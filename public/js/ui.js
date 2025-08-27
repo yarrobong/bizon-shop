@@ -2,6 +2,7 @@
 // DOM-элементы
 const productsContainer = document.getElementById('products');
 const searchInput = document.getElementById('search-input');
+
 const categoryButtons = document.querySelectorAll('.tag-btn');
 const cartBtn = document.getElementById('cart-btn');
 const cartModal = document.getElementById('cart-modal');
