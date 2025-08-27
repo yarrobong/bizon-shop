@@ -28,11 +28,20 @@ if (process.env.DATABASE_URL) {
 // === API: Получить товары ===
 app.get('/api/products', async (req, res) => {
   try {
+    console.log('Запрос /api/products. process.env.DATABASE_URL задана?', !!process.env.DATABASE_URL);
+    console.log('Pool создан?', !!pool);
     if (pool) {
       // На Render — из БД
+      console.log('Выполняется запрос к БД...');
       const result = await pool.query('SELECT * FROM products WHERE available = true ORDER BY id');
+      console.log('Запрос выполнен. Найдено строк:', result.rows.length);
       res.json(result.rows);
-    } 
+    } else {
+      // <-- Добавленная else-ветка
+      console.warn('Подключение к БД не настроено или pool не инициализирован. Возвращается пустой список.');
+      res.json([]); // Отправляем пустой массив
+      // Альтернатива: res.status(503).json({ error: 'Сервис временно недоступен: нет подключения к БД' });
+    }
   } catch (err) {
     console.error('Ошибка загрузки товаров:', err);
     res.status(500).json({ error: 'Не удалось загрузить товары' });
