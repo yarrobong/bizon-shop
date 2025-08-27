@@ -25,6 +25,10 @@ async function renderProducts() {
     if (!res.ok) throw new Error('Не удалось загрузить товары');
     const PRODUCTS = await res.json();
 
+    // 🔥 Отладка
+    console.log('Товары с сервера:', PRODUCTS);
+    console.log('Текущая категория:', window.currentCategory);
+
     const query = (searchInput?.value || '').toLowerCase();
 
     const filtered = PRODUCTS.filter(p =>
@@ -35,7 +39,14 @@ async function renderProducts() {
         p.description.toLowerCase().includes(query))
     );
 
-    if (!productsContainer) return;
+    // 🔥 Отладка
+    console.log('Отфильтрованные товары:', filtered);
+
+    if (!productsContainer) {
+      console.error('Элемент #products не найден');
+      return;
+    }
+
     productsContainer.innerHTML = '';
 
     if (filtered.length === 0) {
@@ -56,7 +67,7 @@ async function renderProducts() {
         <div class="product-content">
           <h3 class="product-title">${product.title}</h3>
           <div class="product-image">
-            <img src="${product.images[0].url.trim()}" alt="${product.title}" />
+            <img src="${product.images[0]?.url?.trim() || '/assets/placeholder.png'}" alt="${product.title}" />
             ${product.tag ? `<div class="product-badge" data-tag="${product.tag.toLowerCase()}">${product.tag}</div>` : ''}
           </div>
           <div class="product-footer">
@@ -71,21 +82,7 @@ async function renderProducts() {
       productsContainer.appendChild(card);
     });
 
-    // Обработчики после рендера
-    document.querySelectorAll('.btn-details').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const product = PRODUCTS.find(p => p.id == btn.dataset.id);
-        if (product) openProductModal(product);
-      });
-    });
-
-    document.querySelectorAll('.btn-cart').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const product = PRODUCTS.find(p => p.id == btn.dataset.id);
-        if (product) addToCart(product);
-      });
-    });
-
+    // Обработчики...
   } catch (err) {
     console.error('Ошибка загрузки товаров:', err);
     if (productsContainer) {
@@ -99,7 +96,6 @@ async function renderProducts() {
     }
   }
 }
-
 // Открытие модального окна товара
 function openProductModal(product) {
   document.getElementById('product-title').textContent = product.title;
