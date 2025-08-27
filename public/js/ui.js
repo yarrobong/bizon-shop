@@ -230,6 +230,15 @@ function updateSendOrderButton() {
 
 // Привязка событий
 function setupEventListeners() {
+  console.log('>>> setupEventListeners запущен');
+  // DOM-элементы (убедитесь, что они все тут или проверяйте их наличие)
+  // const productsContainer = document.getElementById('products');
+  // const searchInput = document.getElementById('search-input');
+  // ... остальные элементы ...
+
+  console.log('>>> Ищем searchInput...');
+  const searchInput = document.getElementById('search-input');
+  console.log('>>> searchInput найден:', searchInput);
   if (searchInput) {
     searchInput.addEventListener('input', renderProducts);
   }
