@@ -12,9 +12,15 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const products = JSON.parse(
-  fs.readFileSync(path.join(__dirname, 'data', 'products.json'), 'utf-8')
-);
+app.get('/api/products', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM products WHERE available = true ORDER BY id');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Не удалось загрузить товары' });
+  }
+});
 
 app.get('/api/products', (req, res) => {
   res.json(products);
@@ -27,54 +33,52 @@ function escapeMarkdown(text) {
     .toString()
     .replace(/[\\_*[\]()~`>#+-=|{}.!]/g, '\\$&');
 }
+const { Pool } = require('pg');
 
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false // нужно для Render
+  }
+});
 app.post('/api/order', async (req, res) => {
   const { phone, comment, cart } = req.body;
-
-  if (!phone || !cart || cart.length === 0) {
-    return res.status(400).json({ success: false, error: 'Недостаточно данных' });
-  }
-
-  const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN?.trim();
-  const CHAT_ID = process.env.TELEGRAM_CHAT_ID?.trim();
-
-  console.log('BOT_TOKEN:', BOT_TOKEN);
-  console.log('CHAT_ID:', CHAT_ID);
-
-  if (!BOT_TOKEN) return res.status(500).json({ success: false, error: 'BOT_TOKEN не загружен' });
-  if (!CHAT_ID) return res.status(500).json({ success: false, error: 'CHAT_ID не загружен' });
-
   const total = cart.reduce((sum, item) => sum + item.product.price * item.qty, 0);
-  const message = `
-📦 *Новый заказ на BIZON!*
-📞 *Телефон:* \`${phone}\`
-💬 *Комментарий:* ${comment || 'не указан'}
-🛒 *Товары:*
-${cart.map(item => `• ${item.product.title} ×${item.qty}`).join('\n')}
-💰 *Итого:* ${total} ₽
-  `.trim();
 
   try {
-    const response = await axios.post(
-      `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
-      {
-        chat_id: CHAT_ID,
-        text: message,
-        parse_mode: 'Markdown',
-        disable_web_page_preview: true
-      }
+    // Начинаем транзакцию
+    await pool.query('BEGIN');
+
+    // Создаём заказ
+    const orderResult = await pool.query(
+      `INSERT INTO orders (phone, comment, total) VALUES ($1, $2, $3) RETURNING id`,
+      [phone, comment, total]
     );
+    const orderId = orderResult.rows[0].id;
 
-    console.log('Telegram response:', response.data); // 🔥 Логируем ответ
-
-    if (response.data.ok) {
-      res.json({ success: true });
-    } else {
-      throw new Error(response.data.description);
+    // Добавляем позиции
+    for (const item of cart) {
+      await pool.query(
+        `INSERT INTO order_items (order_id, product_id, product_title, product_price, qty)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [orderId, item.product.id, item.product.title, item.product.price, item.qty]
+      );
     }
+
+    await pool.query('COMMIT');
+
+    // Отправляем в Telegram
+    await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      chat_id: CHAT_ID,
+      text: `📦 Новый заказ: ${total} ₽\n📞 ${phone}`,
+      parse_mode: 'Markdown'
+    });
+
+    res.json({ success: true });
   } catch (error) {
-    console.error('Telegram error:', error.message || error);
-    res.status(500).json({ success: false, error: 'Не удалось отправить в Telegram' });
+    await pool.query('ROLLBACK');
+    console.error('Ошибка:', error);
+    res.status(500).json({ success: false, error: 'Не удалось обработать заказ' });
   }
 });
 
