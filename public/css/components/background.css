@@ -1,0 +1,68 @@
+/* === ФОН И ПУЛЬСЫ === */
+
+/* Обёртка фона на всю высоту страницы */
+.bg-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%; /* Это высота вьюпорта — но мы исправим это через body/html */
+  z-index: -1;
+  overflow: hidden;
+}
+
+/* Чтобы фон растягивался на всю высоту контента */
+html, body {
+  height: auto; /* Не фиксируем высоту */
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
+/* Градиент на весь слой */
+.bg-overlay::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom right, #0C1016 0%, #0C1016 50%, #0C1016 100%);
+  pointer-events: none;
+}
+
+/* Пульсы — абсолютные, позиционируются относительно .bg-overlay (всей страницы) */
+.pulse-1,
+.pulse-2,
+.pulse-3 {
+  position: absolute;
+  width: 24rem;
+  height: 24rem;
+  border-radius: 9999px;
+  filter: blur(60px);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.pulse-1 {
+  top: 75%;
+  left: 75%;
+  background: #0409AC;
+  animation: pulse 6s ease-in-out infinite;
+}
+
+.pulse-2 {
+  bottom: 65%;
+  right: 80%;
+  background: #0409AC;
+  animation: pulse 6s ease-in-out infinite 3s;
+}
+
+.pulse-3 {
+  bottom: 90%;
+  right: 5%;
+  background: #0409AC;
+  animation: pulse 6s ease-in-out infinite 1.5s;
+}
+

@@ -1,0 +1,186 @@
+/* === HEADER === */
+header {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: relative;
+  z-index: 1000;
+}
+
+/* На десктопе: горизонтальное расположение */
+@media (min-width: 640px) {
+  header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between; /* лого слева, навигация по центру, действия справа */
+    padding: 1.5rem 2rem;
+  }
+}
+
+/* === LOGO === */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo-icon {
+  flex-shrink: 0;
+}
+
+.logo-icon img {
+  width: 75px;
+  height: 75px;
+  object-fit: contain;
+}
+
+.logo-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+}
+
+/* === HEADER ACTIONS (поиск + корзина) === */
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .header-actions {
+    width: auto;
+    flex: 1;
+    justify-content: flex-end;
+    align-items: center; /* чтобы поиск и корзина были по вертикали по центру */
+  }
+}
+/* Скрытие поиска */
+.header .search.hide-search {
+  display: none;
+}
+
+/* === SEARCH INPUT === */
+.search {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 1rem;
+  padding: 0.5rem 1rem;
+  flex: 1;
+}
+
+.search input {
+   border: none;
+  background: transparent;
+  color: white;
+  font-size: 1rem;
+  outline: none;
+  width: 100%;
+}
+
+
+.search input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.search input:focus {
+  border-color: transparent;
+  
+}
+
+.search svg {
+   width: 1.25rem;
+  height: 1.25rem;
+  color: rgba(255, 255, 255, 0.6);
+  flex-shrink: 0;
+  margin-right: 0.5rem; /* Отступ между лупой и текстом */
+}
+
+/* === CART BUTTON === */
+.cart-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(90deg, #3b82f6, #9333ea);
+  border: none;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.cart-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+}
+
+/* === CART COUNT (индикатор количества товаров) === */
+.cart-count {
+  background: #ef4444;
+  color: white;
+  font-size: 0.75rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Когда модалка открыта — скрываем или затемняем шапку */
+body.modal-open .header {
+  opacity: 0;
+  visibility: hidden;
+  /* Или можно использовать transform: translateY(-100%) */
+  /* transform: translateY(-100%); */
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  /* transition: transform 0.4s ease; */
+}
+
+/* === NAVIGATION === */
+.main-nav {
+  display: flex;
+  justify-content: left;
+  flex: 1;
+}
+
+.nav-list {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 12px;
+}
+
+.nav-list a {
+  color: #fff;
+  text-decoration: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 15px;
+  transition: all 0.3s ease;
+  opacity: 0.9;
+}
+
+.nav-list a:hover {
+  background: rgba(255, 255, 255, 0.2);
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+.nav-list a.active {
+  background: #3b82f6;
+  opacity: 1;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}

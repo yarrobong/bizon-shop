@@ -1,0 +1,257 @@
+/* === MODAL (CART & PRODUCT) === */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.modal.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+
+.modal-content {
+  background: #1f2937;
+  border-radius: 1rem;
+  max-width: 1024px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  color: white;
+}
+/* === PRODUCT MODAL === */
+.product-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  flex: 1;
+  overflow-y: auto; /* Лучше: overflow-y, а не overflow */
+  min-height: 0; /* Важно для flex-распределения */
+}
+
+@media (min-width: 768px) {
+  .product-modal-body {
+    flex-direction: row;
+    gap: 2rem;
+  }
+}
+
+/* === ЛЕВАЯ ЧАСТЬ: изображение и миниатюры === */
+.product-modal-left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-modal-image {
+  width: 100%;
+  height: 0;
+  padding-bottom: calc(100% * 3 / 4);
+  position: relative;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.4);
+}
+
+.product-modal-image img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-thumbnails {
+  display: flex;
+  justify-content: center; /* центрируем */
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-bottom: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap; /* чтобы переносились если не влезают */
+}
+
+.product-thumbnails::-webkit-scrollbar {
+  height: 6px;
+}
+
+.product-thumbnails::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.product-thumbnails::-webkit-scrollbar-thumb {
+  background: #6b7280;
+  border-radius: 3px;
+}
+
+.thumbnail {
+  width: 4rem;
+  height: 4rem;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.thumbnail:hover {
+  transform: scale(1.05);
+}
+
+.thumbnail.active {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+/* === ПРАВАЯ ЧАСТЬ: информация и кнопки === */
+.product-modal-right {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  /* УБРАТЬ: justify-content: space-between */
+  /* Заменить на: */
+  justify-content: space-between; /* или оставить по умолчанию */
+  gap: 0.5rem; /* можно добавить отступ между элементами */
+  min-height: 280px;
+  padding-right: 4px;
+}
+
+/* Обёртка для заголовка, описания и цены — займёт всё свободное место */
+.product-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.5rem 0; /* небольшой внутренний отступ */
+  min-height: 0; /* позволяет flex: 1 работать корректно */
+}
+
+.product-modal-right::-webkit-scrollbar {
+  width: 6px;
+}
+
+.product-modal-right::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.product-modal-right::-webkit-scrollbar-thumb {
+  background: #6b7280;
+  border-radius: 3px;
+}
+.product-title,
+#product-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: white;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+.product-description,
+#product-description {
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.6;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  /* НЕ ставим flex: 1 — обёртка уже даёт место */
+}
+
+.product-price {
+  font-size: 1.75rem;
+  font-weight: bold;
+  color: #ffffff;
+  text-align: center;
+  /* НЕ задаём margin здесь, чтобы не влиял везде */
+}
+
+#product-price {
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+/* Контейнер для кнопок — создаёт отступ между ними */
+.buttons-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem; /* расстояние между кнопками */
+  width: 100%;
+}
+
+/* Твои классы кнопок — оставляем, но добавляем стили */
+.btn-add,
+.btn-buy {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 0.75rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-add {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.btn-add:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.btn-buy {
+  background: linear-gradient(90deg, #3b82f6, #9333ea);
+  color: white;
+}
+
+.btn-buy:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}

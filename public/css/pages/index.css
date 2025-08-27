@@ -1,0 +1,396 @@
+/* ==================== RESET & ROOT ==================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+
+  color: #e2e8f0;
+  line-height: 1.6;
+  overflow-x: hidden;
+  
+}
+
+/* ==================== ПУЛЬСЫ — ФИКСИРОВАННЫЕ И ЗА РАМКАМИ ==================== */
+.bg-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: -2;
+  overflow: visible;
+  transform: translateZ(0);
+}
+
+/* Пульсы — абсолютные, позиционируются относительно .bg-overlay (всей страницы) */
+.pulse-1,
+.pulse-2,
+.pulse-3 {
+  position: absolute;
+  width: 24rem;
+  height: 24rem;
+  border-radius: 9999px;
+  filter: blur(60px);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.pulse-1 {
+  top: 75%;
+  left: 75%;
+  background: #0409AC;
+  animation: pulse 6s ease-in-out infinite;
+}
+
+.pulse-2 {
+  bottom: 65%;
+  right: 80%;
+  background: #0409AC;
+  animation: pulse 6s ease-in-out infinite 3s;
+}
+
+.pulse-3 {
+  bottom: 90%;
+  right: 5%;
+  background: #0409AC;
+  animation: pulse 6s ease-in-out infinite 1.5s;
+}
+
+/* ==================== ПАРАЛЛАКС ЭФФЕКТ ДЛЯ ГЕРОЯ ==================== */
+.hero {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  position: relative;
+  overflow: visible;
+}
+
+
+/* ==================== ГЛУБИНА ЧЕРЕЗ ТЕНИ И СЛОИ ==================== */
+main > section {
+  position: relative;
+  z-index: 1;
+}
+
+
+/* ==================== ПЛАВНЫЙ СКРОЛЛ И ОБЪЁМ ==================== */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  scroll-snap-type: y mandatory;
+}
+
+section {
+  scroll-snap-align: start;
+}
+
+/* ==================== ГЕРОЙ ==================== */
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 60px;
+  padding: 100px 20px 80px;
+  min-height: 100vh;
+  position: relative;
+}
+
+.hero-content {
+  flex: 1;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.hero h1 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 3.8rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 20px;
+  background: #ffffff;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+ 
+}
+
+
+
+.hero-subtitle {
+  font-size: 1.2rem;
+  line-height: 1.7;
+  color: #cbd5e1;
+  margin-bottom: 30px;
+  font-weight: 400;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.hero-trust {
+  display: flex;
+  gap: 20px;
+  font-size: 0.9rem;
+  color: #94a3b8;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.hero-trust .trust-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hero-trust .trust-item::before {
+  content: "✓";
+  color: #3b82f6;
+  font-weight: bold;
+}
+
+/* Изображение в герое */
+.hero-image {
+  flex: 1;
+  max-width: 500px;
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  content: "";
+  inset: 0;
+  border-radius: 16px;
+  pointer-events: none;
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
+}
+
+
+.hero-image img {
+  width: 100%;
+  border-radius: 16px;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+
+
+/* ==================== ПРЕИМУЩЕСТВА ==================== */
+.features {
+  padding: 100px 20px;
+  text-align: center;
+  
+}
+
+.features h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.8rem;
+  margin-bottom: 60px;
+  background: linear-gradient(to right, #60a5fa, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+  
+}
+
+.feature-card {
+  padding: 32px;
+
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 0;
+  border-radius: 16px;
+}
+
+.feature-card:hover::before {
+  opacity: 1;
+}
+
+.feature-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 100, 255, 0.2);
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.feature-icon {
+  font-size: 2.8rem;
+  margin-bottom: 16px;
+  color: #3b82f6;
+  text-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
+}
+
+.feature-card h3 {
+  font-size: 1.5rem;
+  color: #e2e8f0;
+  margin-bottom: 14px;
+  font-weight: 600;
+}
+
+.feature-card p {
+  color: #94a3b8;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+/* ==================== CTA (ПРИЗЫВ К ДЕЙСТВИЮ) ==================== */
+.cta {
+  padding: 100px 20px;
+  text-align: center;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  border-top: 1px solid rgba(59, 130, 246, 0.2);
+  position: relative;
+}
+
+.cta::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(59, 130, 246, 0.5), transparent);
+}
+
+.cta-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.cta h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.8rem;
+  margin-bottom: 20px;
+  color: white;
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
+
+.cta p {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  color: #cbd5e1;
+  opacity: 0.9;
+}
+
+/* ==================== КНОПКИ ==================== */
+.btn-primary,
+.btn-secondary,
+.btn-outline {
+  padding: 14px 32px;
+  font-weight: 600;
+  font-size: 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+}
+
+.btn-primary:hover {
+  background: #2563eb;
+  transform: translateY(-3px);
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: white;
+  border: 2px solid #3b82f6;
+  margin-left: 12px;
+}
+
+.btn-secondary:hover {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: #60a5fa;
+  transform: translateY(-3px);
+}
+
+.btn-outline {
+  background: transparent;
+  color: #3b82f6;
+  border: 2px solid #3b82f6;
+  margin-top: 30px;
+}
+
+.btn-outline:hover {
+  background: #3b82f6;
+  color: white;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+}
+
+/* ==================== АДАПТИВ ==================== */
+@media (max-width: 900px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    padding: 80px 20px;
+    min-height: auto;
+  }
+
+  .hero-trust {
+    justify-content: center;
+  }
+
+  .hero-buttons {
+    justify-content: center;
+  }
+
+  .features h2, .cta h2 {
+    font-size: 2.4rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero h1 {
+    font-size: 2.6rem;
+  }
+
+  .btn-secondary {
+    margin-left: 0;
+    margin-top: 10px;
+  }
+
+  .hero-image {
+    max-width: 100%;
+  }
+}

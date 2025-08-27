@@ -1,0 +1,414 @@
+[
+  {
+    "id": 1,
+    "title": "Meta Quest 3 128GB",
+    "description": "Мощный VR-шлем нового поколения с поддержкой смешанной реальности и высоким разрешением.",
+    "price": 0,
+    "tag": "снят",
+    "available": false,
+    "category": "headset",
+    "brand": "meta",
+    "images": [
+      {
+        "url": "https://portal-shop.com/upload/iblock/09f/cgw9mohlptccqz28zc5m4w8douq9vi47.png",
+        "alt": "Quest 3 128GB"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "title": "Meta Quest 3 512GB",
+    "description": "Мощный VR-шлем нового поколения с поддержкой смешанной реальности и высоким разрешением.Флагманская версия Quest 3 с увеличенным объёмом памяти для профессионального использования.",
+    "price": 39990,
+    "tag": "хит",
+    "available": true,
+    "category": "headset",
+    "brand": "meta",
+    "images": [
+      {
+        "url": "/assets/Images-Products/Headset/Quest 3/1.png",
+        "alt": "Quest 3 512GB - Фото 1"
+      },
+      {
+        "url": "/assets/Images-Products/Headset/Quest 3/2.png",
+        "alt": "Quest 3 512GB - Фото 2"
+      },
+      {
+        "url": "/assets/Images-Products/Headset/Quest 3/3.png",
+        "alt": "Quest 3 512GB - Фото 3"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "title": "Meta Quest 3s 128GB",
+    "description": "Обновлённая версия Quest 3 с улучшенной эргономикой и оптимизированной производительностью.",
+    "price": 24200,
+    "tag": "новинка",
+    "available": true,
+    "category": "headset",
+    "brand": "meta",
+    "images": [
+      {
+        "url": "/assets/Images-Products/Headset/Quest-3s/1.png",
+        "alt": "Quest 3s 128GB - Фото 1"
+      },
+      {
+        "url": "/assets/Images-Products/Headset/Quest-3s/2.png",
+        "alt": "Quest 3s 128GB - Фото 2"
+      },
+      {
+        "url": "/assets/Images-Products/Headset/Quest-3s/3.png",
+        "alt": "Quest 3s 128GB - Фото 3"
+      },
+      {
+        "url": "/assets/Images-Products/Headset/Quest-3s/4.png",
+        "alt": "Quest 3s 128GB - Фото 4"
+      },
+      {
+        "url": "/assets/Images-Products/Headset/Quest-3s/5.png",
+        "alt": "Quest 3s 128GB - Фото 5"
+      },
+      {
+        "url": "/assets/Images-Products/Headset/Quest-3s/6.png",
+        "alt": "Quest 3s 128GB - Фото 6"
+      },
+      {
+        "url": "/assets/Images-Products/Headset/Quest-3s/7.png",
+        "alt": "Quest 3s 128GB - Фото 7"
+      },
+      {
+        "url": "/assets/Images-Products/Headset/Quest-3s/8.png",
+        "alt": "Quest 3s 128GB - Фото 8"
+      },
+      {
+        "url": "/assets/Images-Products/Headset/Quest-3s/9.png",
+        "alt": "Quest 3s 128GB - Фото 9"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "title": "Meta Quest 3s 256GB",
+    "description": "Универсальный выбор для геймеров и профессионалов с расширенным хранилищем.",
+    "price": 31200,
+    "tag": "новинка",
+    "available": true,
+    "category": "headset",
+    "brand": "meta",
+    "images": [
+      {
+        "url": "/assets/Images-Products/Headset/Quest-3s/1.png",
+        "alt": "Quest 3s 128GB - Фото 1"
+      },
+      {
+        "url": "/assets/Images-Products/Headset/Quest-3s/2.png",
+        "alt": "Quest 3s 128GB - Фото 2"
+      },
+      {
+        "url": "/assets/Images-Products/Headset/Quest-3s/3.png",
+        "alt": "Quest 3s 128GB - Фото 3"
+      },
+      {
+        "url": "/assets/Images-Products/Headset/Quest-3s/4.png",
+        "alt": "Quest 3s 128GB - Фото 4"
+      },
+      {
+        "url": "/assets/Images-Products/Headset/Quest-3s/5.png",
+        "alt": "Quest 3s 128GB - Фото 5"
+      },
+      {
+        "url": "/assets/Images-Products/Headset/Quest-3s/6.png",
+        "alt": "Quest 3s 128GB - Фото 6"
+      },
+      {
+        "url": "/assets/Images-Products/Headset/Quest-3s/7.png",
+        "alt": "Quest 3s 128GB - Фото 7"
+      },
+      {
+        "url": "/assets/Images-Products/Headset/Quest-3s/8.png",
+        "alt": "Quest 3s 128GB - Фото 8"
+      },
+      {
+        "url": "/assets/Images-Products/Headset/Quest-3s/9.png",
+        "alt": "Quest 3s 128GB - Фото 9"
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "title": "Pico 4 128GB",
+    "description": "VR-шлем среднего класса с хорошим балансом цены и качества.",
+    "price": 0,
+    "tag": "снят",
+    "available": false,
+    "category": "headset",
+    "brand": "pico",
+    "images": [
+      {
+        "url": "",
+        "alt": "Pico 4 128GB"
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "title": "Pico 4 256GB",
+    "description": "Популярный VR-шлем с увеличенным объёмом памяти и поддержкой корпоративных решений.",
+    "price": null,
+    "tag": "ожидается",
+    "available": false,
+    "category": "headset",
+    "brand": "pico",
+    "images": [
+      {
+        "url": "https://portal-shop.com/upload/medialibrary/pico/pico4_256.jpg",
+        "alt": "Pico 4 256GB"
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "title": "Pico 4 Ultra 256GB",
+    "description": "Флагманский шлем с улучшенной оптикой, точным отслеживанием и поддержкой MR.",
+    "price": 39490,
+    "tag": "хит",
+    "available": true,
+    "category": "headset",
+    "brand": "pico",
+    "images": [
+      {
+        "url": "/assets/Images-Products/Headset/Pico 4 Ultra/1.png",
+        "alt": "Pico 4 Ultra 256GB"
+      },
+      {
+        "url": "/assets/Images-Products/Headset/Pico 4 Ultra/2.png",
+        "alt": "Pico 4 Ultra 256GB"
+      },
+      {
+        "url": "/assets/Images-Products/Headset/Pico 4 Ultra/3.png",
+        "alt": "Pico 4 Ultra 256GB"
+      },
+      {
+        "url": "/assets/Images-Products/Headset/Pico 4 Ultra/4.png",
+        "alt": "Pico 4 Ultra 256GB"
+      },
+      {
+        "url": "/assets/Images-Products/Headset/Pico 4 Ultra/5.png",
+        "alt": "Pico 4 Ultra 256GB"
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "title": "BOBOVR S3PRO",
+    "description": "Удобный батарейный ремешок с АКБ B100 для Quest 3 и Quest 3s.",
+    "price": 6990,
+    "tag": "",
+    "available": true,
+    "category": "accessory",
+    "brand": "bobovr",
+    "compatibility": ["Quest 3", "Quest 3s"],
+    "images": [
+      {
+        "url": "/assets/Images-Products/Крепления/BOBOVR S3 PRO/1.png",
+        "alt": "BOBOVR S3PRO"
+      },
+      {
+        "url": "/assets/Images-Products/Крепления/BOBOVR S3 PRO/2.png",
+        "alt": "BOBOVR S3PRO"
+      },
+      {
+        "url": "/assets/Images-Products/Крепления/BOBOVR S3 PRO/3.png",
+        "alt": "BOBOVR S3PRO"
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "title": "BOBOVR M3PRO",
+    "description": "Компактный батарейный ремешок с АКБ B2 для Quest 3 и Quest 3s.",
+    "price": 4490,
+    "tag": "хит",
+    "available": true,
+    "category": "accessory",
+    "brand": "bobovr",
+    "compatibility": ["Quest 3", "Quest 3s"],
+    "images": [
+      {
+        "url": "/assets/Images-Products/Крепления/BOBOVR M3 PRO/1.png",
+        "alt": "BOBOVR S3PRO"
+      },
+      {
+        "url": "/assets/Images-Products/Крепления/BOBOVR M3 PRO/2.png",
+        "alt": "BOBOVR S3PRO"
+      },
+      {
+        "url": "/assets/Images-Products/Крепления/BOBOVR M3 PRO/3.png",
+        "alt": "BOBOVR S3PRO"
+      },
+      {
+        "url": "/assets/Images-Products/Крепления/BOBOVR M3 PRO/4.png",
+        "alt": "BOBOVR S3PRO"
+      },
+      {
+        "url": "/assets/Images-Products/Крепления/BOBOVR M3 PRO/5.png",
+        "alt": "BOBOVR S3PRO"
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "title": "BOBOVR P4U",
+    "description": "Батарейный ремешок с АКБ B100 для Pico 4 и Pico 4 Ultra.",
+    "price": 6990,
+    "tag": "",
+    "available": true,
+    "category": "accessory",
+    "brand": "bobovr",
+    "compatibility": ["Pico 4", "Pico 4 Ultra"],
+    "images": [
+      {
+        "url": "/assets/Images-Products/Крепления/BOBOVR P4U/1.png",
+        "alt": "BOBOVR P4U"
+      },
+      {
+        "url": "/assets/Images-Products/Крепления/BOBOVR P4U/2.png",
+        "alt": "BOBOVR P4U"
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "title": "BOBOVR P4S",
+    "description": "Батарейный ремешок с АКБ B2 для Pico 4 и Pico 4 Ultra.",
+    "price": 5490,
+    "tag": "хит",
+    "available": true,
+    "category": "accessory",
+    "brand": "bobovr",
+    "compatibility": ["Pico 4", "Pico 4 Ultra"],
+    "images": [
+      {
+        "url": "/assets/Images-Products/Крепления/BOBOVR P4S/1.png",
+        "alt": "BOBOVR P4S"
+      },
+      {
+        "url": "/assets/Images-Products/Крепления/BOBOVR P4S/2.png",
+        "alt": "BOBOVR P4S"
+      },
+      {
+        "url": "/assets/Images-Products/Крепления/BOBOVR P4S/3.png",
+        "alt": "BOBOVR P4S"
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "title": "BOBOVR B100",
+    "description": "Заменяемый аккумулятор для BOBOVR S3PRO и P4U.",
+    "price": 3490,
+    "tag": "",
+    "available": true,
+    "category": "battery",
+    "brand": "bobovr",
+    "compatibility": ["BOBOVR S3PRO", "BOBOVR P4U"],
+    "images": [
+      {
+        "url": "/assets/Images-Products/Аккамуляторы/BOBOVR B100/1.png",
+        "alt": "BOBOVR B100"
+      },
+      {
+        "url": "/assets/Images-Products/Аккамуляторы/BOBOVR B100/2.png",
+        "alt": "BOBOVR B100"
+      }
+    ]
+  },
+  {
+    "id": 13,
+    "title": "BOBOVR B2",
+    "description": "Аккумулятор для BOBOVR M3PRO.",
+    "price": 2390,
+    "tag": "",
+    "available": true,
+    "category": "battery",
+    "brand": "bobovr",
+    "compatibility": ["BOBOVR M3PRO"],
+    "images": [
+      {
+        "url": "/assets/Images-Products/Аккамуляторы/BOBOVR B2/1.png",
+        "alt": "BOBOVR B2"
+      },
+      {
+        "url": "/assets/Images-Products/Аккамуляторы/BOBOVR B2/2.png",
+        "alt": "BOBOVR B2"
+      },
+      {
+        "url": "/assets/Images-Products/Аккамуляторы/BOBOVR B2/3.png",
+        "alt": "BOBOVR B2"
+      }
+    ]
+  },
+  {
+    "id": 14,
+    "title": "BOBOVR BD2",
+    "description": "Док-станция для зарядки аккумулятора BOBOVR B2.",
+    "price": 2790,
+    "tag": "",
+    "available": true,
+    "category": "charger",
+    "brand": "bobovr",
+    "compatibility": ["BOBOVR B2"],
+    "images": [
+      {
+        "url": "/assets/Images-Products/Док станции/BOBOVR BD2-1 с аккамуляторм B2/1.png",
+        "alt": "Док-станция B2"
+      },
+      {
+        "url": "/assets/Images-Products/Док станции/BOBOVR BD2-1 с аккамуляторм B2/2.jpg",
+        "alt": "Док-станция B2"
+      },
+      {
+        "url": "/assets/Images-Products/Док станции/BOBOVR BD2-1 с аккамуляторм B2/3.jpg",
+        "alt": "Док-станция B2"
+      },
+      {
+        "url": "/assets/Images-Products/Док станции/BOBOVR BD2-1 с аккамуляторм B2/4.jpg",
+        "alt": "Док-станция B2"
+      },
+      {
+        "url": "/assets/Images-Products/Док станции/BOBOVR BD2-1 с аккамуляторм B2/5.jpg",
+        "alt": "Док-станция B2"
+      }
+    ]
+  },
+  {
+    "id": 15,
+    "title": "BOBOVR BD3",
+    "description": "Универсальная док-станция для зарядки BOBOVR B100.",
+    "price": 2990,
+    "tag": "",
+    "available": true,
+    "category": "charger",
+    "brand": "bobovr",
+    "compatibility": ["BOBOVR B100"],
+    "images": [
+      {
+        "url": "/assets/Images-Products/Док станции/BOBOVR BD3 для B100/1.png",
+        "alt": "Док-станция B100"
+      },
+      {
+        "url": "/assets/Images-Products/Док станции/BOBOVR BD3 для B100/2.png",
+        "alt": "Док-станция B100"
+      },
+      {
+        "url": "/assets/Images-Products/Док станции/BOBOVR BD3 для B100/3.png",
+        "alt": "Док-станция B100"
+      },
+      {
+        "url": "/assets/Images-Products/Док станции/BOBOVR BD3 для B100/4.png",
+        "alt": "Док-станция B100"
+      }
+    ]
+  }
+]
