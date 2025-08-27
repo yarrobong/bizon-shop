@@ -11,10 +11,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// === Локальные данные (для разработки) ===
-const localProducts = JSON.parse(
-  fs.readFileSync(path.join(__dirname, 'data', 'products.json'), 'utf-8')
-);
+
 
 // === Подключение к БД (только на Render) ===
 let pool;
