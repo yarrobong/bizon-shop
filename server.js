@@ -28,11 +28,10 @@ if (process.env.DATABASE_URL) {
 // === API: Получить товары ===
 app.get('/api/products', async (req, res) => {
   try {
-    console.log('Запрос /api/products. process.env.DATABASE_URL задана?', !!process.env.DATABASE_URL);
-    console.log('Pool создан?', !!pool);
+   
     if (pool) {
       // На Render — из БД
-      console.log('Выполняется запрос к БД...');
+      
       // Предполагая, что таблица products имеет колонки: id, title, description, price, tag, available, category, brand, compatibility, images_json
       const result = await pool.query(`
         SELECT 
@@ -42,7 +41,7 @@ app.get('/api/products', async (req, res) => {
         WHERE available = true 
         ORDER BY id
       `);
-      console.log('Запрос выполнен. Найдено строк:', result.rows.length);
+      
       res.json(result.rows); // Теперь каждая строка имеет поле 'images'
     } else {
       console.warn('Подключение к БД не настроено или pool не инициализирован. Возвращается пустой список.');
@@ -84,20 +83,20 @@ ${cart.map(item => `• ${item.product?.title || 'Неизвестный тов�
 
     // 5. Вставка основной информации о заказе в БД
     if (pool) { // Проверяем, есть ли подключение к БД
-        console.log('Сохранение заказа в БД...');
+     
         const orderResult = await pool.query(
           'INSERT INTO orders (phone, comment, total_amount) VALUES ($1, $2, $3) RETURNING id',
           [phone, comment || '', total]
         );
         orderId = orderResult.rows[0].id;
-        console.log(`Заказ сохранен в БД с ID: ${orderId}`);
+       
     } else {
         console.warn('Подключение к БД отсутствует. Заказ не будет сохранен в БД.');
     }
 
     // 6. Вставка позиций заказа в БД
     if (pool && orderId) {
-        console.log('Сохранение позиций заказа в БД...');
+       
         // Подготавливаем данные для batch insert
         const itemInserts = cart.map(item => [
             orderId,
@@ -122,12 +121,12 @@ ${cart.map(item => `• ${item.product?.title || 'Неизвестный тов�
             });
 
             await pool.query(queryText + placeholders, queryValues);
-            console.log(`Позиции заказа ${orderId} сохранены в БД.`);
+            
         }
     }
 
     // 7. Отправка сообщения в Telegram
-    console.log('Отправка заказа в Telegram...');
+   
     const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
     const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
@@ -141,7 +140,7 @@ ${cart.map(item => `• ${item.product?.title || 'Неизвестный тов�
         disable_web_page_preview: true
       }
     );
-    console.log('Заказ успешно отправлен в Telegram.');
+
 
     // 8. Отправка успешного ответа клиенту
     res.json({ success: true });
