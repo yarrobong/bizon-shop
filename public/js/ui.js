@@ -81,7 +81,34 @@ async function renderProducts() {
       `;
       productsContainer.appendChild(card);
     });
+    // --- Добавить обработчики событий для кнопок на карточках товаров ---
+    // Обработчики для кнопок "Подробнее"
+    document.querySelectorAll('.btn-details').forEach(button => {
+      button.addEventListener('click', (event) => {
+        const productId = parseInt(event.target.dataset.id);
+        const product = PRODUCTS.find(p => p.id === productId);
+        if (product) {
+          openProductModal(product);
+        } else {
+          console.error(`Товар с id ${productId} не найден.`);
+        }
+      });
+    });
 
+    // Обработчики для кнопок "В корзину"
+    document.querySelectorAll('.btn-cart').forEach(button => {
+      button.addEventListener('click', (event) => {
+        const productId = parseInt(event.target.dataset.id);
+        const product = PRODUCTS.find(p => p.id === productId);
+        if (product) {
+          addToCart(product); // Предполагается, что функция addToCart определена в другом файле (cart.js)
+          updateCartCount(); // Предполагается, что функция updateCartCount определена в другом файле (cart.js)
+        } else {
+          console.error(`Товар с id ${productId} не найден.`);
+        }
+      });
+    });
+    // --- Конец добавления обработчиков ---
     // Обработчики...
   } catch (err) {
     console.error('Ошибка загрузки товаров:', err);
