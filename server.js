@@ -22,10 +22,6 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
-app.get('/api/products', (req, res) => {
-  res.json(products);
-});
-
 // Функция экранирования для MarkdownV2
 function escapeMarkdown(text) {
   if (!text) return 'не указан';
