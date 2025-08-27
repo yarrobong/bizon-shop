@@ -35,10 +35,7 @@ app.get('/api/products', async (req, res) => {
       // На Render — из БД
       const result = await pool.query('SELECT * FROM products WHERE available = true ORDER BY id');
       res.json(result.rows);
-    } else {
-      // Локально — из файла
-      res.json(localProducts);
-    }
+    } 
   } catch (err) {
     console.error('Ошибка загрузки товаров:', err);
     res.status(500).json({ error: 'Не удалось загрузить товары' });
