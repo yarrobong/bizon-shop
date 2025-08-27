@@ -33,14 +33,20 @@ app.get('/api/products', async (req, res) => {
     if (pool) {
       // На Render — из БД
       console.log('Выполняется запрос к БД...');
-      const result = await pool.query('SELECT * FROM products WHERE available = true ORDER BY id');
+      // Предполагая, что таблица products имеет колонки: id, title, description, price, tag, available, category, brand, compatibility, images_json
+      const result = await pool.query(`
+        SELECT 
+          id, title, description, price, tag, available, category, brand, compatibility,
+          images_json as images -- Преобразуем images_json в images для фронтенда
+        FROM products 
+        WHERE available = true 
+        ORDER BY id
+      `);
       console.log('Запрос выполнен. Найдено строк:', result.rows.length);
-      res.json(result.rows);
+      res.json(result.rows); // Теперь каждая строка имеет поле 'images'
     } else {
-      // <-- Добавленная else-ветка
       console.warn('Подключение к БД не настроено или pool не инициализирован. Возвращается пустой список.');
-      res.json([]); // Отправляем пустой массив
-      // Альтернатива: res.status(503).json({ error: 'Сервис временно недоступен: нет подключения к БД' });
+      res.json([]);
     }
   } catch (err) {
     console.error('Ошибка загрузки товаров:', err);
