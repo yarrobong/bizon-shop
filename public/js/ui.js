@@ -21,6 +21,7 @@ if (yearSpan) {
 
 // Асинхронная загрузка и рендеринг товаров
 async function renderProducts() {
+  console.log(">>> [DEBUG] Начало выполнения renderProducts");
   try {
     const res = await fetch('/api/products');
     if (!res.ok) throw new Error('Не удалось загрузить товары');
