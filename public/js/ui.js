@@ -20,36 +20,56 @@ if (yearSpan) {
 }
 
 // Асинхронная загрузка и рендеринг товаров
+// Асинхронная загрузка и рендеринг товаров
 async function renderProducts() {
   console.log(">>> [DEBUG] Начало выполнения renderProducts");
   try {
+    console.log(">>> [DEBUG] Отправка запроса к /api/products");
     const res = await fetch('/api/products');
-    if (!res.ok) throw new Error('Не удалось загрузить товары');
-    const PRODUCTS = await res.json();
-
+    console.log(">>> [DEBUG] Ответ получен:", res.status, res.statusText);
     
+    if (!res.ok) {
+      console.error(">>> [DEBUG] Ошибка ответа:", res.status);
+      throw new Error('Не удалось загрузить товары');
+    }
+    
+    const PRODUCTS = await res.json();
+    console.log(">>> [DEBUG] Товары получены:", PRODUCTS);
+    console.log(">>> [DEBUG] Количество товаров:", PRODUCTS.length);
 
     const query = (searchInput?.value || '').toLowerCase();
+    console.log(">>> [DEBUG] Текущий поиск:", query);
+    console.log(">>> [DEBUG] Текущая категория:", window.currentCategory);
 
-    const filtered = PRODUCTS.filter(p =>
-      p.available !== false &&
-      (window.currentCategory === 'все' || p.category === window.currentCategory) &&
-      (query === '' ||
+    const filtered = PRODUCTS.filter(p => {
+      const available = p.available !== false;
+      const categoryMatch = window.currentCategory === 'все' || p.category === window.currentCategory;
+      const searchMatch = query === '' ||
         p.title.toLowerCase().includes(query) ||
-        p.description.toLowerCase().includes(query))
-    );
+        p.description.toLowerCase().includes(query);
+      
+      console.log(">>> [DEBUG] Товар:", p.title, {
+        available, 
+        categoryMatch, 
+        searchMatch,
+        category: p.category,
+        currentCategory: window.currentCategory
+      });
+      
+      return available && categoryMatch && searchMatch;
+    });
 
-  
- 
+    console.log(">>> [DEBUG] Отфильтрованные товары:", filtered.length);
 
     if (!productsContainer) {
-      console.error('Элемент #products не найден');
+      console.error('>>> [DEBUG] Элемент #products не найден');
       return;
     }
 
     productsContainer.innerHTML = '';
 
     if (filtered.length === 0) {
+      console.log(">>> [DEBUG] Нет товаров для отображения");
       productsContainer.innerHTML = `
         <div class="empty">
           <div class="text-6xl">🔍</div>
@@ -60,7 +80,10 @@ async function renderProducts() {
       return;
     }
 
-    filtered.forEach(product => {
+    console.log(">>> [DEBUG] Начинаем рендеринг", filtered.length, "товаров");
+    
+    filtered.forEach((product, index) => {
+      console.log(">>> [DEBUG] Рендерим товар", index, ":", product.title);
       const card = document.createElement('div');
       card.className = 'product-card';
       card.innerHTML = `
@@ -81,7 +104,9 @@ async function renderProducts() {
       `;
       productsContainer.appendChild(card);
     });
-    // --- Добавить обработчики событий для кнопок на карточках товаров ---
+    
+    console.log(">>> [DEBUG] Рендеринг завершен, добавлено элементов:", productsContainer.children.length);
+    
     // Обработчики для кнопок "Подробнее"
     document.querySelectorAll('.btn-details').forEach(button => {
       button.addEventListener('click', (event) => {
@@ -101,17 +126,16 @@ async function renderProducts() {
         const productId = parseInt(event.target.dataset.id);
         const product = PRODUCTS.find(p => p.id === productId);
         if (product) {
-          addToCart(product); // Предполагается, что функция addToCart определена в другом файле (cart.js)
-          updateCartCount(); // Предполагается, что функция updateCartCount определена в другом файле (cart.js)
+          addToCart(product);
+          updateCartCount();
         } else {
           console.error(`Товар с id ${productId} не найден.`);
         }
       });
     });
-    // --- Конец добавления обработчиков ---
-    // Обработчики...
+    
   } catch (err) {
-    console.error('Ошибка загрузки товаров:', err);
+    console.error('>>> [DEBUG] Ошибка загрузки товаров:', err);
     if (productsContainer) {
       productsContainer.innerHTML = `
         <div class="empty">
