@@ -82,7 +82,10 @@ function getCurrentTag() {
 // === Инициализация при загрузке ===
 // Вызываем при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
-  updateCartCount(); // Обновляем счётчик при загрузке
+  console.log(">>> [DEBUG] DOM загружен, инициализация приложения");
+  window.currentCategory = 'все'; // Установите начальную категорию
+  renderProducts(); // Загрузка и отображение товаров
+  setupEventListeners(); // Настройка обработчиков событий
 });
 
 // === Экспорт для использования в других файлах ===
