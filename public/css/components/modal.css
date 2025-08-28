@@ -255,3 +255,45 @@
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
+
+/* Когда модальное окно открыто - скрываем шапку */
+body.modal-open header {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-100%);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+/* Альтернативный вариант - просто затемнить шапку */
+/*
+body.modal-open header {
+  opacity: 0.3;
+  filter: blur(2px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+*/
+
+/* Увеличиваем z-index модального окна, чтобы оно было поверх всего */
+.modal {
+  z-index: 10000; /* или любое большое число */
+}
+
+.modal.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Также можно добавить немного затемнения заднего фона шапки */
+body.modal-open::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 120px; /* высота шапки */
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  pointer-events: none;
+}
