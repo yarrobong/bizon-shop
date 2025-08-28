@@ -32,22 +32,24 @@
 
   <!-- Шапка -->
   <header class="header" role="banner">
-    <div class="logo">
-      <div class="logo-icon">
-        <img src="/assets/logo/logo-Photoroom.png" alt="Логотип BIZON" width="75" height="75">
-      </div>
-      <div class="logo-title">BIZON</div>
+  <div class="logo">
+    <div class="logo-icon">
+      <img src="assets/logo/logo-Photoroom.png" alt="Логотип BIZON" width="75" height="75">
     </div>
+    <div class="logo-title">BIZON</div>
+  </div>
 
-    <nav class="main-nav" role="navigation" aria-label="Основная навигация">
-      <ul class="nav-list">
-        <li><a href="index.html">Главная</a></li>
-        <li><a href="catalog.html">Каталог</a></li>
-        <li><a href="about.html">О нас</a></li>
-        <li><a href="contact.html">Контакты</a></li>
-      </ul>
-    </nav>
-  </header>
+  <nav class="main-nav" role="navigation" aria-label="Основная навигация">
+    <ul class="nav-list">
+      <li><a href="index.html">Главная</a></li>
+      <li><a href="catalog.html">Каталог</a></li>
+      <li><a href="about.html">О нас</a></li>
+      <li><a href="contact.html">Контакты</a></li>
+    </ul>
+  </nav>
+
+  
+</header>
 
   <main role="main">
 
@@ -70,7 +72,7 @@
         </div>
       </div>
       <div class="hero-image">
-        <img src="/assets/index/Hero.png" alt="VR-зал под ключ от BIZON" loading="lazy">
+        <img src="/public/assets/icons/apple-icon-180x180.png" alt="VR-зал под ключ от BIZON" loading="lazy">
       </div>
     </section>
 
@@ -102,7 +104,7 @@
     </section>
 
     <!-- Почему выбирают нас -->
-    <section class="features" style="background: #f8fafc;">
+    <section class="features">
       <h2>Почему выбирают нас</h2>
       <div class="features-grid">
         <div class="feature-card">
@@ -129,11 +131,11 @@
     </section>
 
     <!-- VR-аттракционы под ключ -->
-    <section class="cta" style="background: #0f172a; padding: 80px 20px;">
+    <section class="cta">
       <div class="cta-content">
         <h2>VR-аттракционы под ключ</h2>
-        <p style="font-size: 1.1rem;">Сочные цены. Никакой головной боли.</p>
-        <div style="margin: 30px 0; text-align: left; color: #e2e8f0; line-height: 1.7;">
+        <p >Сочные цены. Никакой головной боли.</p>
+        <div>
           <p>✅ Аттракционы от 1 до 4 игроков</p>
           <p>✅ Доставка, пошлины, НДС включены в цену</p>
           <p>✅ Готовим все нужные сертификаты</p>
@@ -144,38 +146,34 @@
     </section>
 
     <!-- Trade-In блок -->
-    <section class="features" style="padding: 80px 20px; background: white;">
-      <div class="hero-content" style="max-width: 700px; margin: 0 auto; text-align: center;">
-        <h2>Trade-In VR-оборудования</h2>
-        <p style="color: #64748b; margin-bottom: 30px;">
-          Обновитесь без лишних затрат! Оставьте заявку — мы подготовим точный расчёт за 1 день.
-        </p>
-        <div style="display: flex; flex-direction: column; gap: 20px; align-items: center; text-align: left; background: #f1f5f9; padding: 25px; border-radius: 12px; max-width: 600px; margin: 0 auto;">
-          <p><strong>1.</strong> Сначала присылаем вам новое оборудование</p>
-          <p><strong>2.</strong> Когда всё заработает — вы отправляете старое</p>
-          <p><strong>3.</strong> Оплачиваете только разницу. Никаких сюрпризов</p>
-        </div>
-        <a href="contact.html" class="btn-primary" style="margin-top: 30px;">Оставить заявку</a>
+    <section class="trade-in">
+      <h2>Trade-In VR-оборудования</h2>
+      <p>Обновитесь без лишних затрат! Оставьте заявку — мы подготовим точный расчёт за 1 день.</p>
+      <div class="trade-in-steps">
+        <p data-step="1">Сначала присылаем вам новое оборудование</p>
+        <p data-step="2">Когда всё заработает — вы отправляете старое</p>
+        <p data-step="3">Оплачиваете только разницу. Никаких сюрпризов</p>
       </div>
+      <a href="contact.html" class="btn btn-primary">Оставить заявку</a>
     </section>
 
     <!-- Ответы на вопросы -->
-    <section class="features" style="background: #f1f5f9; padding: 100px 20px;">
+    <section class="features">
       <h2>ОТВЕТЫ НА ПОПУЛЯРНЫЕ ВОПРОСЫ</h2>
-      <div class="features-grid" style="max-width: 900px; margin: 40px auto; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
-        <div class="feature-card" style="text-align: left;">
+      <div class="features-grid">
+        <div class="feature-card">
           <h3>Сколько стоит доставка?</h3>
           <p>Доставка включена в стоимость каждой позиции. Никаких доплат, кроме как за товар, не предусмотрено.</p>
         </div>
-        <div class="feature-card" style="text-align: left;">
+        <div class="feature-card">
           <h3>Заключается ли договор?</h3>
           <p>Да, заключаем договор поставки. У нас всё официально!</p>
         </div>
-        <div class="feature-card" style="text-align: left;">
+        <div class="feature-card">
           <h3>Наши преимущества?</h3>
           <p>Комплексное решение: консультация, подбор, сопровождение. Всё необходимое одним заказом.</p>
         </div>
-        <div class="feature-card" style="text-align: left;">
+        <div class="feature-card">
           <h3>Условия гарантии?</h3>
           <p>Гарантия до 12 месяцев + полная поддержка.</p>
         </div>
@@ -183,9 +181,9 @@
     </section>
 
     <!-- Клиенты -->
-    <section style="padding: 80px 20px; text-align: center; background: white;">
+    <section class="clients">
       <h2>Поставляли оборудование таким клубам, как:</h2>
-      <div style="display: flex; justify-content: center; gap: 60px; margin-top: 40px; flex-wrap: wrap; align-items: center;">
+      <div>
         <img src="/assets/clients/vrparty.png" alt="VR Party" style="height: 50px; opacity: 0.8;">
         <img src="/assets/clients/avatar.png" alt="AVATAR" style="height: 50px; opacity: 0.8;">
         <img src="/assets/clients/arena.png" alt="ARENA" style="height: 50px; opacity: 0.8;">
@@ -211,38 +209,11 @@
 
   <!-- Скрипты -->
 
-  <script defer src="/js/state.js"></script>
+  <script defer src="/public/js/state.js"></script>
   <script>
     // Год в подвале
     document.getElementById('year').textContent = new Date().getFullYear();
-
-    // Счётчик корзины
-    document.addEventListener('DOMContentLoaded', () => {
-      const cartCount = document.getElementById('cart-count-header');
-      const savedCart = JSON.parse(localStorage.getItem('bizon-cart')) || [];
-      cartCount.textContent = savedCart.length;
-
-      // Показать хиты продаж (если нужно)
-      const container = document.getElementById('bestsellers-list');
-      if (container && window.productsData) {
-        const hits = productsData
-          .filter(p => p.tags.includes('хит'))
-          .slice(0, 4);
-
-        hits.forEach(p => {
-          const card = document.createElement('div');
-          card.className = 'product-card';
-          card.innerHTML = `
-            <img src="${p.image}" alt="${p.name}" onerror="this.src='/assets/products/placeholder.jpg'">
-            <h4>${p.name}</h4>
-            <div class="product-price">${p.price} ₽</div>
-          `;
-          card.onclick = () => (window.location.href = 'catalog.html');
-          container.appendChild(card);
-        });
-      }
-    });
   </script>
-  <script defer src="/js/main.js"></script>
+  <script defer src="/public/js/main.js"></script>
 </body>
 </html>

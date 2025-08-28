@@ -169,15 +169,11 @@ body.modal-open .header {
   border-radius: 6px;
   font-weight: 500;
   font-size: 15px;
-  transition: all 0.3s ease;
-  opacity: 0.9;
+
+  
 }
 
-.nav-list a:hover {
-  background: rgba(255, 255, 255, 0.2);
-  opacity: 1;
-  transform: translateY(-2px);
-}
+
 
 .nav-list a.active {
   background: #3b82f6;

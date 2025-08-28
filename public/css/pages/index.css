@@ -7,20 +7,20 @@
 
 body {
   font-family: 'Inter', sans-serif;
-
   color: #e2e8f0;
   line-height: 1.6;
   overflow-x: hidden;
-  
+  background: linear-gradient(135deg, #0f172a 0%, #0c1220 100%);
+  position: relative;
 }
 
 /* ==================== ПУЛЬСЫ — ФИКСИРОВАННЫЕ И ЗА РАМКАМИ ==================== */
 .bg-overlay {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: 200%;
   pointer-events: none;
   z-index: -2;
   overflow: visible;
@@ -41,24 +41,49 @@ body {
 }
 
 .pulse-1 {
-  top: 75%;
-  left: 75%;
+  top: 75vh;
+  left: 75vw;
   background: #0409AC;
-  animation: pulse 6s ease-in-out infinite;
+ 
 }
 
 .pulse-2 {
-  bottom: 65%;
-  right: 80%;
+  bottom: 65vh;
+  right: 80vw;
   background: #0409AC;
-  animation: pulse 6s ease-in-out infinite 3s;
+  
 }
 
 .pulse-3 {
-  bottom: 90%;
-  right: 5%;
+  bottom: 80vh;
+  right: 95vw;
   background: #0409AC;
-  animation: pulse 6s ease-in-out infinite 1.5s;
+  
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+}
+
+/* ==================== ГЛАВНЫЕ СТИЛИ ==================== */
+main > section {
+  position: relative;
+  z-index: 1;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 /* ==================== ПАРАЛЛАКС ЭФФЕКТ ДЛЯ ГЕРОЯ ==================== */
@@ -69,13 +94,11 @@ body {
   overflow: visible;
 }
 
-
 /* ==================== ГЛУБИНА ЧЕРЕЗ ТЕНИ И СЛОИ ==================== */
 main > section {
   position: relative;
   z-index: 1;
 }
-
 
 /* ==================== ПЛАВНЫЙ СКРОЛЛ И ОБЪЁМ ==================== */
 html {
@@ -96,9 +119,9 @@ section {
   align-items: center;
   justify-content: center;
   gap: 60px;
-  padding: 100px 20px 80px;
-  min-height: 100vh;
   position: relative;
+  padding: 20px 20px;
+  
 }
 
 .hero-content {
@@ -118,10 +141,7 @@ section {
   background: #ffffff;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
- 
 }
-
-
 
 .hero-subtitle {
   font-size: 1.2rem;
@@ -167,13 +187,18 @@ section {
   overflow: hidden;
   position: relative;
   border: 2px solid rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
+  animation: float 6s ease-in-out infinite;
+}
+
+.hero-image::before {
   content: "";
+  position: absolute;
   inset: 0;
   border-radius: 16px;
   pointer-events: none;
-  box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
+  box-shadow: inset 0 0 30px rgba(59, 130, 246, 0.3);
 }
-
 
 .hero-image img {
   width: 100%;
@@ -181,13 +206,23 @@ section {
   transition: transform 0.4s ease, box-shadow 0.4s ease;
 }
 
-
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
 
 /* ==================== ПРЕИМУЩЕСТВА ==================== */
 .features {
   padding: 100px 20px;
   text-align: center;
-  
+  position: relative;
 }
 
 .features h2 {
@@ -206,12 +241,11 @@ section {
   gap: 30px;
   max-width: 1200px;
   margin: 0 auto;
-  
 }
 
 .feature-card {
   padding: 32px;
-
+  background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(59, 130, 246, 0.2);
   border-radius: 16px;
@@ -226,7 +260,7 @@ section {
   content: "";
   position: absolute;
   inset: 0;
-
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent);
   opacity: 0;
   transition: opacity 0.3s ease;
   z-index: 0;
@@ -255,21 +289,117 @@ section {
   color: #e2e8f0;
   margin-bottom: 14px;
   font-weight: 600;
+  position: relative;
+  z-index: 1;
 }
 
 .feature-card p {
   color: #94a3b8;
   line-height: 1.6;
   font-size: 0.95rem;
+  position: relative;
+  z-index: 1;
+}
+
+.traid-in {
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* ==================== TRADE-IN (ЦЕНТРИРОВАН) ==================== */
+.trade-in {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 100px 20px;
+  text-align: center;
+}
+
+.trade-in h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.8rem;
+  margin-bottom: 30px;
+  background: linear-gradient(to right, var(--secondary-color), var(--primary-color));
+  background-clip: text;
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+}
+
+.trade-in p {
+  font-size: 1.1rem;
+  color: var(--text-subtle);
+  margin-bottom: 30px;
+}
+
+.trade-in-steps {
+  text-align: left;
+  margin: 30px 0;
+  padding-left: 20px;
+}
+
+.trade-in-steps p {
+  margin-bottom: 15px;
+  position: relative;
+  padding-left: 30px;
+  text-align: left;
+}
+
+.trade-in-steps p::before {
+  content: attr(data-step);
+  color: var(--primary-color);
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+}
+
+/* ==================== КЛИЕНТЫ ==================== */
+.clients {
+  padding: 100px 20px;
+  text-align: center;
+  position: relative;
+}
+
+.clients h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.8rem;
+  margin-bottom: 60px;
+  background: linear-gradient(to right, #60a5fa, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+}
+
+.clients-grid {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 50px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.client-logo {
+  height: 60px;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+  filter: grayscale(100%);
+}
+
+.client-logo:hover {
+  opacity: 1;
+  filter: grayscale(0);
+  transform: scale(1.1);
 }
 
 /* ==================== CTA (ПРИЗЫВ К ДЕЙСТВИЮ) ==================== */
 .cta {
   padding: 100px 20px;
   text-align: center;
-  background: linear-gradient(135deg, #0f172a, #1e293b);
-  border-top: 1px solid rgba(59, 130, 246, 0.2);
   position: relative;
+  background: rgba(15, 23, 42, 0.4);
+  border-top: 1px solid rgba(59, 130, 246, 0.2);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 .cta::before {
@@ -283,7 +413,7 @@ section {
 }
 
 .cta-content {
-  max-width: 600px;
+  max-width: 700px;
   margin: 0 auto;
 }
 
@@ -302,6 +432,26 @@ section {
   opacity: 0.9;
 }
 
+.cta-list {
+  text-align: left;
+  margin: 30px 0;
+  padding-left: 20px;
+}
+
+.cta-list p {
+  margin-bottom: 15px;
+  position: relative;
+  padding-left: 30px;
+}
+
+.cta-list p::before {
+  content: "✓";
+  color: #3b82f6;
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+}
+
 /* ==================== КНОПКИ ==================== */
 .btn-primary,
 .btn-secondary,
@@ -317,17 +467,16 @@ section {
   position: relative;
   overflow: hidden;
   z-index: 1;
+  border: none;
 }
 
 .btn-primary {
-  background: #3b82f6;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
-  border: none;
   box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
 }
 
 .btn-primary:hover {
-  background: #2563eb;
   transform: translateY(-3px);
   box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
 }
@@ -358,13 +507,42 @@ section {
   box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
 }
 
+/* ==================== FOOTER ==================== */
+footer {
+  padding: 40px 20px;
+  text-align: center;
+  background: rgba(15, 23, 42, 0.8);
+  border-top: 1px solid rgba(59, 130, 246, 0.2);
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
 /* ==================== АДАПТИВ ==================== */
-@media (max-width: 900px) {
+@media (max-width: 1200px) {
+  .hero {
+    gap: 40px;
+  }
+
+  .hero h1 {
+    font-size: 3.2rem;
+  }
+
+  .hero-image {
+    max-width: 450px;
+  }
+}
+
+@media (max-width: 992px) {
   .hero {
     flex-direction: column;
     text-align: center;
     padding: 80px 20px;
     min-height: auto;
+    gap: 40px;
+  }
+
+  .hero-content {
+    align-items: center;
   }
 
   .hero-trust {
@@ -375,14 +553,25 @@ section {
     justify-content: center;
   }
 
-  .features h2, .cta h2 {
+  .features h2, .cta h2, .clients h2, .trade-in h2 {
     font-size: 2.4rem;
+  }
+
+ 
+
+  .hero-image {
+    max-width: 100%;
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .hero h1 {
-    font-size: 2.6rem;
+    font-size: 2.8rem;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+    align-items: center;
   }
 
   .btn-secondary {
@@ -390,7 +579,127 @@ section {
     margin-top: 10px;
   }
 
-  .hero-image {
-    max-width: 100%;
+  
+
+
+
+  .hero-trust {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .clients-grid {
+    gap: 30px;
+  }
+
+  .client-logo {
+    height: 40px;
+  }
+
+  .cta h2 {
+    font-size: 2.2rem;
+  }
+
+  .trade-in h2 {
+    font-size: 2.2rem;
+  }
+
+  .features h2 {
+    font-size: 2.2rem;
+  }
+
+  .clients h2 {
+    font-size: 2.2rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .hero {
+    padding: 60px 20px;
+    gap: 30px;
+  }
+
+  .hero h1 {
+    font-size: 2.4rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1.1rem;
+  }
+
+  .hero-buttons {
+    gap: 12px;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-outline {
+    padding: 12px 24px;
+    font-size: 15px;
+  }
+
+  .features h2,
+  .cta h2,
+  .clients h2,
+  .trade-in h2 {
+    font-size: 2rem;
+  }
+
+  .feature-card {
+    padding: 24px;
+  }
+
+  .feature-icon {
+    font-size: 2.4rem;
+  }
+
+  .trade-in-steps p,
+  .cta-list p {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero h1 {
+    font-size: 2.2rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-outline {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+
+  .features h2,
+  .cta h2,
+  .clients h2,
+  .trade-in h2 {
+    font-size: 1.8rem;
+  }
+
+  .feature-card {
+    padding: 20px;
+  }
+
+  .feature-icon {
+    font-size: 2.2rem;
+  }
+
+  .trade-in-steps p,
+  .cta-list p {
+    font-size: 0.9rem;
+  }
+
+  .client-logo {
+    height: 30px;
   }
 }
