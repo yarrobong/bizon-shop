@@ -369,53 +369,106 @@ app.delete('/api/categories/:id', async (req, res) => {
 app.get('/api/orders', async (req, res) => {
   try {
     if (pool) {
-      // Обновленный запрос с корректной обработкой NULL значений
-      const result = await pool.query(`
+      // Сначала получаем все заказы
+      const ordersResult = await pool.query(`
         SELECT 
-          o.id, 
-          o.phone, 
-          o.comment, 
-          o.total_amount, 
-          o.created_at, 
-          o.status,
-          COALESCE((
-            SELECT json_agg(
-              json_build_object(
-                'product', json_build_object(
-                  'id', oi.product_id, 
-                  'title', oi.product_title, 
-                  'price', oi.price_per_unit
-                ), 
-                'qty', oi.quantity
-              )
-            )
-            FROM order_items oi 
-            WHERE oi.order_id = o.id
-          ), '[]') as cart
-        FROM orders o
-        ORDER BY o.created_at DESC
+          id, 
+          phone, 
+          comment, 
+          total_amount, 
+          created_at, 
+          COALESCE(status, 'новый') as status
+        FROM orders 
+        ORDER BY created_at DESC
       `);
-      
-      // Обрабатываем результаты, чтобы корректно отобразить NULL значения
-      const orders = result.rows.map(order => ({
-        ...order,
-        phone: order.phone || '',
-        comment: order.comment || '',
-        status: order.status || 'новый',
-        cart: order.cart || []
+
+      // Для каждого заказа получаем его позиции
+      const ordersWithItems = await Promise.all(ordersResult.rows.map(async (order) => {
+        const itemsResult = await pool.query(`
+          SELECT 
+            product_id,
+            product_title, 
+            quantity,
+            price_per_unit,
+            (quantity * price_per_unit) as total_price
+          FROM order_items 
+          WHERE order_id = $1
+          ORDER BY id
+        `, [order.id]);
+
+        return {
+          ...order,
+          items: itemsResult.rows || []
+        };
       }));
-      
-      res.json(orders);
+
+      res.json(ordersWithItems);
     } else {
       res.status(500).json({ error: 'База данных не настроена' });
     }
   } catch (err) {
     console.error('Ошибка загрузки заказов:', err);
-    console.error('Stack trace:', err.stack);
+    // Выводим полный стек ошибки для отладки
+    console.error('Stack trace:', err.stack); 
     res.status(500).json({ error: 'Не удалось загрузить заказы: ' + err.message });
   }
 });
+// === API: Обновить статус заказа ===
+app.put('/api/orders/:id/status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
 
+    // Базовая валидация статуса
+    const validStatuses = ['новый', 'в обработке', 'отправлен', 'доставлен', 'отменен'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Недопустимый статус' });
+    }
+
+    if (pool) {
+      const result = await pool.query(
+        'UPDATE orders SET status = $1 WHERE id = $2 RETURNING id',
+        [status, id]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Заказ не найден' });
+      }
+
+      res.json({ success: true, message: 'Статус обновлен' });
+    } else {
+      res.status(500).json({ error: 'База данных не настроена' });
+    }
+  } catch (err) {
+    console.error('Ошибка обновления статуса заказа:', err);
+    res.status(500).json({ error: 'Не удалось обновить статус заказа' });
+  }
+});
+// === API: Удалить заказ ===
+app.delete('/api/orders/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (pool) {
+      // Сначала удаляем все позиции заказа
+      await pool.query('DELETE FROM order_items WHERE order_id = $1', [id]);
+      
+      // Потом удаляем сам заказ
+      const result = await pool.query('DELETE FROM orders WHERE id = $1 RETURNING id', [id]);
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Заказ не найден' });
+      }
+
+      res.json({ success: true, message: 'Заказ удален успешно' });
+    } else {
+      res.status(500).json({ error: 'База данных не настроена' });
+    }
+  } catch (err) {
+    console.error('Ошибка удаления заказа:', err);
+    res.status(500).json({ error: 'Не удалось удалить заказ: ' + err.message });
+  }
+});
 // ... (всё, что у тебя уже есть внизу файла)
 
 
