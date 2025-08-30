@@ -1,5 +1,3 @@
-// admin.js
-
 // В самом начале admin.js, замените старую проверку на эту:
 // Проверка авторизации
 if (localStorage.getItem('isAdmin') !== 'true') {
@@ -12,6 +10,8 @@ if (localStorage.getItem('isAdmin') !== 'true') {
 class AdminPanel {
     constructor() {
         this.currentTab = 'products';
+        this.images = []; // Массив для хранения изображений
+        this.draggedImage = null;
         this.init();
     }
 
@@ -82,6 +82,9 @@ class AdminPanel {
             e.preventDefault();
             this.saveCategory();
         });
+
+        // Настройка drag & drop для изображений
+        this.setupImageEventListeners();
     }
 
     switchTab(tabName) {
@@ -96,6 +99,248 @@ class AdminPanel {
         document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
         
         this.currentTab = tabName;
+    }
+
+    setupImageEventListeners() {
+        // Кнопка добавления изображения через файловый диалог
+        const addImageBtn = document.getElementById('add-image-btn');
+        if (addImageBtn) {
+            addImageBtn.addEventListener('click', () => {
+                // Создаем скрытый input для файлов
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'image/*';
+                fileInput.multiple = true;
+                fileInput.style.display = 'none';
+                
+                fileInput.addEventListener('change', (e) => {
+                    this.handleFileSelect(e.target.files);
+                });
+                
+                document.body.appendChild(fileInput);
+                fileInput.click();
+                document.body.removeChild(fileInput);
+            });
+        }
+
+        // Настройка drag & drop
+        const dropZone = document.getElementById('images-drop-zone');
+        if (dropZone) {
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('drag-over');
+            });
+
+            dropZone.addEventListener('dragleave', (e) => {
+                // Проверяем, действительно ли курсор вышел за пределы drop zone
+                if (!dropZone.contains(e.relatedTarget)) {
+                    dropZone.classList.remove('drag-over');
+                }
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('drag-over');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    this.handleFileSelect(files);
+                }
+            });
+        }
+    }
+
+    // Обработка выбранных файлов (и через drag & drop, и через файловый диалог)
+    async handleFileSelect(files) {
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            if (file.type.startsWith('image/')) {
+                try {
+                    // Здесь должна быть логика загрузки файла на сервер
+                    // Пока используем временный URL для предпросмотра
+                    const imageUrl = URL.createObjectURL(file);
+                    this.addImageField({ url: imageUrl, alt: file.name });
+                } catch (error) {
+                    console.error('Ошибка при обработке файла:', error);
+                    this.showMessage('Ошибка при обработке изображения', 'error');
+                }
+            }
+        }
+    }
+
+    // Добавить новое поле для изображения
+    addImageField(imageData = null) {
+        const container = document.getElementById('images-container');
+        const dropHint = document.getElementById('drop-hint');
+        
+        if (!container) return;
+
+        // Скрываем подсказку, если есть изображения
+        if (dropHint) {
+            dropHint.classList.remove('show');
+        }
+
+        const imageId = Date.now() + Math.floor(Math.random() * 1000); // Уникальный ID
+        const imageItem = document.createElement('div');
+        imageItem.className = 'image-item';
+        imageItem.dataset.id = imageId;
+        imageItem.draggable = true;
+
+        const imageUrl = imageData?.url || '';
+        const imageAlt = imageData?.alt || '';
+
+        imageItem.innerHTML = `
+            ${imageUrl ? 
+                `<img src="${imageUrl}" alt="${imageAlt}" class="image-preview" onerror="this.src='/assets/placeholder.png'">` :
+                `<div class="image-preview-placeholder">Нет изображения</div>`
+            }
+            <button type="button" class="delete-image-btn" onclick="adminPanel.deleteImage(${imageId})">×</button>
+            <input type="hidden" class="image-input" value="${imageUrl}" data-id="${imageId}">
+        `;
+
+        container.appendChild(imageItem);
+
+        // Добавляем drag & drop события
+        this.setupDragEvents(imageItem);
+
+        // Сохраняем изображение в массив
+        this.images.push({
+            id: imageId,
+            url: imageUrl,
+            alt: imageAlt
+        });
+
+        // Показываем кнопку удаления при наведении
+        imageItem.addEventListener('mouseenter', () => {
+            const deleteBtn = imageItem.querySelector('.delete-image-btn');
+            if (deleteBtn) {
+                deleteBtn.style.opacity = '1';
+            }
+        });
+
+        imageItem.addEventListener('mouseleave', () => {
+            const deleteBtn = imageItem.querySelector('.delete-image-btn');
+            if (deleteBtn) {
+                deleteBtn.style.opacity = '0';
+            }
+        });
+    }
+
+    // Настройка событий перетаскивания для изображения
+    setupDragEvents(imageItem) {
+        imageItem.addEventListener('dragstart', (e) => {
+            this.draggedImage = imageItem;
+            setTimeout(() => imageItem.classList.add('dragging'), 0);
+        });
+
+        imageItem.addEventListener('dragend', () => {
+            imageItem.classList.remove('dragging');
+            this.draggedImage = null;
+        });
+
+        const container = document.getElementById('images-container');
+        container.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const afterElement = this.getDragAfterElement(container, e.clientX);
+            const draggable = this.draggedImage;
+            if (draggable && afterElement !== draggable && afterElement !== draggable.nextSibling) {
+                if (afterElement == null) {
+                    container.appendChild(draggable);
+                } else {
+                    container.insertBefore(draggable, afterElement);
+                }
+            }
+        });
+    }
+
+    // Получение элемента после которого нужно вставить перетаскиваемый элемент (горизонтальная сортировка)
+    getDragAfterElement(container, x) {
+        const draggableElements = [...container.querySelectorAll('.image-item:not(.dragging)')];
+
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = x - box.left - box.width / 2;
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    // Удалить изображение
+    deleteImage(imageId) {
+        const imageItem = document.querySelector(`.image-item[data-id="${imageId}"]`);
+        if (imageItem) {
+            imageItem.remove();
+            // Удаляем из массива
+            this.images = this.images.filter(img => img.id !== imageId);
+            
+            // Показываем подсказку, если нет изображений
+            const container = document.getElementById('images-container');
+            const dropHint = document.getElementById('drop-hint');
+            if (container && dropHint && container.children.length === 0) {
+                dropHint.classList.add('show');
+            }
+        }
+    }
+
+    // Очистить все поля изображений
+    clearImageFields() {
+        const container = document.getElementById('images-container');
+        const dropHint = document.getElementById('drop-hint');
+        
+        if (container) {
+            container.innerHTML = '';
+        }
+        
+        if (dropHint) {
+            dropHint.classList.add('show');
+        }
+        
+        this.images = [];
+    }
+
+    // Загрузить изображения в форму
+    loadImagesToForm(images) {
+        this.clearImageFields();
+        
+        if (images && Array.isArray(images) && images.length > 0) {
+            images.forEach(image => {
+                this.addImageField(image);
+            });
+            
+            // Скрываем подсказку, если есть изображения
+            const dropHint = document.getElementById('drop-hint');
+            if (dropHint) {
+                dropHint.classList.remove('show');
+            }
+        } else {
+            // Показываем подсказку для нового товара
+            const dropHint = document.getElementById('drop-hint');
+            if (dropHint) {
+                dropHint.classList.add('show');
+            }
+        }
+    }
+
+    // Получить все изображения из формы
+    getImagesFromForm() {
+        const imageItems = document.querySelectorAll('.image-item');
+        const images = [];
+        
+        imageItems.forEach((item, index) => {
+            const input = item.querySelector('.image-input');
+            const url = input ? input.value.trim() : '';
+            if (url) {
+                images.push({
+                    url: url,
+                    alt: `Изображение ${index + 1}`
+                });
+            }
+        });
+        
+        return images;
     }
 
     async loadProducts() {
@@ -434,23 +679,26 @@ if (order.items && Array.isArray(order.items) && order.items.length > 0) {
         }
 
         if (product) {
-            console.log('Редактируем товар:', product); // <-- Добавлено для отладки
+            console.log('Редактируем товар:', product);
             title.textContent = 'Редактировать товар';
             document.getElementById('product-id').value = product.id || '';
-            document.getElementById('product-title').value = product.title || '';
+            
+            const titleValue = product.title || '';
+            console.log('DEBUG openProductModal: Setting title to', `"${titleValue}"`);
+            document.getElementById('product-title').value = titleValue;
+            console.log('DEBUG openProductModal: Input value is now', `"${document.getElementById('product-title').value}"`);
+            
             document.getElementById('product-description').value = product.description || '';
             document.getElementById('product-price').value = product.price || '';
             
             // Установка категории
             const categorySelect = document.getElementById('product-category');
             if (categorySelect) {
-                console.log('Устанавливаем категорию в форму:', product.category); // <-- Добавлено для отладки
-                // Ищем опцию с нужным значением
+                console.log('Устанавливаем категорию в форму:', product.category);
                 const optionToSelect = Array.from(categorySelect.options).find(option => option.value === product.category);
                 if (optionToSelect) {
                     categorySelect.value = product.category;
                 } else {
-                    // Если категория не найдена в списке, добавим её временно
                     const newOption = new Option(product.category, product.category, true, true);
                     categorySelect.add(newOption);
                     categorySelect.value = product.category;
@@ -458,14 +706,17 @@ if (order.items && Array.isArray(order.items) && order.items.length > 0) {
             }
             
             document.getElementById('product-available').checked = product.available !== false;
-            // Предполагаем, что images - массив
-            const imageUrl = product.images && product.images.length > 0 ? product.images[0].url : '';
-            document.getElementById('product-image').value = imageUrl || '';
+            
+            // Загрузка изображений
+            this.loadImagesToForm(product.images || []);
         } else {
             title.textContent = 'Добавить товар';
             form.reset();
             document.getElementById('product-id').value = '';
             document.getElementById('product-available').checked = true;
+            
+            // Очистка и показ подсказки для нового товара
+            this.clearImageFields();
         }
 
         modal.style.display = 'block';
@@ -492,81 +743,121 @@ if (order.items && Array.isArray(order.items) && order.items.length > 0) {
     }
 
     async saveProduct() {
-        try {
-            console.log('Начало saveProduct'); // <-- Добавлено для отладки
-            const form = document.getElementById('product-form');
-            if (!form) {
-                console.error('Форма product-form не найдена');
-                return;
-            }
-
-            const formData = new FormData(form);
-            console.log('Данные из формы:', Object.fromEntries(formData)); // <-- Добавлено для отладки
-
-            const rawTitle = formData.get('product-title');
-            console.log('Полученное значение product-title:', `"${rawTitle}"`); // <-- Добавлено для отладки
-            console.log('Тип значения product-title:', typeof rawTitle); // <-- Добавлено для отладки
-
-            const productData = {
-                title: rawTitle?.trim(),
-                description: formData.get('product-description')?.trim(),
-                price: parseFloat(formData.get('product-price')) || 0,
-                category: formData.get('product-category')?.trim(),
-                available: formData.get('product-available') === 'on',
-                images: []
-            };
-
-            console.log('Обработанный productData.title:', `"${productData.title}"`); // <-- Добавлено для отладки
-
-            const imageUrl = formData.get('product-image')?.trim();
-            if (imageUrl) {
-                productData.images = [{ url: imageUrl, alt: productData.title || 'Изображение товара' }];
-            }
-
-            // Валидация
-            if (!productData.title) {
-                console.warn('Валидация не пройдена: productData.title пуст'); // <-- Добавлено для отладки
-                alert('Пожалуйста, укажите название товара');
-                return;
-            }
-
-            if (productData.price <= 0) {
-                alert('Пожалуйста, укажите корректную цену');
-                return;
-            }
-
-            if (!productData.category) {
-                alert('Пожалуйста, выберите категорию');
-                return;
-            }
-
-            const productId = formData.get('product-id');
-            const method = productId ? 'PUT' : 'POST';
-            const url = productId ? `/api/products/${productId}` : '/api/products';
-
-            console.log('Отправка данных товара:', { method, url, productData });
-
-            const response = await fetch(url, {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(productData)
-            });
-
-            if (response.ok) {
-                this.closeModal('product-modal');
-                await this.loadProducts();
-                this.showMessage('Товар сохранен успешно!', 'success');
-            } else {
-                const errorText = await response.text();
-                throw new Error(`Ошибка сохранения товара: ${response.status} - ${errorText}`);
-            }
-        } catch (error) {
-            console.error('Ошибка сохранения товара:', error);
-            this.showMessage(`Ошибка сохранения товара: ${error.message}`, 'error');
+    try {
+        console.log('Начало saveProduct');
+        
+        // 1. Получаем форму
+        const form = document.getElementById('product-form');
+        if (!form) {
+            console.error('Форма product-form не найдена');
+            this.showMessage('Ошибка: Форма товара не найдена', 'error');
+            return;
         }
+
+        // 2. Получаем данные из формы
+        const formData = new FormData(form);
+        console.log('Данные из формы (все):', Object.fromEntries(formData));
+
+        // 3. Извлекаем и обрабатываем каждое поле
+        // Название (title) - критически важное поле
+        const rawTitle = formData.get('product-title');
+        console.log('Полученное значение product-title (до обработки):', `"${rawTitle}"`, typeof rawTitle);
+        
+        // Обеспечиваем, что title будет непустой строкой
+        let title = '';
+        if (rawTitle !== null && rawTitle !== undefined) {
+            title = String(rawTitle).trim();
+        }
+        console.log('Обработанный title:', `"${title}"`);
+
+        // Остальные поля
+        const description = (formData.get('product-description') || '').toString().trim();
+        const rawPrice = formData.get('product-price');
+        const price = rawPrice !== null && rawPrice !== '' ? parseFloat(rawPrice) : 0;
+        const category = (formData.get('product-category') || '').toString().trim();
+        const available = formData.get('product-available') === 'on';
+
+        // 4. Получаем изображения из формы
+        const images = this.getImagesFromForm();
+        console.log('Полученные изображения:', images);
+
+        // 5. Формируем объект productData
+        const productData = {
+            title: title,
+            description: description,
+            price: price,
+            category: category,
+            available: available,
+            images: images
+        };
+
+        console.log('Сформированный productData для отправки:', productData);
+
+        // 6. ВАЛИДАЦИЯ
+        if (!productData.title) {
+            console.warn('Валидация не пройдена: productData.title пуст или состоит только из пробелов');
+            this.showMessage('Пожалуйста, укажите название товара', 'error');
+            return;
+        }
+
+        if (isNaN(productData.price) || productData.price <= 0) {
+            this.showMessage('Пожалуйста, укажите корректную цену (больше 0)', 'error');
+            return;
+        }
+
+        if (!productData.category) {
+            this.showMessage('Пожалуйста, выберите категорию', 'error');
+            return;
+        }
+
+        // 7. Определяем метод и URL для fetch
+        const productId = formData.get('product-id'); // Скрытое поле с ID
+        const isUpdate = productId && productId.trim() !== '';
+        
+        const method = isUpdate ? 'PUT' : 'POST';
+        const url = isUpdate ? `/api/products/${productId.trim()}` : '/api/products';
+
+        console.log(`Отправка данных товара: ${method} ${url}`, productData);
+
+        // 8. Отправляем данные на сервер
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(productData)
+        });
+
+        console.log('Ответ от сервера:', response.status, response.statusText);
+
+        // 9. Обрабатываем ответ
+        if (response.ok) {
+            // Успех
+            this.closeModal('product-modal');
+            await this.loadProducts(); // Перезагружаем список товаров
+            this.showMessage(
+                isUpdate ? 'Товар обновлен успешно!' : 'Товар создан успешно!', 
+                'success'
+            );
+        } else {
+            // Ошибка от сервера
+            let errorMessage = `Ошибка сохранения товара: ${response.status}`;
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.message || errorData.error || errorMessage;
+            } catch (e) {
+                // Если не удалось распарсить JSON, используем текст ответа
+                const errorText = await response.text().catch(() => '');
+                errorMessage = errorText || errorMessage;
+            }
+            throw new Error(errorMessage);
+        }
+    } catch (error) {
+        // 10. Обрабатываем любые ошибки (сетевые, логические, от сервера)
+        console.error('Ошибка в функции saveProduct:', error);
+        this.showMessage(`Ошибка сохранения товара: ${error.message}`, 'error');
     }
+}
 
     async saveCategory() {
         try {

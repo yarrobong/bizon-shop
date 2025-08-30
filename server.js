@@ -389,8 +389,8 @@ app.get('/api/orders', async (req, res) => {
             product_id,
             product_title, 
             quantity,
-            price_per_unit, // Цена за единицу
-            (quantity * price_per_unit) as total_price // Общая цена позиции
+            price_per_unit, 
+            (quantity * price_per_unit) as total_price 
           FROM order_items 
           WHERE order_id = $1
           ORDER BY id
