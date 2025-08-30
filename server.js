@@ -389,8 +389,8 @@ app.get('/api/orders', async (req, res) => {
             product_id,
             product_title, 
             quantity,
-            price_per_unit,
-            (quantity * price_per_unit) as total_price
+            price_per_unit, // Цена за единицу
+            (quantity * price_per_unit) as total_price // Общая цена позиции
           FROM order_items 
           WHERE order_id = $1
           ORDER BY id
@@ -398,7 +398,7 @@ app.get('/api/orders', async (req, res) => {
 
         return {
           ...order,
-          items: itemsResult.rows || []
+          items: itemsResult.rows || [] // Передаем позиции с price_per_unit
         };
       }));
 
@@ -408,11 +408,11 @@ app.get('/api/orders', async (req, res) => {
     }
   } catch (err) {
     console.error('Ошибка загрузки заказов:', err);
-    // Выводим полный стек ошибки для отладки
     console.error('Stack trace:', err.stack); 
     res.status(500).json({ error: 'Не удалось загрузить заказы: ' + err.message });
   }
 });
+
 // === API: Обновить статус заказа ===
 app.put('/api/orders/:id/status', async (req, res) => {
   try {

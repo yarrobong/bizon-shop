@@ -284,38 +284,41 @@ class AdminPanel {
         };
 
         // Создаем таблицу товаров
-        let itemsHTML = '';
-        let orderTotal = parseFloat(order.total_amount) || 0;
-        
-        if (order.items && Array.isArray(order.items) && order.items.length > 0) {
-            itemsHTML = `
-            <table class="order-items-table">
-                <thead>
-                    <tr>
-                        <th>Название</th>
-                        <th>Цена</th>
-                        <th>Кол-во</th>
-                        <th>Сумма</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${order.items.map(item => {
-                        const itemTotal = (parseFloat(item.price_per_unit) || 0) * (parseInt(item.quantity) || 0);
-                        return `
-                        <tr>
-                            <td>${this.escapeHtml(item.product_title || 'Неизвестный товар')}</td>
-                            <td>${this.formatPrice(item.price_per_unit)}</td>
-                            <td>${parseInt(item.quantity) || 0}</td>
-                            <td>${this.formatPrice(itemTotal)}</td>
-                        </tr>
-                        `;
-                    }).join('')}
-                </tbody>
-            </table>
-            `;
-        } else {
-            itemsHTML = '<p>Нет товаров</p>';
-        }
+let itemsHTML = '';
+let orderTotal = parseFloat(order.total_amount) || 0;
+
+if (order.items && Array.isArray(order.items) && order.items.length > 0) {
+    itemsHTML = `
+    <table class="order-items-table">
+        <thead>
+            <tr>
+                <th>Название</th>
+                <th>Цена за ед.</th> <!-- Изменено название -->
+                <th>Кол-во</th>
+                <th>Сумма</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${order.items.map(item => {
+                // Убедитесь, что используете price_per_unit из item
+                const pricePerUnit = parseFloat(item.price_per_unit) || 0;
+                const quantity = parseInt(item.quantity) || 0;
+                const itemTotal = pricePerUnit * quantity;
+                return `
+                <tr>
+                    <td>${this.escapeHtml(item.product_title || 'Неизвестный товар')}</td>
+                    <td>${this.formatPrice(pricePerUnit)}</td> <!-- Показываем цену за единицу -->
+                    <td>${quantity}</td>
+                    <td>${this.formatPrice(itemTotal)}</td>
+                </tr>
+                `;
+            }).join('')}
+        </tbody>
+    </table>
+    `;
+} else {
+    itemsHTML = '<p>Нет товаров</p>';
+}
 
         card.innerHTML = `
             <div class="order-header">
