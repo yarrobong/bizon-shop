@@ -147,94 +147,94 @@ class AdminPanel {
     }
 
     async loadCategories() {
-    try {
-        console.log('Загрузка категорий...');
-        const response = await fetch('/api/categories');
-        console.log('Ответ от /api/categories:', response.status);
-        
-        if (response.ok) {
-            const categories = await response.json();
-            console.log('Категории загружены:', categories);
-            this.renderCategories(categories);
-            this.loadCategoryOptions(categories); // Загружаем опции для селекта
-        } else {
-            // Если сервер вернул ошибку (например, 404 или 500)
-            console.warn(`API категорий вернул ошибку ${response.status}`);
+        try {
+            console.log('Загрузка категорий...');
+            const response = await fetch('/api/categories');
+            console.log('Ответ от /api/categories:', response.status);
+            
+            if (response.ok) {
+                const categories = await response.json();
+                console.log('Категории загружены:', categories);
+                this.renderCategories(categories);
+                this.loadCategoryOptions(categories); // Загружаем опции для селекта
+            } else {
+                // Если сервер вернул ошибку (например, 404 или 500)
+                console.warn(`API категорий вернул ошибку ${response.status}`);
+                // Передаем пустой массив, чтобы показать "Нет категорий"
+                this.renderCategories([]); 
+                this.loadCategoryOptions([]); 
+            }
+        } catch (error) {
+            // Если сетевая ошибка (например, нет соединения)
+            console.error('Сетевая ошибка при загрузке категорий:', error);
             // Передаем пустой массив, чтобы показать "Нет категорий"
             this.renderCategories([]); 
             this.loadCategoryOptions([]); 
         }
-    } catch (error) {
-        // Если сетевая ошибка (например, нет соединения)
-        console.error('Сетевая ошибка при загрузке категорий:', error);
-        // Передаем пустой массив, чтобы показать "Нет категорий"
-        this.renderCategories([]); 
-        this.loadCategoryOptions([]); 
-    }
-}
-
-renderCategories(categories) {
-    const container = document.getElementById('categories-list');
-    if (!container) {
-        console.error('Контейнер #categories-list не найден в DOM');
-        return;
     }
 
-    container.innerHTML = '';
-
-    if (!categories || !Array.isArray(categories) || categories.length === 0) {
-        container.innerHTML = '<div class="empty">Нет категорий</div>';
-        console.log('Нет категорий для отображения');
-        return;
-    }
-
-    console.log('Отрисовка категорий:', categories);
-    // Предполагаем, что categories - это массив объектов {id, name}
-    categories.forEach(category => {
-        // Проверка на существование обязательных полей
-        if (category.hasOwnProperty('id') && category.hasOwnProperty('name')) {
-            const item = document.createElement('div');
-            item.className = 'category-item';
-            item.innerHTML = `
-                <span>${this.escapeHtml(category.name)}</span>
-                <button onclick="adminPanel.deleteCategory(${category.id})" class="btn-danger">Удалить</button>
-            `;
-            container.appendChild(item);
-        } else {
-            console.warn('Некорректная структура категории:', category);
+    renderCategories(categories) {
+        const container = document.getElementById('categories-list');
+        if (!container) {
+            console.error('Контейнер #categories-list не найден в DOM');
+            return;
         }
-    });
-}
 
-loadCategoryOptions(categories) {
-    const categorySelect = document.getElementById('product-category');
-    if (!categorySelect) {
-        console.error('Элемент #product-category не найден в DOM');
-        return;
-    }
+        container.innerHTML = '';
 
-    categorySelect.innerHTML = '<option value="">Выберите категорию...</option>'; // Добавляем пустую опцию
-    
-    // Проверяем, что categories - это массив
-    if (!categories || !Array.isArray(categories)) {
-        console.warn('Категории не являются массивом:', categories);
-        return;
-    }
-
-    console.log('Загрузка опций категорий в селект:', categories);
-    // Предполагаем, что categories - это массив объектов {id, name}
-    categories.forEach(category => {
-        // Проверка на существование обязательных полей
-        if (category.hasOwnProperty('id') && category.hasOwnProperty('name')) {
-            const option = document.createElement('option');
-            option.value = category.name; // Используем имя категории как value
-            option.textContent = category.name;
-            categorySelect.appendChild(option);
-        } else {
-            console.warn('Некорректная структура категории для селекта:', category);
+        if (!categories || !Array.isArray(categories) || categories.length === 0) {
+            container.innerHTML = '<div class="empty">Нет категорий</div>';
+            console.log('Нет категорий для отображения');
+            return;
         }
-    });
-}
+
+        console.log('Отрисовка категорий:', categories);
+        // Предполагаем, что categories - это массив объектов {id, name}
+        categories.forEach(category => {
+            // Проверка на существование обязательных полей
+            if (category.hasOwnProperty('id') && category.hasOwnProperty('name')) {
+                const item = document.createElement('div');
+                item.className = 'category-item';
+                item.innerHTML = `
+                    <span>${this.escapeHtml(category.name)}</span>
+                    <button onclick="adminPanel.deleteCategory(${category.id})" class="btn-danger">Удалить</button>
+                `;
+                container.appendChild(item);
+            } else {
+                console.warn('Некорректная структура категории:', category);
+            }
+        });
+    }
+
+    loadCategoryOptions(categories) {
+        const categorySelect = document.getElementById('product-category');
+        if (!categorySelect) {
+            console.error('Элемент #product-category не найден в DOM');
+            return;
+        }
+
+        categorySelect.innerHTML = '<option value="">Выберите категорию...</option>'; // Добавляем пустую опцию
+        
+        // Проверяем, что categories - это массив
+        if (!categories || !Array.isArray(categories)) {
+            console.warn('Категории не являются массивом:', categories);
+            return;
+        }
+
+        console.log('Загрузка опций категорий в селект:', categories);
+        // Предполагаем, что categories - это массив объектов {id, name}
+        categories.forEach(category => {
+            // Проверка на существование обязательных полей
+            if (category.hasOwnProperty('id') && category.hasOwnProperty('name')) {
+                const option = document.createElement('option');
+                option.value = category.name; // Используем имя категории как value
+                option.textContent = category.name;
+                categorySelect.appendChild(option);
+            } else {
+                console.warn('Некорректная структура категории для селекта:', category);
+            }
+        });
+    }
 
     async loadOrders() {
         try {
@@ -292,6 +292,7 @@ loadCategoryOptions(categories) {
         }
 
         if (product) {
+            console.log('Редактируем товар:', product); // <-- Добавлено для отладки
             title.textContent = 'Редактировать товар';
             document.getElementById('product-id').value = product.id || '';
             document.getElementById('product-title').value = product.title || '';
@@ -301,6 +302,7 @@ loadCategoryOptions(categories) {
             // Установка категории
             const categorySelect = document.getElementById('product-category');
             if (categorySelect) {
+                console.log('Устанавливаем категорию в форму:', product.category); // <-- Добавлено для отладки
                 // Ищем опцию с нужным значением
                 const optionToSelect = Array.from(categorySelect.options).find(option => option.value === product.category);
                 if (optionToSelect) {
@@ -349,19 +351,30 @@ loadCategoryOptions(categories) {
 
     async saveProduct() {
         try {
+            console.log('Начало saveProduct'); // <-- Добавлено для отладки
             const form = document.getElementById('product-form');
-            if (!form) return;
+            if (!form) {
+                console.error('Форма product-form не найдена');
+                return;
+            }
 
             const formData = new FormData(form);
-            
+            console.log('Данные из формы:', Object.fromEntries(formData)); // <-- Добавлено для отладки
+
+            const rawTitle = formData.get('product-title');
+            console.log('Полученное значение product-title:', `"${rawTitle}"`); // <-- Добавлено для отладки
+            console.log('Тип значения product-title:', typeof rawTitle); // <-- Добавлено для отладки
+
             const productData = {
-                title: formData.get('product-title')?.trim(),
+                title: rawTitle?.trim(),
                 description: formData.get('product-description')?.trim(),
                 price: parseFloat(formData.get('product-price')) || 0,
                 category: formData.get('product-category')?.trim(),
                 available: formData.get('product-available') === 'on',
                 images: []
             };
+
+            console.log('Обработанный productData.title:', `"${productData.title}"`); // <-- Добавлено для отладки
 
             const imageUrl = formData.get('product-image')?.trim();
             if (imageUrl) {
@@ -370,6 +383,7 @@ loadCategoryOptions(categories) {
 
             // Валидация
             if (!productData.title) {
+                console.warn('Валидация не пройдена: productData.title пуст'); // <-- Добавлено для отладки
                 alert('Пожалуйста, укажите название товара');
                 return;
             }
@@ -412,7 +426,7 @@ loadCategoryOptions(categories) {
         }
     }
 
-     async saveCategory() {
+    async saveCategory() {
         try {
             const form = document.getElementById('category-form');
             if (!form) return;
