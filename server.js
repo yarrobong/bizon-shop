@@ -13,9 +13,6 @@ const bcrypt = require('bcryptjs');
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-
-
-
 // === Подключение к БД (только на Render) ===
 let pool;
 if (process.env.DATABASE_URL) {
@@ -28,24 +25,33 @@ if (process.env.DATABASE_URL) {
   });
 }
 
+// Установка часового пояса (если нужно)
+process.env.TZ = 'Europe/Moscow';
+
 // === API: Получить товары ===
 app.get('/api/products', async (req, res) => {
   try {
-   
     if (pool) {
-      // На Render — из БД
+      // Проверяем, запрашивает ли админ-панель все товары
+      const isAdmin = req.query.admin === 'true';
       
-      // Предполагая, что таблица products имеет колонки: id, title, description, price, tag, available, category, brand, compatibility, images_json
-      const result = await pool.query(`
+      let query = `
         SELECT 
           id, title, description, price, tag, available, category, brand, compatibility,
-          images_json as images -- Преобразуем images_json в images для фронтенда
+          images_json as images
         FROM products 
-        WHERE available = true 
-        ORDER BY id
-      `);
+      `;
       
-      res.json(result.rows); // Теперь каждая строка имеет поле 'images'
+      // Только для обычных пользователей фильтруем по доступности
+      // Для админа показываем все товары
+      if (!isAdmin) {
+        query += 'WHERE available = true ';
+      }
+      
+      query += 'ORDER BY id';
+      
+      const result = await pool.query(query);
+      res.json(result.rows);
     } else {
       console.warn('Подключение к БД не настроено или pool не инициализирован. Возвращается пустой список.');
       res.json([]);
@@ -58,105 +64,162 @@ app.get('/api/products', async (req, res) => {
 
 // === API: Оформить заказ ===
 app.post('/api/order', async (req, res) => {
+  console.log('=== НАЧАЛО ОБРАБОТКИ ЗАКАЗА ===');
+  console.log('Полученные данные:', req.body);
+
   const { phone, comment, cart } = req.body;
 
   // 1. Базовые проверки
   if (!phone || !cart || cart.length === 0) {
+    console.log('ОШИБКА: Недостаточно данных');
     return res.status(400).json({ success: false, error: 'Недостаточно данных' });
   }
 
-  // 2. Рассчитываем общую сумму
-  const total = cart.reduce((sum, item) => sum + (item.product?.price || 0) * item.qty, 0);
+  // 2. Проверка на дублирование запроса
+  const requestHash = JSON.stringify({ phone, comment, cart });
+  if (req.app.locals.lastOrderRequest === requestHash) {
+    console.log('ПРЕДУПРЕЖДЕНИЕ: Повторный запрос с теми же данными обнаружен');
+    return res.status(200).json({ 
+      success: true, 
+      message: 'Заказ уже обрабатывается',
+      orderId: req.app.locals.lastOrderId || null
+    });
+  }
+  
+  // Сохраняем хэш последнего запроса
+  req.app.locals.lastOrderRequest = requestHash;
+  
+  // Очищаем хэш через 30 секунд
+  setTimeout(() => {
+    if (req.app.locals.lastOrderRequest === requestHash) {
+      req.app.locals.lastOrderRequest = null;
+      req.app.locals.lastOrderId = null;
+    }
+  }, 30000);
 
-  // 3. Подготавливаем сообщение для Telegram (как у вас было)
-  const message = `
+  let orderId = null;
+  let orderSaved = false;
+  let telegramSent = false;
+
+  try {
+    // 3. Рассчитываем общую сумму
+    const total = cart.reduce((sum, item) => sum + (item.product?.price || 0) * item.qty, 0);
+    console.log('Рассчитанная сумма:', total);
+
+    // 4. Получаем московское время для сохранения в БД и Telegram
+    const moscowTimeObj = new Date(new Date().toLocaleString("en-US", {timeZone: 'Europe/Moscow'}));
+    const moscowTimeString = moscowTimeObj.toLocaleString('ru-RU', {
+      timeZone: 'Europe/Moscow',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+    console.log('Время заказа (Москва):', moscowTimeString);
+
+    // 5. Вставка основной информации о заказе в БД
+    if (pool) {
+      console.log('Сохранение заказа в БД...');
+      const orderResult = await pool.query(
+        'INSERT INTO orders (phone, comment, total_amount, created_at) VALUES ($1, $2, $3, $4) RETURNING id',
+        [phone, comment || '', total, moscowTimeObj]
+      );
+      orderId = orderResult.rows[0].id;
+      orderSaved = true;
+      req.app.locals.lastOrderId = orderId;
+      console.log('Заказ сохранен в БД с ID:', orderId);
+    } else {
+      console.warn('Подключение к БД отсутствует. Заказ не будет сохранен в БД.');
+    }
+
+    // 6. Вставка позиций заказа в БД
+    if (pool && orderId) {
+      console.log('Сохранение позиций заказа в БД...');
+      const itemInserts = cart.map(item => [
+        orderId,
+        item.product?.id,
+        item.product?.title || 'Неизвестный товар',
+        item.qty,
+        item.product?.price || 0
+      ]);
+
+      if (itemInserts.length > 0) {
+        const queryText = 'INSERT INTO order_items (order_id, product_id, product_title, quantity, price_per_unit) VALUES ';
+        const queryValues = [];
+        const placeholders = itemInserts.map((_, index) => {
+          const start = index * 5 + 1;
+          return `($${start}, $${start+1}, $${start+2}, $${start+3}, $${start+4})`;
+        }).join(', ');
+
+        itemInserts.forEach(item => {
+          queryValues.push(...item);
+        });
+
+        await pool.query(queryText + placeholders, queryValues);
+        console.log('Позиции заказа сохранены в БД');
+      }
+    }
+
+    // 7. Подготавливаем сообщение для Telegram
+    const message = `
 📦 *Новый заказ на BIZON!*
 📞 *Телефон:* \`${phone}\`
 💬 *Комментарий:* ${comment || 'не указан'}
 🛒 *Товары:*
 ${cart.map(item => `• ${item.product?.title || 'Неизвестный товар'} ×${item.qty} — ${(item.product?.price || 0) * item.qty} ₽`).join('\n')}
 💰 *Итого:* ${total} ₽
-🕐 ${new Date().toLocaleString('ru-RU')}
-  `.trim();
+🕐 ${moscowTimeString}
+`.trim();
 
-  // 4. Начинаем транзакцию (если возможно) или просто последовательные запросы
-  // Важно: обработка ошибок должна откатывать изменения, если часть операций прошла успешно
-  try {
-    let orderId = null;
+    console.log('Подготовленное сообщение для Telegram:', message);
 
-    // 5. Вставка основной информации о заказе в БД
-    if (pool) { // Проверяем, есть ли подключение к БД
-     
-        const orderResult = await pool.query(
-          'INSERT INTO orders (phone, comment, total_amount) VALUES ($1, $2, $3) RETURNING id',
-          [phone, comment || '', total]
-        );
-        orderId = orderResult.rows[0].id;
-       
-    } else {
-        console.warn('Подключение к БД отсутствует. Заказ не будет сохранен в БД.');
-    }
-
-    // 6. Вставка позиций заказа в БД
-    if (pool && orderId) {
-       
-        // Подготавливаем данные для batch insert
-        const itemInserts = cart.map(item => [
-            orderId,
-            item.product?.id,
-            item.product?.title || 'Неизвестный товар',
-            item.qty,
-            item.product?.price || 0
-        ]);
-
-        // Используем pg-format или строим SQL вручную для batch insert
-        // Пример с построением SQL (подходит для небольших объемов):
-        if (itemInserts.length > 0) {
-            const queryText = 'INSERT INTO order_items (order_id, product_id, product_title, quantity, price_per_unit) VALUES ';
-            const queryValues = [];
-            const placeholders = itemInserts.map((_, index) => {
-                const start = index * 5 + 1;
-                return `($${start}, $${start+1}, $${start+2}, $${start+3}, $${start+4})`;
-            }).join(', ');
-
-            itemInserts.forEach(item => {
-                queryValues.push(...item);
-            });
-
-            await pool.query(queryText + placeholders, queryValues);
-            
-        }
-    }
-
-    // 7. Отправка сообщения в Telegram
-   
+    // 8. Отправка сообщения в Telegram
     const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
     const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
-    // Исправленный URL (убран лишний пробел)
-    await axios.post(
-      `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
-      {
-        chat_id: CHAT_ID,
-        text: message,
-        parse_mode: 'Markdown',
-        disable_web_page_preview: true
+    if (BOT_TOKEN && CHAT_ID) {
+      try {
+        console.log('Отправка сообщения в Telegram...');
+        await axios.post(
+          `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
+          {
+            chat_id: CHAT_ID,
+            text: message,
+            parse_mode: 'Markdown',
+            disable_web_page_preview: true
+          }
+        );
+        telegramSent = true;
+        console.log('Сообщение успешно отправлено в Telegram');
+      } catch (telegramError) {
+        console.error('Ошибка отправки в Telegram:', telegramError.message);
+        // Не прерываем выполнение, если Telegram не работает
       }
-    );
+    } else {
+      console.warn('Токен Telegram бота или ID чата не настроены');
+    }
 
-
-    // 8. Отправка успешного ответа клиенту
-    res.json({ success: true });
+    // 9. Отправка успешного ответа клиенту
+    console.log('=== ЗАКАЗ УСПЕШНО ОБРАБОТАН ===');
+    res.json({ 
+      success: true, 
+      orderId: orderId,
+      savedToDB: orderSaved,
+      sentToTelegram: telegramSent
+    });
 
   } catch (error) {
-    console.error('Ошибка обработки заказа:', error);
+    console.error('КРИТИЧЕСКАЯ ОШИБКА обработки заказа:', error);
+    // Очищаем хэш при ошибке, чтобы можно было повторить попытку
+    req.app.locals.lastOrderRequest = null;
+    req.app.locals.lastOrderId = null;
+    
     // Отправляем клиенту сообщение об ошибке
     res.status(500).json({ success: false, error: 'Ошибка обработки заказа на сервере' });
-    // Важно: в production среде не стоит показывать клиенту детали внутренней ошибки сервера
   }
 });
-// server.js
-// ... (всё, что у тебя уже есть вверху файла)
 
 // === API: Получить товар по ID ===
 app.get('/api/products/:id', async (req, res) => {
@@ -408,7 +471,6 @@ app.get('/api/orders', async (req, res) => {
     }
   } catch (err) {
     console.error('Ошибка загрузки заказов:', err);
-    console.error('Stack trace:', err.stack); 
     res.status(500).json({ error: 'Не удалось загрузить заказы: ' + err.message });
   }
 });
@@ -444,6 +506,7 @@ app.put('/api/orders/:id/status', async (req, res) => {
     res.status(500).json({ error: 'Не удалось обновить статус заказа' });
   }
 });
+
 // === API: Удалить заказ ===
 app.delete('/api/orders/:id', async (req, res) => {
   try {
@@ -469,8 +532,6 @@ app.delete('/api/orders/:id', async (req, res) => {
     res.status(500).json({ error: 'Не удалось удалить заказ: ' + err.message });
   }
 });
-// ... (всё, что у тебя уже есть внизу файла)
-
 
 app.listen(PORT, () => {
   console.log(`✅ Сервер запущен на http://localhost:${PORT}`);

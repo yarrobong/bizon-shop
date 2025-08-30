@@ -2,7 +2,6 @@
 // DOM-элементы
 const productsContainer = document.getElementById('products');
 const searchInput = document.getElementById('search-input');
-
 const categoryButtons = document.querySelectorAll('.tag-btn');
 const cartBtn = document.getElementById('cart-btn');
 const cartModal = document.getElementById('cart-modal');
@@ -13,6 +12,7 @@ const commentInput = document.getElementById('comment-input');
 const sendOrderBtn = document.getElementById('send-order');
 const successMessage = document.getElementById('success-message');
 const yearSpan = document.getElementById('year');
+let renderProductsTimeout;
 
 // Установка года
 if (yearSpan) {
@@ -20,133 +20,112 @@ if (yearSpan) {
 }
 
 // Асинхронная загрузка и рендеринг товаров
-// Асинхронная загрузка и рендеринг товаров
+// Улучшенная версия renderProducts с debounce
 async function renderProducts() {
-  console.log(">>> [DEBUG] Начало выполнения renderProducts");
-  try {
-    console.log(">>> [DEBUG] Отправка запроса к /api/products");
-    const res = await fetch('/api/products');
-    console.log(">>> [DEBUG] Ответ получен:", res.status, res.statusText);
-    
-    if (!res.ok) {
-      console.error(">>> [DEBUG] Ошибка ответа:", res.status);
-      throw new Error('Не удалось загрузить товары');
-    }
-    
-    const PRODUCTS = await res.json();
-    console.log(">>> [DEBUG] Товары получены:", PRODUCTS);
-    console.log(">>> [DEBUG] Количество товаров:", PRODUCTS.length);
-
-    const query = (searchInput?.value || '').toLowerCase();
-    console.log(">>> [DEBUG] Текущий поиск:", query);
-    console.log(">>> [DEBUG] Текущая категория:", window.currentCategory);
-
-    const filtered = PRODUCTS.filter(p => {
-      const available = p.available !== false;
-      const categoryMatch = window.currentCategory === 'все' || p.category === window.currentCategory;
-      const searchMatch = query === '' ||
-        p.title.toLowerCase().includes(query) ||
-        p.description.toLowerCase().includes(query);
+  // Отменяем предыдущий таймаут
+  if (renderProductsTimeout) {
+    clearTimeout(renderProductsTimeout);
+  }
+  
+  // Задержка 300ms перед выполнением
+  renderProductsTimeout = setTimeout(async () => {
+    try {
+      const res = await fetch('/api/products');
       
-      console.log(">>> [DEBUG] Товар:", p.title, {
-        available, 
-        categoryMatch, 
-        searchMatch,
-        category: p.category,
-        currentCategory: window.currentCategory
+      if (!res.ok) {
+        throw new Error('Не удалось загрузить товары');
+      }
+      
+      const PRODUCTS = await res.json();
+      const query = (searchInput?.value || '').toLowerCase();
+
+      const filtered = PRODUCTS.filter(p => {
+        const available = p.available !== false;
+        const categoryMatch = window.currentCategory === 'все' || p.category === window.currentCategory;
+        const searchMatch = query === '' ||
+          p.title.toLowerCase().includes(query) ||
+          p.description.toLowerCase().includes(query);
+        
+        return available && categoryMatch && searchMatch;
       });
-      
-      return available && categoryMatch && searchMatch;
-    });
 
-    console.log(">>> [DEBUG] Отфильтрованные товары:", filtered.length);
+      if (!productsContainer) {
+        return;
+      }
 
-    if (!productsContainer) {
-      console.error('>>> [DEBUG] Элемент #products не найден');
-      return;
-    }
+      productsContainer.innerHTML = '';
 
-    productsContainer.innerHTML = '';
-
-    if (filtered.length === 0) {
-      console.log(">>> [DEBUG] Нет товаров для отображения");
-      productsContainer.innerHTML = `
-        <div class="empty">
-          <div class="text-6xl">🔍</div>
-          <h3>Товары не найдены</h3>
-          <p>Попробуйте изменить параметры поиска</p>
-        </div>
-      `;
-      return;
-    }
-
-    console.log(">>> [DEBUG] Начинаем рендеринг", filtered.length, "товаров");
-    
-    filtered.forEach((product, index) => {
-      console.log(">>> [DEBUG] Рендерим товар", index, ":", product.title);
-      const card = document.createElement('div');
-      card.className = 'product-card';
-      card.innerHTML = `
-        <div class="product-content">
-          <h3 class="product-title">${product.title}</h3>
-          <div class="product-image">
-            <img src="${product.images[0]?.url?.trim() || '/assets/placeholder.png'}" alt="${product.title}" />
-            ${product.tag ? `<div class="product-badge" data-tag="${product.tag.toLowerCase()}">${product.tag}</div>` : ''}
+      if (filtered.length === 0) {
+        productsContainer.innerHTML = `
+          <div class="empty">
+            <div class="text-6xl">🔍</div>
+            <h3>Товары не найдены</h3>
+            <p>Попробуйте изменить параметры поиска</p>
           </div>
-          <div class="product-footer">
-            <div class="product-price">${formatPrice(product.price)}</div>
-            <div class="product-actions">
-              <button class="btn-details" data-id="${product.id}">Подробнее</button>
-              <button class="btn-cart" data-id="${product.id}">В корзину</button>
+        `;
+        return;
+      }
+
+      filtered.forEach((product) => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.innerHTML = `
+          <div class="product-content">
+            <h3 class="product-title">${product.title}</h3>
+            <div class="product-image">
+              <img src="${product.images[0]?.url?.trim() || '/assets/placeholder.png'}" alt="${product.title}" />
+              ${product.tag ? `<div class="product-badge" data-tag="${product.tag.toLowerCase()}">${product.tag}</div>` : ''}
+            </div>
+            <div class="product-footer">
+              <div class="product-price">${formatPrice(product.price)}</div>
+              <div class="product-actions">
+                <button class="btn-details" data-id="${product.id}">Подробнее</button>
+                <button class="btn-cart" data-id="${product.id}">В корзину</button>
+              </div>
             </div>
           </div>
-        </div>
-      `;
-      productsContainer.appendChild(card);
-    });
-    
-    console.log(">>> [DEBUG] Рендеринг завершен, добавлено элементов:", productsContainer.children.length);
-    
-    // Обработчики для кнопок "Подробнее"
-    document.querySelectorAll('.btn-details').forEach(button => {
-      button.addEventListener('click', (event) => {
-        const productId = parseInt(event.target.dataset.id);
-        const product = PRODUCTS.find(p => p.id === productId);
-        if (product) {
-          openProductModal(product);
-        } else {
-          console.error(`Товар с id ${productId} не найден.`);
-        }
+        `;
+        productsContainer.appendChild(card);
       });
-    });
+      
+      // Обработчики для кнопок "Подробнее"
+      document.querySelectorAll('.btn-details').forEach(button => {
+        button.addEventListener('click', (event) => {
+          const productId = parseInt(event.target.dataset.id);
+          const product = PRODUCTS.find(p => p.id === productId);
+          if (product) {
+            openProductModal(product);
+          }
+        });
+      });
 
-    // Обработчики для кнопок "В корзину"
-    document.querySelectorAll('.btn-cart').forEach(button => {
-      button.addEventListener('click', (event) => {
-        const productId = parseInt(event.target.dataset.id);
-        const product = PRODUCTS.find(p => p.id === productId);
-        if (product) {
-          addToCart(product);
-          updateCartCount();
-        } else {
-          console.error(`Товар с id ${productId} не найден.`);
-        }
+      // Обработчики для кнопок "В корзину"
+      document.querySelectorAll('.btn-cart').forEach(button => {
+        button.addEventListener('click', (event) => {
+          const productId = parseInt(event.target.dataset.id);
+          const product = PRODUCTS.find(p => p.id === productId);
+          if (product) {
+            addToCart(product);
+            updateCartCount();
+          }
+        });
       });
-    });
-    
-  } catch (err) {
-    console.error('>>> [DEBUG] Ошибка загрузки товаров:', err);
-    if (productsContainer) {
-      productsContainer.innerHTML = `
-        <div class="empty">
-          <div class="text-6xl">⚠️</div>
-          <h3>Ошибка загрузки</h3>
-          <p>Попробуйте позже или свяжитесь с нами</p>
-        </div>
-      `;
+      
+    } catch (err) {
+      console.error('Ошибка загрузки товаров:', err);
+      if (productsContainer) {
+        productsContainer.innerHTML = `
+          <div class="empty">
+            <div class="text-6xl">⚠️</div>
+            <h3>Ошибка загрузки</h3>
+            <p>Попробуйте позже или свяжитесь с нами</p>
+          </div>
+        `;
+      }
     }
-  }
+  }, 300); // 300ms задержка
 }
+
 // Открытие модального окна товара
 function openProductModal(product) {
   document.getElementById('product-title').textContent = product.title;
@@ -253,24 +232,25 @@ function updateSendOrderButton() {
 
 // Привязка событий
 function setupEventListeners() {
-
-  // DOM-элементы (убедитесь, что они все тут или проверяйте их наличие)
-  // const productsContainer = document.getElementById('products');
-  // const searchInput = document.getElementById('search-input');
-  // ... остальные элементы ...
-
-
   const searchInput = document.getElementById('search-input');
  
   if (searchInput) {
-    searchInput.addEventListener('input', renderProducts);
+    // Удаляем предыдущие обработчики, если есть
+    const newSearchInput = searchInput.cloneNode(true);
+    searchInput.parentNode.replaceChild(newSearchInput, searchInput);
+    newSearchInput.addEventListener('input', renderProducts);
   }
 
+  // Удаляем активные классы и заново навешиваем обработчики
   categoryButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
+    // Удаляем предыдущие обработчики
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+    
+    newBtn.addEventListener('click', () => {
       categoryButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      window.currentCategory = btn.dataset.category;
+      newBtn.classList.add('active');
+      window.currentCategory = newBtn.dataset.category;
       renderProducts();
     });
   });
@@ -291,54 +271,96 @@ function setupEventListeners() {
   });
 
   // Отправка заказа на сервер
-  if (sendOrderBtn) {
-    sendOrderBtn.addEventListener('click', async () => {
-      if (!phoneInput.value.trim()) {
-        alert('Укажите телефон');
-        return;
+  // В ui.js найдите функцию отправки заказа и замените её на эту:
+
+// В ui.js найдите функцию отправки заказа и замените её на эту:
+
+if (sendOrderBtn) {
+  let isSending = false; // Флаг для предотвращения повторной отправки
+  
+  sendOrderBtn.addEventListener('click', async () => {
+    // Предотвращаем повторную отправку
+    if (isSending) {
+      console.log('Заказ уже отправляется...');
+      return;
+    }
+    
+    if (!phoneInput.value.trim()) {
+      alert('Укажите телефон');
+      return;
+    }
+    
+    if (getCart().length === 0) {
+      alert('Корзина пуста');
+      return;
+    }
+
+    try {
+      isSending = true;
+      sendOrderBtn.disabled = true;
+      sendOrderBtn.textContent = 'Отправка...';
+
+      const response = await fetch('/api/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: phoneInput.value,
+          comment: commentInput.value,
+          cart: getCart()
+        })
+      });
+
+      const result = await response.json();
+      console.log('Ответ сервера:', result);
+
+      if (result.success) {
+        // Успешная отправка - показываем сообщение об успехе
+        clearCart();
+        phoneInput.value = '';
+        commentInput.value = '';
+        successMessage.style.display = 'block';
+        updateCartCount();
+        openCartModal();
+
+        setTimeout(() => {
+          successMessage.style.display = 'none';
+          sendOrderBtn.disabled = false;
+          sendOrderBtn.textContent = 'Оформить заказ';
+          isSending = false;
+        }, 3000);
+      } else {
+        // Ошибка от сервера
+        throw new Error(result.error || 'Ошибка сервера');
       }
-      if (getCart().length === 0) return;
+    } catch (error) {
+      console.error('Ошибка отправки заказа:', error);
+      
+      // Проверяем, возможно заказ уже отправлен (по статусу ответа)
+      if (error.message && error.message.includes('Заказ уже обрабатывается')) {
+        // Заказ уже обрабатывается, показываем сообщение об успехе
+        clearCart();
+        phoneInput.value = '';
+        commentInput.value = '';
+        successMessage.style.display = 'block';
+        updateCartCount();
+        openCartModal();
 
-      try {
-        sendOrderBtn.disabled = true;
-        sendOrderBtn.textContent = 'Отправка...';
-
-        const response = await fetch('/api/order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            phone: phoneInput.value,
-            comment: commentInput.value,
-            cart: getCart()
-          })
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-          clearCart();
-          phoneInput.value = '';
-          commentInput.value = '';
-          successMessage.style.display = 'block';
-          updateCartCount();
-          openCartModal();
-
-          setTimeout(() => {
-            successMessage.style.display = 'none';
-            sendOrderBtn.disabled = false;
-            sendOrderBtn.textContent = 'Оформить заказ';
-          }, 3000);
-        } else {
-          throw new Error(result.error || 'Ошибка сервера');
-        }
-      } catch (error) {
-        console.error('Ошибка отправки заказа:', error);
+        setTimeout(() => {
+          successMessage.style.display = 'none';
+          sendOrderBtn.disabled = false;
+          sendOrderBtn.textContent = 'Оформить заказ';
+          isSending = false;
+        }, 3000);
+      } else {
+        // Другая ошибка
         alert('Не удалось отправить заказ. Пожалуйста, позвоните нам.');
         sendOrderBtn.disabled = false;
         sendOrderBtn.textContent = 'Оформить заказ';
+        isSending = false;
       }
-    });
-  }
+    }
+  });
+}
 
   document.querySelectorAll('[data-close]').forEach(btn => {
     btn.addEventListener('click', closeModals);

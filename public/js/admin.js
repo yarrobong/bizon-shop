@@ -128,6 +128,7 @@ class AdminPanel {
         if (dropZone) {
             dropZone.addEventListener('dragover', (e) => {
                 e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
                 dropZone.classList.add('drag-over');
             });
 
@@ -180,7 +181,7 @@ class AdminPanel {
             dropHint.classList.remove('show');
         }
 
-        const imageId = Date.now() + Math.floor(Math.random() * 1000); // Уникальный ID
+        const imageId = Date.now() + Math.floor(Math.random() * 10000); // Уникальный ID
         const imageItem = document.createElement('div');
         imageItem.className = 'image-item';
         imageItem.dataset.id = imageId;
@@ -230,42 +231,50 @@ class AdminPanel {
     setupDragEvents(imageItem) {
         imageItem.addEventListener('dragstart', (e) => {
             this.draggedImage = imageItem;
-            setTimeout(() => imageItem.classList.add('dragging'), 0);
+            imageItem.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', imageItem.outerHTML);
         });
 
         imageItem.addEventListener('dragend', () => {
             imageItem.classList.remove('dragging');
+            const container = document.getElementById('images-container');
+            if (container) {
+                const draggables = container.querySelectorAll('.image-item.drag-over');
+                draggables.forEach(item => item.classList.remove('drag-over'));
+            }
             this.draggedImage = null;
         });
 
-        const container = document.getElementById('images-container');
-        container.addEventListener('dragover', (e) => {
+        imageItem.addEventListener('dragover', (e) => {
             e.preventDefault();
-            const afterElement = this.getDragAfterElement(container, e.clientX);
-            const draggable = this.draggedImage;
-            if (draggable && afterElement !== draggable && afterElement !== draggable.nextSibling) {
-                if (afterElement == null) {
-                    container.appendChild(draggable);
-                } else {
-                    container.insertBefore(draggable, afterElement);
+            e.dataTransfer.dropEffect = 'move';
+            
+            if (this.draggedImage !== imageItem) {
+                imageItem.classList.add('drag-over');
+            }
+        });
+
+        imageItem.addEventListener('dragleave', () => {
+            imageItem.classList.remove('drag-over');
+        });
+
+        imageItem.addEventListener('drop', (e) => {
+            e.preventDefault();
+            imageItem.classList.remove('drag-over');
+            
+            if (this.draggedImage && this.draggedImage !== imageItem) {
+                const container = document.getElementById('images-container');
+                if (container) {
+                    // Определяем позицию для вставки
+                    const rect = imageItem.getBoundingClientRect();
+                    const nextSibling = e.clientX > rect.left + rect.width / 2 ? 
+                        imageItem.nextSibling : imageItem;
+                    
+                    container.insertBefore(this.draggedImage, nextSibling);
                 }
             }
         });
-    }
-
-    // Получение элемента после которого нужно вставить перетаскиваемый элемент (горизонтальная сортировка)
-    getDragAfterElement(container, x) {
-        const draggableElements = [...container.querySelectorAll('.image-item:not(.dragging)')];
-
-        return draggableElements.reduce((closest, child) => {
-            const box = child.getBoundingClientRect();
-            const offset = x - box.left - box.width / 2;
-            if (offset < 0 && offset > closest.offset) {
-                return { offset: offset, element: child };
-            } else {
-                return closest;
-            }
-        }, { offset: Number.NEGATIVE_INFINITY }).element;
     }
 
     // Удалить изображение
@@ -344,56 +353,66 @@ class AdminPanel {
     }
 
     async loadProducts() {
-        try {
-            console.log('Загрузка товаров...');
-            const response = await fetch('/api/products');
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const products = await response.json();
-            console.log('Товары загружены:', products);
-            this.renderProducts(products);
-        } catch (error) {
-            console.error('Ошибка загрузки товаров:', error);
-            this.showErrorMessage('Не удалось загрузить товары');
+    try {
+        console.log('Загрузка товаров...');
+        const response = await fetch('/api/products?admin=true');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
+        const products = await response.json();
+        console.log('Все товары загружены (включая недоступные):', products);
+        
+        // Проверим, есть ли недоступные товары
+        const unavailableProducts = products.filter(product => product.available === false);
+        console.log('Недоступные товары найдены:', unavailableProducts);
+        
+        this.renderProducts(products);
+    } catch (error) {
+        console.error('Ошибка загрузки товаров:', error);
+        this.showErrorMessage('Не удалось загрузить товары');
     }
+}
 
     renderProducts(products) {
-        const container = document.getElementById('admin-products-grid');
-        if (!container) {
-            console.error('Контейнер для товаров не найден');
-            return;
-        }
-
-        container.innerHTML = '';
-
-        if (!products || products.length === 0) {
-            container.innerHTML = '<div class="empty">Нет товаров для отображения</div>';
-            return;
-        }
-
-        products.forEach(product => {
-            const card = document.createElement('div');
-            card.className = 'product-card';
-            // Предполагаем, что у товара есть поле images - массив объектов {url, alt}
-            const imageUrl = product.images && product.images.length > 0 ? product.images[0].url : '/assets/placeholder.png';
-            card.innerHTML = `
-                <img src="${imageUrl}" alt="${product.title}" onerror="this.src='/assets/placeholder.png'">
-                <h3>${this.escapeHtml(product.title)}</h3>
-                <p>Цена: ${this.formatPrice(product.price)}</p>
-                <p>Категория: ${this.escapeHtml(product.category || 'Не указана')}</p>
-                <p>Доступен: ${product.available !== false ? 'Да' : 'Нет'}</p>
-                <div class="product-actions">
-                    <button onclick="adminPanel.editProduct(${product.id})" class="btn-primary">Редактировать</button>
-                    <button onclick="adminPanel.deleteProduct(${product.id})" class="btn-danger">Удалить</button>
-                </div>
-            `;
-            container.appendChild(card);
-        });
+    const container = document.getElementById('admin-products-grid');
+    if (!container) {
+        console.error('Контейнер для товаров не найден');
+        return;
     }
+
+    container.innerHTML = '';
+
+    if (!products || products.length === 0) {
+        container.innerHTML = '<div class="empty">Нет товаров для отображения</div>';
+        return;
+    }
+
+    console.log('Проверка структуры первого товара:', products[0]);
+
+    products.forEach(product => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        
+        // Предполагаем, что у товара есть поле images - массив объектов {url, alt}
+        const imageUrl = product.images && product.images.length > 0 ? product.images[0].url : '/assets/placeholder.png';
+        
+        // Временно показываем все поля товара для отладки
+        card.innerHTML = `
+            <img src="${imageUrl}" alt="${product.title}" onerror="this.src='/assets/placeholder.png'">
+            <h3>${this.escapeHtml(product.title)}</h3>
+            <p>Цена: ${this.formatPrice(product.price)}</p>
+            <p>Категория: ${this.escapeHtml(product.category || 'Не указана')}</p>
+            <p>Доступность: ${product.available !== undefined ? (product.available ? 'Да' : 'Нет') : 'Не указано'}</p>
+            <div class="product-actions">
+                <button onclick="adminPanel.editProduct(${product.id})" class="btn-primary">Редактировать</button>
+                <button onclick="adminPanel.deleteProduct(${product.id})" class="btn-danger">Удалить</button>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
 
     async loadCategories() {
         try {
