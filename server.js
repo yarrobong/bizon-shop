@@ -8,8 +8,11 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const bcrypt = require('bcryptjs');
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
 
 
 
@@ -296,6 +299,53 @@ app.post('/api/categories', async (req, res) => {
     }
 });
 
+// === API: Логин администратора ===
+app.post('/api/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    // 1. Базовая валидация
+    if (!username || !password) {
+      return res.status(400).json({ success: false, message: 'Логин и пароль обязательны' });
+    }
+
+    // 2. Проверяем, есть ли подключение к БД
+    if (!pool) {
+      console.error('Подключение к БД не настроено');
+      return res.status(500).json({ success: false, message: 'Ошибка сервера' });
+    }
+
+    // 3. Ищем пользователя в БД
+    const result = await pool.query(
+      'SELECT id, username, password_hash FROM admin_users WHERE username = $1',
+      [username]
+    );
+
+    // 4. Проверяем, найден ли пользователь
+    if (result.rows.length === 0) {
+      // В целях безопасности не раскрываем, что пользователь не существует
+      return res.status(401).json({ success: false, message: 'Неверный логин или пароль' });
+    }
+
+    const user = result.rows[0];
+
+    // 5. Сравниваем хэш пароля
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+    
+    if (!isPasswordValid) {
+      return res.status(401).json({ success: false, message: 'Неверный логин или пароль' });
+    }
+
+    // 6. Если всё верно, возвращаем успех
+    // В реальном приложении здесь бы создавался JWT токен
+    res.json({ success: true, message: 'Авторизация успешна' });
+
+  } catch (err) {
+    console.error('Ошибка авторизации:', err);
+    res.status(500).json({ success: false, message: 'Ошибка сервера при авторизации' });
+  }
+});
+
 // === API: Удалить категорию ===
 app.delete('/api/categories/:id', async (req, res) => {
   try {
@@ -367,6 +417,7 @@ app.get('/api/orders', async (req, res) => {
 });
 
 // ... (всё, что у тебя уже есть внизу файла)
+
 
 app.listen(PORT, () => {
   console.log(`✅ Сервер запущен на http://localhost:${PORT}`);

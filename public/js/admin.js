@@ -1,8 +1,12 @@
 // admin.js
 
+// В самом начале admin.js, замените старую проверку на эту:
 // Проверка авторизации
 if (localStorage.getItem('isAdmin') !== 'true') {
-    window.location.href = '../login.html'; // Предполагаем, что login.html находится на уровень выше
+    // Проверяем, не находится ли пользователь уже на странице логина
+    if (!window.location.pathname.includes('login.html')) {
+        window.location.href = '../login.html'; // Убедитесь, что путь правильный
+    }
 }
 
 class AdminPanel {

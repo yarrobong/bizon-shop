@@ -5,114 +5,128 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вход в админ-панель</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
             font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            background-color: #f0f0f0;
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
         }
-
         .login-container {
             background: white;
             padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 400px;
         }
-
-        .login-form h2 {
+        h2 {
             text-align: center;
             margin-bottom: 1.5rem;
             color: #333;
         }
-
         .form-group {
             margin-bottom: 1rem;
         }
-
-        .form-group label {
+        label {
             display: block;
             margin-bottom: 0.5rem;
-            color: #555;
+            font-weight: bold;
         }
-
-        .form-group input {
+        input[type="text"], input[type="password"] {
             width: 100%;
             padding: 0.75rem;
             border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 1rem;
+            border-radius: 4px;
+            box-sizing: border-box;
         }
-
-        .btn-login {
+        button {
             width: 100%;
             padding: 0.75rem;
-            background: #667eea;
+            background-color: #007bff;
             color: white;
             border: none;
-            border-radius: 5px;
-            font-size: 1rem;
+            border-radius: 4px;
             cursor: pointer;
-            transition: background 0.3s;
+            font-size: 1rem;
         }
-
-        .btn-login:hover {
-            background: #5a6fd8;
+        button:hover {
+            background-color: #0056b3;
         }
-
         .error-message {
-            color: #e74c3c;
-            text-align: center;
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 0.75rem;
+            border-radius: 4px;
             margin-top: 1rem;
             display: none;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 1rem;
         }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <form class="login-form" id="login-form">
-            <h2>Вход в админ-панель</h2>
+        <h2>Вход в админ-панель</h2>
+        <form id="login-form">
             <div class="form-group">
                 <label for="username">Логин:</label>
-                <input type="text" id="username" required>
+                <input type="text" id="username" name="username" required>
             </div>
             <div class="form-group">
                 <label for="password">Пароль:</label>
-                <input type="password" id="password" required>
+                <input type="password" id="password" name="password" required>
             </div>
-            <button type="submit" class="btn-login">Войти</button>
-            <div class="error-message" id="error-message"></div>
+            <button type="submit">Войти</button>
         </form>
+        <div id="error-message" class="error-message"></div>
+        <div id="loading" class="loading">Проверка данных...</div>
     </div>
 
     <script>
-        // Простая авторизация (в реальном проекте используйте серверную авторизацию)
-        const ADMIN_USERNAME = 'admin';
-        const ADMIN_PASSWORD = 'password123'; // Замените на более безопасный пароль
-
-        document.getElementById('login-form').addEventListener('submit', function(e) {
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('error-message');
+            const loading = document.getElementById('loading');
             
-            if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-                // Сохраняем информацию о входе
-                localStorage.setItem('isAdmin', 'true');
-                // Перенаправляем в админ-панель
-                window.location.href = 'admin.html';
-            } else {
-                errorMessage.textContent = 'Неверный логин или пароль';
+            // Скрываем предыдущие ошибки
+            errorMessage.style.display = 'none';
+            loading.style.display = 'block';
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                loading.style.display = 'none';
+                
+                if (data.success) {
+                    // Сохраняем информацию о входе
+                    localStorage.setItem('isAdmin', 'true');
+                    // Перенаправляем в админ-панель
+                    window.location.href = 'admin/index.html'; // Убедитесь, что путь правильный
+                } else {
+                    errorMessage.textContent = data.message || 'Ошибка авторизации';
+                    errorMessage.style.display = 'block';
+                }
+            } catch (err) {
+                loading.style.display = 'none';
+                console.error('Ошибка сети:', err);
+                errorMessage.textContent = 'Ошибка подключения к серверу';
                 errorMessage.style.display = 'block';
             }
         });
