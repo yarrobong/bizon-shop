@@ -319,22 +319,50 @@ app.delete('/api/categories/:id', async (req, res) => {
 app.get('/api/orders', async (req, res) => {
   try {
     if (pool) {
-      // Предполагаем, что у вас есть таблицы orders и order_items
+      // Обновленный запрос с корректной обработкой NULL значений
       const result = await pool.query(`
-        SELECT o.id, o.phone, o.comment, o.total_amount, o.created_at, o.status,
-               json_agg(json_build_object('product', json_build_object('id', oi.product_id, 'title', oi.product_title, 'price', oi.price_per_unit), 'qty', oi.quantity)) as cart
+        SELECT 
+          o.id, 
+          o.phone, 
+          o.comment, 
+          o.total_amount, 
+          o.created_at, 
+          o.status,
+          COALESCE((
+            SELECT json_agg(
+              json_build_object(
+                'product', json_build_object(
+                  'id', oi.product_id, 
+                  'title', oi.product_title, 
+                  'price', oi.price_per_unit
+                ), 
+                'qty', oi.quantity
+              )
+            )
+            FROM order_items oi 
+            WHERE oi.order_id = o.id
+          ), '[]') as cart
         FROM orders o
-        LEFT JOIN order_items oi ON o.id = oi.order_id
-        GROUP BY o.id
         ORDER BY o.created_at DESC
       `);
-      res.json(result.rows);
+      
+      // Обрабатываем результаты, чтобы корректно отобразить NULL значения
+      const orders = result.rows.map(order => ({
+        ...order,
+        phone: order.phone || '',
+        comment: order.comment || '',
+        status: order.status || 'новый',
+        cart: order.cart || []
+      }));
+      
+      res.json(orders);
     } else {
       res.status(500).json({ error: 'База данных не настроена' });
     }
   } catch (err) {
     console.error('Ошибка загрузки заказов:', err);
-    res.status(500).json({ error: 'Не удалось загрузить заказы' });
+    console.error('Stack trace:', err.stack);
+    res.status(500).json({ error: 'Не удалось загрузить заказы: ' + err.message });
   }
 });
 
