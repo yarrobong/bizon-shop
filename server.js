@@ -152,6 +152,193 @@ ${cart.map(item => `• ${item.product?.title || 'Неизвестный тов�
     // Важно: в production среде не стоит показывать клиенту детали внутренней ошибки сервера
   }
 });
+// server.js
+// ... (всё, что у тебя уже есть вверху файла)
+
+// === API: Получить товар по ID ===
+app.get('/api/products/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (pool) {
+      const result = await pool.query(`
+        SELECT 
+          id, title, description, price, tag, available, category, brand, compatibility,
+          images_json as images
+        FROM products 
+        WHERE id = $1
+      `, [id]);
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Товар не найден' });
+      }
+      res.json(result.rows[0]);
+    } else {
+      res.status(500).json({ error: 'База данных не настроена' });
+    }
+  } catch (err) {
+    console.error('Ошибка загрузки товара:', err);
+    res.status(500).json({ error: 'Не удалось загрузить товар' });
+  }
+});
+
+// === API: Создать товар ===
+app.post('/api/products', async (req, res) => {
+  try {
+    const { title, description, price, tag, available, category, brand, compatibility, images } = req.body;
+    
+    // Преобразуем images обратно в JSON для хранения в БД
+    const images_json = images ? JSON.stringify(images) : null;
+
+    if (pool) {
+      const result = await pool.query(`
+        INSERT INTO products (title, description, price, tag, available, category, brand, compatibility, images_json)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        RETURNING id, title, description, price, tag, available, category, brand, compatibility, images_json as images
+      `, [title, description, price, tag, available, category, brand, compatibility, images_json]);
+
+      res.status(201).json(result.rows[0]);
+    } else {
+      res.status(500).json({ error: 'База данных не настроена' });
+    }
+  } catch (err) {
+    console.error('Ошибка создания товара:', err);
+    res.status(500).json({ error: 'Не удалось создать товар' });
+  }
+});
+
+// === API: Обновить товар ===
+app.put('/api/products/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, price, tag, available, category, brand, compatibility, images } = req.body;
+    
+    // Преобразуем images обратно в JSON для хранения в БД
+    const images_json = images ? JSON.stringify(images) : null;
+
+    if (pool) {
+      const result = await pool.query(`
+        UPDATE products 
+        SET title = $1, description = $2, price = $3, tag = $4, available = $5, category = $6, brand = $7, compatibility = $8, images_json = $9
+        WHERE id = $10
+        RETURNING id, title, description, price, tag, available, category, brand, compatibility, images_json as images
+      `, [title, description, price, tag, available, category, brand, compatibility, images_json, id]);
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Товар не найден' });
+      }
+      res.json(result.rows[0]);
+    } else {
+      res.status(500).json({ error: 'База данных не настроена' });
+    }
+  } catch (err) {
+    console.error('Ошибка обновления товара:', err);
+    res.status(500).json({ error: 'Не удалось обновить товар' });
+  }
+});
+
+// === API: Удалить товар ===
+app.delete('/api/products/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (pool) {
+      const result = await pool.query('DELETE FROM products WHERE id = $1 RETURNING id', [id]);
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Товар не найден' });
+      }
+      res.status(204).send(); // 204 No Content - успешно удалено
+    } else {
+      res.status(500).json({ error: 'База данных не настроена' });
+    }
+  } catch (err) {
+    console.error('Ошибка удаления товара:', err);
+    res.status(500).json({ error: 'Не удалось удалить товар' });
+  }
+});
+
+// === API: Получить категории ===
+app.get('/api/categories', async (req, res) => {
+  try {
+    if (pool) {
+      // Предполагаем, что у вас есть таблица categories с полями id и name
+      const result = await pool.query('SELECT id, name FROM categories ORDER BY name');
+      res.json(result.rows);
+    } else {
+      // Если таблицы нет, возвращаем пустой массив или стандартные категории
+      console.warn('Таблица категорий не найдена или pool не инициализирован.');
+      res.json([]); // Или res.json([{id: 1, name: 'электроника'}, ...]);
+    }
+  } catch (err) {
+    console.error('Ошибка загрузки категорий:', err);
+    res.status(500).json({ error: 'Не удалось загрузить категории' });
+  }
+});
+
+// === API: Создать категорию ===
+app.post('/api/categories', async (req, res) => {
+    try {
+        const { name } = req.body;
+        if (!name) {
+            return res.status(400).json({ error: 'Название категории обязательно' });
+        }
+
+        if (pool) {
+            const result = await pool.query(
+                'INSERT INTO categories (name) VALUES ($1) RETURNING id, name',
+                [name]
+            );
+            res.status(201).json(result.rows[0]);
+        } else {
+            res.status(500).json({ error: 'База данных не настроена' });
+        }
+    } catch (err) {
+        console.error('Ошибка создания категории:', err);
+        res.status(500).json({ error: 'Не удалось создать категорию' });
+    }
+});
+
+// === API: Удалить категорию ===
+app.delete('/api/categories/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (pool) {
+      const result = await pool.query('DELETE FROM categories WHERE id = $1 RETURNING id', [id]);
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Категория не найдена' });
+      }
+      res.status(204).send(); // 204 No Content - успешно удалено
+    } else {
+      res.status(500).json({ error: 'База данных не настроена' });
+    }
+  } catch (err) {
+    console.error('Ошибка удаления категории:', err);
+    res.status(500).json({ error: 'Не удалось удалить категорию' });
+  }
+});
+
+// === API: Получить заказы ===
+app.get('/api/orders', async (req, res) => {
+  try {
+    if (pool) {
+      // Предполагаем, что у вас есть таблицы orders и order_items
+      const result = await pool.query(`
+        SELECT o.id, o.phone, o.comment, o.total_amount, o.created_at, o.status,
+               json_agg(json_build_object('product', json_build_object('id', oi.product_id, 'title', oi.product_title, 'price', oi.price_per_unit), 'qty', oi.quantity)) as cart
+        FROM orders o
+        LEFT JOIN order_items oi ON o.id = oi.order_id
+        GROUP BY o.id
+        ORDER BY o.created_at DESC
+      `);
+      res.json(result.rows);
+    } else {
+      res.status(500).json({ error: 'База данных не настроена' });
+    }
+  } catch (err) {
+    console.error('Ошибка загрузки заказов:', err);
+    res.status(500).json({ error: 'Не удалось загрузить заказы' });
+  }
+});
+
+// ... (всё, что у тебя уже есть внизу файла)
 
 app.listen(PORT, () => {
   console.log(`✅ Сервер запущен на http://localhost:${PORT}`);
