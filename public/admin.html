@@ -3,20 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Админ-панель | Каталог</title>
-    <link rel="stylesheet" href="css/pages/admin.css">
-    <script>
-    // Проверка авторизации при загрузке страницы
-    if (localStorage.getItem('isAdmin') !== 'true') {
-        window.location.href = 'login.html';
-    }
-</script>
+    <title>Админ-панель</title>
+    <link rel="stylesheet" href="admin.css">
 </head>
 <body>
     <div class="admin-container">
-        <header>
+        <header class="admin-header">
             <h1>Админ-панель</h1>
-            <button id="logout-btn">Выйти</button>
+            <button id="logout-btn" class="btn-danger">Выйти</button>
         </header>
 
         <nav class="admin-nav">
@@ -26,81 +20,85 @@
         </nav>
 
         <main class="admin-main">
-            <!-- Вкладка товаров -->
-            <div id="products-tab" class="tab-content active">
-                <div class="admin-header">
+            <!-- Вкладка Товары -->
+            <section id="products-tab" class="tab-content active">
+                <div class="tab-header">
                     <h2>Управление товарами</h2>
                     <button id="add-product-btn" class="btn-primary">Добавить товар</button>
                 </div>
-                
-                <div class="products-grid" id="admin-products-grid">
-                    <!-- Товары будут загружены сюда -->
+                <div id="admin-products-grid" class="admin-grid">
+                    <!-- Товары будут подгружаться сюда -->
                 </div>
-            </div>
+            </section>
 
-            <!-- Вкладка категорий -->
-            <div id="categories-tab" class="tab-content">
-                <div class="admin-header">
+            <!-- Вкладка Категории -->
+            <section id="categories-tab" class="tab-content">
+                <div class="tab-header">
                     <h2>Управление категориями</h2>
                     <button id="add-category-btn" class="btn-primary">Добавить категорию</button>
                 </div>
-                
-                <div class="categories-list" id="categories-list">
-                    <!-- Категории будут загружены сюда -->
+                <div id="categories-list" class="admin-list">
+                    <!-- Категории будут подгружаться сюда -->
                 </div>
-            </div>
+            </section>
 
-            <!-- Вкладка заказов -->
-            <div id="orders-tab" class="tab-content">
+            <!-- Вкладка Заказы -->
+            <section id="orders-tab" class="tab-content">
                 <h2>Заказы</h2>
-                <div class="orders-list" id="orders-list">
-                    <!-- Заказы будут загружены сюда -->
+                <div id="orders-list" class="admin-list">
+                    <!-- Заказы будут подгружаться сюда -->
                 </div>
-            </div>
+            </section>
         </main>
     </div>
 
-    <!-- Модальное окно для редактирования товара -->
+    <!-- Модальное окно для товара -->
     <div id="product-modal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h3 id="modal-title">Добавить товар</h3>
+            <h2 id="modal-title">Добавить товар</h2>
             <form id="product-form">
                 <input type="hidden" id="product-id">
-                
-                <div class="form-group">
-                    <label for="product-title">Название:</label>
-                    <input type="text" id="product-title" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="product-description">Описание:</label>
-                    <textarea id="product-description" rows="3"></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label for="product-price">Цена:</label>
-                    <input type="number" id="product-price" step="0.01" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="product-category">Категория:</label>
-                    <select id="product-category" required></select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="product-available">Доступен:</label>
-                    <input type="checkbox" id="product-available" checked>
-                </div>
-                
-                <div class="form-group">
-                    <label for="product-image">Изображение URL:</label>
-                    <input type="url" id="product-image">
-                </div>
-                
-                <div class="form-actions">
+                <label for="product-title">Название:</label>
+                <input type="text" id="product-title" required>
+
+                <label for="product-description">Описание:</label>
+                <textarea id="product-description"></textarea>
+
+                <label for="product-price">Цена (руб.):</label>
+                <input type="number" id="product-price" step="0.01" required>
+
+                <label for="product-category">Категория:</label>
+                <select id="product-category" required>
+                    <!-- Опции будут загружены динамически -->
+                </select>
+
+                <label for="product-image">URL изображения:</label>
+                <input type="text" id="product-image">
+
+                <label>
+                    <input type="checkbox" id="product-available" checked> Доступен
+                </label>
+
+                <div class="modal-actions">
                     <button type="button" id="cancel-btn" class="btn-secondary">Отмена</button>
                     <button type="submit" class="btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно для категории -->
+    <div id="category-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-category-modal close">&times;</span>
+            <h2>Добавить категорию</h2>
+            <form id="category-form">
+                <label for="category-name">Название категории:</label>
+                <input type="text" id="category-name" required>
+                <div class="modal-actions">
+                    <button type="button" id="cancel-category-btn" class="btn-secondary">Отмена</button>
+                    <button type="submit" class="btn-primary">Добавить</button>
                 </div>
             </form>
         </div>
