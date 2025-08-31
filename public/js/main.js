@@ -1,20 +1,13 @@
 // main.js
-// Инициализация приложения
-window.currentCategory = 'все';
-
-
-
-document.addEventListener('DOMContentLoaded', () => {
-  renderProducts();
-  updateCartCount();
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log('[DEBUG] DOM загружен, инициализация приложения');
+  
+  // Инициализируем начальное состояние
+  window.currentCategory = 'все'; // Устанавливаем начальную категорию
+  
+  // Настраиваем обработчики событий
   setupEventListeners();
+  
+  // Загружаем и отображаем товары
+  await renderProducts();
 });
-
-(function () {
-  var a = document.querySelectorAll('.nav-list a');
-  for (var i = a.length; i--;) {
-    if (a[i].href === window.location.pathname || a[i].href === window.location.href) {
-      a[i].className += ' active';
-    }
-  }
-})();
