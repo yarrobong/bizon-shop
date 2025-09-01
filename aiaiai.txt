@@ -1,30 +1,8 @@
-// main.js
-
-// Инициализация приложения
-// window.currentCategory = 'все'; // Устанавливается в loadCategoriesAndSetupFilters
-
-document.addEventListener('DOMContentLoaded', async () => {
-  console.log(">>> [DEBUG] DOM загружен, инициализация приложения");
-
-  // Установка обработчиков событий (для поиска, корзины, модалок и т.д.)
-  // Это настраивает обработчики, которые не зависят от динамически созданных элементов
-  setupEventListeners();
-
-  // Загрузка категорий, создание кнопок и установка их обработчиков
-  // Также запускает первый рендер товаров
-  await loadCategoriesAndSetupFilters();
-
-  // updateCartCount(); // Можно вызвать здесь, если нужно обновить счетчик сразу
-  // Но loadCategoriesAndSetupFilters -> renderProducts уже делает рендер,
-  // а updateCartCount вызывается из addToCart/clearCart
-});
-
-// --- Остальной ваш код из main.js, если он есть --- // ui.js
-
+// ui.js
 // DOM-элементы
 const productsContainer = document.getElementById('products');
 const searchInput = document.getElementById('search-input');
-let categoryButtons = []; // Будет обновляться после создания кнопок
+const categoryButtons = document.querySelectorAll('.tag-btn');
 const cartBtn = document.getElementById('cart-btn');
 const cartModal = document.getElementById('cart-modal');
 const productModal = document.getElementById('product-modal');
@@ -36,1073 +14,558 @@ const successMessage = document.getElementById('success-message');
 const yearSpan = document.getElementById('year');
 let renderProductsTimeout;
 
-// --- Вспомогательные функции ---
-
-// Функция для получения корзины из localStorage
-function getCart() {
-    const cart = localStorage.getItem('cart');
-    return cart ? JSON.parse(cart) : [];
-}
-
-// Функция для добавления товара в корзину
-function addToCart(product) {
-    if (!product || !product.id) {
-        console.error('Невозможно добавить товар: неверные данные', product);
-        return;
-    }
-    const cart = getCart();
-    const existingItemIndex = cart.findIndex(item => item.product.id === product.id);
-
-    if (existingItemIndex > -1) {
-        cart[existingItemIndex].qty += 1;
-    } else {
-        cart.push({ product: product, qty: 1 });
-    }
-
-    localStorage.setItem('cart', JSON.stringify(cart));
-    updateCartCount();
-    console.log(`Товар ${product.title} добавлен в корзину`);
-}
-
-// Функция для обновления количества товара в корзине
-function updateQuantity(productId, change) {
-    const cart = getCart();
-    const itemIndex = cart.findIndex(item => item.product.id === productId);
-
-    if (itemIndex !== -1) {
-        cart[itemIndex].qty += change;
-        if (cart[itemIndex].qty <= 0) {
-            cart.splice(itemIndex, 1); // Удаляем товар, если количество <= 0
-        }
-        localStorage.setItem('cart', JSON.stringify(cart));
-        updateCartCount();
-    }
-}
-
-// Функция для очистки корзины
-function clearCart() {
-    localStorage.removeItem('cart');
-    updateCartCount();
-}
-
-// Функция для обновления счетчика товаров в корзине (пример)
-function updateCartCount() {
-    const cartCountElement = document.getElementById('cart-count'); // Предполагаемый ID
-    if (cartCountElement) {
-        const count = getCart().reduce((total, item) => total + item.qty, 0);
-        cartCountElement.textContent = count > 0 ? count : '';
-        // cartCountElement.style.display = count > 0 ? 'inline' : 'none';
-    }
-}
-
-// Функция для форматирования цены
-function formatPrice(priceInCents) {
-    // Предполагаем, что цена хранится в копейках/центах
-    const priceInRubles = priceInCents / 100;
-    return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB' }).format(priceInRubles);
-}
-
-// --- Установка года ---
+// Установка года
 if (yearSpan) {
-    yearSpan.textContent = new Date().getFullYear();
+  yearSpan.textContent = new Date().getFullYear();
 }
 
-// --- Функции для работы с категориями и фильтрацией ---
+// Асинхронная загрузка и рендеринг товаров
+// Улучшенная версия renderProducts с debounce
+async function renderProducts() {
+  // Отменяем предыдущий таймаут
+  if (renderProductsTimeout) {
+    clearTimeout(renderProductsTimeout);
+  }
+  
+  // Задержка 300ms перед выполнением
+  renderProductsTimeout = setTimeout(async () => {
+    try {
+      const res = await fetch('/api/products');
+      
+      if (!res.ok) {
+        throw new Error('Не удалось загрузить товары');
+      }
+      
+      const PRODUCTS = await res.json();
+      const query = (searchInput?.value || '').toLowerCase();
 
-// 1. Загрузка категорий с сервера и настройка фильтров
-async function loadCategoriesAndSetupFilters() {
-    const tagsContainer = document.querySelector('.tags');
-    if (!tagsContainer) {
-        console.error('Контейнер для тегов (.tags) не найден в DOM');
-        // Даже если контейнер не найден, устанавливаем дефолтную категорию
-        window.currentCategory = 'все';
-        renderProducts(); // Инициируем рендер с дефолтной категорией
+      const filtered = PRODUCTS.filter(p => {
+        const available = p.available !== false;
+        const categoryMatch = window.currentCategory === 'все' || p.category === window.currentCategory;
+        const searchMatch = query === '' ||
+          p.title.toLowerCase().includes(query) ||
+          p.description.toLowerCase().includes(query);
+        
+        return available && categoryMatch && searchMatch;
+      });
+
+      if (!productsContainer) {
         return;
+      }
+
+      productsContainer.innerHTML = '';
+
+      if (filtered.length === 0) {
+        productsContainer.innerHTML = `
+          <div class="empty">
+            <div class="text-6xl">🔍</div>
+            <h3>Товары не найдены</h3>
+            <p>Попробуйте изменить параметры поиска</p>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach((product) => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.innerHTML = `
+          <div class="product-content">
+            <h3 class="product-title">${product.title}</h3>
+            <div class="product-image">
+              <img src="${product.images[0]?.url?.trim() || '/assets/placeholder.png'}" alt="${product.title}" />
+              ${product.tag ? `<div class="product-badge" data-tag="${product.tag.toLowerCase()}">${product.tag}</div>` : ''}
+            </div>
+            <div class="product-footer">
+              <div class="product-price">${formatPrice(product.price)}</div>
+              <div class="product-actions">
+                <button class="btn-details" data-id="${product.id}">Подробнее</button>
+                <button class="btn-cart" data-id="${product.id}">В корзину</button>
+              </div>
+            </div>
+          </div>
+        `;
+        productsContainer.appendChild(card);
+      });
+      
+      // Обработчики для кнопок "Подробнее"
+      document.querySelectorAll('.btn-details').forEach(button => {
+        button.addEventListener('click', (event) => {
+          const productId = parseInt(event.target.dataset.id);
+          const product = PRODUCTS.find(p => p.id === productId);
+          if (product) {
+            openProductModal(product);
+          }
+        });
+      });
+
+      // Обработчики для кнопок "В корзину"
+      document.querySelectorAll('.btn-cart').forEach(button => {
+        button.addEventListener('click', (event) => {
+          const productId = parseInt(event.target.dataset.id);
+          const product = PRODUCTS.find(p => p.id === productId);
+          if (product) {
+            addToCart(product);
+            updateCartCount();
+          }
+        });
+      });
+      
+    } catch (err) {
+      console.error('Ошибка загрузки товаров:', err);
+      if (productsContainer) {
+        productsContainer.innerHTML = `
+          <div class="empty">
+            <div class="text-6xl">⚠️</div>
+            <h3>Ошибка загрузки</h3>
+            <p>Попробуйте позже или свяжитесь с нами</p>
+          </div>
+        `;
+      }
+    }
+  }, 300); // 300ms задержка
+}
+
+// Открытие модального окна товара
+function openProductModal(product) {
+  document.getElementById('product-title').textContent = product.title;
+  document.getElementById('product-description').textContent = product.description;
+  document.getElementById('product-price').textContent = formatPrice(product.price);
+  document.getElementById('product-main-image').src = product.images[0].url.trim();
+
+  const thumbnails = document.getElementById('thumbnails');
+  thumbnails.innerHTML = '';
+  product.images.forEach(img => {
+    const thumb = document.createElement('img');
+    thumb.src = img.url.trim();
+    thumb.alt = img.alt;
+    thumb.className = 'thumbnail';
+    if (img.url === product.images[0].url) thumb.classList.add('active');
+
+    thumb.addEventListener('click', () => {
+      document.getElementById('product-main-image').src = img.url.trim();
+      document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+      thumb.classList.add('active');
+    });
+
+    thumbnails.appendChild(thumb);
+  });
+
+  window.currentProduct = product;
+  productModal.classList.add('open');
+}
+
+// Открытие модального окна корзины
+function openCartModal() {
+  if (cartItems) {
+    const cart = getCart();
+    if (cart.length === 0) {
+      cartItems.innerHTML = '<div class="empty">Ваша корзина пуста</div>';
+    } else {
+      cartItems.innerHTML = '';
+      let total = 0;
+      cart.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'cart-item';
+        row.innerHTML = `
+          <img src="${item.product.images[0].url.trim()}" alt="" />
+          <div class="cart-item-info">
+            <div class="cart-item-title">${item.product.title}</div>
+            <div class="cart-item-price">${formatPrice(item.product.price)}</div>
+            <div class="cart-quantity">
+              <button class="qty-minus" data-id="${item.product.id}">−</button>
+              <span>${item.qty}</span>
+              <button class="qty-plus" data-id="${item.product.id}">+</button>
+            </div>
+          </div>
+          <div class="cart-item-total">${formatPrice(item.product.price * item.qty)}</div>
+        `;
+        cartItems.appendChild(row);
+        total += item.product.price * item.qty;
+      });
+
+      const totalRow = document.createElement('div');
+      totalRow.className = 'total-row';
+      totalRow.innerHTML = `<span>Итого:</span><span>${formatPrice(total)}</span>`;
+      cartItems.appendChild(totalRow);
+
+      // Обработчики изменения количества
+      document.querySelectorAll('.qty-minus').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = parseInt(btn.dataset.id);
+          updateQuantity(id, -1);
+          openCartModal();
+        });
+      });
+
+      document.querySelectorAll('.qty-plus').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = parseInt(btn.dataset.id);
+          updateQuantity(id, 1);
+          openCartModal();
+        });
+      });
+    }
+  }
+
+  updateSendOrderButton();
+  cartModal.classList.add('open');
+}
+
+// Закрытие модалок
+function closeModals() {
+  const modal = document.querySelector('.modal.open');
+  if (modal) modal.classList.remove('open');
+}
+
+// Обновление состояния кнопки "Оформить заказ"
+function updateSendOrderButton() {
+  if (!sendOrderBtn) return;
+  if (getCart().length === 0) {
+    sendOrderBtn.disabled = true;
+    sendOrderBtn.title = 'Нельзя оформить заказ — корзина пуста';
+  } else {
+    sendOrderBtn.disabled = false;
+    sendOrderBtn.title = '';
+  }
+}
+
+// Привязка событий
+// ui.js - обновленная функция setupEventListeners()
+// ui.js - обновленная функция setupEventListeners()
+// ui.js - обновленная функция setupEventListeners
+function setupEventListeners() {
+  const searchInput = document.getElementById('search-input');
+
+  if (searchInput) {
+    // Безопасное обновление обработчика поиска
+    searchInput.removeEventListener('input', renderProducts);
+    searchInput.addEventListener('input', renderProducts);
+  }
+
+  // Обработка категорий - безопасный способ
+  const categoryButtons = document.querySelectorAll('.tag-btn');
+  
+  // Удаляем старые обработчики
+  categoryButtons.forEach(btn => {
+    btn.removeEventListener('click', handleCategoryClick);
+  });
+  
+  // Добавляем новые обработчики
+  categoryButtons.forEach(btn => {
+    btn.addEventListener('click', handleCategoryClick);
+  });
+
+  // Остальные обработчики событий...
+  if (cartBtn) {
+    cartBtn.removeEventListener('click', openCartModal);
+    cartBtn.addEventListener('click', openCartModal);
+  }
+
+  document.getElementById('add-to-cart-btn')?.addEventListener('click', () => addToCart(window.currentProduct));
+  document.getElementById('buy-now-btn')?.addEventListener('click', () => {
+    addToCart(window.currentProduct);
+    closeModals();
+    openCartModal();
+  });
+
+  phoneInput?.addEventListener('input', () => {
+    phoneInput.value = phoneInput.value.replace(/[^0-9+]/g, '');
+  });
+
+  // Отправка заказа (оставляем как есть)
+  if (sendOrderBtn) {
+    let isSending = false;
+    // ... ваш код отправки заказа
+  }
+
+  document.querySelectorAll('[data-close]').forEach(btn => {
+    btn.addEventListener('click', closeModals);
+  });
+}
+
+// Отдельная функция для обработки кликов по категориям
+function handleCategoryClick(event) {
+  const categoryButtons = document.querySelectorAll('.tag-btn');
+  const clickedBtn = event.target;
+  
+  // Убираем активный класс у всех кнопок
+  categoryButtons.forEach(btn => {
+    btn.classList.remove('active');
+  });
+  
+  // Добавляем активный класс текущей кнопке
+  clickedBtn.classList.add('active');
+  
+  // Устанавливаем текущую категорию
+  window.currentCategory = clickedBtn.dataset.category || 'все';
+  
+  // Перерисовываем товары
+  renderProducts();
+}
+
+// Убедитесь, что в main.js правильно инициализируется начальное состояние
+// main.js
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log('[DEBUG] DOM загружен, инициализация приложения');
+  
+  // Инициализируем начальное состояние
+  window.currentCategory = 'все'; // Устанавливаем начальную категорию
+  
+  // Настраиваем обработчики событий
+  setupEventListeners();
+  
+  // Загружаем и отображаем товары
+  await renderProducts();
+});
+
+// Улучшенная функция renderProducts с четкой фильтрацией по категориям
+// ui.js - обновленная функция renderProducts
+async function renderProducts() {
+  if (renderProductsTimeout) {
+    clearTimeout(renderProductsTimeout);
+  }
+  
+  renderProductsTimeout = setTimeout(async () => {
+    try {
+      const res = await fetch('/api/products');
+      
+      if (!res.ok) {
+        throw new Error('Не удалось загрузить товары');
+      }
+      
+      const PRODUCTS = await res.json();
+      const query = (searchInput?.value || '').toLowerCase();
+      
+      // Получаем текущую категорию
+      const currentCategory = window.currentCategory || 'все';
+
+      const filtered = PRODUCTS.filter(p => {
+        const available = p.available !== false;
+        
+        // Фильтр по категории
+        let categoryMatch = true;
+        if (currentCategory !== 'все') {
+          // Преобразуем категорию из базы данных для сравнения
+          const productCategory = p.category || '';
+          categoryMatch = productCategory.toLowerCase() === currentCategory.toLowerCase();
+        }
+        
+        // Фильтр по поиску
+        const searchMatch = query === '' ||
+          (p.title && p.title.toLowerCase().includes(query)) ||
+          (p.description && p.description.toLowerCase().includes(query));
+        
+        return available && categoryMatch && searchMatch;
+      });
+
+      if (!productsContainer) {
+        return;
+      }
+
+      productsContainer.innerHTML = '';
+
+      if (filtered.length === 0) {
+        productsContainer.innerHTML = `
+          <div class="empty">
+            <div class="text-6xl">🔍</div>
+            <h3>Товары не найдены</h3>
+            <p>Попробуйте изменить параметры поиска</p>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach((product) => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.innerHTML = `
+          <div class="product-content">
+            <h3 class="product-title">${product.title || 'Без названия'}</h3>
+            <div class="product-image">
+              <img src="${product.images && product.images[0]?.url?.trim() || '/assets/placeholder.png'}" alt="${product.title || 'Изображение товара'}" />
+              ${product.tag ? `<div class="product-badge" data-tag="${product.tag.toLowerCase()}">${product.tag}</div>` : ''}
+            </div>
+            <div class="product-footer">
+              <div class="product-price">${formatPrice(product.price || 0)}</div>
+              <div class="product-actions">
+                <button class="btn-details" data-id="${product.id}">Подробнее</button>
+                <button class="btn-cart" data-id="${product.id}">В корзину</button>
+              </div>
+            </div>
+          </div>
+        `;
+        productsContainer.appendChild(card);
+      });
+      
+      // Обработчики событий для кнопок
+      document.querySelectorAll('.btn-details').forEach(button => {
+        button.addEventListener('click', (event) => {
+          const productId = parseInt(event.target.dataset.id);
+          const product = PRODUCTS.find(p => p.id === productId);
+          if (product) {
+            openProductModal(product);
+          }
+        });
+      });
+
+      document.querySelectorAll('.btn-cart').forEach(button => {
+        button.addEventListener('click', (event) => {
+          const productId = parseInt(event.target.dataset.id);
+          const product = PRODUCTS.find(p => p.id === productId);
+          if (product) {
+            addToCart(product);
+            updateCartCount();
+          }
+        });
+      });
+      
+    } catch (err) {
+      console.error('Ошибка загрузки товаров:', err);
+      if (productsContainer) {
+        productsContainer.innerHTML = `
+          <div class="empty">
+            <div class="text-6xl">⚠️</div>
+            <h3>Ошибка загрузки</h3>
+            <p>Попробуйте позже или свяжитесь с нами</p>
+          </div>
+        `;
+      }
+    }
+  }, 300);
+}
+
+// В ui.js найдите функцию отправки заказа и замените её на эту:
+
+if (sendOrderBtn) {
+  let isSending = false; // Флаг для предотвращения повторной отправки
+  
+  sendOrderBtn.addEventListener('click', async () => {
+    // Предотвращаем повторную отправку
+    if (isSending) {
+      console.log('Заказ уже отправляется...');
+      return;
+    }
+    
+    if (!phoneInput.value.trim()) {
+      alert('Укажите телефон');
+      return;
+    }
+    
+    if (getCart().length === 0) {
+      alert('Корзина пуста');
+      return;
     }
 
     try {
-        const res = await fetch('/api/categories');
-        if (!res.ok) {
-            console.warn('Не удалось загрузить категории с сервера, используем локальные.');
-            throw new Error('Categories fetch failed');
-        }
-        let categories = await res.json();
-        console.log('Категории загружены с сервера:', categories);
+      isSending = true;
+      sendOrderBtn.disabled = true;
+      sendOrderBtn.textContent = 'Отправка...';
 
-        // --- Подготовка списка категорий ---
-        // 1. Создаем объект для категории "все"
-        const allCategory = { slug: 'все', name: 'все' };
-        // 2. Фильтруем, чтобы "все" не было в списке из API (если оно там есть)
-        categories = categories.filter(cat => cat.slug !== 'все');
-        // 3. Ставим "все" в начало
-        categories.unshift(allCategory);
+      const response = await fetch('/api/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: phoneInput.value,
+          comment: commentInput.value,
+          cart: getCart()
+        })
+      });
 
-        // --- Рендер кнопок категорий ---
-        renderCategoryButtons(categories, tagsContainer);
+      const result = await response.json();
+      console.log('Ответ сервера:', result);
 
-        // --- Установка обработчиков событий для кнопок категорий ---
-        setupCategoryEventListeners();
+      if (result.success) {
+        // Успешная отправка - показываем сообщение об успехе
+        clearCart();
+        phoneInput.value = '';
+        commentInput.value = '';
+        successMessage.style.display = 'block';
+        updateCartCount();
+        openCartModal();
 
-        // --- Установка начальной категории ---
-        // window.currentCategory уже установлена в main.js как 'все'
-        // Но на всякий случай переустановим
-        window.currentCategory = 'все';
-        console.log("Начальная категория установлена:", window.currentCategory);
+        setTimeout(() => {
+          successMessage.style.display = 'none';
+          sendOrderBtn.disabled = false;
+          sendOrderBtn.textContent = 'Оформить заказ';
+          isSending = false;
+        }, 3000);
+      } else {
+        // Ошибка от сервера
+        throw new Error(result.error || 'Ошибка сервера');
+      }
+    } catch (error) {
+      console.error('Ошибка отправки заказа:', error);
+      
+      // Проверяем, возможно заказ уже отправлен (по статусу ответа)
+      if (error.message && error.message.includes('Заказ уже обрабатывается')) {
+        // Заказ уже обрабатывается, показываем сообщение об успехе
+        clearCart();
+        phoneInput.value = '';
+        commentInput.value = '';
+        successMessage.style.display = 'block';
+        updateCartCount();
+        openCartModal();
 
-        // --- Первичный рендер товаров ---
-        renderProducts();
-
-    } catch (err) {
-        console.error('Ошибка при загрузке или обработке категорий:', err);
-        // --- Fallback на локальные категории ---
-        const defaultCategories = [
-            { slug: 'все', name: 'все' },
-            { slug: 'headset', name: 'шлемы' },
-            { slug: 'accessory', name: 'крепления' },
-            { slug: 'battery', name: 'аккумуляторы' },
-            { slug: 'charger', name: 'док-станции' }
-        ];
-        renderCategoryButtons(defaultCategories, tagsContainer);
-        setupCategoryEventListeners();
-
-        window.currentCategory = 'все';
-        renderProducts();
-    }
-}
-
-// 2. Рендер кнопок категорий в DOM
-function renderCategoryButtons(categories, container) {
-    container.innerHTML = ''; // Очищаем контейнер
-    categories.forEach(cat => {
-        const btn = document.createElement('button');
-        btn.className = 'tag-btn';
-        // Активируем кнопку "все" по умолчанию или текущую выбранную категорию
-        if (cat.slug === 'все' || cat.slug === window.currentCategory) {
-            btn.classList.add('active');
-        }
-        btn.dataset.category = cat.slug; // Используем slug для data-атрибута
-        btn.textContent = cat.name;
-        container.appendChild(btn);
-    });
-    console.log("Кнопки категорий созданы и добавлены в DOM");
-}
-
-// 3. Установка обработчиков событий для кнопок категорий
-function setupCategoryEventListeners() {
-    // Получаем свежий список кнопок после их создания
-    const buttons = document.querySelectorAll('.tag-btn');
-    console.log(`Найдено ${buttons.length} кнопок категорий для установки обработчиков`);
-
-    buttons.forEach(btn => {
-        // Простое решение: удалить старый обработчик (если есть) и добавить новый
-        // Это помогает избежать дублирования событий
-        const newBtn = btn.cloneNode(true); // Клонируем кнопку без обработчиков
-        btn.parentNode.replaceChild(newBtn, btn); // Заменяем старую на новую
-
-        newBtn.addEventListener('click', () => {
-            // Убираем класс 'active' у всех кнопок
-            document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
-            // Добавляем класс 'active' только нажатой кнопке
-            newBtn.classList.add('active');
-
-            // Получаем выбранную категорию из data-атрибута
-            const selectedCategory = newBtn.dataset.category;
-            if (selectedCategory !== undefined) {
-                window.currentCategory = selectedCategory;
-                console.log("Выбрана категория:", window.currentCategory);
-                // Перерисовываем товары с учетом новой категории
-                renderProducts();
-            } else {
-                console.error("У кнопки категории отсутствует data-category атрибут:", newBtn);
-            }
-        });
-    });
-    console.log("Обработчики событий для кнопок категорий установлены");
-}
-
-// --- Функция рендеринга товаров с фильтрацией ---
-async function renderProducts() {
-    // Отменяем предыдущий таймаут рендера, если он есть (debounce)
-    if (renderProductsTimeout) {
-        clearTimeout(renderProductsTimeout);
-    }
-
-    // Устанавливаем новый таймаут
-    renderProductsTimeout = setTimeout(async () => {
-        try {
-            // 1. Получаем товары с сервера
-            const res = await fetch('/api/products');
-            if (!res.ok) {
-                throw new Error(`HTTP error! status: ${res.status}`);
-            }
-            const PRODUCTS = await res.json();
-            console.log("Товары загружены с сервера:", PRODUCTS.length, "шт.");
-
-            // 2. Получаем значения фильтров
-            const query = (searchInput?.value || '').toLowerCase().trim();
-            const currentCategory = window.currentCategory; // Получаем из глобальной переменной
-
-            console.log("Применяем фильтры: поиск =", query, ", категория =", currentCategory);
-
-            // 3. Фильтруем товары
-            const filteredProducts = PRODUCTS.filter(p => {
-                const isAvailable = p.available !== false; // Считаем доступным, если available === true или undefined
-
-                // --- Фильтр по категории ---
-                const categoryMatch = currentCategory === 'все' || p.category === currentCategory;
-                // console.log(`Товар ${p.id}: категория '${p.category}' совпадает с '${currentCategory}'?`, categoryMatch);
-
-                // --- Фильтр по поиску ---
-                const searchMatch =
-                    query === '' ||
-                    (p.title && p.title.toLowerCase().includes(query)) ||
-                    (p.description && p.description.toLowerCase().includes(query));
-
-                // Товар попадает в результат, если он доступен И подходит по категории И подходит по поиску
-                return isAvailable && categoryMatch && searchMatch;
-            });
-
-            console.log("Отфильтрованные товары:", filteredProducts);
-
-            // 4. Отрисовываем товары в DOM
-            if (productsContainer) {
-                productsContainer.innerHTML = ''; // Очищаем контейнер
-
-                if (filteredProducts.length === 0) {
-                    productsContainer.innerHTML = '<p class="no-products">Товары не найдены.</p>';
-                    return;
-                }
-
-                filteredProducts.forEach(p => {
-                    const productEl = document.createElement('div');
-                    productEl.className = 'product';
-                    // --- Адаптируйте HTML под вашу структуру ---
-                    productEl.innerHTML = `
-                        <img src="${p.images && p.images[0] ? p.images[0].url.trim() : '/path/to/default-image.jpg'}" alt="${p.title || 'Изображение товара'}" />
-                        <h3>${p.title || 'Без названия'}</h3>
-                        <p class="product-description">${p.description || ''}</p>
-                        <div class="product-price">${formatPrice(p.price)}</div>
-                        <button class="view-btn" data-product-id="${p.id}">Посмотреть</button>
-                        <button class="add-btn" data-product-id="${p.id}">В корзину</button>
-                    `;
-                    productsContainer.appendChild(productEl);
-
-                    // --- Добавляем обработчики для кнопок внутри карточки товара ---
-                    productEl.querySelector('.view-btn')?.addEventListener('click', () => {
-                        // Передаем полный объект товара в модальное окно
-                        openProductModal(p);
-                    });
-
-                    productEl.querySelector('.add-btn')?.addEventListener('click', () => {
-                        addToCart(p);
-                    });
-                });
-            }
-
-        } catch (err) {
-            console.error('Ошибка при рендеринге товаров:', err);
-            if (productsContainer) {
-                productsContainer.innerHTML = '<p class="error">Ошибка загрузки товаров. Попробуйте позже.</p>';
-            }
-        }
-    }, 300); // Задержка 300ms перед выполнением (debounce)
-}
-
-// --- Модальные окна ---
-function openProductModal(product) {
-    // --- Адаптируйте под вашу разметку модального окна ---
-    const titleEl = document.getElementById('product-title');
-    const descEl = document.getElementById('product-description');
-    const priceEl = document.getElementById('product-price');
-    const mainImgEl = document.getElementById('product-main-image');
-    const thumbnailsEl = document.getElementById('thumbnails');
-
-    if (titleEl) titleEl.textContent = product.title || 'Без названия';
-    if (descEl) descEl.textContent = product.description || '';
-    if (priceEl) priceEl.textContent = formatPrice(product.price);
-    if (mainImgEl) {
-        mainImgEl.src = product.images && product.images[0] ? product.images[0].url.trim() : '';
-        mainImgEl.alt = product.title || '';
-    }
-
-    if (thumbnailsEl) {
-        thumbnailsEl.innerHTML = '';
-        if (product.images && product.images.length > 1) { // Показываем миниатюры, если их больше одной
-            product.images.forEach((img, index) => {
-                const thumb = document.createElement('img');
-                thumb.src = img.url.trim();
-                thumb.alt = img.alt || `Изображение ${index + 1} товара ${product.title}`;
-                thumb.className = 'thumbnail';
-                if (index === 0) thumb.classList.add('active');
-
-                thumb.addEventListener('click', () => {
-                    if (mainImgEl) mainImgEl.src = img.url.trim();
-                    document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
-                    thumb.classList.add('active');
-                });
-
-                thumbnailsEl.appendChild(thumb);
-            });
-        }
-    }
-
-    window.currentProduct = product; // Сохраняем текущий товар глобально
-    if (productModal) productModal.classList.add('open');
-}
-
-function openCartModal() {
-    // --- Адаптируйте под вашу разметку модального окна корзины ---
-    if (cartItems) {
-        const cart = getCart();
-        cartItems.innerHTML = '';
-
-        if (cart.length === 0) {
-            cartItems.innerHTML = '<div class="empty">Ваша корзина пуста</div>';
-        } else {
-            let total = 0;
-            cart.forEach(item => {
-                const row = document.createElement('div');
-                row.className = 'cart-item';
-                row.innerHTML = `
-                    <img src="${item.product.images && item.product.images[0] ? item.product.images[0].url.trim() : ''}" alt="${item.product.title || ''}" />
-                    <div class="cart-item-info">
-                        <div class="cart-item-title">${item.product.title || 'Без названия'}</div>
-                        <div class="cart-item-price">${formatPrice(item.product.price)}</div>
-                        <div class="cart-quantity">
-                            <button class="qty-minus" data-product-id="${item.product.id}">−</button>
-                            <span>${item.qty}</span>
-                            <button class="qty-plus" data-product-id="${item.product.id}">+</button>
-                        </div>
-                    </div>
-                    <div class="cart-item-total">${formatPrice(item.product.price * item.qty)}</div>
-                `;
-                cartItems.appendChild(row);
-                total += item.product.price * item.qty;
-            });
-
-            const totalRow = document.createElement('div');
-            totalRow.className = 'total-row';
-            totalRow.innerHTML = `<span>Итого:</span><span>${formatPrice(total)}</span>`;
-            cartItems.appendChild(totalRow);
-
-            // Обработчики изменения количества
-            cartItems.querySelectorAll('.qty-minus').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const id = parseInt(e.target.dataset.productId);
-                    if (!isNaN(id)) {
-                        updateQuantity(id, -1);
-                        openCartModal(); // Перерисовываем модалку
-                    }
-                });
-            });
-
-            cartItems.querySelectorAll('.qty-plus').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const id = parseInt(e.target.dataset.productId);
-                    if (!isNaN(id)) {
-                        updateQuantity(id, 1);
-                        openCartModal(); // Перерисовываем модалку
-                    }
-                });
-            });
-        }
-    }
-
-    updateSendOrderButton();
-    if (cartModal) cartModal.classList.add('open');
-}
-
-function closeModals() {
-    const openModal = document.querySelector('.modal.open');
-    if (openModal) openModal.classList.remove('open');
-}
-
-// --- Обновление состояния кнопки отправки заказа ---
-function updateSendOrderButton() {
-    if (!sendOrderBtn) return;
-    if (getCart().length === 0) {
-        sendOrderBtn.disabled = true;
-        sendOrderBtn.title = 'Нельзя оформить заказ — корзина пуста';
-    } else {
+        setTimeout(() => {
+          successMessage.style.display = 'none';
+          sendOrderBtn.disabled = false;
+          sendOrderBtn.textContent = 'Оформить заказ';
+          isSending = false;
+        }, 3000);
+      } else {
+        // Другая ошибка
+        alert('Не удалось отправить заказ. Пожалуйста, позвоните нам.');
         sendOrderBtn.disabled = false;
-        sendOrderBtn.title = '';
-    }
-}
-
-// --- Настройка общих обработчиков событий ---
-function setupEventListeners() {
-
-    // --- Обработчик поиска ---
-    if (searchInput) {
-        // Debounce для поиска тоже
-        let searchTimeout;
-        searchInput.addEventListener('input', () => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                renderProducts(); // Перерисовываем товары при вводе в поиск
-            }, 300);
-        });
-    }
-
-    // --- Обработчики модальных окон и корзины ---
-    if (cartBtn) {
-        cartBtn.addEventListener('click', openCartModal);
-    }
-
-    // Обработчики для кнопок закрытия модалок
-    document.querySelectorAll('[data-close]').forEach(btn => {
-        btn.addEventListener('click', closeModals);
-    });
-
-    // --- Обработчики для формы заказа (если есть) ---
-    if (phoneInput) {
-        phoneInput.addEventListener('input', () => {
-            phoneInput.value = phoneInput.value.replace(/[^0-9+]/g, '');
-        });
-    }
-
-    if (sendOrderBtn) {
-        let isSending = false;
-        sendOrderBtn.addEventListener('click', async () => {
-            if (isSending) return;
-            if (!phoneInput || !phoneInput.value.trim()) {
-                alert('Укажите телефон');
-                return;
-            }
-            if (getCart().length === 0) {
-                alert('Корзина пуста');
-                return;
-            }
-
-            try {
-                isSending = true;
-                sendOrderBtn.disabled = true;
-                sendOrderBtn.textContent = 'Отправка...';
-
-                const response = await fetch('/api/order', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        phone: phoneInput.value,
-                        comment: commentInput ? commentInput.value : '',
-                        cart: getCart()
-                    })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    clearCart();
-                    if (phoneInput) phoneInput.value = '';
-                    if (commentInput) commentInput.value = '';
-                    if (successMessage) successMessage.style.display = 'block';
-                    updateCartCount();
-                    openCartModal(); // Обновить модалку корзины
-
-                    setTimeout(() => {
-                        if (successMessage) successMessage.style.display = 'none';
-                        sendOrderBtn.disabled = false;
-                        sendOrderBtn.textContent = 'Оформить заказ';
-                        isSending = false;
-                    }, 3000);
-                } else {
-                    throw new Error(result.error || 'Ошибка сервера');
-                }
-            } catch (error) {
-                console.error('Ошибка отправки заказа:', error);
-                alert('Не удалось отправить заказ. Пожалуйста, позвоните нам.');
-                sendOrderBtn.disabled = false;
-                sendOrderBtn.textContent = 'Оформить заказ';
-                isSending = false;
-            }
-        });
-    }
-
-    console.log("Основные обработчики событий установлены");
-}
-
-// --- Экспорт функций в глобальную область видимости ---
-window.renderProducts = renderProducts;
-window.openProductModal = openProductModal;
-window.openCartModal = openCartModal;
-window.closeModals = closeModals;
-window.setupEventListeners = setupEventListeners;
-window.loadCategoriesAndSetupFilters = loadCategoriesAndSetupFilters; // Экспортируем новую функцию
-// Также экспортируем вспомогательные, если они используются в других местах
-window.getCart = getCart;
-window.addToCart = addToCart;
-window.updateQuantity = updateQuantity;
-window.clearCart = clearCart;
-window.updateCartCount = updateCartCount;
-window.formatPrice = formatPrice;
-
-console.log("[DEBUG] Функции экспортированы в window");// server.js
-require('dotenv').config();
-const express = require('express');
-const path = require('path');
-const fs = require('fs');
-const axios = require('axios');
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-const bcrypt = require('bcryptjs');
-
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
-
-// === Подключение к БД (только на Render) ===
-let pool;
-if (process.env.DATABASE_URL) {
-  const { Pool } = require('pg');
-  pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-      rejectUnauthorized: false
+        sendOrderBtn.textContent = 'Оформить заказ';
+        isSending = false;
+      }
     }
   });
 }
 
-// Установка часового пояса (если нужно)
-process.env.TZ = 'Europe/Moscow';
+  document.querySelectorAll('[data-close]').forEach(btn => {
+    btn.addEventListener('click', closeModals);
+  });
 
-// === API: Получить товары ===
-app.get('/api/products', async (req, res) => {
-  try {
-    if (pool) {
-      // Проверяем, запрашивает ли админ-панель все товары
-      const isAdmin = req.query.admin === 'true';
-      
-      let query = `
-        SELECT 
-          id, title, description, price, tag, available, category, brand, compatibility,
-          images_json as images
-        FROM products 
-      `;
-      
-      // Только для обычных пользователей фильтруем по доступности
-      // Для админа показываем все товары
-      if (!isAdmin) {
-        query += 'WHERE available = true ';
-      }
-      
-      query += 'ORDER BY id';
-      
-      const result = await pool.query(query);
-      res.json(result.rows);
-    } else {
-      console.warn('Подключение к БД не настроено или pool не инициализирован. Возвращается пустой список.');
-      res.json([]);
-    }
-  } catch (err) {
-    console.error('Ошибка загрузки товаров:', err);
-    res.status(500).json({ error: 'Не удалось загрузить товары' });
-  }
-});
 
-// === API: Оформить заказ ===
-app.post('/api/order', async (req, res) => {
-  console.log('=== НАЧАЛО ОБРАБОТКИ ЗАКАЗА ===');
-  console.log('Полученные данные:', req.body);
-
-  const { phone, comment, cart } = req.body;
-
-  // 1. Базовые проверки
-  if (!phone || !cart || cart.length === 0) {
-    console.log('ОШИБКА: Недостаточно данных');
-    return res.status(400).json({ success: false, error: 'Недостаточно данных' });
-  }
-
-  // 2. Проверка на дублирование запроса
-  const requestHash = JSON.stringify({ phone, comment, cart });
-  if (req.app.locals.lastOrderRequest === requestHash) {
-    console.log('ПРЕДУПРЕЖДЕНИЕ: Повторный запрос с теми же данными обнаружен');
-    return res.status(200).json({ 
-      success: true, 
-      message: 'Заказ уже обрабатывается',
-      orderId: req.app.locals.lastOrderId || null
-    });
-  }
-  
-  // Сохраняем хэш последнего запроса
-  req.app.locals.lastOrderRequest = requestHash;
-  
-  // Очищаем хэш через 30 секунд
-  setTimeout(() => {
-    if (req.app.locals.lastOrderRequest === requestHash) {
-      req.app.locals.lastOrderRequest = null;
-      req.app.locals.lastOrderId = null;
-    }
-  }, 30000);
-
-  let orderId = null;
-  let orderSaved = false;
-  let telegramSent = false;
-
-  try {
-    // 3. Рассчитываем общую сумму
-    const total = cart.reduce((sum, item) => sum + (item.product?.price || 0) * item.qty, 0);
-    console.log('Рассчитанная сумма:', total);
-
-    // 4. Получаем московское время для сохранения в БД и Telegram
-    const moscowTimeObj = new Date(new Date().toLocaleString("en-US", {timeZone: 'Europe/Moscow'}));
-    const moscowTimeString = moscowTimeObj.toLocaleString('ru-RU', {
-      timeZone: 'Europe/Moscow',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-    console.log('Время заказа (Москва):', moscowTimeString);
-
-    // 5. Вставка основной информации о заказе в БД
-    if (pool) {
-      console.log('Сохранение заказа в БД...');
-      const orderResult = await pool.query(
-        'INSERT INTO orders (phone, comment, total_amount, created_at) VALUES ($1, $2, $3, $4) RETURNING id',
-        [phone, comment || '', total, moscowTimeObj]
-      );
-      orderId = orderResult.rows[0].id;
-      orderSaved = true;
-      req.app.locals.lastOrderId = orderId;
-      console.log('Заказ сохранен в БД с ID:', orderId);
-    } else {
-      console.warn('Подключение к БД отсутствует. Заказ не будет сохранен в БД.');
-    }
-
-    // 6. Вставка позиций заказа в БД
-    if (pool && orderId) {
-      console.log('Сохранение позиций заказа в БД...');
-      const itemInserts = cart.map(item => [
-        orderId,
-        item.product?.id,
-        item.product?.title || 'Неизвестный товар',
-        item.qty,
-        item.product?.price || 0
-      ]);
-
-      if (itemInserts.length > 0) {
-        const queryText = 'INSERT INTO order_items (order_id, product_id, product_title, quantity, price_per_unit) VALUES ';
-        const queryValues = [];
-        const placeholders = itemInserts.map((_, index) => {
-          const start = index * 5 + 1;
-          return `($${start}, $${start+1}, $${start+2}, $${start+3}, $${start+4})`;
-        }).join(', ');
-
-        itemInserts.forEach(item => {
-          queryValues.push(...item);
-        });
-
-        await pool.query(queryText + placeholders, queryValues);
-        console.log('Позиции заказа сохранены в БД');
-      }
-    }
-
-    // 7. Подготавливаем сообщение для Telegram
-    const message = `
-📦 *Новый заказ на BIZON!*
-📞 *Телефон:* \`${phone}\`
-💬 *Комментарий:* ${comment || 'не указан'}
-🛒 *Товары:*
-${cart.map(item => `• ${item.product?.title || 'Неизвестный товар'} ×${item.qty} — ${(item.product?.price || 0) * item.qty} ₽`).join('\n')}
-💰 *Итого:* ${total} ₽
-🕐 ${moscowTimeString}
-`.trim();
-
-    console.log('Подготовленное сообщение для Telegram:', message);
-
-    // 8. Отправка сообщения в Telegram
-    const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-    const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-
-    if (BOT_TOKEN && CHAT_ID) {
-      try {
-        console.log('Отправка сообщения в Telegram...');
-        await axios.post(
-          `https://api.telegram.org/bot ${BOT_TOKEN}/sendMessage`,
-          {
-            chat_id: CHAT_ID,
-            text: message,
-            parse_mode: 'Markdown',
-            disable_web_page_preview: true
-          }
-        );
-        telegramSent = true;
-        console.log('Сообщение успешно отправлено в Telegram');
-      } catch (telegramError) {
-        console.error('Ошибка отправки в Telegram:', telegramError.message);
-        // Не прерываем выполнение, если Telegram не работает
-      }
-    } else {
-      console.warn('Токен Telegram бота или ID чата не настроены');
-    }
-
-    // 9. Отправка успешного ответа клиенту
-    console.log('=== ЗАКАЗ УСПЕШНО ОБРАБОТАН ===');
-    res.json({ 
-      success: true, 
-      orderId: orderId,
-      savedToDB: orderSaved,
-      sentToTelegram: telegramSent
-    });
-
-  } catch (error) {
-    console.error('КРИТИЧЕСКАЯ ОШИБКА обработки заказа:', error);
-    // Очищаем хэш при ошибке, чтобы можно было повторить попытку
-    req.app.locals.lastOrderRequest = null;
-    req.app.locals.lastOrderId = null;
-    
-    // Отправляем клиенту сообщение об ошибке
-    res.status(500).json({ success: false, error: 'Ошибка обработки заказа на сервере' });
-  }
-});
-
-// === API: Получить товар по ID ===
-app.get('/api/products/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (pool) {
-      const result = await pool.query(`
-        SELECT 
-          id, title, description, price, tag, available, category, brand, compatibility,
-          images_json as images
-        FROM products 
-        WHERE id = $1
-      `, [id]);
-
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Товар не найден' });
-      }
-      res.json(result.rows[0]);
-    } else {
-      res.status(500).json({ error: 'База данных не настроена' });
-    }
-  } catch (err) {
-    console.error('Ошибка загрузки товара:', err);
-    res.status(500).json({ error: 'Не удалось загрузить товар' });
-  }
-});
-
-// === API: Создать товар ===
-app.post('/api/products', async (req, res) => {
-  try {
-    const { title, description, price, tag, available, category, brand, compatibility, images } = req.body;
-    
-    // Преобразуем images обратно в JSON для хранения в БД
-    const images_json = images ? JSON.stringify(images) : null;
-
-    if (pool) {
-      const result = await pool.query(`
-        INSERT INTO products (title, description, price, tag, available, category, brand, compatibility, images_json)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        RETURNING id, title, description, price, tag, available, category, brand, compatibility, images_json as images
-      `, [title, description, price, tag, available, category, brand, compatibility, images_json]);
-
-      res.status(201).json(result.rows[0]);
-    } else {
-      res.status(500).json({ error: 'База данных не настроена' });
-    }
-  } catch (err) {
-    console.error('Ошибка создания товара:', err);
-    res.status(500).json({ error: 'Не удалось создать товар' });
-  }
-});
-
-// === API: Обновить товар ===
-app.put('/api/products/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { title, description, price, tag, available, category, brand, compatibility, images } = req.body;
-    
-    // Преобразуем images обратно в JSON для хранения в БД
-    const images_json = images ? JSON.stringify(images) : null;
-
-    if (pool) {
-      const result = await pool.query(`
-        UPDATE products 
-        SET title = $1, description = $2, price = $3, tag = $4, available = $5, category = $6, brand = $7, compatibility = $8, images_json = $9
-        WHERE id = $10
-        RETURNING id, title, description, price, tag, available, category, brand, compatibility, images_json as images
-      `, [title, description, price, tag, available, category, brand, compatibility, images_json, id]);
-
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Товар не найден' });
-      }
-      res.json(result.rows[0]);
-    } else {
-      res.status(500).json({ error: 'База данных не настроена' });
-    }
-  } catch (err) {
-    console.error('Ошибка обновления товара:', err);
-    res.status(500).json({ error: 'Не удалось обновить товар' });
-  }
-});
-
-// === API: Удалить товар ===
-app.delete('/api/products/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (pool) {
-      const result = await pool.query('DELETE FROM products WHERE id = $1 RETURNING id', [id]);
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Товар не найден' });
-      }
-      res.status(204).send(); // 204 No Content - успешно удалено
-    } else {
-      res.status(500).json({ error: 'База данных не настроена' });
-    }
-  } catch (err) {
-    console.error('Ошибка удаления товара:', err);
-    res.status(500).json({ error: 'Не удалось удалить товар' });
-  }
-});
-
-// === API: Получить категории ===
-app.get('/api/categories', async (req, res) => {
-  try {
-    if (pool) {
-      // Предполагаем, что у вас есть таблица categories с полями id и name
-      const result = await pool.query('SELECT id, name FROM categories ORDER BY name');
-      res.json(result.rows);
-    } else {
-      // Если таблицы нет, возвращаем пустой массив или стандартные категории
-      console.warn('Таблица категорий не найдена или pool не инициализирован.');
-      res.json([]); // Или res.json([{id: 1, name: 'электроника'}, ...]);
-    }
-  } catch (err) {
-    console.error('Ошибка загрузки категорий:', err);
-    res.status(500).json({ error: 'Не удалось загрузить категории' });
-  }
-});
-
-// === API: Создать категорию ===
-app.post('/api/categories', async (req, res) => {
-    try {
-        const { name } = req.body;
-        if (!name) {
-            return res.status(400).json({ error: 'Название категории обязательно' });
-        }
-
-        if (pool) {
-            const result = await pool.query(
-                'INSERT INTO categories (name) VALUES ($1) RETURNING id, name',
-                [name]
-            );
-            res.status(201).json(result.rows[0]);
-        } else {
-            res.status(500).json({ error: 'База данных не настроена' });
-        }
-    } catch (err) {
-        console.error('Ошибка создания категории:', err);
-        res.status(500).json({ error: 'Не удалось создать категорию' });
-    }
-});
-
-// === API: Логин администратора ===
-app.post('/api/login', async (req, res) => {
-  try {
-    const { username, password } = req.body;
-
-    // 1. Базовая валидация
-    if (!username || !password) {
-      return res.status(400).json({ success: false, message: 'Логин и пароль обязательны' });
-    }
-
-    // 2. Проверяем, есть ли подключение к БД
-    if (!pool) {
-      console.error('Подключение к БД не настроено');
-      return res.status(500).json({ success: false, message: 'Ошибка сервера' });
-    }
-
-    // 3. Ищем пользователя в БД
-    const result = await pool.query(
-      'SELECT id, username, password_hash FROM admin_users WHERE username = $1',
-      [username]
-    );
-
-    // 4. Проверяем, найден ли пользователь
-    if (result.rows.length === 0) {
-      // В целях безопасности не раскрываем, что пользователь не существует
-      return res.status(401).json({ success: false, message: 'Неверный логин или пароль' });
-    }
-
-    const user = result.rows[0];
-
-    // 5. Сравниваем хэш пароля
-    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
-    
-    if (!isPasswordValid) {
-      return res.status(401).json({ success: false, message: 'Неверный логин или пароль' });
-    }
-
-    // 6. Если всё верно, возвращаем успех
-    // В реальном приложении здесь бы создавался JWT токен
-    res.json({ success: true, message: 'Авторизация успешна' });
-
-  } catch (err) {
-    console.error('Ошибка авторизации:', err);
-    res.status(500).json({ success: false, message: 'Ошибка сервера при авторизации' });
-  }
-});
-
-// === API: Удалить категорию ===
-app.delete('/api/categories/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (pool) {
-      const result = await pool.query('DELETE FROM categories WHERE id = $1 RETURNING id', [id]);
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Категория не найдена' });
-      }
-      res.status(204).send(); // 204 No Content - успешно удалено
-    } else {
-      res.status(500).json({ error: 'База данных не настроена' });
-    }
-  } catch (err) {
-    console.error('Ошибка удаления категории:', err);
-    res.status(500).json({ error: 'Не удалось удалить категорию' });
-  }
-});
-
-// === API: Получить заказы ===
-app.get('/api/orders', async (req, res) => {
-  try {
-    if (pool) {
-      // Сначала получаем все заказы
-      const ordersResult = await pool.query(`
-        SELECT 
-          id, 
-          phone, 
-          comment, 
-          total_amount, 
-          created_at, 
-          COALESCE(status, 'новый') as status
-        FROM orders 
-        ORDER BY created_at DESC
-      `);
-
-      // Для каждого заказа получаем его позиции
-      const ordersWithItems = await Promise.all(ordersResult.rows.map(async (order) => {
-        const itemsResult = await pool.query(`
-          SELECT 
-            product_id,
-            product_title, 
-            quantity,
-            price_per_unit, 
-            (quantity * price_per_unit) as total_price 
-          FROM order_items 
-          WHERE order_id = $1
-          ORDER BY id
-        `, [order.id]);
-
-        return {
-          ...order,
-          items: itemsResult.rows || [] // Передаем позиции с price_per_unit
-        };
-      }));
-
-      res.json(ordersWithItems);
-    } else {
-      res.status(500).json({ error: 'База данных не настроена' });
-    }
-  } catch (err) {
-    console.error('Ошибка загрузки заказов:', err);
-    res.status(500).json({ error: 'Не удалось загрузить заказы: ' + err.message });
-  }
-});
-
-// === API: Обновить статус заказа ===
-app.put('/api/orders/:id/status', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
-
-    // Базовая валидация статуса
-    const validStatuses = ['новый', 'в обработке', 'отправлен', 'доставлен', 'отменен'];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({ error: 'Недопустимый статус' });
-    }
-
-    if (pool) {
-      const result = await pool.query(
-        'UPDATE orders SET status = $1 WHERE id = $2 RETURNING id',
-        [status, id]
-      );
-
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Заказ не найден' });
-      }
-
-      res.json({ success: true, message: 'Статус обновлен' });
-    } else {
-      res.status(500).json({ error: 'База данных не настроена' });
-    }
-  } catch (err) {
-    console.error('Ошибка обновления статуса заказа:', err);
-    res.status(500).json({ error: 'Не удалось обновить статус заказа' });
-  }
-});
-
-// === API: Удалить заказ ===
-app.delete('/api/orders/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    if (pool) {
-      // Сначала удаляем все позиции заказа
-      await pool.query('DELETE FROM order_items WHERE order_id = $1', [id]);
-      
-      // Потом удаляем сам заказ
-      const result = await pool.query('DELETE FROM orders WHERE id = $1 RETURNING id', [id]);
-
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Заказ не найден' });
-      }
-
-      res.json({ success: true, message: 'Заказ удален успешно' });
-    } else {
-      res.status(500).json({ error: 'База данных не настроена' });
-    }
-  } catch (err) {
-    console.error('Ошибка удаления заказа:', err);
-    res.status(500).json({ error: 'Не удалось удалить заказ: ' + err.message });
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`✅ Сервер запущен на http://localhost:${PORT}`);
-});<!DOCTYPE html>
+// Экспорт
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { renderProducts, openProductModal, openCartModal, closeModals, setupEventListeners };
+} else {
+  window.renderProducts = renderProducts;
+  window.openProductModal = openProductModal;
+  window.openCartModal = openCartModal;
+  window.closeModals = closeModals;
+  window.setupEventListeners = setupEventListeners;
+} <!DOCTYPE html>
 <html lang="ru">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BIZON — Каталог товаров</title>
+  <meta name="description"
+    content="BIZON — Поставка VR-оборудования для клубов под ключ. Лучшие цены, гарантия, установка, обучение." />
+  <title>BIZON — VR-оборудование для клубов под ключ</title>
+  <link rel="icon" sizes="180x180" href="/assets/icons/apple-icon-180x180.png">
+  <meta name="msapplication-TileColor" content="#ffffff">
+  <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
+  <meta name="theme-color" content="#ffffff">
+  <!-- Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com  ">
+  <link rel="preconnect" href="https://fonts.gstatic.com  " crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800&display=swap"
+    rel="stylesheet">
 
-<link rel="icon" sizes="180x180" href="/assets/icons/apple-icon-180x180.png">
-
-
-
-<meta name="msapplication-TileColor" content="#ffffff">
-<meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
-<meta name="theme-color" content="#ffffff">
-
-  <!-- Preconnect для шрифтов -->
-  <link rel="preconnect" href="https://fonts.googleapis.com ">
-  <link rel="preconnect" href="https://fonts.gstatic.com " crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- Общие стили -->
+  <!-- Стили -->
   <link rel="stylesheet" href="css/base/reset.css">
   <link rel="stylesheet" href="css/layout/header.css">
   <link rel="stylesheet" href="css/components/background.css">
-  <link rel="stylesheet" href="css/components/tags.css">
-  <link rel="stylesheet" href="css/components/product-card.css">
-  <link rel="stylesheet" href="css/components/modal.css">
-  <link rel="stylesheet" href="css/components/cart.css">
   <link rel="stylesheet" href="css/layout/footer.css">
+  <link rel="stylesheet" href="css/pages/index.css">
 </head>
+
 <body>
 
   <!-- Фоновая анимация -->
@@ -1112,140 +575,301 @@ app.listen(PORT, () => {
     <div class="pulse-3"></div>
   </div>
 
+  <!-- Шапка -->
   <header class="header" role="banner">
-  <div class="logo">
-    <div class="logo-icon">
-      <img src="assets/logo/logo-Photoroom.png" alt="Логотип BIZON" width="75" height="75">
-    </div>
-    <div class="logo-title">BIZON</div>
-  </div>
-
-  <nav class="main-nav" role="navigation" aria-label="Основная навигация">
-    <ul class="nav-list">
-      <li><a href="index.html">Главная</a></li>
-      <li><a href="catalog.html">Каталог</a></li>
-      <li><a href="about.html">О нас</a></li>
-      <li><a href="contact.html">Контакты</a></li>
-    </ul>
-  </nav>
-
-  <div class="header-actions">
-    <!-- Поиск — показываем только на catalog.html -->
-    <div class="search" id="header-search">
-       <svg 
-      class="search-icon" 
-      aria-hidden="true" 
-      focusable="false" 
-      viewBox="0 0 24 24" 
-      stroke="currentColor" 
-      fill="none" 
-      stroke-width="2"
-    >
-      <path 
-        stroke-linecap="round" 
-        stroke-linejoin="round" 
-        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
-      />
-    </svg>
-      <input type="text" id="search-input" placeholder="Поиск по товарам..." />
+    <div class="logo">
+      <div class="logo-icon">
+        <img src="assets/logo/logo-Photoroom.png" alt="Логотип BIZON" width="75" height="75">
+      </div>
+      <div class="logo-title">BIZON</div>
     </div>
 
-    <button id="cart-btn" class="cart-btn" aria-label="Корзина">
-      
-      Корзина
-      <span id="cart-count" class="cart-count">0</span>
-    </button>
-  </div>
-</header>
+    <nav class="main-nav" role="navigation" aria-label="Основная навигация">
+      <ul class="nav-list">
+        <li><a href="index.html">Главная</a></li>
+        <li><a href="catalog.html">Каталог</a></li>
+        <li><a href="about.html">О нас</a></li>
+        <li><a href="contact.html">Контакты</a></li>
+      </ul>
+    </nav>
+
+
+  </header>
 
   <main role="main">
-   
 
-   <!-- Фильтры по категориям -->
-<!-- Кнопки будут созданы JavaScript'ом, поэтому начальный HTML может быть пустым или содержать заглушку -->
-<div class="tags" role="group" aria-label="Фильтры по категориям">
-    <!-- Кнопки категорий будут вставлены сюда скриптом -->
-    <!-- <button class="tag-btn active" data-category="все">все</button> -->
-    <!-- ... остальные кнопки ... -->
-</div>
+    <!-- Герой-секция -->
+    <section class="hero">
+      <div class="hero-content">
+        <h1>Построим ваш VR<br>просто и подключим</h1>
+        <p class="hero-subtitle">
+          BIZON — поставщик VR-оборудования и решений для бизнеса, клубов и организаций по всей России.
+          <strong>Поможем быстро и удобно запустить или обновить VR-направление: от подбора до полной
+            комплектации.</strong>
+        </p>
+        <div class="hero-buttons">
+          <a href="catalog.html" class="btn-primary">Посмотреть оборудование</a>
+          <a href="contact.html" class="btn-secondary">Рассчитать стоимость</a>
+        </div>
+        <div class="hero-trust">
+          <div class="trust-item">Мы предлагаем не просто технику, а решение ваших проблем</div>
+          <div class="trust-item">Гарантия и поддержка</div>
+          <div class="trust-item">Доставка по всей России</div>
+        </div>
+      </div>
+      <div class="hero-image">
+        <img src="assets/index/Hero.webp" alt="VR-зал под ключ от BIZON" loading="lazy">
+      </div>
+    </section>
 
-    <!-- Список товаров -->
-    <div id="products" class="products" aria-live="polite" aria-atomic="true">
-      <!-- Заполняется через JavaScript -->
-    </div>
+    <!-- Преимущества -->
+    <section class="features">
+      <h2>Мы предлагаем не просто технику, а решение ваших проблем!</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M31.25 75C26.6667 75 22.7431 73.3681 19.4792 70.1042C16.2153 66.8403 14.5833 62.9167 14.5833 58.3333V41.3542C14.5833 37.8125 15.6944 34.7049 17.9167 32.0312C20.1389 29.3576 22.9861 27.7083 26.4583 27.0833C30.4167 26.3194 34.3403 25.7812 38.2292 25.4688C42.1181 25.1562 46.0417 25 50 25C53.9583 25 57.8993 25.1562 61.8229 25.4688C65.7465 25.7812 69.6528 26.3194 73.5417 27.0833C77.0139 27.7778 79.8611 29.4444 82.0833 32.0833C84.3056 34.7222 85.4167 37.8125 85.4167 41.3542V58.3333C85.4167 62.9167 83.7847 66.8403 80.5208 70.1042C77.257 73.3681 73.3333 75 68.75 75H64.5833C63.6806 75 62.7778 74.9479 61.875 74.8438C60.9722 74.7396 60.1042 74.5139 59.2708 74.1667L52.6042 71.875C51.7708 71.5278 50.9028 71.3542 50 71.3542C49.0972 71.3542 48.2292 71.5278 47.3958 71.875L40.7292 74.1667C39.8958 74.5139 39.0278 74.7396 38.125 74.8438C37.2222 74.9479 36.3195 75 35.4167 75H31.25ZM31.25 66.6667H35.4167C35.9028 66.6667 36.3715 66.6319 36.8229 66.5625C37.2743 66.4931 37.7083 66.3889 38.125 66.25C40.1389 65.625 42.1007 64.9653 44.0104 64.2708C45.9201 63.5764 47.9167 63.2292 50 63.2292C52.0833 63.2292 54.0972 63.559 56.0417 64.2188C57.9861 64.8785 59.9306 65.5556 61.875 66.25C62.2917 66.3889 62.7257 66.4931 63.1771 66.5625C63.6285 66.6319 64.0972 66.6667 64.5833 66.6667H68.75C71.0417 66.6667 73.0035 65.8507 74.6354 64.2188C76.2674 62.5868 77.0833 60.625 77.0833 58.3333V41.3542C77.0833 39.8264 76.5972 38.5069 75.625 37.3958C74.6528 36.2847 73.4375 35.5556 71.9792 35.2083C68.3681 34.4444 64.7396 33.941 61.0938 33.6979C57.4479 33.4549 53.75 33.3333 50 33.3333C46.25 33.3333 42.5695 33.4722 38.9583 33.75C35.3472 34.0278 31.7014 34.5139 28.0208 35.2083C26.5625 35.4861 25.3472 36.1979 24.375 37.3438C23.4028 38.4896 22.9167 39.8264 22.9167 41.3542V58.3333C22.9167 60.625 23.7326 62.5868 25.3646 64.2188C26.9965 65.8507 28.9583 66.6667 31.25 66.6667ZM4.16667 58.3333V41.6667H10.4167V58.3333H4.16667ZM89.5833 58.3333V41.6667H95.8333V58.3333H89.5833Z"
+                fill="#59DEFA" />
+            </svg>
+          </div>
+          <div class="feature-text">
+            <h3>VR-Шлема</h3>
+            <p>Quest 3/3s, Pico 4 Ultra — выбор профессионалов, который не разочарует!</p>
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M8.33333 83.3333L33.3333 50L8.33333 16.6666H62.5C63.8194 16.6666 65.0694 16.9618 66.25 17.552C67.4305 18.1423 68.4028 18.9583 69.1667 20L91.6667 50L91.1458 50.7291C89.2708 49.4791 87.2396 48.4548 85.0521 47.6562C82.8646 46.8576 80.5903 46.3194 78.2292 46.0416L62.5 25H25L43.75 50L25 75H45.8333C45.8333 76.4583 45.9375 77.8819 46.1458 79.2708C46.3542 80.6597 46.6667 82.0138 47.0833 83.3333H8.33333ZM71.9792 84.375L86.4583 70L82.0833 65.625L71.9792 75.5208L67.9167 71.4583L63.5417 75.9375L71.9792 84.375ZM75 95.8333C69.2361 95.8333 64.3229 93.802 60.2604 89.7395C56.1979 85.677 54.1667 80.7638 54.1667 75C54.1667 69.2361 56.1979 64.3229 60.2604 60.2604C64.3229 56.1979 69.2361 54.1666 75 54.1666C80.7639 54.1666 85.6771 56.1979 89.7396 60.2604C93.8021 64.3229 95.8333 69.2361 95.8333 75C95.8333 80.7638 93.8021 85.677 89.7396 89.7395C85.6771 93.802 80.7639 95.8333 75 95.8333Z"
+                fill="#59DEFA" />
+            </svg>
+          </div>
+          <div class="feature-text">
+            <h3>Широкий ассортимент</h3>
+            <p>Всё необходимое для VR-клуба — от простого до эксклюзивного!</p>
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M45.8333 87.5V79.1667H79.1667V49.5833C79.1667 41.4583 76.3368 34.566 70.6771 28.9062C65.0174 23.2465 58.125 20.4167 50 20.4167C41.875 20.4167 34.9826 23.2465 29.3229 28.9062C23.6632 34.566 20.8333 41.4583 20.8333 49.5833V75H16.6667C14.375 75 12.4132 74.184 10.7812 72.5521C9.1493 70.9201 8.33333 68.9583 8.33333 66.6667V58.3333C8.33333 56.875 8.69791 55.5035 9.42708 54.2188C10.1562 52.934 11.1806 51.9097 12.5 51.1458L12.8125 45.625C13.3681 40.9028 14.7396 36.5278 16.9271 32.5C19.1146 28.4722 21.8576 24.9653 25.1562 21.9792C28.4549 18.9931 32.2396 16.6667 36.5104 15C40.7812 13.3333 45.2778 12.5 50 12.5C54.7222 12.5 59.2014 13.3333 63.4375 15C67.6736 16.6667 71.4583 18.9757 74.7917 21.9271C78.125 24.8785 80.8681 28.3681 83.0208 32.3958C85.1736 36.4236 86.5625 40.7986 87.1875 45.5208L87.5 50.9375C88.8194 51.5625 89.8438 52.5 90.5729 53.75C91.3021 55 91.6667 56.3194 91.6667 57.7083V67.2917C91.6667 68.6806 91.3021 70 90.5729 71.25C89.8438 72.5 88.8194 73.4375 87.5 74.0625V79.1667C87.5 81.4583 86.684 83.4201 85.0521 85.0521C83.4201 86.684 81.4583 87.5 79.1667 87.5H45.8333ZM37.5 58.3333C36.3194 58.3333 35.3299 57.934 34.5312 57.1354C33.7326 56.3368 33.3333 55.3472 33.3333 54.1667C33.3333 52.9861 33.7326 51.9965 34.5312 51.1979C35.3299 50.3993 36.3194 50 37.5 50C38.6806 50 39.6701 50.3993 40.4687 51.1979C41.2674 51.9965 41.6667 52.9861 41.6667 54.1667C41.6667 55.3472 41.2674 56.3368 40.4687 57.1354C39.6701 57.934 38.6806 58.3333 37.5 58.3333ZM62.5 58.3333C61.3194 58.3333 60.3299 57.934 59.5312 57.1354C58.7326 56.3368 58.3333 55.3472 58.3333 54.1667C58.3333 52.9861 58.7326 51.9965 59.5312 51.1979C60.3299 50.3993 61.3194 50 62.5 50C63.6806 50 64.6701 50.3993 65.4687 51.1979C66.2674 51.9965 66.6667 52.9861 66.6667 54.1667C66.6667 55.3472 66.2674 56.3368 65.4687 57.1354C64.6701 57.934 63.6806 58.3333 62.5 58.3333ZM25.1042 51.875C24.6181 44.5139 26.8403 38.1944 31.7708 32.9167C36.7014 27.6389 42.8472 25 50.2083 25C56.3889 25 61.8229 26.9618 66.5104 30.8854C71.1979 34.809 74.0278 39.8264 75 45.9375C68.6806 45.8681 62.8646 44.1667 57.5521 40.8333C52.2396 37.5 48.1597 32.9861 45.3125 27.2917C44.2014 32.8472 41.8576 37.7951 38.2812 42.1354C34.7049 46.4757 30.3125 49.7222 25.1042 51.875Z"
+                fill="#59DEFA" />
+            </svg>
+          </div>
+          <div class="feature-text">
+            <h3>Консультации и поддержка</h3>
+            <p>Поможем подобрать, объяснить и решить любую проблему — даже если вы не понимаете, что нужно.</p>
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M50.2083 83.3333C40.9028 83.3333 32.9861 80.1041 26.4583 73.6458C19.9306 67.1875 16.6667 59.3055 16.6667 50V49.2708L10 55.9375L4.16667 50.1041L20.8333 33.4375L37.5 50.1041L31.6667 55.9375L25 49.2708V50C25 56.9444 27.4479 62.8472 32.3438 67.7083C37.2396 72.5694 43.1944 75 50.2083 75C52.0139 75 53.7847 74.7916 55.5208 74.375C57.2569 73.9583 58.9583 73.3333 60.625 72.5L66.875 78.75C64.2361 80.2777 61.5278 81.4236 58.75 82.1875C55.9722 82.9513 53.125 83.3333 50.2083 83.3333ZM79.1667 66.5625L62.5 49.8958L68.3333 44.0625L75 50.7291V50C75 43.0555 72.5521 37.1527 67.6563 32.2916C62.7604 27.4305 56.8056 25 49.7917 25C47.9861 25 46.2153 25.2083 44.4792 25.625C42.7431 26.0416 41.0417 26.6666 39.375 27.5L33.125 21.25C35.7639 19.7222 38.4722 18.5763 41.25 17.8125C44.0278 17.0486 46.875 16.6666 49.7917 16.6666C59.0972 16.6666 67.0139 19.8958 73.5417 26.3541C80.0695 32.8125 83.3333 40.6944 83.3333 50V50.7291L90 44.0625L95.8333 49.8958L79.1667 66.5625Z"
+                fill="#59DEFA" />
+            </svg>
+          </div>
+          <div class="feature-text">
+            <h3>Trade-In</h3>
+            <p>Принимаем старое оборудование по хорошей цене — обновитесь без лишних затрат!</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Почему выбирают нас -->
+    <section class="features">
+      <h2>Почему выбирают нас</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M25 105C22.25 105 19.8958 104.021 17.9375 102.062C15.9792 100.104 15 97.75 15 95V15H25V95H105V105H25ZM30 90V45H50V90H30ZM55 90V20H75V90H55ZM80 90V65H100V90H80Z"
+                fill="#59DEFA" />
+            </svg>
+          </div>
+          <div class="feature-text">
+            <h3>Глубоко понимаем рынок VR</h3>
+            <p>Обладаем глубокими знаниями о рынке VR и помогаем отличить эффективные решения от маркетинговых трендов.
+            </p>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M59.375 100C59.7083 100 60.0417 99.9167 60.375 99.75C60.7083 99.5833 60.9583 99.4167 61.125 99.25L102.125 58.25C103.125 57.25 103.854 56.125 104.313 54.875C104.771 53.625 105 52.375 105 51.125C105 49.7917 104.771 48.5208 104.313 47.3125C103.854 46.1042 103.125 45.0417 102.125 44.125L80.875 22.875C79.9584 21.875 78.8959 21.1458 77.6875 20.6875C76.4792 20.2292 75.2084 20 73.875 20C72.625 20 71.375 20.2292 70.125 20.6875C68.875 21.1458 67.75 21.875 66.75 22.875L65.375 24.25L74.625 33.625C75.875 34.7917 76.7917 36.125 77.375 37.625C77.9584 39.125 78.25 40.7083 78.25 42.375C78.25 45.875 77.0625 48.8125 74.6875 51.1875C72.3125 53.5625 69.375 54.75 65.875 54.75C64.2083 54.75 62.6042 54.4583 61.0625 53.875C59.5208 53.2917 58.1667 52.4167 57 51.25L47.625 42L25.75 63.875C25.5 64.125 25.3125 64.3958 25.1875 64.6875C25.0625 64.9792 25 65.2917 25 65.625C25 66.2917 25.25 66.8958 25.75 67.4375C26.25 67.9792 26.8333 68.25 27.5 68.25C27.8333 68.25 28.1667 68.1667 28.5 68C28.8333 67.8333 29.0833 67.6667 29.25 67.5L46.25 50.5L53.25 57.5L36.375 74.5C36.125 74.75 35.9375 75.0208 35.8125 75.3125C35.6875 75.6042 35.625 75.9167 35.625 76.25C35.625 76.9167 35.875 77.5 36.375 78C36.875 78.5 37.4583 78.75 38.125 78.75C38.4583 78.75 38.7917 78.6667 39.125 78.5C39.4583 78.3333 39.7083 78.1667 39.875 78L56.875 61.125L63.875 68.125L47 85.125C46.75 85.2917 46.5625 85.5417 46.4375 85.875C46.3125 86.2083 46.25 86.5417 46.25 86.875C46.25 87.5417 46.5 88.125 47 88.625C47.5 89.125 48.0833 89.375 48.75 89.375C49.0833 89.375 49.3958 89.3125 49.6875 89.1875C49.9792 89.0625 50.25 88.875 50.5 88.625L67.5 71.75L74.5 78.75L57.5 95.75C57.25 96 57.0625 96.2708 56.9375 96.5625C56.8125 96.8542 56.75 97.1667 56.75 97.5C56.75 98.1667 57.0208 98.75 57.5625 99.25C58.1042 99.75 58.7083 100 59.375 100ZM59.25 110C56.1667 110 53.4375 108.979 51.0625 106.938C48.6875 104.896 47.2917 102.333 46.875 99.25C44.0417 98.8333 41.6667 97.6667 39.75 95.75C37.8333 93.8333 36.6667 91.4583 36.25 88.625C33.4167 88.2083 31.0625 87.0208 29.1875 85.0625C27.3125 83.1042 26.1667 80.75 25.75 78C22.5833 77.5833 20 76.2083 18 73.875C16 71.5417 15 68.7917 15 65.625C15 63.9583 15.3125 62.3542 15.9375 60.8125C16.5625 59.2708 17.4583 57.9167 18.625 56.75L47.625 27.875L64 44.25C64.1667 44.5 64.4167 44.6875 64.75 44.8125C65.0833 44.9375 65.4167 45 65.75 45C66.5 45 67.125 44.7708 67.625 44.3125C68.125 43.8542 68.375 43.25 68.375 42.5C68.375 42.1667 68.3125 41.8333 68.1875 41.5C68.0625 41.1667 67.875 40.9167 67.625 40.75L49.75 22.875C48.8333 21.875 47.7708 21.1458 46.5625 20.6875C45.3542 20.2292 44.0833 20 42.75 20C41.5 20 40.25 20.2292 39 20.6875C37.75 21.1458 36.625 21.875 35.625 22.875L18 40.625C17.25 41.375 16.625 42.25 16.125 43.25C15.625 44.25 15.2917 45.25 15.125 46.25C14.9583 47.25 14.9583 48.2708 15.125 49.3125C15.2917 50.3542 15.625 51.3333 16.125 52.25L8.87501 59.5C7.45835 57.5833 6.41668 55.4792 5.75001 53.1875C5.08335 50.8958 4.83335 48.5833 5.00001 46.25C5.16668 43.9167 5.75001 41.6458 6.75001 39.4375C7.75001 37.2292 9.12501 35.25 10.875 33.5L28.5 15.875C30.5 13.9583 32.7292 12.5 35.1875 11.5C37.6458 10.5 40.1667 10 42.75 10C45.3333 10 47.8542 10.5 50.3125 11.5C52.7708 12.5 54.9583 13.9583 56.875 15.875L58.25 17.25L59.625 15.875C61.625 13.9583 63.8542 12.5 66.3125 11.5C68.7708 10.5 71.2917 10 73.875 10C76.4584 10 78.9792 10.5 81.4375 11.5C83.8959 12.5 86.0834 13.9583 88 15.875L109.125 37C111.042 38.9167 112.5 41.125 113.5 43.625C114.5 46.125 115 48.6667 115 51.25C115 53.8333 114.5 56.3542 113.5 58.8125C112.5 61.2708 111.042 63.4583 109.125 65.375L68.125 106.25C66.9583 107.417 65.6042 108.333 64.0625 109C62.5208 109.667 60.9167 110 59.25 110Z"
+                fill="#59DEFA" />
+            </svg>
+          </div>
+
+          <div class="feature-text">
+
+            <h3>Полный комплекс услуг</h3>
+            <p>Берём на себя все этапы: от консультации до запуска и поддержки.</p>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M35 100C30.8333 100 27.2917 98.5417 24.375 95.625C21.4583 92.7083 20 89.1667 20 85H7.5L9.75 75H23.875C25.2917 73.4167 26.9583 72.1875 28.875 71.3125C30.7917 70.4375 32.8333 70 35 70C37.1667 70 39.2083 70.4375 41.125 71.3125C43.0417 72.1875 44.7083 73.4167 46.125 75H67L77.5 30H22.75L23.25 27.875C23.75 25.5417 24.8958 23.6458 26.6875 22.1875C28.4792 20.7292 30.5833 20 33 20H90L85.375 40H100L115 60L110 85H100C100 89.1667 98.5417 92.7083 95.625 95.625C92.7083 98.5417 89.1667 100 85 100C80.8333 100 77.2917 98.5417 74.375 95.625C71.4583 92.7083 70 89.1667 70 85H50C50 89.1667 48.5417 92.7083 45.625 95.625C42.7083 98.5417 39.1667 100 35 100ZM79.625 65H103.75L104.25 62.375L95 50H83.125L79.625 65ZM77.25 30.875L77.5 30L67 75L67.25 74.125L71.5 55.875L77.25 30.875ZM2.5 66.625L5 56.625H32.5L30 66.625H2.5ZM12.5 48.375L15 38.375H47.5L45 48.375H12.5ZM35 90C36.4167 90 37.6042 89.5208 38.5625 88.5625C39.5208 87.6042 40 86.4167 40 85C40 83.5833 39.5208 82.3958 38.5625 81.4375C37.6042 80.4792 36.4167 80 35 80C33.5833 80 32.3958 80.4792 31.4375 81.4375C30.4792 82.3958 30 83.5833 30 85C30 86.4167 30.4792 87.6042 31.4375 88.5625C32.3958 89.5208 33.5833 90 35 90ZM85 90C86.4167 90 87.6042 89.5208 88.5625 88.5625C89.5208 87.6042 90 86.4167 90 85C90 83.5833 89.5208 82.3958 88.5625 81.4375C87.6042 80.4792 86.4167 80 85 80C83.5833 80 82.3958 80.4792 81.4375 81.4375C80.4792 82.3958 80 83.5833 80 85C80 86.4167 80.4792 87.6042 81.4375 88.5625C82.3958 89.5208 83.5833 90 85 90Z"
+                fill="#59DEFA" />
+            </svg>
+          </div>
+          <div class="feature-text">
+            <h3>Работаем по всей России</h3>
+            <p>Оперативная доставка оборудования в любой регион.</p>
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M35 85H70V75H35V85ZM35 65H85V55H35V65ZM35 45H85V35H35V45ZM25 105C22.25 105 19.8958 104.021 17.9375 102.062C15.9792 100.104 15 97.75 15 95V25C15 22.25 15.9792 19.8958 17.9375 17.9375C19.8958 15.9792 22.25 15 25 15H95C97.75 15 100.104 15.9792 102.062 17.9375C104.021 19.8958 105 22.25 105 25V95C105 97.75 104.021 100.104 102.062 102.062C100.104 104.021 97.75 105 95 105H25ZM25 95H95V25H25V95Z"
+                fill="#59DEFA" />
+            </svg>
+          </div>
+          <div class="feature-text">
+
+            <h3>Официально и надёжно</h3>
+            <p>Все процессы оформлены документально, с гарантией и техподдержкой.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VR-аттракционы под ключ -->
+    <section class="cta">
+      <div class="cta-content">
+        <h2>VR-аттракционы под ключ</h2>
+        <p>Сочные цены. Никакой головной боли.</p>
+        <div>
+          <p>Аттракционы от 1 до 4 игроков</p>
+          <p>Доставка, пошлины, НДС включены в цену</p>
+          <p>Готовим все нужные сертификаты</p>
+          <p>Цены в среднем ниже на 20% чем у конкурентов</p>
+        </div>
+        <a href="contact.html" class="btn-primary">Рассчитать стоимость</a>
+      </div>
+    </section>
+
+    <!-- Trade-In блок -->
+    <section class="trade-in">
+      <h2>Trade-In VR-оборудования</h2>
+      <p>Обновитесь без лишних затрат! Оставьте заявку — мы подготовим точный расчёт за 1 день.</p>
+      <div class="trade-in-steps">
+        <p data-step="1">Сначала присылаем вам новое оборудование</p>
+        <p data-step="2">Когда всё заработает — вы отправляете старое</p>
+        <p data-step="3">Оплачиваете только разницу. Никаких сюрпризов</p>
+      </div>
+      <a href="contact.html" class="btn btn-primary">Оставить заявку</a>
+    </section>
+
+    <!-- Ответы на вопросы -->
+    <section class="features">
+      <h2>ОТВЕТЫ НА ПОПУЛЯРНЫЕ ВОПРОСЫ</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <h3>Сколько стоит доставка?</h3>
+          <p>Доставка включена в стоимость каждой позиции. Никаких доплат, кроме как за товар, не предусмотрено.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Заключается ли договор?</h3>
+          <p>Да, заключаем договор поставки. У нас всё официально!</p>
+        </div>
+        <div class="feature-card">
+          <h3>Наши преимущества?</h3>
+          <p>Комплексное решение: консультация, подбор, сопровождение. Всё необходимое одним заказом.</p>
+        </div>
+        <div class="feature-card">
+          <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M50 91.6666C40.3472 89.236 32.3785 83.6978 26.0938 75.052C19.809 66.4062 16.6667 56.8055 16.6667 46.2499V20.8333L50 8.33325L83.3333 20.8333V46.2499C83.3333 56.8055 80.191 66.4062 73.9063 75.052C67.6215 83.6978 59.6528 89.236 50 91.6666ZM50 82.9166C57.2222 80.6249 63.1945 76.0416 67.9167 69.1666C72.6389 62.2916 75 54.6527 75 46.2499V26.5624L50 17.1874L25 26.5624V46.2499C25 54.6527 27.3611 62.2916 32.0833 69.1666C36.8056 76.0416 42.7778 80.6249 50 82.9166Z"
+              fill="#59DEFA" />
+          </svg>
+          <h3>Условия гарантии?</h3>
+          <p>Гарантия до 12 месяцев + полная поддержка.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Клиенты -->
+    <section class="clients">
+      <h2>Поставляли оборудование таким клубам, как:</h2>
+      <div>
+        <img src="/assets/clients/vrparty.png" alt="VR Party" style="height: 50px; opacity: 0.8;">
+        <img src="/assets/clients/avatar.png" alt="AVATAR" style="height: 50px; opacity: 0.8;">
+        <img src="/assets/clients/arena.png" alt="ARENA" style="height: 50px; opacity: 0.8;">
+      </div>
+    </section>
+
+    <!-- Призыв к действию -->
+    <section class="cta">
+      <div class="cta-content">
+        <h2>Наш подход — не просто «отгрузка техники»</h2>
+        <p>Это выстроенное партнёрство с поддержкой, документацией, сервисом и доверием.</p>
+        <a href="contact.html" class="btn-primary">Связаться с нами</a>
+      </div>
+    </section>
+
   </main>
-
-  <!-- Модальное окно: Корзина -->
-  <div id="cart-modal" class="modal" role="dialog" aria-labelledby="cart-modal-title" aria-hidden="true">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="cart-modal-title" class="modal-title">Корзина</h3>
-        <button class="modal-close" data-close="cart" aria-label="Закрыть">&times;</button>
-      </div>
-      <div class="modal-body" id="cart-items">
-        <div class="empty">Ваша корзина пуста</div>
-      </div>
-      <div class="modal-footer">
-        <label for="phone-input" class="visually-hidden">Телефон для связи</label>
-        <input type="tel" id="phone-input" placeholder="Телефон для связи" required>
-
-        <label for="comment-input" class="visually-hidden">Комментарий к заказу</label>
-        <textarea id="comment-input" placeholder="Комментарий к заказу"></textarea>
-
-        <button id="send-order">Оформить заказ</button>
-
-        <div id="success-message" class="success-message" role="alert" aria-live="assertive">
-          ✅ Заказ оформлен! С вами свяжутся в ближайшее время.
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Модальное окно: Товар -->
-  <div id="product-modal" class="modal" role="dialog" aria-labelledby="product-title" aria-hidden="true">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 class="modal-title">Товар</h3>
-        <button class="modal-close" data-close="product" aria-label="Закрыть">&times;</button>
-      </div>
-      <div class="product-modal-body">
-        <div class="product-modal-left">
-          <div class="product-modal-image">
-            <img id="product-main-image" src="" alt="Изображение товара" />
-          </div>
-          <div class="product-thumbnails" id="thumbnails" role="group" aria-label="Миниатюры изображений"></div>
-        </div>
-        <div class="product-modal-right">
-          <div class="product-info">
-            <h3 id="product-title" class="product-title"></h3>
-            <p id="product-description" class="product-description"></p>
-            <div id="product-price" class="product-price"></div>
-          </div>
-          <div class="buttons-container">
-            <button id="add-to-cart-btn" class="btn-add full-width">Добавить в корзину</button>
-            <button id="buy-now-btn" class="btn-buy full-width">Купить сейчас</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Подвал -->
   <footer role="contentinfo">
-    © <span id="year"></span> BIZON — Все права защищены
+    © <span id="year"></span> BIZON — Все права защищены<br>
+    Поставка VR-оборудования для клубов под ключ
   </footer>
 
   <!-- Скрипты -->
 
-  <script defer src="js/utils.js"></script>
   <script defer src="js/state.js"></script>
-  <script defer src="js/ui.js"></script>
-  <script defer src="js/main.js"></script>
-
-  <!-- Инициализация -->
   <script>
-    // Установка года
+    // Год в подвале
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
+  <script defer src="js/main.js"></script>
 </body>
-</html>  
+.main-nav {
+  display: flex;
+  justify-content: left;
+  flex: 1;
+}
+
+.nav-list {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  flex-wrap: nowrap; /* Запрещаем перенос */
+}
+
+.nav-list a {
+  color: #fff;
+  text-decoration: none;
+  padding: 10px 10px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 15px;
+flex-wrap: nowrap; /* Запрещаем перенос */
+  opacity: 0.9;
+  flex-shrink: 0; /* Запрещаем сжатие элементов */
+}
+
+
+
+.nav-list a.active {
+  background: #3b82f6;
+  opacity: 1;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+</html>  активные страницы в меню навигации не подсвечиваются 
