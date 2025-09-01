@@ -3,9 +3,16 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  padding-bottom: 1.5rem; /* отступ только до линии */
-  margin-bottom: 1.5rem; /* отступ после линии — создаёт пространство внизу */
+  padding: 0 1.5rem; /* ← Боковые отступы по умолчанию */
+  padding-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
   border-bottom: 3px solid rgba(255, 255, 255, 1);
+}
+@media (max-width: 360px) {
+  .tags  {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
 }
 
 .tag-btn {

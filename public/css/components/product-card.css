@@ -21,6 +21,13 @@ main {
   position: relative;
   z-index: 10;
 }
+/* Убираем боковые отступы на маленьких экранах (например, до 480px) */
+@media (max-width: 479px) {
+  main {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
 
 /* === PRODUCTS GRID (Mobile-first) === */
 .products {
@@ -34,6 +41,9 @@ main {
 @media (min-width: 344px) {
   .products {
     grid-template-columns: repeat(2, 1fr);
+    padding: 0;
+    margin: 0;
+    gap: 0.3rem;
   }
 }
 
@@ -134,11 +144,28 @@ main {
 /* === PRODUCT TAG (на заголовке) === */
 .product-tag {
   flex-shrink: 0;
-  padding: 0.25rem 0.75rem;
+  padding: 0.25rem 0.75rem; /* Стандартные отступы: 4px сверху/снизу, 12px по бокам */
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 500;
 }
+/* На очень маленьких экранах — немного уменьшаем отступы */
+@media (max-width: 360px) {
+  .product-tag {
+    padding: 0.2rem 0.5rem; /* Меньше отступы, но не нулевые */
+    font-size: 0.7rem;
+  }
+}
+
+/* На экранах 768px+ — можно чуть больше */
+@media (min-width: 768px) {
+  .product-tag {
+    padding: 0.3rem 0.85rem;
+    font-size: 0.8rem;
+  }
+}
+
+
 
 .tag-new { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
 .tag-hit { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
