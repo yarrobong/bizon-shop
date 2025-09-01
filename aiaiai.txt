@@ -1248,15 +1248,4 @@ app.listen(PORT, () => {
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
 </body>
-</html>  что исправить у меня сайт выводит ошибку в консоле [Info] Successfully preconnected to https://fonts.googleapis.com/ 
-[Info] Successfully preconnected to https://fonts.gstatic.com/ 
-[Error] Failed to load resource: the server responded with a status of 404 (Not Found) (cart.js, line 0)
-[Error] Refused to execute http://localhost:3000/js/cart.js as script because "X-Content-Type-Options: nosniff" was given and its Content-Type is not a script MIME type.
-[Log] >>> [DEBUG] DOM загружен, инициализация приложения (state.js, line 85)
-[Log] >>> [DEBUG] DOM загружен, инициализация приложения (main.js, line 7)
-[Error] Unhandled Promise Rejection: ReferenceError: Can't find variable: loadCategoriesAndSetupFilters
-	(анонимная функция) (main.js:15)
-	(анонимная функция) (main.js:6)
-[Error] Ошибка загрузки товаров: – ReferenceError: Can't find variable: formatPrice — ui.js:81
-ReferenceError: Can't find variable: formatPrice — ui.js:81
-	(анонимная функция) (ui.js:116) надо чтобы была фильтрация по категориям товара
+</html>  
