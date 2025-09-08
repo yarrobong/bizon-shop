@@ -96,6 +96,10 @@ dist/
 .cache/
 public/
 
+!public/contact.html
+!public/css/pages/contact.css
+!public/assets/index/Hero.webp
+
 
 # vuepress build output
 .vuepress/dist
