@@ -220,7 +220,7 @@ section {
 
 /* ==================== ПРЕИМУЩЕСТВА ==================== */
 .features {
-  padding: 100px 20px;
+  padding: 60px 0px;
   text-align: center;
   position: relative;
 }
@@ -229,10 +229,11 @@ section {
   font-family: 'Montserrat', sans-serif;
   font-size: 2.8rem;
   margin-bottom: 60px;
-  background: linear-gradient(to right, #60a5fa, #3b82f6);
+  background: white;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+  text-shadow: 0 -20px 100px, 0 0 2px, 0 0 1em #ff14f7, 0 0 0.5em #ff14f7, 0 0 0.1em #ff14f7, 0 10px 3px #000;
+  padding: 0px 20px;
 }
 
 /* СЕТКА: 2 КАРТОЧКИ В РЯДУ */
@@ -383,46 +384,85 @@ section {
   left: 0;
 }
 
-/* ==================== КЛИЕНТЫ ==================== */
 .clients {
-  padding: 100px 20px;
+  padding: 4rem 1.5rem;
   text-align: center;
-  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .clients h2 {
   font-family: 'Montserrat', sans-serif;
   font-size: 2.8rem;
-  margin-bottom: 60px;
-  background: linear-gradient(to right, #60a5fa, #3b82f6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  margin-bottom: 30px;
+  background: linear-gradient(to right, var(--secondary-color), var(--primary-color));
+  background-clip: text;
   text-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
 }
 
-.clients-grid {
+.clients-track {
+  overflow: hidden;
+  padding: 1rem 0;
+  width: 100%;
+  mask-image: linear-gradient(90deg, transparent, white 10%, white 90%, transparent);
+}
+
+.clients-track-inner {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 50px;
-  max-width: 1000px;
-  margin: 0 auto;
+  gap: 4rem;
+  animation: scroll 10s linear infinite; /* Увеличил скорость */
 }
 
 .client-logo {
-  height: 60px;
+  max-height: 50px;
+  width: auto;
   opacity: 0.7;
   transition: all 0.3s ease;
-  filter: grayscale(100%);
+  flex-shrink: 0;
+  user-select: none;
 }
 
 .client-logo:hover {
   opacity: 1;
-  filter: grayscale(0);
+  filter: grayscale(0%);
   transform: scale(1.1);
 }
 
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-100% / 2)); /* Точное значение для бесшовности */
+  }
+}
+
+.clients-track-inner:hover {
+  animation-play-state: paused;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .clients-track-inner {
+    gap: 3rem;
+    animation-duration: 8s; /* Адаптируем скорость под мобильные */
+  }
+
+  .client-logo {
+    max-height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .clients-track-inner {
+    gap: 2rem;
+    animation-duration: 6s;
+  }
+
+  .client-logo {
+    max-height: 35px;
+  }
+}
 /* ==================== CTA (ПРИЗЫВ К ДЕЙСТВИЮ) ==================== */
 .cta {
   padding: 100px 20px;
@@ -734,4 +774,90 @@ footer {
   .client-logo {
     height: 30px;
   }
+}
+
+/* === FAQ / Аккордеон === */
+.faq {
+  max-width: 800px;
+  margin: 4rem auto;
+  padding: 0 1.5rem;
+}
+
+.faq h2 {
+  text-align: center;
+  font-size: 1.8rem;
+  margin-bottom: 2rem;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.accordion-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: box-shadow 0.2s ease;
+}
+
+.accordion-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.accordion-header {
+  width: 100%;
+  text-align: left;
+  padding: 1rem 1.5rem;
+  background: transparent;
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.2s ease;
+}
+
+.accordion-header:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.accordion-header.active {
+  color: #59DEFA;
+  font-weight: 600;
+}
+
+.accordion-header .accordion-icon {
+  font-size: 1.5rem;
+  transition: transform 0.3s ease;
+  color: #59DEFA;
+}
+
+.accordion-header.active .accordion-icon {
+  transform: rotate(45deg);
+}
+
+.accordion-panel {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, padding 0.4s ease;
+  padding: 0 1.5rem;
+}
+
+.accordion-panel p {
+  color: rgba(255, 255, 255, 0.8);
+  margin: 1rem 0 1.5rem;
+  line-height: 1.6;
+}
+
+.accordion-panel.open {
+  max-height: 200px;
+  padding: 0 1.5rem 1.5rem;
 }

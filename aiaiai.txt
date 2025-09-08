@@ -1,544 +1,127 @@
-// ui.js
-// DOM-элементы
-const productsContainer = document.getElementById('products');
-const searchInput = document.getElementById('search-input');
-const categoryButtons = document.querySelectorAll('.tag-btn');
-const cartBtn = document.getElementById('cart-btn');
-const cartModal = document.getElementById('cart-modal');
-const productModal = document.getElementById('product-modal');
-const cartItems = document.getElementById('cart-items');
-const phoneInput = document.getElementById('phone-input');
-const commentInput = document.getElementById('comment-input');
-const sendOrderBtn = document.getElementById('send-order');
-const successMessage = document.getElementById('success-message');
-const yearSpan = document.getElementById('year');
-let renderProductsTimeout;
 
-// Установка года
-if (yearSpan) {
-  yearSpan.textContent = new Date().getFullYear();
-}
+напиши страницу сайта по этому тз 
+Цель 
 
-// Асинхронная загрузка и рендеринг товаров
-// Улучшенная версия renderProducts с debounce
-async function renderProducts() {
-  // Отменяем предыдущий таймаут
-  if (renderProductsTimeout) {
-    clearTimeout(renderProductsTimeout);
-  }
-  
-  // Задержка 300ms перед выполнением
-  renderProductsTimeout = setTimeout(async () => {
-    try {
-      const res = await fetch('/api/products');
-      
-      if (!res.ok) {
-        throw new Error('Не удалось загрузить товары');
-      }
-      
-      const PRODUCTS = await res.json();
-      const query = (searchInput?.value || '').toLowerCase();
+	•	Максимум заявок на обратный звонок.
+	•	Никаких карт, адресов и лишних контактов — только страница контактов с нашими контактами и форма «Давайте мы вам позвоним» (в модальном окне).
 
-      const filtered = PRODUCTS.filter(p => {
-        const available = p.available !== false;
-        const categoryMatch = window.currentCategory === 'все' || p.category === window.currentCategory;
-        const searchMatch = query === '' ||
-          p.title.toLowerCase().includes(query) ||
-          p.description.toLowerCase().includes(query);
-        
-        return available && categoryMatch && searchMatch;
-      });
+Общий стиль
+	•	Темная, глубокая сцена: фон — чёрный/темно-синий градиент без лишних паттернов.
+	•	Визуальный язык — VR/неон, «электрический» синий + голубой.
+	•	Акценты: мягкое свечение/глоу, пульсация синего на ключевых элементах (кнопки/контуры).
+	•	Атмосфера — «технологично, чисто, футуристично» (никакой кислотной пестроты).
 
-      if (!productsContainer) {
-        return;
-      }
+Палитра (референс)
+	•	Фон: #00040E → #0A1022 (радиальный/диагональный градиент).
+	•	Акцент 1 (электрический синий): #00E5FF.
+	•	Акцент 2 (глубокий синий): #2B6CFF.
+	•	Подсветка/глоу: полупрозрачные слои этих же оттенков.
+	•	Текст основной: #FFFFFF, вторичный: #AAB3C5.
 
-      productsContainer.innerHTML = '';
+Типографика
+	•	Современный гротеск: Inter/Manrope/SF Pro (что доступнее).
+	•	Заголовки: полужирные; текст — нормальный; межстрочные увеличенные для «воздуха».
 
-      if (filtered.length === 0) {
-        productsContainer.innerHTML = `
-          <div class="empty">
-            <div class="text-6xl">🔍</div>
-            <h3>Товары не найдены</h3>
-            <p>Попробуйте изменить параметры поиска</p>
-          </div>
-        `;
-        return;
-      }
+Компоновка вкладки
+	•	Центрированный блок: заголовок + кнопка-CTA.
+	•	Заголовок: «Давайте мы вам позвоним».
+	•	Подзаголовок: «Оставьте свой номер, и мы перезвоним вам».
+	•	Под ними — крупная кнопка «Давайте мы вам позвоним».
 
-      filtered.forEach((product) => {
-        const card = document.createElement('div');
-        card.className = 'product-card';
-        card.innerHTML = `
-          <div class="product-content">
-            <h3 class="product-title">${product.title}</h3>
-            <div class="product-image">
-              <img src="${product.images[0]?.url?.trim() || '/assets/placeholder.png'}" alt="${product.title}" />
-              ${product.tag ? `<div class="product-badge" data-tag="${product.tag.toLowerCase()}">${product.tag}</div>` : ''}
-            </div>
-            <div class="product-footer">
-              <div class="product-price">${formatPrice(product.price)}</div>
-              <div class="product-actions">
-                <button class="btn-details" data-id="${product.id}">Подробнее</button>
-                <button class="btn-cart" data-id="${product.id}">В корзину</button>
-              </div>
-            </div>
-          </div>
-        `;
-        productsContainer.appendChild(card);
-      });
-      
-      // Обработчики для кнопок "Подробнее"
-      document.querySelectorAll('.btn-details').forEach(button => {
-        button.addEventListener('click', (event) => {
-          const productId = parseInt(event.target.dataset.id);
-          const product = PRODUCTS.find(p => p.id === productId);
-          if (product) {
-            openProductModal(product);
-          }
-        });
-      });
+Поведение (UX)
+	•	Клик по CTA открывает модальное окно с формой.
+	•	Закрытие модалки: крестик, клик по оверлею, клавиша Esc; фокус — внутри модалки (trap).
+	•	Легкая неоновая пульсация CTA (cycle 2–3s), hover — усиление свечения, press — лёгкая компрессия.
 
-      // Обработчики для кнопок "В корзину"
-      document.querySelectorAll('.btn-cart').forEach(button => {
-        button.addEventListener('click', (event) => {
-          const productId = parseInt(event.target.dataset.id);
-          const product = PRODUCTS.find(p => p.id === productId);
-          if (product) {
-            addToCart(product);
-            updateCartCount();
-          }
-        });
-      });
-      
-    } catch (err) {
-      console.error('Ошибка загрузки товаров:', err);
-      if (productsContainer) {
-        productsContainer.innerHTML = `
-          <div class="empty">
-            <div class="text-6xl">⚠️</div>
-            <h3>Ошибка загрузки</h3>
-            <p>Попробуйте позже или свяжитесь с нами</p>
-          </div>
-        `;
-      }
-    }
-  }, 300); // 300ms задержка
-}
+Форма в модалке
 
-// Открытие модального окна товара
-function openProductModal(product) {
-  document.getElementById('product-title').textContent = product.title;
-  document.getElementById('product-description').textContent = product.description;
-  document.getElementById('product-price').textContent = formatPrice(product.price);
-  document.getElementById('product-main-image').src = product.images[0].url.trim();
+Тексты полей:
+	1.	Ваше имя — опционально, placeholder: «Введите имя».
+	2.	Ваш номер телефона* — обязательное поле, placeholder: «+7 (___) ___-__-__».
+	3.	Перезвонить в — селектор времени (выпадающий список).
 
-  const thumbnails = document.getElementById('thumbnails');
-  thumbnails.innerHTML = '';
-  product.images.forEach(img => {
-    const thumb = document.createElement('img');
-    thumb.src = img.url.trim();
-    thumb.alt = img.alt;
-    thumb.className = 'thumbnail';
-    if (img.url === product.images[0].url) thumb.classList.add('active');
+Под формой:
+— строка мелким текстом: «Вы даете согласие на обработку персональных данных.» (желательно кликабельная ссылка на политику).
 
-    thumb.addEventListener('click', () => {
-      document.getElementById('product-main-image').src = img.url.trim();
-      document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
-      thumb.classList.add('active');
-    });
+Кнопка отправки:
+— текст «Жду звонка», широкая, со свечением и hover-эффектом.
 
-    thumbnails.appendChild(thumb);
-  });
+Селектор времени
+	•	Значения каждые 10–15 минут, рабочий диапазон 10:00–22:00 по МСК (можно уточнить позже).
+	•	По умолчанию предустановить 14:40 (как в твоём примере).
+	•	Если текущее время позже выбранного — подсказка: «Позвоним завтра в выбранное время / ближайшее рабочее».
 
-  window.currentProduct = product;
-  productModal.classList.add('open');
-}
+Валидация и маска телефона
+	•	Маска ввода (желательно): +7 (___) ___-__-__.
+	•	Разрешать международные форматы +375 … и т. п. (паттерн типа: ^\\+?[\\d\\s().-]{10,}$).
+	•	Ошибки показывать под полем, лаконично:
+	•	«Введите номер телефона» (пусто)
+	•	«Проверьте формат номера» (некорректно)
 
-// Открытие модального окна корзины
-function openCartModal() {
-  if (cartItems) {
-    const cart = getCart();
-    if (cart.length === 0) {
-      cartItems.innerHTML = '<div class="empty">Ваша корзина пуста</div>';
-    } else {
-      cartItems.innerHTML = '';
-      let total = 0;
-      cart.forEach(item => {
-        const row = document.createElement('div');
-        row.className = 'cart-item';
-        row.innerHTML = `
-          <img src="${item.product.images[0].url.trim()}" alt="" />
-          <div class="cart-item-info">
-            <div class="cart-item-title">${item.product.title}</div>
-            <div class="cart-item-price">${formatPrice(item.product.price)}</div>
-            <div class="cart-quantity">
-              <button class="qty-minus" data-id="${item.product.id}">−</button>
-              <span>${item.qty}</span>
-              <button class="qty-plus" data-id="${item.product.id}">+</button>
-            </div>
-          </div>
-          <div class="cart-item-total">${formatPrice(item.product.price * item.qty)}</div>
-        `;
-        cartItems.appendChild(row);
-        total += item.product.price * item.qty;
-      });
+Состояния
+	•	Ошибки: красная тонкая подсветка поля + текст ошибки; без «красной сирены».
+	•	Отправка: кнопка в состоянии «loading» (спиннер, текст «Отправляем…»).
+	•	Успех: заменяем содержимое модалки на screen «Спасибо! Мы перезвоним в {время}» + кнопка «Ок».
+	•	Сбой: «Не получилось отправить. Попробуйте ещё раз или позже.»
 
-      const totalRow = document.createElement('div');
-      totalRow.className = 'total-row';
-      totalRow.innerHTML = `<span>Итого:</span><span>${formatPrice(total)}</span>`;
-      cartItems.appendChild(totalRow);
+Анимации (ненавязчивые)
+	•	CTA: пульсирующее свечение (keyframes: лёгкое увеличение тени/яркости).
+	•	Инпуты/селект: при фокусе — неоновая кайма и едва заметный inner-glow.
+	•	Модалка: scale-in + fade-in (300–400 ms).
+	•	Hover кнопок: усиление glow, лёгкий подъём (-2px).
 
-      // Обработчики изменения количества
-      document.querySelectorAll('.qty-minus').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const id = parseInt(btn.dataset.id);
-          updateQuantity(id, -1);
-          openCartModal();
-        });
-      });
+Адаптив
+	•	Мобайл first: модалка во всю ширину/высоту, крупные поля, тач-зоны ≥ 44px.
+	•	Десктоп: контейнер формы ~360–420 px шириной, радиусы 20–24 px, большие поля.
+	•	Без горизонтального скролла на всех брейкпоинтах.
 
-      document.querySelectorAll('.qty-plus').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const id = parseInt(btn.dataset.id);
-          updateQuantity(id, 1);
-          openCartModal();
-        });
-      });
-    }
-  }
+Доступность
+	•	Семантические <label> связаны с input id.
+	•	aria-modal, role="dialog", фокус на первом поле, Esc закрывает.
+	•	Контраст текста/фона ≥ WCAG AA.
+	•	Подписи ошибок привязаны к полям (aria-describedby).
 
-  updateSendOrderButton();
-  cartModal.classList.add('open');
-}
+Технические требования
+	•	Чистые HTML + CSS + Vanilla JS, без фреймворков и лишних библиотек.
+	•	Лёгкие тени/градиенты без тяжёлых фильтров, чтобы не грузить GPU.
+	•	Минимум внешних шрифтов; font-display: swap.
+	•	Код разбит: стили в <style> или отдельный .css, JS — внизу страницы/отдельный .js.
 
-// Закрытие модалок
-function closeModals() {
-  const modal = document.querySelector('.modal.open');
-  if (modal) modal.classList.remove('open');
-}
+Интеграция формы (когда подключишь бэкенд)
+	•	Отправка POST /api/callback (JSON):
 
-// Обновление состояния кнопки "Оформить заказ"
-function updateSendOrderButton() {
-  if (!sendOrderBtn) return;
-  if (getCart().length === 0) {
-    sendOrderBtn.disabled = true;
-    sendOrderBtn.title = 'Нельзя оформить заказ — корзина пуста';
-  } else {
-    sendOrderBtn.disabled = false;
-    sendOrderBtn.title = '';
-  }
-}
-
-// Привязка событий
-// ui.js - обновленная функция setupEventListeners()
-// ui.js - обновленная функция setupEventListeners()
-// ui.js - обновленная функция setupEventListeners
-function setupEventListeners() {
-  const searchInput = document.getElementById('search-input');
-
-  if (searchInput) {
-    // Безопасное обновление обработчика поиска
-    searchInput.removeEventListener('input', renderProducts);
-    searchInput.addEventListener('input', renderProducts);
-  }
-
-  // Обработка категорий - безопасный способ
-  const categoryButtons = document.querySelectorAll('.tag-btn');
-  
-  // Удаляем старые обработчики
-  categoryButtons.forEach(btn => {
-    btn.removeEventListener('click', handleCategoryClick);
-  });
-  
-  // Добавляем новые обработчики
-  categoryButtons.forEach(btn => {
-    btn.addEventListener('click', handleCategoryClick);
-  });
-
-  // Остальные обработчики событий...
-  if (cartBtn) {
-    cartBtn.removeEventListener('click', openCartModal);
-    cartBtn.addEventListener('click', openCartModal);
-  }
-
-  document.getElementById('add-to-cart-btn')?.addEventListener('click', () => addToCart(window.currentProduct));
-  document.getElementById('buy-now-btn')?.addEventListener('click', () => {
-    addToCart(window.currentProduct);
-    closeModals();
-    openCartModal();
-  });
-
-  phoneInput?.addEventListener('input', () => {
-    phoneInput.value = phoneInput.value.replace(/[^0-9+]/g, '');
-  });
-
-  // Отправка заказа (оставляем как есть)
-  if (sendOrderBtn) {
-    let isSending = false;
-    // ... ваш код отправки заказа
-  }
-
-  document.querySelectorAll('[data-close]').forEach(btn => {
-    btn.addEventListener('click', closeModals);
-  });
-}
-
-// Отдельная функция для обработки кликов по категориям
-function handleCategoryClick(event) {
-  const categoryButtons = document.querySelectorAll('.tag-btn');
-  const clickedBtn = event.target;
-  
-  // Убираем активный класс у всех кнопок
-  categoryButtons.forEach(btn => {
-    btn.classList.remove('active');
-  });
-  
-  // Добавляем активный класс текущей кнопке
-  clickedBtn.classList.add('active');
-  
-  // Устанавливаем текущую категорию
-  window.currentCategory = clickedBtn.dataset.category || 'все';
-  
-  // Перерисовываем товары
-  renderProducts();
-}
-
-// Убедитесь, что в main.js правильно инициализируется начальное состояние
-// main.js
-document.addEventListener('DOMContentLoaded', async () => {
-  console.log('[DEBUG] DOM загружен, инициализация приложения');
-  
-  // Инициализируем начальное состояние
-  window.currentCategory = 'все'; // Устанавливаем начальную категорию
-  
-  // Настраиваем обработчики событий
-  setupEventListeners();
-  
-  // Загружаем и отображаем товары
-  await renderProducts();
-});
-
-// Улучшенная функция renderProducts с четкой фильтрацией по категориям
-// ui.js - обновленная функция renderProducts
-async function renderProducts() {
-  if (renderProductsTimeout) {
-    clearTimeout(renderProductsTimeout);
-  }
-  
-  renderProductsTimeout = setTimeout(async () => {
-    try {
-      const res = await fetch('/api/products');
-      
-      if (!res.ok) {
-        throw new Error('Не удалось загрузить товары');
-      }
-      
-      const PRODUCTS = await res.json();
-      const query = (searchInput?.value || '').toLowerCase();
-      
-      // Получаем текущую категорию
-      const currentCategory = window.currentCategory || 'все';
-
-      const filtered = PRODUCTS.filter(p => {
-        const available = p.available !== false;
-        
-        // Фильтр по категории
-        let categoryMatch = true;
-        if (currentCategory !== 'все') {
-          // Преобразуем категорию из базы данных для сравнения
-          const productCategory = p.category || '';
-          categoryMatch = productCategory.toLowerCase() === currentCategory.toLowerCase();
-        }
-        
-        // Фильтр по поиску
-        const searchMatch = query === '' ||
-          (p.title && p.title.toLowerCase().includes(query)) ||
-          (p.description && p.description.toLowerCase().includes(query));
-        
-        return available && categoryMatch && searchMatch;
-      });
-
-      if (!productsContainer) {
-        return;
-      }
-
-      productsContainer.innerHTML = '';
-
-      if (filtered.length === 0) {
-        productsContainer.innerHTML = `
-          <div class="empty">
-            <div class="text-6xl">🔍</div>
-            <h3>Товары не найдены</h3>
-            <p>Попробуйте изменить параметры поиска</p>
-          </div>
-        `;
-        return;
-      }
-
-      filtered.forEach((product) => {
-        const card = document.createElement('div');
-        card.className = 'product-card';
-        card.innerHTML = `
-          <div class="product-content">
-            <h3 class="product-title">${product.title || 'Без названия'}</h3>
-            <div class="product-image">
-              <img src="${product.images && product.images[0]?.url?.trim() || '/assets/placeholder.png'}" alt="${product.title || 'Изображение товара'}" />
-              ${product.tag ? `<div class="product-badge" data-tag="${product.tag.toLowerCase()}">${product.tag}</div>` : ''}
-            </div>
-            <div class="product-footer">
-              <div class="product-price">${formatPrice(product.price || 0)}</div>
-              <div class="product-actions">
-                <button class="btn-details" data-id="${product.id}">Подробнее</button>
-                <button class="btn-cart" data-id="${product.id}">В корзину</button>
-              </div>
-            </div>
-          </div>
-        `;
-        productsContainer.appendChild(card);
-      });
-      
-      // Обработчики событий для кнопок
-      document.querySelectorAll('.btn-details').forEach(button => {
-        button.addEventListener('click', (event) => {
-          const productId = parseInt(event.target.dataset.id);
-          const product = PRODUCTS.find(p => p.id === productId);
-          if (product) {
-            openProductModal(product);
-          }
-        });
-      });
-
-      document.querySelectorAll('.btn-cart').forEach(button => {
-        button.addEventListener('click', (event) => {
-          const productId = parseInt(event.target.dataset.id);
-          const product = PRODUCTS.find(p => p.id === productId);
-          if (product) {
-            addToCart(product);
-            updateCartCount();
-          }
-        });
-      });
-      
-    } catch (err) {
-      console.error('Ошибка загрузки товаров:', err);
-      if (productsContainer) {
-        productsContainer.innerHTML = `
-          <div class="empty">
-            <div class="text-6xl">⚠️</div>
-            <h3>Ошибка загрузки</h3>
-            <p>Попробуйте позже или свяжитесь с нами</p>
-          </div>
-        `;
-      }
-    }
-  }, 300);
-}
-
-// В ui.js найдите функцию отправки заказа и замените её на эту:
-
-if (sendOrderBtn) {
-  let isSending = false; // Флаг для предотвращения повторной отправки
-  
-  sendOrderBtn.addEventListener('click', async () => {
-    // Предотвращаем повторную отправку
-    if (isSending) {
-      console.log('Заказ уже отправляется...');
-      return;
-    }
-    
-    if (!phoneInput.value.trim()) {
-      alert('Укажите телефон');
-      return;
-    }
-    
-    if (getCart().length === 0) {
-      alert('Корзина пуста');
-      return;
-    }
-
-    try {
-      isSending = true;
-      sendOrderBtn.disabled = true;
-      sendOrderBtn.textContent = 'Отправка...';
-
-      const response = await fetch('/api/order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone: phoneInput.value,
-          comment: commentInput.value,
-          cart: getCart()
-        })
-      });
-
-      const result = await response.json();
-      console.log('Ответ сервера:', result);
-
-      if (result.success) {
-        // Успешная отправка - показываем сообщение об успехе
-        clearCart();
-        phoneInput.value = '';
-        commentInput.value = '';
-        successMessage.style.display = 'block';
-        updateCartCount();
-        openCartModal();
-
-        setTimeout(() => {
-          successMessage.style.display = 'none';
-          sendOrderBtn.disabled = false;
-          sendOrderBtn.textContent = 'Оформить заказ';
-          isSending = false;
-        }, 3000);
-      } else {
-        // Ошибка от сервера
-        throw new Error(result.error || 'Ошибка сервера');
-      }
-    } catch (error) {
-      console.error('Ошибка отправки заказа:', error);
-      
-      // Проверяем, возможно заказ уже отправлен (по статусу ответа)
-      if (error.message && error.message.includes('Заказ уже обрабатывается')) {
-        // Заказ уже обрабатывается, показываем сообщение об успехе
-        clearCart();
-        phoneInput.value = '';
-        commentInput.value = '';
-        successMessage.style.display = 'block';
-        updateCartCount();
-        openCartModal();
-
-        setTimeout(() => {
-          successMessage.style.display = 'none';
-          sendOrderBtn.disabled = false;
-          sendOrderBtn.textContent = 'Оформить заказ';
-          isSending = false;
-        }, 3000);
-      } else {
-        // Другая ошибка
-        alert('Не удалось отправить заказ. Пожалуйста, позвоните нам.');
-        sendOrderBtn.disabled = false;
-        sendOrderBtn.textContent = 'Оформить заказ';
-        isSending = false;
-      }
-    }
-  });
-}
-
-  document.querySelectorAll('[data-close]').forEach(btn => {
-    btn.addEventListener('click', closeModals);
-  });
+{ "name": "Имя", "phone": "+7 ...", "time": "14:40", "page": "/contacts" }
 
 
-// Экспорт
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { renderProducts, openProductModal, openCartModal, closeModals, setupEventListeners };
-} else {
-  window.renderProducts = renderProducts;
-  window.openProductModal = openProductModal;
-  window.openCartModal = openCartModal;
-  window.closeModals = closeModals;
-  window.setupEventListeners = setupEventListeners;
-} <!DOCTYPE html>
+	•	Добавить: скрытое honeypot-поле для антиспама, UTM-метки, referrer.
+	•	События аналитики: callback_submit, callback_success, callback_error.
+
+Тексты (готовые)
+	•	Заголовок страницы: «Давайте мы вам позвоним»
+	•	Подзаголовок: «Оставьте свой номер, и мы перезвоним вам»
+	•	Поле 1: «Ваше имя»
+	•	Поле 2: «Ваш номер телефона»*
+	•	Поле 3: «Перезвонить в»
+	•	Кнопка: «Жду звонка»
+	•	Согласие: «Вы даете согласие на обработку персональных данных.»
+	•	Успех: «Спасибо! Мы свяжемся с вами в {время}.»
+
+Нюансы/детали визуала
+	•	Карточка модалки — glass/neo-glass: тёмный полупрозрачный фон rgba(15,22,41,0.9) + неоновая обводка (внешнее свечение).
+	•	Радиусы: 20–24px, тени — мягкие, шириной 20–40px, прозрачность невысокая.
+	•	Линии-разделители (если понадобятся) — тонкие «голографические» (1px с лёгким свечением).
+	•	Никаких лишних иконок/соцсетей — чтобы не уводить от цели.
+
+Критерии приёмки
+	•	Вкладка без карты/адресов, только CTA и модальная форма.
+	•	Цвета/свечение соответствуют VR-стилю; есть пульсация синего 
+	•	Селектор времени присутствует
+	•	Валидация телефона работает, ошибки выводятся корректно.
+	•	Доступность: управление с клавиатуры, закрытие по Esc.
+	•	Адаптив: мобильная и десктопная версии выглядят одинаково стильно.
+	•	Успешная отправка показывает «Спасибо»-экран. 
+
+для примера вот мой index.html <!DOCTYPE html>
 <html lang="ru">
 
 <head>
@@ -552,8 +135,8 @@ if (typeof module !== 'undefined' && module.exports) {
   <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
   <meta name="theme-color" content="#ffffff">
   <!-- Preconnect -->
-  <link rel="preconnect" href="https://fonts.googleapis.com  ">
-  <link rel="preconnect" href="https://fonts.gstatic.com  " crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800&display=swap"
     rel="stylesheet">
@@ -585,13 +168,13 @@ if (typeof module !== 'undefined' && module.exports) {
     </div>
 
     <nav class="main-nav" role="navigation" aria-label="Основная навигация">
-      <ul class="nav-list">
-        <li><a href="index.html">Главная</a></li>
-        <li><a href="catalog.html">Каталог</a></li>
-        <li><a href="about.html">О нас</a></li>
-        <li><a href="contact.html">Контакты</a></li>
-      </ul>
-    </nav>
+  <ul class="nav-list">
+    <li><a href="index.html" data-page="index">Главная</a></li>
+    <li><a href="catalog.html" data-page="catalog">Каталог</a></li>
+    <li><a href="about.html" data-page="about">О нас</a></li>
+    <li><a href="contact.html" data-page="contact">Контакты</a></li>
+  </ul>
+</nav>
 
 
   </header>
@@ -746,20 +329,7 @@ if (typeof module !== 'undefined' && module.exports) {
       </div>
     </section>
 
-    <!-- VR-аттракционы под ключ -->
-    <section class="cta">
-      <div class="cta-content">
-        <h2>VR-аттракционы под ключ</h2>
-        <p>Сочные цены. Никакой головной боли.</p>
-        <div>
-          <p>Аттракционы от 1 до 4 игроков</p>
-          <p>Доставка, пошлины, НДС включены в цену</p>
-          <p>Готовим все нужные сертификаты</p>
-          <p>Цены в среднем ниже на 20% чем у конкурентов</p>
-        </div>
-        <a href="contact.html" class="btn-primary">Рассчитать стоимость</a>
-      </div>
-    </section>
+   
 
     <!-- Trade-In блок -->
     <section class="trade-in">
@@ -773,43 +343,76 @@ if (typeof module !== 'undefined' && module.exports) {
       <a href="contact.html" class="btn btn-primary">Оставить заявку</a>
     </section>
 
-    <!-- Ответы на вопросы -->
-    <section class="features">
-      <h2>ОТВЕТЫ НА ПОПУЛЯРНЫЕ ВОПРОСЫ</h2>
-      <div class="features-grid">
-        <div class="feature-card">
-          <h3>Сколько стоит доставка?</h3>
-          <p>Доставка включена в стоимость каждой позиции. Никаких доплат, кроме как за товар, не предусмотрено.</p>
-        </div>
-        <div class="feature-card">
-          <h3>Заключается ли договор?</h3>
-          <p>Да, заключаем договор поставки. У нас всё официально!</p>
-        </div>
-        <div class="feature-card">
-          <h3>Наши преимущества?</h3>
-          <p>Комплексное решение: консультация, подбор, сопровождение. Всё необходимое одним заказом.</p>
-        </div>
-        <div class="feature-card">
-          <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M50 91.6666C40.3472 89.236 32.3785 83.6978 26.0938 75.052C19.809 66.4062 16.6667 56.8055 16.6667 46.2499V20.8333L50 8.33325L83.3333 20.8333V46.2499C83.3333 56.8055 80.191 66.4062 73.9063 75.052C67.6215 83.6978 59.6528 89.236 50 91.6666ZM50 82.9166C57.2222 80.6249 63.1945 76.0416 67.9167 69.1666C72.6389 62.2916 75 54.6527 75 46.2499V26.5624L50 17.1874L25 26.5624V46.2499C25 54.6527 27.3611 62.2916 32.0833 69.1666C36.8056 76.0416 42.7778 80.6249 50 82.9166Z"
-              fill="#59DEFA" />
-          </svg>
-          <h3>Условия гарантии?</h3>
-          <p>Гарантия до 12 месяцев + полная поддержка.</p>
-        </div>
+   <!-- Ответы на вопросы -->
+<section class="faq">
+  <h2>ОТВЕТЫ НА ПОПУЛЯРНЫЕ ВОПРОСЫ</h2>
+  <div class="accordion">
+    <div class="accordion-item">
+      <button class="accordion-header">
+        Сколько стоит доставка?
+        <span class="accordion-icon">+</span>
+      </button>
+      <div class="accordion-panel">
+        <p>Доставка включена в стоимость каждой позиции. Никаких доплат, кроме как за товар, не предусмотрено.</p>
       </div>
-    </section>
+    </div>
 
-    <!-- Клиенты -->
-    <section class="clients">
-      <h2>Поставляли оборудование таким клубам, как:</h2>
-      <div>
-        <img src="/assets/clients/vrparty.png" alt="VR Party" style="height: 50px; opacity: 0.8;">
-        <img src="/assets/clients/avatar.png" alt="AVATAR" style="height: 50px; opacity: 0.8;">
-        <img src="/assets/clients/arena.png" alt="ARENA" style="height: 50px; opacity: 0.8;">
+    <div class="accordion-item">
+      <button class="accordion-header">
+        Заключается ли договор?
+        <span class="accordion-icon">+</span>
+      </button>
+      <div class="accordion-panel">
+        <p>Да, заключаем договор поставки. У нас всё официально!</p>
       </div>
-    </section>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">
+        Наши преимущества?
+        <span class="accordion-icon">+</span>
+      </button>
+      <div class="accordion-panel">
+        <p>Комплексное решение: консультация, подбор, сопровождение. Всё необходимое одним заказом.</p>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">
+        Условия гарантии?
+        <span class="accordion-icon">+</span>
+      </button>
+      <div class="accordion-panel">
+        <p>Гарантия до 12 месяцев + полная поддержка.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+  <section class="clients">
+  <h2>Поставляли оборудование таким клубам, как:</h2>
+
+  <div class="clients-track">
+    <div class="clients-track-inner">
+      <img src="/assets/Partners/Another World.png" alt="Another World" class="client-logo">
+      <img src="/assets/Partners/AVATAR ARENA.png" alt="AVATAR ARENA" class="client-logo">
+      <img src="/assets/Partners/Metaforce.png" alt="Metaforce" class="client-logo">
+      <img src="/assets/Partners/Warpoint.png" alt="Warpoint" class="client-logo">
+      <img src="/assets/Partners/Another World.png" alt="Another World" class="client-logo">
+      <img src="/assets/Partners/AVATAR ARENA.png" alt="AVATAR ARENA" class="client-logo">
+      <img src="/assets/Partners/Metaforce.png" alt="Metaforce" class="client-logo">
+      <img src="/assets/Partners/Warpoint.png" alt="Warpoint" class="client-logo">
+      <img src="/assets/Partners/Another World.png" alt="Another World" class="client-logo">
+      <img src="/assets/Partners/AVATAR ARENA.png" alt="AVATAR ARENA" class="client-logo">
+      <img src="/assets/Partners/Metaforce.png" alt="Metaforce" class="client-logo">
+      <img src="/assets/Partners/Warpoint.png" alt="Warpoint" class="client-logo">
+      <img src="/assets/Partners/Another World.png" alt="Another World" class="client-logo">
+      <img src="/assets/Partners/AVATAR ARENA.png" alt="AVATAR ARENA" class="client-logo">
+      <img src="/assets/Partners/Metaforce.png" alt="Metaforce" class="client-logo">
+      <img src="/assets/Partners/Warpoint.png" alt="Warpoint" class="client-logo">
+    </div>
+  </div>
+</section>
 
     <!-- Призыв к действию -->
     <section class="cta">
@@ -837,39 +440,867 @@ if (typeof module !== 'undefined' && module.exports) {
   </script>
   <script defer src="js/main.js"></script>
 </body>
-.main-nav {
-  display: flex;
-  justify-content: left;
-  flex: 1;
-}
 
-.nav-list {
-  display: flex;
-  list-style: none;
+</html> и index.css /* ==================== RESET & ROOT ==================== */
+* {
   margin: 0;
   padding: 0;
-
-  flex-wrap: nowrap; /* Запрещаем перенос */
+  box-sizing: border-box;
 }
 
-.nav-list a {
-  color: #fff;
-  text-decoration: none;
-  padding: 10px 10px;
-  border-radius: 6px;
-  font-weight: 500;
-  font-size: 15px;
-flex-wrap: nowrap; /* Запрещаем перенос */
-  opacity: 0.9;
-  flex-shrink: 0; /* Запрещаем сжатие элементов */
+body {
+  font-family: 'Inter', sans-serif;
+  color: #e2e8f0;
+  line-height: 1.6;
+  overflow-x: hidden;
+  background: linear-gradient(135deg, #0f172a 0%, #0c1220 100%);
+  position: relative;
 }
 
+/* ==================== ПУЛЬСЫ — ФИКСИРОВАННЫЕ И ЗА РАМКАМИ ==================== */
+.bg-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 200%;
+  pointer-events: none;
+  z-index: -2;
+  overflow: visible;
+  transform: translateZ(0);
+}
 
+/* Пульсы — абсолютные, позиционируются относительно .bg-overlay (всей страницы) */
+.pulse-1,
+.pulse-2,
+.pulse-3 {
+  position: absolute;
+  width: 24rem;
+  height: 24rem;
+  border-radius: 9999px;
+  filter: blur(60px);
+  opacity: 0.6;
+  pointer-events: none;
+}
 
-.nav-list a.active {
-  background: #3b82f6;
+.pulse-1 {
+  top: 75vh;
+  left: 75vw;
+  background: #0409AC;
+ 
+}
+
+.pulse-2 {
+  bottom: 65vh;
+  right: 80vw;
+  background: #0409AC;
+  
+}
+
+.pulse-3 {
+  bottom: 80vh;
+  right: 95vw;
+  background: #0409AC;
+  
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+}
+
+/* ==================== ГЛАВНЫЕ СТИЛИ ==================== */
+main > section {
+  position: relative;
+  z-index: 1;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* ==================== ПАРАЛЛАКС ЭФФЕКТ ДЛЯ ГЕРОЯ ==================== */
+.hero {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  position: relative;
+  overflow: visible;
+}
+
+/* ==================== ГЛУБИНА ЧЕРЕЗ ТЕНИ И СЛОИ ==================== */
+main > section {
+  position: relative;
+  z-index: 1;
+}
+
+/* ==================== ПЛАВНЫЙ СКРОЛЛ И ОБЪЁМ ==================== */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  scroll-snap-type: y mandatory;
+}
+
+section {
+  scroll-snap-align: start;
+}
+
+/* ==================== ГЕРОЙ ==================== */
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 60px;
+  position: relative;
+  padding: 20px 20px;
+  
+}
+
+.hero-content {
+  flex: 1;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.hero h1 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 3.8rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 20px;
+  background: #ffffff;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-subtitle {
+  font-size: 1.2rem;
+  line-height: 1.7;
+  color: #cbd5e1;
+  margin-bottom: 30px;
+  font-weight: 400;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.hero-trust {
+  display: flex;
+  gap: 20px;
+  font-size: 0.9rem;
+  color: #94a3b8;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.hero-trust .trust-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hero-trust .trust-item::before {
+  content: "✓";
+  color: #3b82f6;
+  font-weight: bold;
+}
+
+/* Изображение в герое */
+.hero-image {
+  flex: 1;
+  max-width: 500px;
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  
+  
+  
+}
+
+.hero-image::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  pointer-events: none;
+  
+}
+
+.hero-image img {
+  width: 100%;
+  border-radius: 16px;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+/* ==================== ПРЕИМУЩЕСТВА ==================== */
+.features {
+  padding: 60px 0px;
+  text-align: center;
+  position: relative;
+}
+
+.features h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.8rem;
+  margin-bottom: 60px;
+  background: white;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 -20px 100px, 0 0 2px, 0 0 1em #ff14f7, 0 0 0.5em #ff14f7, 0 0 0.1em #ff14f7, 0 10px 3px #000;
+  padding: 0px 20px;
+}
+
+/* СЕТКА: 2 КАРТОЧКИ В РЯДУ */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 30px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ==================== FEATURE CARD — ГОРИЗОНТАЛЬНЫЙ МАКЕТ ==================== */
+.feature-card {
+  display: flex;
+  align-items: center; /* по центру по вертикали */
+  gap: 24px;
+  padding: 28px;
+  background: #01033E;
+  backdrop-filter: blur(10px);
+  border: 3px solid #2B53C1;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 100, 255, 0.2);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 0;
+  border-radius: 16px;
+}
+
+.feature-card:hover::before {
   opacity: 1;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
-</html>  активные страницы в меню навигации не подсвечиваются 
+.feature-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(59, 130, 246, 0.6);
+}
+
+/* ==================== ИКОНКА С НЕОНОМ ==================== */
+.feature-icon {
+  flex-shrink: 0;
+  /* Убираем всё: фон, рамку, тени, радиус */
+  /* Оставляем только выравнивание */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+}
+
+.feature-icon svg {
+  width: 80px;
+  height: 80px;
+  /* Ключевой эффект: свечение вокруг иконки */
+  filter: 
+    drop-shadow(0 0 8px rgba(89, 222, 250, 0.4))
+    drop-shadow(0 0 15px rgba(89, 222, 250, 0.4))
+    drop-shadow(0 0 25px rgba(89, 222, 250, 0.3));
+  /* Делаем саму иконку чуть ярче */
+  opacity: 1;
+  
+}
+
+
+
+
+/* ==================== ТЕКСТ: ЗАГОЛОВОК СВЕРХУ, ОПИСАНИЕ СНИЗУ ==================== */
+.feature-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.feature-text h3 {
+  font-size: 1.5rem;
+  color: #e2e8f0;
+  margin-bottom: 8px; /* между заголовком и описанием */
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
+}
+
+.feature-text p {
+  color: #94a3b8;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  position: relative;
+  z-index: 1;
+}
+
+.traid-in {
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* ==================== TRADE-IN (ЦЕНТРИРОВАН) ==================== */
+.trade-in {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 100px 20px;
+  text-align: center;
+}
+
+.trade-in h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.8rem;
+  margin-bottom: 30px;
+  background: linear-gradient(to right, var(--secondary-color), var(--primary-color));
+  background-clip: text;
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+}
+
+.trade-in p {
+  font-size: 1.1rem;
+  color: var(--text-subtle);
+  margin-bottom: 30px;
+}
+
+.trade-in-steps {
+  text-align: left;
+  margin: 30px 0;
+  padding-left: 20px;
+}
+
+.trade-in-steps p {
+  margin-bottom: 15px;
+  position: relative;
+  padding-left: 30px;
+  text-align: left;
+}
+
+.trade-in-steps p::before {
+  content: attr(data-step);
+  color: var(--primary-color);
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+}
+
+.clients {
+  padding: 4rem 1.5rem;
+  text-align: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.clients h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.8rem;
+  margin-bottom: 30px;
+  background: linear-gradient(to right, var(--secondary-color), var(--primary-color));
+  background-clip: text;
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+}
+
+.clients-track {
+  overflow: hidden;
+  padding: 1rem 0;
+  width: 100%;
+  mask-image: linear-gradient(90deg, transparent, white 10%, white 90%, transparent);
+}
+
+.clients-track-inner {
+  display: flex;
+  gap: 4rem;
+  animation: scroll 10s linear infinite; /* Увеличил скорость */
+}
+
+.client-logo {
+  max-height: 50px;
+  width: auto;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.client-logo:hover {
+  opacity: 1;
+  filter: grayscale(0%);
+  transform: scale(1.1);
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-100% / 2)); /* Точное значение для бесшовности */
+  }
+}
+
+.clients-track-inner:hover {
+  animation-play-state: paused;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .clients-track-inner {
+    gap: 3rem;
+    animation-duration: 8s; /* Адаптируем скорость под мобильные */
+  }
+
+  .client-logo {
+    max-height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .clients-track-inner {
+    gap: 2rem;
+    animation-duration: 6s;
+  }
+
+  .client-logo {
+    max-height: 35px;
+  }
+}
+/* ==================== CTA (ПРИЗЫВ К ДЕЙСТВИЮ) ==================== */
+.cta {
+  padding: 100px 20px;
+  text-align: center;
+  position: relative;
+  background: rgba(15, 23, 42, 0.4);
+  border-top: 1px solid rgba(59, 130, 246, 0.2);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.cta::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(59, 130, 246, 0.5), transparent);
+}
+
+.cta-content {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.cta h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.8rem;
+  margin-bottom: 20px;
+  color: white;
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
+
+.cta p {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  color: #cbd5e1;
+  opacity: 0.9;
+}
+
+.cta-list {
+  text-align: left;
+  margin: 30px 0;
+  padding-left: 20px;
+}
+
+.cta-list p {
+  margin-bottom: 15px;
+  position: relative;
+  padding-left: 30px;
+}
+
+.cta-list p::before {
+  content: "✓";
+  color: #3b82f6;
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+}
+
+/* ==================== КНОПКИ ==================== */
+.btn-primary,
+.btn-secondary,
+.btn-outline {
+  padding: 14px 32px;
+  font-weight: 600;
+  font-size: 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  border: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: white;
+  border: 2px solid #3b82f6;
+  margin-left: 12px;
+}
+
+.btn-secondary:hover {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: #60a5fa;
+  transform: translateY(-3px);
+}
+
+.btn-outline {
+  background: transparent;
+  color: #3b82f6;
+  border: 2px solid #3b82f6;
+  margin-top: 30px;
+}
+
+.btn-outline:hover {
+  background: #3b82f6;
+  color: white;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+}
+
+/* ==================== FOOTER ==================== */
+footer {
+  padding: 40px 20px;
+  text-align: center;
+  background: rgba(15, 23, 42, 0.8);
+  border-top: 1px solid rgba(59, 130, 246, 0.2);
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+/* ==================== АДАПТИВ ==================== */
+@media (max-width: 1200px) {
+  .hero {
+    gap: 40px;
+  }
+
+  .hero h1 {
+    font-size: 3.2rem;
+  }
+
+  .hero-image {
+    max-width: 450px;
+  }
+}
+
+@media (max-width: 992px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    padding: 80px 20px;
+    min-height: auto;
+    gap: 40px;
+  }
+
+  .hero-content {
+    align-items: center;
+  }
+
+  .hero-trust {
+    justify-content: center;
+  }
+
+  .hero-buttons {
+    justify-content: center;
+  }
+
+  .features h2, .cta h2, .clients h2, .trade-in h2 {
+    font-size: 2.4rem;
+  }
+
+ 
+
+  .hero-image {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero h1 {
+    font-size: 2.8rem;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .btn-secondary {
+    margin-left: 0;
+    margin-top: 10px;
+  }
+
+  
+
+
+
+  .hero-trust {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+    padding: 20px;
+  }
+
+  .clients-grid {
+    gap: 30px;
+  }
+
+  .client-logo {
+    height: 40px;
+  }
+
+  .cta h2 {
+    font-size: 2.2rem;
+  }
+
+  .trade-in h2 {
+    font-size: 2.2rem;
+  }
+
+  .features h2 {
+    font-size: 2.2rem;
+  }
+
+  .clients h2 {
+    font-size: 2.2rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .hero {
+    padding: 60px 20px;
+    gap: 30px;
+  }
+
+  .hero h1 {
+    font-size: 2.4rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1.1rem;
+  }
+
+  .hero-buttons {
+    gap: 12px;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-outline {
+    padding: 12px 24px;
+    font-size: 15px;
+  }
+
+  .features h2,
+  .cta h2,
+  .clients h2,
+  .trade-in h2 {
+    font-size: 2rem;
+  }
+
+  .feature-card {
+    padding: 24px;
+  }
+
+  .feature-icon {
+    font-size: 2.4rem;
+  }
+
+  .trade-in-steps p,
+  .cta-list p {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero h1 {
+    font-size: 2.2rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-outline {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+
+  .features h2,
+  .cta h2,
+  .clients h2,
+  .trade-in h2 {
+    font-size: 1.8rem;
+  }
+
+  .feature-card {
+    padding: 20px;
+  }
+
+  .feature-icon {
+    font-size: 2.2rem;
+  }
+
+  .trade-in-steps p,
+  .cta-list p {
+    font-size: 0.9rem;
+  }
+
+  .client-logo {
+    height: 30px;
+  }
+}
+
+/* === FAQ / Аккордеон === */
+.faq {
+  max-width: 800px;
+  margin: 4rem auto;
+  padding: 0 1.5rem;
+}
+
+.faq h2 {
+  text-align: center;
+  font-size: 1.8rem;
+  margin-bottom: 2rem;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.accordion-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: box-shadow 0.2s ease;
+}
+
+.accordion-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.accordion-header {
+  width: 100%;
+  text-align: left;
+  padding: 1rem 1.5rem;
+  background: transparent;
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.2s ease;
+}
+
+.accordion-header:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.accordion-header.active {
+  color: #59DEFA;
+  font-weight: 600;
+}
+
+.accordion-header .accordion-icon {
+  font-size: 1.5rem;
+  transition: transform 0.3s ease;
+  color: #59DEFA;
+}
+
+.accordion-header.active .accordion-icon {
+  transform: rotate(45deg);
+}
+
+.accordion-panel {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, padding 0.4s ease;
+  padding: 0 1.5rem;
+}
+
+.accordion-panel p {
+  color: rgba(255, 255, 255, 0.8);
+  margin: 1rem 0 1.5rem;
+  line-height: 1.6;
+}
+
+.accordion-panel.open {
+  max-height: 200px;
+  padding: 0 1.5rem 1.5rem;
+}
