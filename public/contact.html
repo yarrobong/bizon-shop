@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="BIZON — Свяжитесь с нами. Оставьте заявку на обратный звонок." />
+  <title>Контакты — BIZON</title>
+  <link rel="icon" sizes="180x180" href="/assets/icons/apple-icon-180x180.png">
+  <meta name="msapplication-TileColor" content="#ffffff">
+  <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
+  <meta name="theme-color" content="#ffffff">
+
+  <!-- Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"> <!-- Убраны пробелы -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> <!-- Убраны пробелы -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+
+  <!-- Стили -->
+  <link rel="stylesheet" href="css/base/reset.css">
+  <link rel="stylesheet" href="css/layout/header.css">
+  <link rel="stylesheet" href="css/components/background.css">
+  <link rel="stylesheet" href="css/layout/footer.css">
+  <link rel="stylesheet" href="css/pages/index.css">
+  <link rel="stylesheet" href="css/pages/contact.css">
+  <style>
+    /* Добавьте сюда или в отдельный CSS файл улучшенные стили из предыдущего ответа */
+  </style>
+</head>
+<body>
+
+  <!-- Фоновые пульсы -->
+  <div class="bg-overlay" aria-hidden="true">
+    <div class="pulse-1"></div>
+    <div class="pulse-2"></div>
+    <div class="pulse-3"></div>
+  </div>
+
+  <!-- Шапка -->
+  <header class="header" role="banner">
+    <div class="logo">
+      <div class="logo-icon">
+        <img src="assets/logo/logo-Photoroom.png" alt="Логотип BIZON" width="75" height="75">
+      </div>
+      <div class="logo-title">BIZON</div>
+    </div>
+    <nav class="main-nav" role="navigation" aria-label="Основная навигация">
+      <ul class="nav-list">
+        <li><a href="index.html" data-page="index">Главная</a></li>
+        <li><a href="catalog.html" data-page="catalog">Каталог</a></li>
+        <li><a href="about.html" data-page="about">О нас</a></li>
+        <li><a href="contact.html" data-page="contact" class="active">Контакты</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main role="main">
+    <div class="contact-layout">
+
+      <!-- ЛЕВО: Контакты и форма -->
+      <section class="contact-info">
+        <!-- <h1 class="visually-hidden">Контакты — BIZON</h1> --> <!-- Опционально для SEO -->
+        <h2>НАШИ КОНТАКТЫ</h2>
+        <p class="contact-subtitle">Оставьте заявку, мы свяжемся и ответим на ваши вопросы</p> <!-- Стилизуйте как нужно -->
+
+        <!-- Форма -->
+        <form id="callbackForm" class="callback-form" novalidate>
+          <div class="form-group">
+            <label for="name">Ваше имя</label>
+            <input type="text" id="name" name="name" placeholder="Введите имя">
+          </div>
+
+          <div class="form-group">
+            <label for="phone">Ваш номер телефона*</label>
+            <input type="tel" id="phone" name="phone" placeholder="+7 (___) ___-__-__" required>
+            <div class="error-message" id="phoneError"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="time">Перезвонить в</label>
+            <select id="time" name="time" required>
+              <!-- Заполняется JS -->
+            </select>
+          </div>
+
+          <p class="consent">
+            Вы даете согласие на обработку персональных данных.
+            <a href="/privacy.html" target="_blank">Подробнее</a>
+          </p>
+
+          <button type="submit" class="submit-btn" id="submitBtn">Жду звонка</button>
+        </form>
+      </section>
+
+      <!-- ПРАВО: Фото и Контакты -->
+      <div class="contact-image-wrapper"> <!-- Добавлен оберточный div -->
+        <div class="contact-image" aria-hidden="true">
+       
+        </div>
+
+        <!-- Контакты -->
+        <div class="contact-links-below-image">
+          <!-- Убраны пробелы в href -->
+          <a href="https://t.me/your_telegram" target="_blank" class="contact-link contact-link--below">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" fill="#0088cc">
+              <path d="M446.7 98.6l-67.6 318.8c-5.4 25.4-21.9 37.6-45.7 37.6h-251.6c-29.3 0-47.1-19.5-42-48.8l60.2-285c3-14.4 14.2-20.9 29.9-15.2l149.3 57c16.1 6.1 30 6.1 46.1 0l63.8-25.5c17.4-7 28.6-20.5 26.9-39.8z"/>
+              <path d="M178.7 354.5l172.7-54.6c11.5-3.6 16.8-15.9 10.3-25.7l-57.8-89.3c-5-7.7-15.6-7.7-20.6 0l-37.3 57.7c-3.6 5.5-9.6 5.5-13.2 0l-21.9-33.9c-5-7.7-15.6-7.7-20.6 0l-57.8 89.3c-6.5 10 2.1 22.4 13.6 26z"/>
+            </svg>
+            Telegram
+          </a>
+          <a href="https://wa.me/your_whatsapp" target="_blank" class="contact-link contact-link--below">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" fill="#25D366">
+              <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 222.4-99.1 222.4-222.4 0-59.3-25.1-115-67.8-156.6zm-158.8 179.4c-47.7 0-86.5-38.8-86.5-86.5 0-47.7 38.8-86.5 86.5-86.5 47.7 0 86.5 38.8 86.5 86.5 0 47.7-38.8 86.5-86.5 86.5zm132.6-119.3c-12.9 0-25.4-2.3-37.1-6.5-10.9-3.9-23.5-12.5-31.5-21.5-11.8-13.1-18.1-29.2-18.1-46.8 0-17.6 6.3-33.7 18.1-46.8 8-9 20.6-17.6 31.5-21.5 11.7-4.2 24.2-6.5 37.1-6.5 12.9 0 25.4 2.3 37.1 6.5 10.9 3.9 23.5 12.5 31.5 21.5 11.8 13.1 18.1 29.2 18.1 46.8 0 17.6-6.3 33.7-18.1 46.8-8 9-20.6 17.6-31.5 21.5-11.7 4.2-24.2 6.5-37.1 6.5z"/>
+            </svg>
+            WhatsApp
+          </a>
+        </div>
+      </div> <!-- Закрытие contact-image-wrapper -->
+    </div> <!-- Закрытие contact-layout -->
+
+    <section class="clients">
+      <h2>Поставляли оборудование таким клубам, как:</h2>
+      <div class="clients-track">
+        <div class="clients-track-inner">
+          <img src="/assets/Partners/Another World.png" alt="Another World" class="client-logo">
+          <img src="/assets/Partners/AVATAR ARENA.png" alt="AVATAR ARENA" class="client-logo">
+          <img src="/assets/Partners/Metaforce.png" alt="Metaforce" class="client-logo">
+          <img src="/assets/Partners/Warpoint.png" alt="Warpoint" class="client-logo">
+          <img src="/assets/Partners/Another World.png" alt="Another World" class="client-logo">
+          <img src="/assets/Partners/AVATAR ARENA.png" alt="AVATAR ARENA" class="client-logo">
+          <img src="/assets/Partners/Metaforce.png" alt="Metaforce" class="client-logo">
+          <img src="/assets/Partners/Warpoint.png" alt="Warpoint" class="client-logo">
+          <img src="/assets/Partners/Another World.png" alt="Another World" class="client-logo">
+          <img src="/assets/Partners/AVATAR ARENA.png" alt="AVATAR ARENA" class="client-logo">
+          <img src="/assets/Partners/Metaforce.png" alt="Metaforce" class="client-logo">
+          <img src="/assets/Partners/Warpoint.png" alt="Warpoint" class="client-logo">
+          <img src="/assets/Partners/Another World.png" alt="Another World" class="client-logo">
+          <img src="/assets/Partners/AVATAR ARENA.png" alt="AVATAR ARENA" class="client-logo">
+          <img src="/assets/Partners/Metaforce.png" alt="Metaforce" class="client-logo">
+          <img src="/assets/Partners/Warpoint.png" alt="Warpoint" class="client-logo">
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Подвал -->
+  <footer role="contentinfo">
+    © <span id="year"></span> BIZON — Все права защищены<br>
+    Поставка VR-оборудования для клубов под ключ
+  </footer>
+
+  <!-- Скрипты -->
+  <script defer src="js/state.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+  <script>
+    // ==================== СЕЛЕКТОР ВРЕМЕНИ ====================
+    const timeSelect = document.getElementById('time');
+    const start = 10, end = 22, step = 15;
+    for (let h = start; h <= end; h++) {
+      for (let m = 0; m < 60; m += step) {
+        const hour = h.toString().padStart(2, '0');
+        const minute = m.toString().padStart(2, '0');
+        const timeStr = `${hour}:${minute}`;
+        const option = document.createElement('option');
+        option.value = timeStr;
+        option.textContent = timeStr;
+        timeSelect.appendChild(option);
+      }
+    };
+    timeSelect.value = '14:40'; // Установка значения по умолчанию
+
+    // ==================== МАСКА ТЕЛЕФОНА ====================
+    const phoneInput = document.getElementById('phone');
+    const phoneError = document.getElementById('phoneError');
+    phoneInput.addEventListener('input', () => {
+      let value = phoneInput.value.replace(/\D/g, '');
+      if (value.startsWith('7') && value.length > 1) value = value.substring(1);
+      if (value.startsWith('8') && value.length > 1) value = value.substring(1);
+
+      let formatted = '+7 ';
+      if (value.length > 0) formatted += '(' + value.substring(0, 3);
+      if (value.length >= 4) formatted += ') ' + value.substring(3, 6);
+      if (value.length >= 7) formatted += '-' + value.substring(6, 8);
+      if (value.length >= 9) formatted += '-' + value.substring(8, 10);
+
+      phoneInput.value = formatted;
+      phoneError.textContent = '';
+      phoneInput.classList.remove('error'); // Убираем класс ошибки при вводе
+    });
+
+    // ==================== ВАЛИДАЦИЯ ====================
+    const form = document.getElementById('callbackForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      phoneError.textContent = '';
+      phoneInput.classList.remove('error');
+      const phone = phoneInput.value;
+
+      if (!phone || phone.replace(/\D/g, '').length < 10) {
+        phoneError.textContent = 'Введите номер телефона';
+        phoneInput.classList.add('error');
+        phoneInput.focus();
+        return;
+      }
+
+      const phoneDigits = phone.replace(/\D/g, '');
+      if (!/^\+?\d{10,}$/.test(phoneDigits)) {
+        phoneError.textContent = 'Проверьте формат номера';
+        phoneInput.classList.add('error');
+        phoneInput.focus();
+        return;
+      }
+
+      // phoneInput.classList.remove('error'); // Уже удалили выше
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner"></span> Отправляем…';
+
+      // Имитация отправки (замените на реальную отправку данных)
+      setTimeout(() => {
+        alert(`Форма отправлена!\nИмя: ${document.getElementById('name').value}\nТелефон: ${phone}\nВремя звонка: ${timeSelect.value}`);
+        form.reset();
+        timeSelect.value = '14:40'; // Сброс к значению по умолчанию
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Жду звонка';
+        phoneError.textContent = '';
+      }, 1500);
+    });
+  </script>
+  <script defer src="js/main.js"></script>
+</body>
+</html>

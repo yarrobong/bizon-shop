@@ -1,0 +1,453 @@
+:root {
+  /* ... ваши переменные ... */
+  /* Добавим переменную для размера маски */
+  --mask-fade-size: 55%; /* Регулируйте этот процент для изменения ширины "рассеивания" */
+}
+/* ==================== ОСНОВНОЙ КОНТЕНТ ==================== */
+main {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* ==================== ОСНОВНАЯ СЕТКА КОНТАКТОВ ==================== */
+.contact-layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+  width: 100%;
+  margin-bottom: 60px;
+}
+
+/* ==================== ЛЕВЫЙ БЛОК — КОНТАКТЫ + ФОРМА ==================== */
+.contact-info {
+  flex: 1 1 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px 30px;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.contact-info h1 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+.contact-info h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.2rem;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+  background: white;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
+}
+
+.contact-info p.contact-subtitle {
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  margin-bottom: 30px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* ==================== ФОРМА ==================== */
+.callback-form {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-md);
+  padding: 25px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+input, select {
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.2);
+  background: rgba(0, 229, 255, 0.08);
+}
+
+input.error, select.error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 0.85rem;
+  margin-top: 6px;
+  display: block;
+}
+
+.consent {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 20px 0;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.consent a {
+  color: var(--accent);
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.consent a:hover {
+  color: var(--accent-light);
+  text-decoration: none;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 16px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 229, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: var(--accent-light);
+  box-shadow: 0 6px 15px rgba(0, 229, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 5px rgba(0, 229, 255, 0.3);
+}
+
+.submit-btn:disabled {
+  background: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.submit-btn .spinner {
+  display: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #000;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.submit-btn:disabled .spinner {
+  display: inline-block;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==================== ПРАВЫЙ БЛОК — ФОТО И КОНТАКТЫ ==================== */
+.contact-image-wrapper {
+  flex: 2 1 400px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.contact-image {
+flex-grow: 1;
+  min-height: 400px;
+  /* Предполагается, что фон установлен через CSS */
+ background: url('/assets/Contacts/20250903_0614_Futuristic BIZON Reception_simple_compose_01k46j72ksejnvd6p4jce7g1ww.png') no-repeat center center;
+  
+  background-size: cover;
+  position: relative;
+  /* Убран overflow: hidden отсюда, перенесен в .contact-image-wrapper */
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); /* Внешняя тень остается */
+
+  
+}
+
+.contact-image::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* Градиент снизу вверх, затемняющий только нижнюю часть */
+  background: linear-gradient(0deg, rgba(15, 22, 41, 0.4) 0%, rgba(15, 22, 41, 0.2) 30%, transparent 60%);
+  
+  
+  z-index: 1;
+}
+
+/* ==================== ССЫЛКИ НА МЕССЕНДЖЕРЫ НА ФОТО ==================== */
+/* Абсолютное позиционирование внутри .contact-image-wrapper */
+.contact-links-below-image {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 16px;
+  z-index: 2;
+  padding: 0 10px;
+  width: 100%;
+  justify-content: center;
+}
+
+/* Стили для ссылок на фото */
+.contact-link--below {
+  width: auto;
+  padding: 10px 20px;
+  background: rgba(15, 22, 41, 0.85); /* Темный полупрозрачный фон */
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(4px); /* Эффект размытия фона */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+}
+
+.contact-link--below:hover {
+  background: rgba(0, 229, 255, 0.2);
+  border-color: var(--accent);
+  box-shadow: 0 6px 15px rgba(0, 229, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Стили для иконок в ссылках на фото */
+.contact-link--below svg {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+  transition: filter 0.3s ease;
+}
+
+.contact-link--below:hover svg {
+  filter: drop-shadow(0 0 6px rgba(0, 229, 255, 0.8));
+}
+
+/* ==================== СЕКЦИЯ КЛИЕНТОВ ==================== */
+.clients {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 60px;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+.clients h2 {
+  font-size: 1.8rem;
+  margin-bottom: 30px;
+  color: var(--text-primary);
+}
+
+.clients-track {
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.clients-track-inner {
+  display: flex;
+  width: max-content;
+  animation: scroll 30s linear infinite;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.client-logo {
+  height: 60px;
+  margin: 0 30px;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+  filter: grayscale(100%);
+}
+
+.client-logo:hover {
+  opacity: 1;
+  filter: grayscale(0%);
+}
+
+/* ==================== АДАПТИВ ==================== */
+@media (max-width: 992px) {
+  .contact-layout {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .contact-info,
+  .contact-image-wrapper {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: 600px;
+  }
+
+  .contact-image {
+    min-height: 300px;
+  }
+
+  .contact-image-wrapper {
+    position: relative;
+  }
+
+  .contact-links-below-image {
+    position: absolute;
+  }
+
+  .clients h2 {
+    font-size: 1.5rem;
+  }
+
+  .client-logo {
+    height: 50px;
+    margin: 0 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .contact-links-below-image {
+    bottom: 15px;
+    gap: 12px;
+  }
+
+  .contact-link--below {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+
+  .contact-link--below svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 576px) {
+  main {
+    padding: 15px;
+  }
+
+  .contact-info {
+    padding: 25px 15px;
+  }
+
+  .contact-info h2 {
+    font-size: 1.8rem;
+  }
+
+  .contact-info p.contact-subtitle {
+    font-size: 1rem;
+    margin-bottom: 25px;
+  }
+
+  .callback-form {
+    padding: 20px;
+  }
+
+  input,
+  select {
+    padding: 12px 14px;
+  }
+
+  .submit-btn {
+    padding: 14px;
+    font-size: 1rem;
+  }
+
+  .contact-links-below-image {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    bottom: 10px;
+  }
+
+  .contact-link--below {
+    width: 80%;
+    max-width: 250px;
+    justify-content: center;
+  }
+
+  .consent {
+    font-size: 0.75rem;
+    margin: 15px 0;
+  }
+
+  .clients {
+    margin-bottom: 40px;
+    padding: 0 10px;
+  }
+
+  .clients h2 {
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+  }
+
+  .client-logo {
+    height: 40px;
+    margin: 0 15px;
+  }
+}
