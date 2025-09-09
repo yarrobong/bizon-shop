@@ -1,7 +1,9 @@
+
 /* === MODAL (CART & PRODUCT) === */
 .modal {
   position: fixed;
   inset: 0;
+  overflow: hidden; /* Важно! */
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(10px);
   display: flex;
@@ -153,7 +155,7 @@
   /* Заменить на: */
   justify-content: space-between; /* или оставить по умолчанию */
   gap: 0.5rem; /* можно добавить отступ между элементами */
-  min-height: 280px;
+ 
   padding-right: 4px;
 }
 
@@ -296,4 +298,33 @@ body.modal-open::before {
   background: rgba(0, 0, 0, 0.5);
   z-index: 9999;
   pointer-events: none;
+}
+#send-order {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(90deg, #3b82f6, #9333ea);
+  border: none;
+  color: white;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+#send-order:enabled {
+  opacity: 1;
+  pointer-events: all;
+}
+
+#send-order:enabled:hover:not(:disabled) {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+#send-order:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }

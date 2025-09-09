@@ -11,9 +11,12 @@
   <meta name="theme-color" content="#ffffff">
 
   <!-- Preconnect -->
-  <link rel="preconnect" href="https://fonts.googleapis.com"> <!-- Убраны пробелы -->
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> <!-- Убраны пробелы -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js" type="text/javascript"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery.maskedinput@1.4.1/src/jquery.maskedinput.js" type="text/javascript"></script>
 
   <!-- Стили -->
   <link rel="stylesheet" href="css/base/reset.css">
@@ -23,7 +26,8 @@
   <link rel="stylesheet" href="css/pages/index.css">
   <link rel="stylesheet" href="css/pages/contact.css">
   <style>
-    /* Добавьте сюда или в отдельный CSS файл улучшенные стили из предыдущего ответа */
+    
+
   </style>
 </head>
 <body>
@@ -47,7 +51,6 @@
       <ul class="nav-list">
         <li><a href="index.html" data-page="index">Главная</a></li>
         <li><a href="catalog.html" data-page="catalog">Каталог</a></li>
-        <li><a href="about.html" data-page="about">О нас</a></li>
         <li><a href="contact.html" data-page="contact" class="active">Контакты</a></li>
       </ul>
     </nav>
@@ -58,9 +61,8 @@
 
       <!-- ЛЕВО: Контакты и форма -->
       <section class="contact-info">
-        <!-- <h1 class="visually-hidden">Контакты — BIZON</h1> --> <!-- Опционально для SEO -->
         <h2>НАШИ КОНТАКТЫ</h2>
-        <p class="contact-subtitle">Оставьте заявку, мы свяжемся и ответим на ваши вопросы</p> <!-- Стилизуйте как нужно -->
+        <p class="contact-subtitle">Оставьте заявку, мы свяжемся и ответим на ваши вопросы</p>
 
         <!-- Форма -->
         <form id="callbackForm" class="callback-form" novalidate>
@@ -71,51 +73,56 @@
 
           <div class="form-group">
             <label for="phone">Ваш номер телефона*</label>
-            <input type="tel" id="phone" name="phone" placeholder="+7 (___) ___-__-__" required>
+            <input type="text" class="phone_mask" id="phone" placeholder="+7 (___) ___-__-__" required>
             <div class="error-message" id="phoneError"></div>
           </div>
 
-          <div class="form-group">
-            <label for="time">Перезвонить в</label>
-            <select id="time" name="time" required>
-              <!-- Заполняется JS -->
-            </select>
+          <!-- Переключатель согласия -->
+          <div class="consent-container">
+            <div class="consent-toggle">
+              <input type="checkbox" id="consent-toggle" class="consent-checkbox" required>
+              <label for="consent-toggle" class="consent-slider" aria-label="Согласие на обработку персональных данных"></label>
+            </div>
+            <p class="consent-text">
+              Я даю согласие на обработку персональных данных.
+              <a href="/privacy.html" target="_blank">Подробнее</a>
+            </p>
           </div>
 
-          <p class="consent">
-            Вы даете согласие на обработку персональных данных.
-            <a href="/privacy.html" target="_blank">Подробнее</a>
-          </p>
-
-          <button type="submit" class="submit-btn" id="submitBtn">Жду звонка</button>
+          <button type="submit" class="submit-btn" id="submitBtn" disabled>Жду звонка</button>
         </form>
       </section>
 
       <!-- ПРАВО: Фото и Контакты -->
-      <div class="contact-image-wrapper"> <!-- Добавлен оберточный div -->
+      <div class="contact-image-wrapper">
         <div class="contact-image" aria-hidden="true">
-       
+
         </div>
 
-        <!-- Контакты -->
+        <!-- Контакты под изображением -->
         <div class="contact-links-below-image">
-          <!-- Убраны пробелы в href -->
-          <a href="https://t.me/your_telegram" target="_blank" class="contact-link contact-link--below">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" fill="#0088cc">
-              <path d="M446.7 98.6l-67.6 318.8c-5.4 25.4-21.9 37.6-45.7 37.6h-251.6c-29.3 0-47.1-19.5-42-48.8l60.2-285c3-14.4 14.2-20.9 29.9-15.2l149.3 57c16.1 6.1 30 6.1 46.1 0l63.8-25.5c17.4-7 28.6-20.5 26.9-39.8z"/>
-              <path d="M178.7 354.5l172.7-54.6c11.5-3.6 16.8-15.9 10.3-25.7l-57.8-89.3c-5-7.7-15.6-7.7-20.6 0l-37.3 57.7c-3.6 5.5-9.6 5.5-13.2 0l-21.9-33.9c-5-7.7-15.6-7.7-20.6 0l-57.8 89.3c-6.5 10 2.1 22.4 13.6 26z"/>
-            </svg>
+          <a href="https://t.me/your_telegram" target="_blank" class="contact-link contact-link--below" rel="noopener">
+            <svg width="800px" height="800px" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="16" cy="16" r="14" fill="url(#paint0_linear_87_7225)"/>
+<path d="M22.9866 10.2088C23.1112 9.40332 22.3454 8.76755 21.6292 9.082L7.36482 15.3448C6.85123 15.5703 6.8888 16.3483 7.42147 16.5179L10.3631 17.4547C10.9246 17.6335 11.5325 17.541 12.0228 17.2023L18.655 12.6203C18.855 12.4821 19.073 12.7665 18.9021 12.9426L14.1281 17.8646C13.665 18.3421 13.7569 19.1512 14.314 19.5005L19.659 22.8523C20.2585 23.2282 21.0297 22.8506 21.1418 22.1261L22.9866 10.2088Z" fill="white"/>
+<defs>
+<linearGradient id="paint0_linear_87_7225" x1="16" y1="2" x2="16" y2="30" gradientUnits="userSpaceOnUse">
+<stop stop-color="#37BBFE"/>
+<stop offset="1" stop-color="#007DBB"/>
+</linearGradient>
+</defs>
+</svg>
             Telegram
           </a>
-          <a href="https://wa.me/your_whatsapp" target="_blank" class="contact-link contact-link--below">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" fill="#25D366">
-              <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 222.4-99.1 222.4-222.4 0-59.3-25.1-115-67.8-156.6zm-158.8 179.4c-47.7 0-86.5-38.8-86.5-86.5 0-47.7 38.8-86.5 86.5-86.5 47.7 0 86.5 38.8 86.5 86.5 0 47.7-38.8 86.5-86.5 86.5zm132.6-119.3c-12.9 0-25.4-2.3-37.1-6.5-10.9-3.9-23.5-12.5-31.5-21.5-11.8-13.1-18.1-29.2-18.1-46.8 0-17.6 6.3-33.7 18.1-46.8 8-9 20.6-17.6 31.5-21.5 11.7-4.2 24.2-6.5 37.1-6.5 12.9 0 25.4 2.3 37.1 6.5 10.9 3.9 23.5 12.5 31.5 21.5 11.8 13.1 18.1 29.2 18.1 46.8 0 17.6-6.3 33.7-18.1 46.8-8 9-20.6 17.6-31.5 21.5-11.7 4.2-24.2 6.5-37.1 6.5z"/>
-            </svg>
+          <a href="https://wa.me/your_whatsapp" target="_blank" class="contact-link contact-link--below" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="100" height="100" viewBox="0 0 48 48">
+<path fill="#fff" d="M4.868,43.303l2.694-9.835C5.9,30.59,5.026,27.324,5.027,23.979C5.032,13.514,13.548,5,24.014,5c5.079,0.002,9.845,1.979,13.43,5.566c3.584,3.588,5.558,8.356,5.556,13.428c-0.004,10.465-8.522,18.98-18.986,18.98c-0.001,0,0,0,0,0h-0.008c-3.177-0.001-6.3-0.798-9.073-2.311L4.868,43.303z"></path><path fill="#fff" d="M4.868,43.803c-0.132,0-0.26-0.052-0.355-0.148c-0.125-0.127-0.174-0.312-0.127-0.483l2.639-9.636c-1.636-2.906-2.499-6.206-2.497-9.556C4.532,13.238,13.273,4.5,24.014,4.5c5.21,0.002,10.105,2.031,13.784,5.713c3.679,3.683,5.704,8.577,5.702,13.781c-0.004,10.741-8.746,19.48-19.486,19.48c-3.189-0.001-6.344-0.788-9.144-2.277l-9.875,2.589C4.953,43.798,4.911,43.803,4.868,43.803z"></path><path fill="#cfd8dc" d="M24.014,5c5.079,0.002,9.845,1.979,13.43,5.566c3.584,3.588,5.558,8.356,5.556,13.428c-0.004,10.465-8.522,18.98-18.986,18.98h-0.008c-3.177-0.001-6.3-0.798-9.073-2.311L4.868,43.303l2.694-9.835C5.9,30.59,5.026,27.324,5.027,23.979C5.032,13.514,13.548,5,24.014,5 M24.014,42.974C24.014,42.974,24.014,42.974,24.014,42.974C24.014,42.974,24.014,42.974,24.014,42.974 M24.014,42.974C24.014,42.974,24.014,42.974,24.014,42.974C24.014,42.974,24.014,42.974,24.014,42.974 M24.014,4C24.014,4,24.014,4,24.014,4C12.998,4,4.032,12.962,4.027,23.979c-0.001,3.367,0.849,6.685,2.461,9.622l-2.585,9.439c-0.094,0.345,0.002,0.713,0.254,0.967c0.19,0.192,0.447,0.297,0.711,0.297c0.085,0,0.17-0.011,0.254-0.033l9.687-2.54c2.828,1.468,5.998,2.243,9.197,2.244c11.024,0,19.99-8.963,19.995-19.98c0.002-5.339-2.075-10.359-5.848-14.135C34.378,6.083,29.357,4.002,24.014,4L24.014,4z"></path><path fill="#40c351" d="M35.176,12.832c-2.98-2.982-6.941-4.625-11.157-4.626c-8.704,0-15.783,7.076-15.787,15.774c-0.001,2.981,0.833,5.883,2.413,8.396l0.376,0.597l-1.595,5.821l5.973-1.566l0.577,0.342c2.422,1.438,5.2,2.198,8.032,2.199h0.006c8.698,0,15.777-7.077,15.78-15.776C39.795,19.778,38.156,15.814,35.176,12.832z"></path><path fill="#fff" fill-rule="evenodd" d="M19.268,16.045c-0.355-0.79-0.729-0.806-1.068-0.82c-0.277-0.012-0.593-0.011-0.909-0.011c-0.316,0-0.83,0.119-1.265,0.594c-0.435,0.475-1.661,1.622-1.661,3.956c0,2.334,1.7,4.59,1.937,4.906c0.237,0.316,3.282,5.259,8.104,7.161c4.007,1.58,4.823,1.266,5.693,1.187c0.87-0.079,2.807-1.147,3.202-2.255c0.395-1.108,0.395-2.057,0.277-2.255c-0.119-0.198-0.435-0.316-0.909-0.554s-2.807-1.385-3.242-1.543c-0.435-0.158-0.751-0.237-1.068,0.238c-0.316,0.474-1.225,1.543-1.502,1.859c-0.277,0.317-0.554,0.357-1.028,0.119c-0.474-0.238-2.002-0.738-3.815-2.354c-1.41-1.257-2.362-2.81-2.639-3.285c-0.277-0.474-0.03-0.731,0.208-0.968c0.213-0.213,0.474-0.554,0.712-0.831c0.237-0.277,0.316-0.475,0.474-0.791c0.158-0.317,0.079-0.594-0.04-0.831C20.612,19.329,19.69,16.983,19.268,16.045z" clip-rule="evenodd"></path>
+</svg>
             WhatsApp
           </a>
         </div>
-      </div> <!-- Закрытие contact-image-wrapper -->
-    </div> <!-- Закрытие contact-layout -->
+      </div>
+    </div>
 
     <section class="clients">
       <h2>Поставляли оборудование таким клубам, как:</h2>
@@ -125,14 +132,7 @@
           <img src="/assets/Partners/AVATAR ARENA.png" alt="AVATAR ARENA" class="client-logo">
           <img src="/assets/Partners/Metaforce.png" alt="Metaforce" class="client-logo">
           <img src="/assets/Partners/Warpoint.png" alt="Warpoint" class="client-logo">
-          <img src="/assets/Partners/Another World.png" alt="Another World" class="client-logo">
-          <img src="/assets/Partners/AVATAR ARENA.png" alt="AVATAR ARENA" class="client-logo">
-          <img src="/assets/Partners/Metaforce.png" alt="Metaforce" class="client-logo">
-          <img src="/assets/Partners/Warpoint.png" alt="Warpoint" class="client-logo">
-          <img src="/assets/Partners/Another World.png" alt="Another World" class="client-logo">
-          <img src="/assets/Partners/AVATAR ARENA.png" alt="AVATAR ARENA" class="client-logo">
-          <img src="/assets/Partners/Metaforce.png" alt="Metaforce" class="client-logo">
-          <img src="/assets/Partners/Warpoint.png" alt="Warpoint" class="client-logo">
+          <!-- Повтор для бесконечной прокрутки -->
           <img src="/assets/Partners/Another World.png" alt="Another World" class="client-logo">
           <img src="/assets/Partners/AVATAR ARENA.png" alt="AVATAR ARENA" class="client-logo">
           <img src="/assets/Partners/Metaforce.png" alt="Metaforce" class="client-logo">
@@ -148,57 +148,59 @@
     Поставка VR-оборудования для клубов под ключ
   </footer>
 
-  <!-- Скрипты -->
+ <!-- Скрипты -->
   <script defer src="js/state.js"></script>
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
   <script>
-    // ==================== СЕЛЕКТОР ВРЕМЕНИ ====================
-    const timeSelect = document.getElementById('time');
-    const start = 10, end = 22, step = 15;
-    for (let h = start; h <= end; h++) {
-      for (let m = 0; m < 60; m += step) {
-        const hour = h.toString().padStart(2, '0');
-        const minute = m.toString().padStart(2, '0');
-        const timeStr = `${hour}:${minute}`;
-        const option = document.createElement('option');
-        option.value = timeStr;
-        option.textContent = timeStr;
-        timeSelect.appendChild(option);
-      }
-    };
-    timeSelect.value = '14:40'; // Установка значения по умолчанию
+  // Инициализация маски телефона
+  $(document).ready(function(){
+     $(".phone_mask").mask("+7 (999) 999-99-99");
+  });
 
-    // ==================== МАСКА ТЕЛЕФОНА ====================
-    const phoneInput = document.getElementById('phone');
-    const phoneError = document.getElementById('phoneError');
-    phoneInput.addEventListener('input', () => {
-      let value = phoneInput.value.replace(/\D/g, '');
-      if (value.startsWith('7') && value.length > 1) value = value.substring(1);
-      if (value.startsWith('8') && value.length > 1) value = value.substring(1);
+  // ==================== УПРАВЛЕНИЕ КНОПКОЙ ОТПРАВКИ ====================
+  const consentCheckbox = document.getElementById('consent-toggle');
+  const submitBtn = document.getElementById('submitBtn');
+  const phoneInput = document.getElementById('phone');
+  const phoneError = document.getElementById('phoneError');
+  const form = document.getElementById('callbackForm');
 
-      let formatted = '+7 ';
-      if (value.length > 0) formatted += '(' + value.substring(0, 3);
-      if (value.length >= 4) formatted += ') ' + value.substring(3, 6);
-      if (value.length >= 7) formatted += '-' + value.substring(6, 8);
-      if (value.length >= 9) formatted += '-' + value.substring(8, 10);
+  // Функция для обновления состояния кнопки
+  function updateSubmitButton() {
+      const isPhoneFilled = phoneInput.value.trim() !== '';
+      const isConsentGiven = consentCheckbox.checked;
 
-      phoneInput.value = formatted;
-      phoneError.textContent = '';
-      phoneInput.classList.remove('error'); // Убираем класс ошибки при вводе
-    });
+      submitBtn.disabled = !(isPhoneFilled && isConsentGiven);
+  }
 
-    // ==================== ВАЛИДАЦИЯ ====================
-    const form = document.getElementById('callbackForm');
-    const submitBtn = document.getElementById('submitBtn');
+  // Добавляем обработчики событий
+  phoneInput.addEventListener('input', updateSubmitButton);
+  consentCheckbox.addEventListener('change', updateSubmitButton);
 
-    form.addEventListener('submit', (e) => {
+  // Инициализируем состояние кнопки при загрузке страницы
+  updateSubmitButton();
+
+  // ==================== ВАЛИДАЦИЯ И ОТПРАВКА ====================
+  if (submitBtn) {
+    let isSending = false;
+
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
+
+      // Предотвращаем повторную отправку
+      if (isSending) {
+        console.log('Заявка уже отправляется...');
+        return;
+      }
+
       phoneError.textContent = '';
       phoneInput.classList.remove('error');
-      const phone = phoneInput.value;
 
+      const phone = phoneInput.value;
+      const name = document.getElementById('name').value;
+
+      // Проверка телефона
       if (!phone || phone.replace(/\D/g, '').length < 10) {
         phoneError.textContent = 'Введите номер телефона';
         phoneInput.classList.add('error');
@@ -214,22 +216,82 @@
         return;
       }
 
-      // phoneInput.classList.remove('error'); // Уже удалили выше
+      // Проверка согласия
+      if (!consentCheckbox.checked) {
+         alert('Необходимо дать согласие на обработку персональных данных');
+         return;
+      }
 
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<span class="spinner"></span> Отправляем…';
+      try {
+        isSending = true;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner"></span> Отправка...';
 
-      // Имитация отправки (замените на реальную отправку данных)
-      setTimeout(() => {
-        alert(`Форма отправлена!\nИмя: ${document.getElementById('name').value}\nТелефон: ${phone}\nВремя звонка: ${timeSelect.value}`);
-        form.reset();
-        timeSelect.value = '14:40'; // Сброс к значению по умолчанию
+        // === ОТПРАВКА НА НОВЫЙ ENDPOINT ===
+        const response = await fetch('/api/contact', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: name, // Отправляем имя
+            phone: phone // Отправляем телефон
+          })
+        });
+
+        const result = await response.json();
+        console.log('Ответ сервера:', result);
+
+        if (result.success) {
+          // Успешная отправка
+          console.log(`Форма отправлена!\nИмя: ${name}\nТелефон: ${phone}`);
+          
+          // Показать сообщение об успехе
+          alert('Спасибо! Мы свяжемся с вами в ближайшее время.');
+          
+          // Сброс формы
+          form.reset();
+          phoneError.textContent = '';
+          updateSubmitButton(); // Обновляем состояние кнопки после сброса
+          
+          // Возврат кнопки в исходное состояние
+          setTimeout(() => {
+             submitBtn.disabled = false;
+             submitBtn.innerHTML = 'Жду звонка';
+             isSending = false;
+          }, 3000);
+          
+        } else {
+          // Ошибка от сервера
+          throw new Error(result.error || 'Ошибка сервера');
+        }
+      } catch (error) {
+        console.error('Ошибка отправки заявки:', error);
+        
+        // Проверка на специфическую ошибку "уже обрабатывается"
+        if (error.message && error.message.includes('Заявка уже обрабатывается')) {
+            alert('Ваша заявка уже обрабатывается. Мы скоро с вами свяжемся.');
+        } else {
+            // Другая ошибка (сеть, сервер)
+            alert('Не удалось отправить заявку. Пожалуйста, попробуйте позже или позвоните нам.');
+        }
+        
+        // Возврат кнопки в исходное состояние
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Жду звонка';
-        phoneError.textContent = '';
-      }, 1500);
+        submitBtn.innerHTML = 'Жду звонка';
+        isSending = false;
+      }
     });
-  </script>
+  }
+
+  // Закрытие модальных окнов (если есть на странице)
+  document.querySelectorAll('[data-close]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      // Реализуйте логику закрытия модальных окон, если они используются на этой странице
+      // Например: const modal = btn.closest('.modal'); if (modal) modal.classList.remove('open');
+    });
+  });
+</script>
   <script defer src="js/main.js"></script>
 </body>
 </html>

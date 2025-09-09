@@ -1,36 +1,22 @@
-/* ==================== RESET & ROOT ==================== */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'Inter', sans-serif;
-  color: #e2e8f0;
-  line-height: 1.6;
-  overflow-x: hidden;
-  background: linear-gradient(135deg, #0f172a 0%, #0c1220 100%);
-  position: relative;
-}
-
-/* ==================== ПУЛЬСЫ — ФИКСИРОВАННЫЕ И ЗА РАМКАМИ ==================== */
+/* ==================== ПУЛЬСЫ ==================== */
 .bg-overlay {
-  position: absolute;
+  position: absolute; /* Изменил с fixed на absolute */
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 200%;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
-  z-index: -2;
-  overflow: visible;
-  transform: translateZ(0);
+  z-index: -2; /* Поверх точек, позади контента */
+  overflow: hidden;
 }
 
-/* Пульсы — абсолютные, позиционируются относительно .bg-overlay (всей страницы) */
+/* Пульсы — абсолютные, позиционируются относительно .bg-overlay */
 .pulse-1,
 .pulse-2,
-.pulse-3 {
+.pulse-3,
+.pulse-4,
+.pulse-5,
+.pulse-6 {
   position: absolute;
   width: 24rem;
   height: 24rem;
@@ -38,42 +24,52 @@ body {
   filter: blur(60px);
   opacity: 0.6;
   pointer-events: none;
+  animation: pulse 3s ease-in-out infinite;
 }
 
 .pulse-1 {
-  top: 75vh;
-  left: 75vw;
-  background: #0409AC;
- 
+  top: 0vh;
+  left: 70vw;
+  background: rgba(0, 4, 172, 0.9);
 }
 
 .pulse-2 {
-  bottom: 65vh;
+  top: 60vh;
   right: 80vw;
-  background: #0409AC;
-  
+  background: rgba(0, 4, 172, 0.7);
 }
 
 .pulse-3 {
-  bottom: 80vh;
-  right: 95vw;
-  background: #0409AC;
-  
+  top: 160vh;
+  right: 10vw;
+  background: rgba(0, 4, 172, 0.7);
 }
 
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    opacity: 0.6;
-  }
-  50% {
-    transform: scale(1.1);
-    opacity: 0.4;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 0.6;
-  }
+.pulse-4 {
+  top: 230vh;
+  right: 80vw;
+  background: rgba(0, 4, 172, 0.7);
+}
+
+.pulse-5 {
+  top: 300vh;
+  right: 0vw;
+  background: rgba(0, 4, 172, 0.7);
+}
+
+.pulse-6 {
+  top: 350vh;
+  right: 80vw;
+  background: rgba(0, 4, 172, 0.7);
+}
+/* ==================== ГЛАВНЫЕ СТИЛИ ==================== */
+main > section {
+  position: relative;
+  z-index: 1;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 /* ==================== ГЛАВНЫЕ СТИЛИ ==================== */
@@ -229,10 +225,11 @@ section {
   font-family: 'Montserrat', sans-serif;
   font-size: 2.8rem;
   margin-bottom: 60px;
-  background: white;
+  /* Упрощаем градиентный текст */
+  background: #ffffff;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 -20px 100px, 0 0 2px, 0 0 1em #ff14f7, 0 0 0.5em #ff14f7, 0 0 0.1em #ff14f7, 0 10px 3px #000;
+  background-clip: text;
   padding: 0px 20px;
 }
 
@@ -340,48 +337,185 @@ section {
   justify-content: center;
 }
 
-/* ==================== TRADE-IN (ЦЕНТРИРОВАН) ==================== */
+/* ==================== TRADE-IN — НОВЫЙ ДИЗАЙН ==================== */
 .trade-in {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 100px 20px;
-  text-align: center;
-}
-
-.trade-in h2 {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 2.8rem;
-  margin-bottom: 30px;
-  background: linear-gradient(to right, var(--secondary-color), var(--primary-color));
-  background-clip: text;
-  text-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
-}
-
-.trade-in p {
-  font-size: 1.1rem;
-  color: var(--text-subtle);
-  margin-bottom: 30px;
-}
-
-.trade-in-steps {
-  text-align: left;
-  margin: 30px 0;
-  padding-left: 20px;
-}
-
-.trade-in-steps p {
-  margin-bottom: 15px;
+  padding: 80px 0;
+  
   position: relative;
-  padding-left: 30px;
-  text-align: left;
+  overflow: hidden;
 }
 
-.trade-in-steps p::before {
-  content: attr(data-step);
-  color: var(--primary-color);
+
+
+.trade-in-content {
+  display: flex;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+  gap: 60px;
+  position: relative;
+  z-index: 2;
+  align-items: center;
+}
+
+/* Текстовая часть */
+.trade-in-text {
+  flex: 1;
+  color: #FFFFFF;
+  font-family: 'Inter', sans-serif;
+}
+
+.trade-in-text h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.trade-in-text p {
+  color: #CBD5E1;
+  margin-bottom: 30px;
+  line-height: 1.7;
+  font-size: 1rem;
+}
+
+.trade-in-text h3 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.5rem;
+  margin: 40px 0 20px;
+  text-align: center;
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+/* Шаги трейд-ина */
+.trade-in-step {
+  display: flex;
+  margin-bottom: 30px;
+  position: relative;
+  padding-left: 40px;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(89, 222, 250, 0.2);
+  color: #59DEFA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-weight: bold;
   position: absolute;
   left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 2px solid #59DEFA;
+}
+
+.step-number::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  border: 1px solid rgba(89, 222, 250, 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h4 {
+  color: #FFFFFF;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.step-content p {
+  color: #CBD5E1;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* Призыв к действию */
+.trade-in-call-to-action {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-top: 40px;
+  text-align: center;
+  color: #FFFFFF;
+  line-height: 1.4;
+}
+
+/* Изображение VR-шлема */
+.trade-in-image {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.trade-in-image img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 16px;
+  
+  filter: drop-shadow(0 0 10px rgba(89, 222, 250, 0.3));
+  transition: transform 0.3s ease;
+}
+
+
+
+/* Адаптивность */
+@media (max-width: 1024px) {
+  
+  .trade-in-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .trade-in-text {
+    order: 2;
+  }
+  .trade-in-step {
+    max-width: 500px; /* Используйте max-width вместо width, если хотите гибкость */
+  /* width: 500px; */ /* Уберите фиксированную ширину, если не нужно строго 500px */
+  margin: 0 auto;
+  }
+
+  .trade-in-image {
+    order: 1;
+    margin-bottom: 40px;
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .trade-in {
+    padding: 60px 0;
+  }
+
+  .trade-in-text h2 {
+    font-size: 1.6rem;
+  }
+
+  .trade-in-text h3 {
+    font-size: 1.3rem;
+  }
+
+  .trade-in-call-to-action {
+    font-size: 1.1rem;
+  }
+
+  .trade-in-image img {
+    display: none;
+  }
 }
 
 .clients {
@@ -437,9 +571,6 @@ section {
   }
 }
 
-.clients-track-inner:hover {
-  animation-play-state: paused;
-}
 
 /* Адаптивность */
 @media (max-width: 768px) {
@@ -600,10 +731,11 @@ footer {
 
   .hero-image {
     max-width: 450px;
+    
   }
 }
 
-@media (max-width: 992px) {
+@media (max-width: 1070px) {
   .hero {
     flex-direction: column;
     text-align: center;
@@ -617,6 +749,7 @@ footer {
   }
 
   .hero-trust {
+    width: 300px;
     justify-content: center;
   }
 
@@ -631,7 +764,9 @@ footer {
  
 
   .hero-image {
-    max-width: 100%;
+    
+    display: none;
+  
   }
 }
 

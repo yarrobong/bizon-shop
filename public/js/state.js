@@ -80,13 +80,7 @@ function getCurrentTag() {
 }
 
 // === Инициализация при загрузке ===
-// Вызываем при загрузке страницы
-document.addEventListener('DOMContentLoaded', () => {
-  console.log(">>> [DEBUG] DOM загружен, инициализация приложения");
-  window.currentCategory = 'все'; // Установите начальную категорию
-  renderProducts(); // Загрузка и отображение товаров
-  setupEventListeners(); // Настройка обработчиков событий
-});
+
 
 // === Экспорт для использования в других файлах ===
 if (typeof module !== 'undefined' && module.exports) {

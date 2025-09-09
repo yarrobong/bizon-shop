@@ -1,15 +1,13 @@
 // main.js
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('[DEBUG] DOM загружен, инициализация приложения');
+ 
   
   // Инициализируем начальное состояние
   window.currentCategory = 'все'; // Устанавливаем начальную категорию
   
-  // Настраиваем обработчики событий
-  setupEventListeners();
+
   
-  // Загружаем и отображаем товары
-  await renderProducts();
+
   
   
 });
@@ -49,39 +47,3 @@ document.querySelectorAll('.accordion-header').forEach(button => {
   });
 });
 
-document.addEventListener("DOMContentLoaded", () => {
-  const trackInner = document.querySelector('.clients-track-inner');
-  
-  // Получаем ширину одного набора логотипов
-  const logos = trackInner.querySelectorAll('.client-logo');
-  const firstSetWidth = Array.from(logos).slice(0, logos.length / 2)
-    .reduce((total, img) => total + img.offsetWidth + 64, 0); // 64 = gap в пикселях
-  
-  // Создаем точную анимацию
-  const animationName = `smoothScroll_${Date.now()}`;
-  
-  const styleSheet = document.createElement('style');
-  styleSheet.textContent = `
-    @keyframes ${animationName} {
-      0% {
-        transform: translateX(0);
-      }
-      100% {
-        transform: translateX(-${firstSetWidth}px);
-      }
-    }
-  `;
-  document.head.appendChild(styleSheet);
-  
-  // Применяем анимацию
-  trackInner.style.animation = `${animationName} 30s linear infinite`;
-  
-  // Пауза при наведении
-  trackInner.addEventListener('mouseenter', () => {
-    trackInner.style.animationPlayState = 'paused';
-  });
-  
-  trackInner.addEventListener('mouseleave', () => {
-    trackInner.style.animationPlayState = 'running';
-  });
-});

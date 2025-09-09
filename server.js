@@ -161,11 +161,12 @@ app.post('/api/order', async (req, res) => {
         console.log('Позиции заказа сохранены в БД');
       }
     }
+    const cleanPhone = phone.replace(/[^0-9+]/g, '');
 
     // 7. Подготавливаем сообщение для Telegram
     const message = `
 📦 *Новый заказ на BIZON!*
-📞 *Телефон:* \`${phone}\`
+📞 *Телефон:* \`${cleanPhone}\`
 💬 *Комментарий:* ${comment || 'не указан'}
 🛒 *Товары:*
 ${cart.map(item => `• ${item.product?.title || 'Неизвестный товар'} ×${item.qty} — ${(item.product?.price || 0) * item.qty} ₽`).join('\n')}
@@ -218,6 +219,127 @@ ${cart.map(item => `• ${item.product?.title || 'Неизвестный тов�
     
     // Отправляем клиенту сообщение об ошибке
     res.status(500).json({ success: false, error: 'Ошибка обработки заказа на сервере' });
+  }
+});
+
+// === API: Обратный звонок (Контактная форма) ===
+app.post('/api/contact', async (req, res) => {
+  console.log('=== НАЧАЛО ОБРАБОТКИ ЗАЯВКИ НА ОБРАТНЫЙ ЗВОНОК ===');
+  console.log('Полученные данные:', req.body);
+
+  const { name, phone } = req.body; // Ожидаем name и phone из формы
+
+  // 1. Базовые проверки
+  if (!phone) { // Имя может быть опциональным, но телефон обязателен
+    console.log('ОШИБКА: Не указан номер телефона');
+    return res.status(400).json({ success: false, error: 'Не указан номер телефона' });
+  }
+
+  // 2. Проверка на дублирование запроса (по аналогии с заказом)
+  const requestHash = JSON.stringify({ name, phone });
+  if (req.app.locals.lastContactRequest === requestHash) {
+    console.log('ПРЕДУПРЕЖДЕНИЕ: Повторный запрос с теми же данными обнаружен');
+    return res.status(200).json({ 
+      success: true, 
+      message: 'Заявка уже обрабатывается'
+    });
+  }
+  
+  // Сохраняем хэш последнего запроса
+  req.app.locals.lastContactRequest = requestHash;
+  
+  // Очищаем хэш через 30 секунд
+  setTimeout(() => {
+    if (req.app.locals.lastContactRequest === requestHash) {
+      req.app.locals.lastContactRequest = null;
+    }
+  }, 30000);
+
+  let dbSaved = false;
+  let telegramSent = false;
+
+  try {
+    // 3. Получаем московское время
+    const moscowTimeObj = new Date(new Date().toLocaleString("en-US", {timeZone: 'Europe/Moscow'}));
+    const moscowTimeString = moscowTimeObj.toLocaleString('ru-RU', {
+      timeZone: 'Europe/Moscow',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+    console.log('Время заявки (Москва):', moscowTimeString);
+
+    // 4. (Опционально) Сохранение в БД
+    // Если у вас есть таблица для заявок, например `callbacks`, раскомментируйте и адаптируйте:
+    /*
+    if (pool) {
+      console.log('Сохранение заявки в БД...');
+      const callbackResult = await pool.query(
+        'INSERT INTO callbacks (name, phone, created_at) VALUES ($1, $2, $3) RETURNING id',
+        [name || '', phone, moscowTimeObj] // name может быть пустым
+      );
+      dbSaved = true;
+      console.log('Заявка сохранена в БД с ID:', callbackResult.rows[0].id);
+    } else {
+      console.warn('Подключение к БД отсутствует. Заявка не будет сохранена в БД.');
+    }
+    */
+const cleanPhone = phone.replace(/[^0-9+]/g, '');
+    // 5. Подготавливаем сообщение для Telegram
+    const message = `
+📞 *Новая заявка на обратный звонок BIZON!*
+👤 *Имя:* ${name || 'не указано'}
+📱 *Телефон:* \`${cleanPhone}\`
+🕐 ${moscowTimeString}
+`.trim();
+
+    console.log('Подготовленное сообщение для Telegram:', message);
+
+    // 6. Отправка сообщения в Telegram (используем те же переменные окружения)
+    const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+    const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+    if (BOT_TOKEN && CHAT_ID) {
+      try {
+        console.log('Отправка сообщения в Telegram...');
+        // Исправлен URL (убран лишний пробел)
+        await axios.post(
+          `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
+          {
+            chat_id: CHAT_ID,
+            text: message,
+            parse_mode: 'Markdown',
+            disable_web_page_preview: true
+          }
+        );
+        telegramSent = true;
+        console.log('Сообщение успешно отправлено в Telegram');
+      } catch (telegramError) {
+        console.error('Ошибка отправки в Telegram:', telegramError.message);
+        // Не прерываем выполнение, если Telegram не работает
+      }
+    } else {
+      console.warn('Токен Telegram бота или ID чата не настроены');
+    }
+
+    // 7. Отправка успешного ответа клиенту
+    console.log('=== ЗАЯВКА УСПЕШНО ОБРАБОТАНА ===');
+    res.json({ 
+      success: true,
+      savedToDB: dbSaved,
+      sentToTelegram: telegramSent
+    });
+
+  } catch (error) {
+    console.error('КРИТИЧЕСКАЯ ОШИБКА обработки заявки:', error);
+    // Очищаем хэш при ошибке
+    req.app.locals.lastContactRequest = null;
+    
+    // Отправляем клиенту сообщение об ошибке
+    res.status(500).json({ success: false, error: 'Ошибка обработки заявки на сервере' });
   }
 });
 

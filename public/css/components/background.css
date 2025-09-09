@@ -1,68 +1,42 @@
-/* === ФОН И ПУЛЬСЫ === */
-
-/* Обёртка фона на всю высоту страницы */
-.bg-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%; /* Это высота вьюпорта — но мы исправим это через body/html */
-  z-index: -1;
-  overflow: hidden;
+:root {
+  /* Определяем CSS-переменные для цветов из ТЗ */
+  --bg-start: #e7ebf4ff;
+  --bg-end: #cdcfd3ff;
+  --accent-electric-blue: #00E5FF;
+  --accent-deep-blue: #2B6CFF;
+  --text-primary: #FFFFFF;
+  --text-secondary: #AAB3C5;
+  --primary-color: #3b82f6;
 }
 
-/* Чтобы фон растягивался на всю высоту контента */
-html, body {
-  height: auto; /* Не фиксируем высоту */
-  min-height: 100vh;
-  margin: 0;
-  padding: 0;
+body {
+  font-family: 'Inter', sans-serif;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  overflow-x: hidden;
   position: relative;
+  margin: 0;
+  min-height: 100vh;
+  background: #0d0f17;
 }
 
-/* Градиент на весь слой */
-.bg-overlay::before {
+/* ==================== ТОЧЕЧНЫЙ ФОН НА ВСЕЙ СТРАНИЦЕ ==================== */
+body::before {
   content: "";
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
+  width: 200vw;
   height: 100%;
-  background: linear-gradient(to bottom right, #0C1016 0%, #0C1016 50%, #0C1016 100%);
+  background-image: radial-gradient(
+    circle at 15px 15px, /* Увеличил размер точек */
+    var(--accent-electric-blue) 2px, /* Увеличил радиус точки */
+    transparent 1.5px
+  );
+  background-size: 60px 60px; /* Увеличил расстояние между точками */
+  z-index: -3;
   pointer-events: none;
-}
-
-/* Пульсы — абсолютные, позиционируются относительно .bg-overlay (всей страницы) */
-.pulse-1,
-.pulse-2,
-.pulse-3 {
-  position: absolute;
-  width: 24rem;
-  height: 24rem;
-  border-radius: 9999px;
-  filter: blur(60px);
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-.pulse-1 {
-  top: 75%;
-  left: 75%;
-  background: #0409AC;
-  animation: pulse 6s ease-in-out infinite;
-}
-
-.pulse-2 {
-  bottom: 65%;
-  right: 80%;
-  background: #0409AC;
-  animation: pulse 6s ease-in-out infinite 3s;
-}
-
-.pulse-3 {
-  bottom: 90%;
-  right: 5%;
-  background: #0409AC;
-  animation: pulse 6s ease-in-out infinite 1.5s;
+  opacity: 0.10; /* Немного увеличил прозрачность для лучшей видимости */
+  background-blend-mode: screen;
 }
 

@@ -1,8 +1,19 @@
+/* ==================== КОРНЕВЫЕ ПЕРЕМЕННЫЕ ==================== */
 :root {
-  /* ... ваши переменные ... */
-  /* Добавим переменную для размера маски */
-  --mask-fade-size: 55%; /* Регулируйте этот процент для изменения ширины "рассеивания" */
+  /* Предполагаемые переменные, адаптируйте под ваш файл variables.css */
+  /* --card-bg: ...; */
+  /* --radius-lg: ...; */
+  /* --radius-md: ...; */
+  /* --radius-sm: ...; */
+  /* --text-primary: ...; */
+  /* --text-secondary: ...; */
+  /* --accent: ...; */
+  /* --accent-light: ...; */
+
+  /* Переменная для эффекта рассеивания у логотипов клиентов */
+  --mask-fade-size: 55%;
 }
+
 /* ==================== ОСНОВНОЙ КОНТЕНТ ==================== */
 main {
   flex-grow: 1;
@@ -23,6 +34,7 @@ main {
   gap: 40px;
   width: 100%;
   margin-bottom: 60px;
+  position: relative; /* Для абсолютного позиционирования ссылок */
 }
 
 /* ==================== ЛЕВЫЙ БЛОК — КОНТАКТЫ + ФОРМА ==================== */
@@ -34,18 +46,18 @@ main {
   padding: 40px 30px;
   background: var(--card-bg);
   border-radius: var(--radius-lg);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
+/* Скрытие заголовка h1 для SEO */
 .contact-info h1 {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    padding: 0;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    border: 0;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
 }
 
 .contact-info h2 {
@@ -69,7 +81,7 @@ main {
 
 /* ==================== ФОРМА ==================== */
 .callback-form {
-  background: rgba(255, 255, 255, 0.03);
+  background: #050b14;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: var(--radius-md);
   padding: 25px;
@@ -119,45 +131,110 @@ input.error, select.error {
   display: block;
 }
 
-.consent {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
+/* ==================== ПЕРЕКЛЮЧАТЕЛЬ СОГЛАСИЯ ==================== */
+.consent-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
   margin: 20px 0;
-  text-align: center;
+  padding: 15px;
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 12px;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.consent-toggle {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.consent-checkbox {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.consent-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #4a5568; /* Серый по умолчанию */
+  transition: .3s;
+  border-radius: 24px;
+}
+
+.consent-slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+}
+
+.consent-checkbox:checked + .consent-slider {
+  background-color: #3b82f6; /* Синий при активации */
+}
+
+.consent-checkbox:checked + .consent-slider:before {
+  transform: translateX(20px);
+}
+
+.consent-checkbox:focus + .consent-slider {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.consent-text {
+  margin: 0;
+  color: #e2e8f0;
+  font-size: 0.95rem;
   line-height: 1.5;
+  flex: 1;
 }
 
-.consent a {
-  color: var(--accent);
-  text-decoration: underline;
-  transition: color 0.2s ease;
-}
-
-.consent a:hover {
-  color: var(--accent-light);
+.consent-text a {
+  color: #59DEFA;
   text-decoration: none;
+  border-bottom: 1px dotted #59DEFA;
 }
 
+.consent-text a:hover {
+  border-bottom: 1px solid #59DEFA;
+}
+
+/* ==================== КНОПКА ОТПРАВКИ ==================== */
 .submit-btn {
   width: 100%;
-  padding: 16px;
-  font-size: 1.1rem;
+  padding: 16px; /* Используем значение из предыдущего стиля */
+  font-size: 1.1rem; /* Используем значение из предыдущего стиля */
   font-weight: 600;
-  background: var(--accent);
-  color: #000;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); /* Используем значение из предыдущего стиля */
+  color: #fff;
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 10px rgba(0, 229, 255, 0.3);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); /* Используем значение из предыдущего стиля */
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  /* Стили для состояния по умолчанию (когда disabled через JS) */
+  opacity: 0.7;
+  pointer-events: none;
 }
 
 .submit-btn:hover:not(:disabled) {
-  background: var(--accent-light);
   box-shadow: 0 6px 15px rgba(0, 229, 255, 0.5);
   transform: translateY(-2px);
 }
@@ -167,22 +244,31 @@ input.error, select.error {
   box-shadow: 0 2px 5px rgba(0, 229, 255, 0.3);
 }
 
+.submit-btn:enabled {
+  opacity: 1;
+  pointer-events: all;
+}
+
 .submit-btn:disabled {
   background: #cccccc;
   color: #666666;
   cursor: not-allowed;
   box-shadow: none;
   transform: none;
+  opacity: 0.5; /* Переопределяем для состояния disabled */
 }
 
-.submit-btn .spinner {
-  display: none;
-  width: 18px;
-  height: 18px;
-  border: 2px solid #000;
+/* Стиль спиннера */
+.spinner {
+  display: inline-block;
+  width: 18px; /* Используем размер из .submit-btn */
+  height: 18px; /* Используем размер из .submit-btn */
+  border: 2px solid #000; /* Используем цвет из предыдущего .spinner */
   border-top-color: transparent;
   border-radius: 50%;
   animation: spin 1s linear infinite;
+  /* Скрыто по умолчанию */
+  display: none;
 }
 
 .submit-btn:disabled .spinner {
@@ -204,18 +290,13 @@ input.error, select.error {
 }
 
 .contact-image {
-flex-grow: 1;
+  flex-grow: 1;
   min-height: 400px;
-  /* Предполагается, что фон установлен через CSS */
- background: url('/assets/Contacts/20250903_0614_Futuristic BIZON Reception_simple_compose_01k46j72ksejnvd6p4jce7g1ww.png') no-repeat center center;
-  
+  background: url('/assets/Contacts/20250903_0614_Futuristic BIZON Reception_simple_compose_01k46j72ksejnvd6p4jce7g1ww.png') no-repeat center center;
   background-size: cover;
   position: relative;
-  /* Убран overflow: hidden отсюда, перенесен в .contact-image-wrapper */
   border-radius: var(--radius-lg);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); /* Внешняя тень остается */
-
-  
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .contact-image::before {
@@ -224,9 +305,8 @@ flex-grow: 1;
   inset: 0;
   /* Градиент снизу вверх, затемняющий только нижнюю часть */
   background: linear-gradient(0deg, rgba(15, 22, 41, 0.4) 0%, rgba(15, 22, 41, 0.2) 30%, transparent 60%);
-  
-  
   z-index: 1;
+  border-radius: inherit; /* Наследует скругление от родителя */
 }
 
 /* ==================== ССЫЛКИ НА МЕССЕНДЖЕРЫ НА ФОТО ==================== */
@@ -248,7 +328,7 @@ flex-grow: 1;
 .contact-link--below {
   width: auto;
   padding: 10px 20px;
-  background: rgba(15, 22, 41, 0.85); /* Темный полупрозрачный фон */
+  background: rgba(15, 22, 41, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--radius-md);
   color: var(--text-primary);
@@ -258,7 +338,7 @@ flex-grow: 1;
   align-items: center;
   gap: 10px;
   transition: all 0.3s ease;
-  backdrop-filter: blur(4px); /* Эффект размытия фона */
+  backdrop-filter: blur(4px);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
   white-space: nowrap;
 }
@@ -300,8 +380,21 @@ flex-grow: 1;
 
 .clients-track {
   overflow: hidden;
-  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  /* Используем переменную для гибкой настройки */
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black var(--mask-fade-size),
+    black calc(100% - var(--mask-fade-size)),
+    transparent
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black var(--mask-fade-size),
+    black calc(100% - var(--mask-fade-size)),
+    transparent
+  );
 }
 
 .clients-track-inner {
@@ -314,7 +407,6 @@ flex-grow: 1;
   0% {
     transform: translateX(0);
   }
-
   100% {
     transform: translateX(-50%);
   }
@@ -348,7 +440,7 @@ flex-grow: 1;
   }
 
   .contact-image {
-    min-height: 300px;
+    display: none;
   }
 
   .contact-image-wrapper {
@@ -383,6 +475,23 @@ flex-grow: 1;
   .contact-link--below svg {
     width: 20px;
     height: 20px;
+  }
+
+  /* Адаптация переключателя согласия */
+  .consent-container {
+    flex-direction: row; /* Убедимся, что элементы в ряд */
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .consent-text {
+    font-size: 0.9rem;
+  }
+
+  /* Адаптация изображения */
+  .contact-image {
+    min-height: 200px;
+    /* display: none;  Убрано, так как противоречит основной логике блока */
   }
 }
 
@@ -429,11 +538,6 @@ flex-grow: 1;
     width: 80%;
     max-width: 250px;
     justify-content: center;
-  }
-
-  .consent {
-    font-size: 0.75rem;
-    margin: 15px 0;
   }
 
   .clients {

@@ -7,7 +7,7 @@ const cartBtn = document.getElementById('cart-btn');
 const cartModal = document.getElementById('cart-modal');
 const productModal = document.getElementById('product-modal');
 const cartItems = document.getElementById('cart-items');
-const phoneInput = document.getElementById('phone-input');
+const phoneInput = document.getElementById('phone');
 const commentInput = document.getElementById('comment-input');
 const sendOrderBtn = document.getElementById('send-order');
 const successMessage = document.getElementById('success-message');
@@ -207,9 +207,73 @@ function openCartModal() {
       });
     }
   }
+  // Проверяем, что jQuery и maskedinput доступны, и элемент существует
+  if (typeof $ !== 'undefined' && $.fn.mask && phoneInput) {
+    // Сначала удаляем любую существующую маску, чтобы избежать конфликтов
+    // при повторных открытиях модального окна
+    $(phoneInput).unmask();
+    // Применяем маску
+    $(phoneInput).mask("+7 (999) 999-99-99", { placeholder: "+7 (___) ___-__-__" });
+    console.log("Маска телефона применена к #phone-input");
+  } else {
+    console.warn("jQuery, maskedinput или элемент #phone-input не найдены. Маска не применена.");
+    // Оставляем существующий обработчик input как резервный вариант
+    // (если маска по какой-то причине не сработала)
+    if (phoneInput) {
+       // Убедимся, что обработчик добавлен только один раз
+       phoneInput.removeEventListener('input', sanitizePhoneInput);
+       phoneInput.addEventListener('input', sanitizePhoneInput);
+    }
+  }
 
   updateSendOrderButton();
   cartModal.classList.add('open');
+ 
+  // 1. Убедимся, что модальное окно видимо для ассистивных технологий ДО добавления класса 'open'
+  cartModal.setAttribute('aria-hidden', 'false');
+  // Также убедимся, что оно фокусируемо
+  cartModal.setAttribute('tabindex', '-1');
+  
+  // 2. Добавляем класс 'open' для визуального отображения
+  cartModal.classList.add('open');
+  // Таймаут нужен, чтобы DOM успел отрендерить модальное окно
+  setTimeout(() => {
+    // Пытаемся сфокусироваться на поле телефона
+    const phoneInputToFocus = document.getElementById('phone');
+    if (phoneInputToFocus && typeof phoneInputToFocus.focus === 'function') {
+      phoneInputToFocus.focus();
+      console.log("Фокус установлен на поле #phone");
+    } else {
+      // Если поле телефона не найдено, фокусируемся на кнопке закрытия
+      const closeButton = cartModal.querySelector('.modal-close');
+      if (closeButton && typeof closeButton.focus === 'function') {
+        closeButton.focus();
+        console.log("Фокус установлен на кнопку закрытия модального окна");
+      } else {
+        // Если и её нет, фокус остается на модальном окне
+        cartModal.setAttribute('tabindex', '-1'); // Убедимся, что модальное окно может получить фокус
+        cartModal.focus();
+        console.log("Фокус установлен на само модальное окно");
+      }
+    }
+  }, 0); // Очень короткая задержка, достаточная для рендеринга
+
+  // --- ДОБАВИТЬ ИНИЦИАЛИЗАЦИЮ МАСКИ ЗДЕСЬ ТОЖЕ ---
+  // (Код инициализации маски, который мы обсуждали ранее)
+  if (typeof $ !== 'undefined' && $.fn.mask && phoneInput) {
+    $(phoneInput).unmask();
+    $(phoneInput).mask("+7 (999) 999-99-99", { placeholder: "+7 (___) ___-__-__" });
+    console.log("Маска телефона применена к #phone");
+  } else {
+    console.warn("jQuery, maskedinput или элемент #phone не найдены. Маска не применена.");
+    if (phoneInput) {
+       phoneInput.removeEventListener('input', sanitizePhoneInput);
+       phoneInput.addEventListener('input', sanitizePhoneInput);
+    }
+  }
+}
+function sanitizePhoneInput(event) {
+  event.target.value = event.target.value.replace(/[^0-9+]/g, '');
 }
 
 // Закрытие модалок
@@ -221,19 +285,25 @@ function closeModals() {
 // Обновление состояния кнопки "Оформить заказ"
 function updateSendOrderButton() {
   if (!sendOrderBtn) return;
-  if (getCart().length === 0) {
+  
+  const cart = getCart();
+  const consentCheckbox = document.getElementById('consent-toggle');
+  const isConsentGiven = consentCheckbox ? consentCheckbox.checked : false;
+  
+  if (cart.length === 0) {
     sendOrderBtn.disabled = true;
     sendOrderBtn.title = 'Нельзя оформить заказ — корзина пуста';
+  } else if (!isConsentGiven) {
+    sendOrderBtn.disabled = true;
+    sendOrderBtn.title = 'Необходимо дать согласие на обработку персональных данных';
   } else {
     sendOrderBtn.disabled = false;
     sendOrderBtn.title = '';
   }
 }
 
+
 // Привязка событий
-// ui.js - обновленная функция setupEventListeners()
-// ui.js - обновленная функция setupEventListeners()
-// ui.js - обновленная функция setupEventListeners
 function setupEventListeners() {
   const searchInput = document.getElementById('search-input');
 
@@ -273,10 +343,107 @@ function setupEventListeners() {
     phoneInput.value = phoneInput.value.replace(/[^0-9+]/g, '');
   });
 
-  // Отправка заказа (оставляем как есть)
+  // Обработчик для чекбокса согласия
+  const consentCheckbox = document.getElementById('consent-toggle');
+  if (consentCheckbox) {
+    consentCheckbox.addEventListener('change', updateSendOrderButton);
+  }
+
+  // Отправка заказа
   if (sendOrderBtn) {
     let isSending = false;
-    // ... ваш код отправки заказа
+    
+    sendOrderBtn.addEventListener('click', async () => {
+      // Предотвращаем повторную отправку
+      if (isSending) {
+        console.log('Заказ уже отправляется...');
+        return;
+      }
+      
+      // Проверяем согласие перед отправкой
+      const consentCheckbox = document.getElementById('consent-toggle');
+      const isConsentGiven = consentCheckbox ? consentCheckbox.checked : false;
+      
+      if (!isConsentGiven) {
+        alert('Необходимо дать согласие на обработку персональных данных');
+        return;
+      }
+      
+      if (!phoneInput.value.trim()) {
+        alert('Укажите телефон');
+        return;
+      }
+      
+      if (getCart().length === 0) {
+        alert('Корзина пуста');
+        return;
+      }
+
+      try {
+        isSending = true;
+        sendOrderBtn.disabled = true;
+        sendOrderBtn.textContent = 'Отправка...';
+
+        const response = await fetch('/api/order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: phoneInput.value,
+            comment: commentInput.value,
+            cart: getCart()
+          })
+        });
+
+        const result = await response.json();
+        console.log('Ответ сервера:', result);
+
+        if (result.success) {
+          // Успешная отправка - показываем сообщение об успехе
+          clearCart();
+          phoneInput.value = '';
+          commentInput.value = '';
+          successMessage.style.display = 'block';
+          updateCartCount();
+          openCartModal();
+
+          setTimeout(() => {
+            successMessage.style.display = 'none';
+            sendOrderBtn.disabled = false;
+            sendOrderBtn.textContent = 'Оформить заказ';
+            isSending = false;
+          }, 3000);
+        } else {
+          // Ошибка от сервера
+          throw new Error(result.error || 'Ошибка сервера');
+        }
+      } catch (error) {
+        console.error('Ошибка отправки заказа:', error);
+        
+        // Проверяем, возможно заказ уже отправлен (по статусу ответа)
+        if (error.message && error.message.includes('Заказ уже обрабатывается')) {
+          // Заказ уже обрабатывается, показываем сообщение об успехе
+          clearCart();
+          phoneInput.value = '';
+          commentInput.value = '';
+          successMessage.style.display = 'block';
+          updateCartCount();
+          openCartModal();
+
+          setTimeout(() => {
+            successMessage.style.display = 'none';
+            sendOrderBtn.disabled = false;
+            sendOrderBtn.textContent = 'Оформить заказ';
+            isSending = false;
+          }, 3000);
+        } else {
+          // Другая ошибка
+          alert('Не удалось отправить заказ. Пожалуйста, позвоните нам.');
+          sendOrderBtn.disabled = false;
+          sendOrderBtn.textContent = 'Оформить заказ';
+          isSending = false;
+        }
+      }
+    });
   }
 
   document.querySelectorAll('[data-close]').forEach(btn => {
@@ -307,8 +474,6 @@ function handleCategoryClick(event) {
 // Убедитесь, что в main.js правильно инициализируется начальное состояние
 // main.js
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('[DEBUG] DOM загружен, инициализация приложения');
-  
   // Инициализируем начальное состояние
   window.currentCategory = 'все'; // Устанавливаем начальную категорию
   
@@ -317,11 +482,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // Загружаем и отображаем товары
   await renderProducts();
+  
+  // Инициализируем состояние кнопки отправки заказа
+  updateSendOrderButton();
 });
 
 // Улучшенная функция renderProducts с четкой фильтрацией по категориям
-// ui.js - обновленная функция renderProducts
-async function renderProducts() {
+async function renderProductsImproved() {
   if (renderProductsTimeout) {
     clearTimeout(renderProductsTimeout);
   }
@@ -434,100 +601,6 @@ async function renderProducts() {
     }
   }, 300);
 }
-
-// В ui.js найдите функцию отправки заказа и замените её на эту:
-
-if (sendOrderBtn) {
-  let isSending = false; // Флаг для предотвращения повторной отправки
-  
-  sendOrderBtn.addEventListener('click', async () => {
-    // Предотвращаем повторную отправку
-    if (isSending) {
-      console.log('Заказ уже отправляется...');
-      return;
-    }
-    
-    if (!phoneInput.value.trim()) {
-      alert('Укажите телефон');
-      return;
-    }
-    
-    if (getCart().length === 0) {
-      alert('Корзина пуста');
-      return;
-    }
-
-    try {
-      isSending = true;
-      sendOrderBtn.disabled = true;
-      sendOrderBtn.textContent = 'Отправка...';
-
-      const response = await fetch('/api/order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone: phoneInput.value,
-          comment: commentInput.value,
-          cart: getCart()
-        })
-      });
-
-      const result = await response.json();
-      console.log('Ответ сервера:', result);
-
-      if (result.success) {
-        // Успешная отправка - показываем сообщение об успехе
-        clearCart();
-        phoneInput.value = '';
-        commentInput.value = '';
-        successMessage.style.display = 'block';
-        updateCartCount();
-        openCartModal();
-
-        setTimeout(() => {
-          successMessage.style.display = 'none';
-          sendOrderBtn.disabled = false;
-          sendOrderBtn.textContent = 'Оформить заказ';
-          isSending = false;
-        }, 3000);
-      } else {
-        // Ошибка от сервера
-        throw new Error(result.error || 'Ошибка сервера');
-      }
-    } catch (error) {
-      console.error('Ошибка отправки заказа:', error);
-      
-      // Проверяем, возможно заказ уже отправлен (по статусу ответа)
-      if (error.message && error.message.includes('Заказ уже обрабатывается')) {
-        // Заказ уже обрабатывается, показываем сообщение об успехе
-        clearCart();
-        phoneInput.value = '';
-        commentInput.value = '';
-        successMessage.style.display = 'block';
-        updateCartCount();
-        openCartModal();
-
-        setTimeout(() => {
-          successMessage.style.display = 'none';
-          sendOrderBtn.disabled = false;
-          sendOrderBtn.textContent = 'Оформить заказ';
-          isSending = false;
-        }, 3000);
-      } else {
-        // Другая ошибка
-        alert('Не удалось отправить заказ. Пожалуйста, позвоните нам.');
-        sendOrderBtn.disabled = false;
-        sendOrderBtn.textContent = 'Оформить заказ';
-        isSending = false;
-      }
-    }
-  });
-}
-
-  document.querySelectorAll('[data-close]').forEach(btn => {
-    btn.addEventListener('click', closeModals);
-  });
-
 
 // Экспорт
 if (typeof module !== 'undefined' && module.exports) {
