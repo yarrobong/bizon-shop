@@ -1,5 +1,18 @@
 // server.js
 require('dotenv').config();
+
+// Временный вывод для отладки
+console.log('=== Environment Variables ===');
+console.log('DATABASE_URL:', process.env.DATABASE_URL);
+console.log('DB_HOST:', process.env.DB_HOST);
+console.log('DB_PORT:', process.env.DB_PORT);
+console.log('DB_USER:', process.env.DB_USER);
+console.log('DB_PASSWORD:', process.env.DB_PASSWORD);
+console.log('DB_NAME:', process.env.DB_NAME);
+console.log('============================');
+
+
+
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
@@ -14,16 +27,49 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // === Подключение к БД (только на Render) ===
-let pool;
-if (process.env.DATABASE_URL) {
-  const { Pool } = require('pg');
-  pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-      rejectUnauthorized: false
-    }
-  });
+const pool = new Pool({
+  // Приоритет у DATABASE_URL, если он задан и корректен
+  connectionString: process.env.DATABASE_URL && process.env.DATABASE_URL !== 'undefined' 
+    ? process.env.DATABASE_URL 
+    : `postgres://${process.env.DB_USER}:${encodeURIComponent(process.env.DB_PASSWORD)}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+// Добавьте обработчики ошибок пула
+pool.on('error', (err) => {
+  console.error('Неожиданная ошибка в пуле подключений PostgreSQL:', err);
+  process.exit(-1);
+});
+
+// Проверка подключения при запуске приложения
+pool.query('SELECT NOW()', (err, res) => {
+  if (err) {
+    console.error('❌ Ошибка подключения к БД при запуске:', err.stack);
+  } else {
+    console.log('✅ Успешное подключение к БД. Текущее время на сервере:', res.rows[0].now);
+  }
+});
+
+async function getProducts() {
+  try {
+    const res = await pool.query('SELECT * FROM products');
+    return res.rows;
+  } catch (err) {
+    console.error('Ошибка загрузки товаров:', err);
+    return [];
+  }
 }
+
+// Пример использования
+(async () => {
+  const products = await getProducts();
+  console.log(products);
+})();
+
+// Не закрываем пул здесь, он должен жить пока работает сервер
+module.exports = { pool, getProducts };
 
 // Установка часового пояса (если нужно)
 process.env.TZ = 'Europe/Moscow';
