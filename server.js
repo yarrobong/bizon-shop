@@ -7,39 +7,36 @@ console.log('DATABASE_URL:', process.env.DATABASE_URL);
 console.log('DB_HOST:', process.env.DB_HOST);
 console.log('DB_PORT:', process.env.DB_PORT);
 console.log('DB_USER:', process.env.DB_USER);
-console.log('DB_PASSWORD:', process.env.DB_PASSWORD);
+console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? '[СКРЫТ]' : 'undefined');
 console.log('DB_NAME:', process.env.DB_NAME);
 console.log('============================');
-
-
 
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
-const bcrypt = require('bcryptjs');
-const { Pool } = require('pg');
+const bcrypt = require('bcryptjs'); // ✅ Только один раз
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const bcrypt = require('bcryptjs');
+const { Pool } = require('pg');
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// === Подключение к БД (только на Render) ===
+// === Подключение к БД ===
 const pool = new Pool({
-  // Приоритет у DATABASE_URL, если он задан и корректен
   connectionString: process.env.DATABASE_URL && process.env.DATABASE_URL !== 'undefined' 
     ? process.env.DATABASE_URL 
     : `postgres://${process.env.DB_USER}:${encodeURIComponent(process.env.DB_PASSWORD)}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
-  ssl: {
+  // Отключаем SSL для локального подключения
+  ssl: process.env.DB_HOST === 'localhost' || process.env.DB_HOST === '127.0.0.1' ? false : {
     rejectUnauthorized: false
   }
 });
 
-// Добавьте обработчики ошибок пула
+// Обработчики ошибок пула
 pool.on('error', (err) => {
   console.error('Неожиданная ошибка в пуле подключений PostgreSQL:', err);
   process.exit(-1);
@@ -48,7 +45,8 @@ pool.on('error', (err) => {
 // Проверка подключения при запуске приложения
 pool.query('SELECT NOW()', (err, res) => {
   if (err) {
-    console.error('❌ Ошибка подключения к БД при запуске:', err.stack);
+    console.error('❌ Ошибка подключения к БД при запуске:', err.message);
+    console.error('Код ошибки:', err.code);
   } else {
     console.log('✅ Успешное подключение к БД. Текущее время на сервере:', res.rows[0].now);
   }
@@ -64,52 +62,50 @@ async function getProducts() {
   }
 }
 
-// Пример использования
+// Пример использования (можно удалить в production)
 (async () => {
-  const products = await getProducts();
-  console.log(products);
+  try {
+    const products = await getProducts();
+    console.log('Товары из БД:', products.length);
+  } catch (err) {
+    console.error('Ошибка при загрузке товаров в примере:', err);
+  }
 })();
 
-// Не закрываем пул здесь, он должен жить пока работает сервер
+// Экспорт для использования в других модулях
 module.exports = { pool, getProducts };
 
-// Установка часового пояса (если нужно)
+// Установка часового пояса
 process.env.TZ = 'Europe/Moscow';
 
 // === API: Получить товары ===
 app.get('/api/products', async (req, res) => {
   try {
-    if (pool) {
-      // Проверяем, запрашивает ли админ-панель все товары
-      const isAdmin = req.query.admin === 'true';
-      
-      let query = `
-        SELECT 
-          id, title, description, price, tag, available, category, brand, compatibility,
-          images_json as images
-        FROM products 
-      `;
-      
-      // Только для обычных пользователей фильтруем по доступности
-      // Для админа показываем все товары
-      if (!isAdmin) {
-        query += 'WHERE available = true ';
-      }
-      
-      query += 'ORDER BY id';
-      
-      const result = await pool.query(query);
-      res.json(result.rows);
-    } else {
-      console.warn('Подключение к БД не настроено или pool не инициализирован. Возвращается пустой список.');
-      res.json([]);
+    // Проверяем, запрашивает ли админ-панель все товары
+    const isAdmin = req.query.admin === 'true';
+    
+    let query = `
+      SELECT 
+        id, title, description, price, tag, available, category, brand, compatibility,
+        images_json as images
+      FROM products 
+    `;
+    
+    // Только для обычных пользователей фильтруем по доступности
+    // Для админа показываем все товары
+    if (!isAdmin) {
+      query += ' WHERE available = true ';
     }
+    
+    query += ' ORDER BY id';
+    
+    const result = await pool.query(query);
+    res.json(result.rows);
   } catch (err) {
     console.error('Ошибка загрузки товаров:', err);
     res.status(500).json({ error: 'Не удалось загрузить товары' });
   }
 });
-
 // === API: Оформить заказ ===
 app.post('/api/order', async (req, res) => {
   console.log('=== НАЧАЛО ОБРАБОТКИ ЗАКАЗА ===');
