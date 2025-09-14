@@ -997,12 +997,31 @@ if (order.items && Array.isArray(order.items) && order.items.length > 0) {
     }
 
     formatPrice(price) {
-        if (typeof price !== 'number' || isNaN(price)) return 'Цена не указана';
-        return new Intl.NumberFormat('ru-RU', {
-            style: 'currency',
-            currency: 'RUB'
-        }).format(price);
+    // Проверяем, является ли price null или undefined
+    if (price === null || price === undefined) {
+        return 'Цена не указана';
     }
+
+    // Если price - строка, пытаемся преобразовать её в число
+    let numericPrice;
+    if (typeof price === 'string') {
+        // Удаляем пробелы и заменяем запятую на точку (на случай, если формат другой)
+        numericPrice = parseFloat(price.trim().replace(',', '.'));
+    } else {
+        numericPrice = price;
+    }
+
+    // Проверяем, является ли результат числом
+    if (typeof numericPrice !== 'number' || isNaN(numericPrice)) {
+        return 'Цена не указана';
+    }
+
+    // Форматируем число как валюту
+    return new Intl.NumberFormat('ru-RU', {
+        style: 'currency',
+        currency: 'RUB'
+    }).format(numericPrice);
+}
 
     escapeHtml(text) {
         if (!text) return '';
