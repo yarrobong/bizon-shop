@@ -16,6 +16,8 @@ const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
 const bcrypt = require('bcryptjs'); // ✅ Только один раз
+const multer = require('multer');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -77,6 +79,32 @@ module.exports = { pool, getProducts };
 
 // Установка часового пояса
 process.env.TZ = 'Europe/Moscow';
+// Настройка хранилища для multer
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    // Убедитесь, что папка существует
+    cb(null, path.join(__dirname, 'public', 'uploads'));
+  },
+  filename: function (req, file, cb) {
+    // Генерируем уникальное имя файла
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
+
+// Endpoint для загрузки файлов
+// ВАЖНО: Этот маршрут должен быть ДО ваших других app.use и app.get/app.post
+app.post('/api/upload', upload.single('image'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'Файл не был загружен' });
+  }
+  // Возвращаем путь, по которому файл будет доступен через статику
+  // Предполагаем, что Nginx настроен отдавать /uploads из /public/uploads
+  const fileUrl = `/uploads/${req.file.filename}`;
+  res.json({ url: fileUrl });
+});
 
 // === API: Получить товары ===
 app.get('/api/products', async (req, res) => {

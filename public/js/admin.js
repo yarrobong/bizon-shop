@@ -152,23 +152,41 @@ class AdminPanel {
     }
 
     // Обработка выбранных файлов (и через drag & drop, и через файловый диалог)
-    async handleFileSelect(files) {
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            if (file.type.startsWith('image/')) {
-                try {
-                    // Здесь должна быть логика загрузки файла на сервер
-                    // Пока используем временный URL для предпросмотра
-                    const imageUrl = URL.createObjectURL(file);
-                    this.addImageField({ url: imageUrl, alt: file.name });
-                } catch (error) {
-                    console.error('Ошибка при обработке файла:', error);
-                    this.showMessage('Ошибка при обработке изображения', 'error');
+    
+async handleFileSelect(files) {
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.type.startsWith('image/')) {
+            try {
+                // Создаем FormData для отправки файла
+                const formData = new FormData();
+                formData.append('image', file);
+
+                // Отправляем файл на сервер
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                    // НЕ устанавливаем Content-Type, браузер сделает это правильно с boundary
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `Ошибка загрузки: ${response.status}`);
                 }
+
+                const data = await response.json();
+                // data.url - это путь к изображению на сервере, возвращаемый из /api/upload
+                this.addImageField({ url: data.url, alt: file.name });
+
+            } catch (error) {
+                console.error('Ошибка при загрузке файла:', error);
+                this.showMessage(`Ошибка загрузки ${file.name}: ${error.message}`, 'error');
             }
+        } else {
+            this.showMessage(`Файл ${file.name} не является изображением`, 'error');
         }
     }
-
+}
     // Добавить новое поле для изображения
     addImageField(imageData = null) {
         const container = document.getElementById('images-container');
