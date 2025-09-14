@@ -17,7 +17,7 @@ const fs = require('fs');
 const axios = require('axios');
 const bcrypt = require('bcryptjs'); // ✅ Только один раз
 const multer = require('multer');
-const path = require('path');
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -444,12 +444,27 @@ app.get('/api/products/:id', async (req, res) => {
 // === API: Создать товар ===
 app.post('/api/products', async (req, res) => {
   try {
-    const { title, description, price, tag, available, category, brand, compatibility, images } = req.body;
-    
+    // req.body может содержать поле 'id'
+    const { id, title, description, price, tag, available, category, brand, compatibility, images } = req.body;
+
     // Преобразуем images обратно в JSON для хранения в БД
     const images_json = images ? JSON.stringify(images) : null;
 
+    // ПРОБЛЕМА ЧАСТО ЗДЕСЬ: если 'id' передается из req.body и используется в INSERT,
+    // а в БД уже есть запись с таким id, будет ошибка.
+    // Лучше НЕ передавать 'id' из клиента при создании нового товара.
+
     if (pool) {
+      // ТЕКУЩИЙ КОД (возможно проблемный):
+      // const result = await pool.query(`
+      //   INSERT INTO products (id, title, description, ...) -- Явное указание id
+      //   VALUES ($1, $2, $3, ...)                           -- Передача id из req.body
+      //   RETURNING ...
+      // `, [id, title, description, ...]);                   -- id в списке
+
+      // ИСПРАВЛЕННЫЙ КОД:
+      // Не включаем 'id' в список полей для INSERT и в VALUES, если хотим,
+      // чтобы PostgreSQL сам сгенерировал его.
       const result = await pool.query(`
         INSERT INTO products (title, description, price, tag, available, category, brand, compatibility, images_json)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -462,7 +477,7 @@ app.post('/api/products', async (req, res) => {
     }
   } catch (err) {
     console.error('Ошибка создания товара:', err);
-    res.status(500).json({ error: 'Не удалось создать товар' });
+    // ... логика обработки ошибки
   }
 });
 
