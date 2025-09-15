@@ -116,7 +116,7 @@ section {
   justify-content: center;
   gap: 60px;
   position: relative;
-  padding: 20px 20px;
+  padding: 20px auto;
   
 }
 
@@ -216,7 +216,7 @@ section {
 
 /* ==================== ПРЕИМУЩЕСТВА ==================== */
 .features {
-  padding: 60px 0px;
+  padding: 40px 0px;
   text-align: center;
   position: relative;
 }
@@ -224,7 +224,7 @@ section {
 .features h2 {
   font-family: 'Montserrat', sans-serif;
   font-size: 2.8rem;
-  margin-bottom: 60px;
+  margin-bottom: 30px;
   /* Упрощаем градиентный текст */
   background: #ffffff;
   -webkit-background-clip: text;
@@ -239,7 +239,7 @@ section {
   grid-template-columns: repeat(2, 1fr);
   gap: 30px;
   max-width: 1100px;
-  margin: 0 auto;
+  margin: 10px auto;
 }
 
 /* ==================== FEATURE CARD — ГОРИЗОНТАЛЬНЫЙ МАКЕТ ==================== */
@@ -247,7 +247,7 @@ section {
   display: flex;
   align-items: center; /* по центру по вертикали */
   gap: 24px;
-  padding: 28px;
+  padding: 20px;
   background: #01033E;
   backdrop-filter: blur(10px);
   border: 3px solid #2B53C1;
@@ -349,7 +349,7 @@ section {
 
 .trade-in-content {
   display: flex;
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
   gap: 60px;
@@ -391,7 +391,6 @@ section {
 
 /* Шаги трейд-ина */
 .trade-in-step {
-  display: flex;
   margin-bottom: 30px;
   position: relative;
   padding-left: 40px;
@@ -432,7 +431,7 @@ section {
 
 .step-content h4 {
   color: #FFFFFF;
-  margin-bottom: 10px;
+  
   font-size: 1.1rem;
   font-weight: 600;
 }
@@ -477,7 +476,7 @@ section {
   
   .trade-in-content {
     flex-direction: column;
-    text-align: center;
+    text-align: justify;
   }
 
   .trade-in-text {
@@ -739,7 +738,7 @@ footer {
   .hero {
     flex-direction: column;
     text-align: center;
-    padding: 80px 20px;
+
     min-height: auto;
     gap: 40px;
   }
@@ -749,7 +748,7 @@ footer {
   }
 
   .hero-trust {
-    width: 300px;
+
     justify-content: center;
   }
 
@@ -812,7 +811,7 @@ footer {
   }
 
   .trade-in h2 {
-    font-size: 2.2rem;
+    text-align: center;
   }
 
   .features h2 {
@@ -826,7 +825,7 @@ footer {
 
 @media (max-width: 576px) {
   .hero {
-    padding: 60px 20px;
+    padding: 0px 20px;
     gap: 30px;
   }
 

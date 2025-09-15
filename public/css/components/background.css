@@ -26,17 +26,17 @@ body::before {
   position: absolute;
   top: 0;
   left: 0;
-  width: 200vw;
+  width: 100%; /* Исправлено: ширина равна 100% viewport */
   height: 100%;
   background-image: radial-gradient(
-    circle at 15px 15px, /* Увеличил размер точек */
-    var(--accent-electric-blue) 2px, /* Увеличил радиус точки */
+    circle at 15px 15px,
+    var(--accent-electric-blue) 2px,
     transparent 1.5px
   );
-  background-size: 60px 60px; /* Увеличил расстояние между точками */
+  background-size: 60px 60px;
   z-index: -3;
   pointer-events: none;
-  opacity: 0.10; /* Немного увеличил прозрачность для лучшей видимости */
+  opacity: 0.10;
   background-blend-mode: screen;
 }
 

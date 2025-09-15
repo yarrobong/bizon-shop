@@ -47,3 +47,32 @@ document.querySelectorAll('.accordion-header').forEach(button => {
   });
 });
 
+// Добавьте этот скрипт в ваш HTML или JS файл
+document.addEventListener('DOMContentLoaded', function() {
+  const header = document.querySelector('header');
+  
+  window.addEventListener('scroll', function() {
+    if (window.scrollY > 50) {
+      header.classList.add('scrolled');
+    } else {
+      header.classList.remove('scrolled');
+    }
+  });
+});
+
+// Мобильное меню
+        const hamburger = document.getElementById('hamburger');
+        const nav = document.getElementById('mainNav');
+
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('active');
+            nav.classList.toggle('active');
+        });
+
+        // Закрытие меню при клике на ссылку
+        document.querySelectorAll('.nav-list a').forEach(link => {
+            link.addEventListener('click', () => {
+                hamburger.classList.remove('active');
+                nav.classList.remove('active');
+            });
+        });

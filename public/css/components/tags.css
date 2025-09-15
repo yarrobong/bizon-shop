@@ -1,39 +1,101 @@
-/* === TAGS FILTER === */
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  padding: 0 1.5rem; /* ← Боковые отступы по умолчанию */
-  padding-bottom: 1.5rem;
-  margin-bottom: 1.5rem;
-  border-bottom: 3px solid rgba(255, 255, 255, 1);
+:root {
+    /* Цвета фона */
+    --bg-start: #e7ebf4ff;
+    --bg-end: #cdcfd3ff;
+    --card-bg: #0F1629;
+
+    /* Акцентные цвета */
+    --accent-electric-blue: #00E5FF;
+    --accent-deep-blue: #2B6CFF;
+    --accent: #59DEFA; /* Используется в .tag-btn.active */
+    --accent-light: #8BEBFB;
+    --primary-color: #3b82f6; /* Может использоваться в других частях сайта */
+
+    /* Цвета текста */
+    --text-primary: #FFFFFF;
+    --text-secondary: #AAB3C5; /* Исправлено: было разрозненно определено */
+
+    /* Радиусы скругления */
+    --radius-lg: 20px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+
+    /* Другие переменные */
+    --mask-fade-size: 55%;
 }
-@media (max-width: 360px) {
-  .tags  {
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-  }
+
+/* === TAGS FILTER === */
+/* Стили по умолчанию (для десктопа и планшета) */
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    /* Устанавливаем отступы сверху и снизу, боковые отступы */
+    padding: 60px 1.5rem 1.5rem 1.5rem; /* Верх(60px) Право(1.5rem) Низ(1.5rem) Лево(1.5rem) */
+    margin: 60px 0 1.5rem 0; /* Внешние отступы: сверху(60px) справа(0) снизу(1.5rem) слева(0) */
+    border-bottom: 3px solid var(--text-primary); /* Граница снизу белого цвета */
 }
 
 .tag-btn {
-  padding: 0.5rem 1.5rem;
-  border-radius: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
+    padding: 0.5rem 1.5rem;
+    border: 1px solid black; /* Граница черного цвета */
+    border-radius: 1rem; /* Скругление углов */
+    font-weight: 500; /* Средняя жирность шрифта */
+    cursor: pointer; /* Курсор указатель */
+    transition: all 0.2s ease; /* Плавный переход */
+    background: rgba(255, 255, 255, 0.1); /* Светлый полупрозрачный фон по умолчанию */
+    color: rgba(255, 255, 255, 0.7); /* Светло-серый цвет текста по умолчанию */
 }
 
+/* Стили для активной кнопки */
 .tag-btn.active {
-  background: linear-gradient(90deg, #3b82f6, #9333ea);
-  color: white;
-  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+    background: rgba(0, 229, 255, 0.2); /* Полупрозрачный акцентный фон */
+    border-color: var(--accent); /* Цвет границы из переменной */
+    box-shadow: 0 6px 15px rgba(0, 229, 255, 0.4); /* Тень с акцентным цветом */
+    transform: translateY(-2px); /* Легкое приподнимание */
+    color: var(--text-primary); /* Белый цвет текста */
 }
 
-.tag-btn:not(.active) {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.7);
-}
-
+/* Стили при наведении на НЕактивную кнопку */
 .tag-btn:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.2); /* Более насыщенный фон при наведении */
+    color: var(--text-primary); /* Белый цвет текста при наведении */
+}
+
+/* Адаптация для мобильных устройств */
+@media (max-width: 768px) { /* Используем 768px как точку перехода к мобильной версии */
+    .tags {
+        /* Убираем большие отступы сверху */
+        padding-top: 2.3rem; /* Оставляем небольшой внутренний отступ сверху */
+        margin-top: 1.5rem;   /* Оставляем небольшой внешний отступ сверху */
+        /* Сохраняем боковые и нижние отступы */
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+        padding-bottom: 1.5rem;
+        margin-bottom: 1.5rem;
+        /* Сохраняем границу снизу */
+        border-bottom: 3px solid var(--text-primary);
+    }
+}
+
+/* Адаптация для очень маленьких экранов */
+@media (max-width: 360px) {
+    .tags {
+        /* Ещё больше уменьшаем боковые отступы */
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+        /* Верхние и нижние отступы остаются такими же, как в 768px */
+        padding-top: 2rem;
+        padding-bottom: 1.5rem;
+        margin-top: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+}
+
+/* Медиа-запрос для планшетов (если нужно что-то специфичное, иначе можно удалить) */
+@media (min-width: 769px) and (max-width: 992px) {
+  .tags {
+    /* Если нужны специфические стили для планшетов, добавьте их здесь */
+    /* В противном случае, используются стили по умолчанию */
+  }
 }

@@ -38,57 +38,67 @@
     <div class="pulse-1"></div>
     <div class="pulse-2"></div>
     <div class="pulse-3"></div>
+    <div class="pulse-4"></div>
+    <div class="pulse-5"></div>
+    <div class="pulse-6"></div>
   </div>
 
-  <header class="header" role="banner">
-  <div class="logo">
-    <div class="logo-icon">
-      <img src="assets/logo/logo-Photoroom.png" alt="Логотип BIZON" width="75" height="75">
+  <!-- Шапка -->
+<header class="header" role="banner">
+    <a href="https://bizon-business.ru" class="logo">
+        <div class="logo-icon">
+            <img src="assets/logo/logo-Photoroom.png" alt="Логотип BIZON" width="45" height="45">
+        </div>
+        <div class="logo-title">BIZON</div>
+    </a>
+
+    <!-- Навигация для десктопа (скрывается на мобильных) -->
+    <nav class="main-nav" id="mainNav" role="navigation" aria-label="Основная навигация">
+        <ul class="nav-list">
+            <li><a href="index.html" data-page="index">Главная</a></li>
+            <li><a href="catalog.html" data-page="catalog">Каталог</a></li>
+            <li><a href="contact.html" data-page="contact">Контакты</a></li>
+        </ul>
+    </nav>
+
+    <div class="header-actions">
+        <!-- Поиск — показываем только на catalog.html -->
+        <div class="search" id="header-search">
+            <svg 
+                class="search-icon" 
+                aria-hidden="true" 
+                focusable="false" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor" 
+                fill="none" 
+                stroke-width="2"
+            >
+                <path 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round" 
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
+                />
+            </svg>
+            <input type="text" id="search-input" placeholder="Поиск по товарам..." />
+        </div>
+
+        <button id="cart-btn" class="cart-btn" aria-label="Корзина">
+            Корзина
+            <span id="cart-count" class="cart-count">0</span>
+        </button>
     </div>
-    <div class="logo-title">BIZON</div>
-  </div>
-  <nav class="main-nav" role="navigation" aria-label="Основная навигация">
-  <ul class="nav-list">
-    <li><a href="index.html" data-page="index">Главная</a></li>
-    <li><a href="catalog.html" data-page="catalog">Каталог</a></li>
-    <li><a href="contact.html" data-page="contact">Контакты</a></li>
-  </ul>
-</nav>
 
-  <div class="header-actions">
-    <!-- Поиск — показываем только на catalog.html -->
-    <div class="search" id="header-search">
-       <svg 
-      class="search-icon" 
-      aria-hidden="true" 
-      focusable="false" 
-      viewBox="0 0 24 24" 
-      stroke="currentColor" 
-      fill="none" 
-      stroke-width="2"
-    >
-      <path 
-        stroke-linecap="round" 
-        stroke-linejoin="round" 
-        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
-      />
-    </svg>
-      <input type="text" id="search-input" placeholder="Поиск по товарам..." />
+    <!-- Гамбургер меню - теперь самое крайнее справа -->
+    <div class="hamburger" id="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
     </div>
-
-    <button id="cart-btn" class="cart-btn" aria-label="Корзина">
-      
-      Корзина
-      <span id="cart-count" class="cart-count">0</span>
-    </button>
-  </div>
 </header>
 
   <main role="main">
-   
-
     <!-- Фильтры по категориям -->
-    <div class="tags" role="group" aria-label="Фильтры по категориям">
+    <div class="tags"  aria-label="Фильтры по категориям">
   <button class="tag-btn active" data-category="все">Все</button>
   <button class="tag-btn" data-category="VR шлемы">VR шлемы</button>
   <button class="tag-btn" data-category="Крепления">Крепления</button>

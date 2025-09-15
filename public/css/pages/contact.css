@@ -1,15 +1,17 @@
 /* ==================== КОРНЕВЫЕ ПЕРЕМЕННЫЕ ==================== */
 :root {
-  /* Предполагаемые переменные, адаптируйте под ваш файл variables.css */
-  /* --card-bg: ...; */
-  /* --radius-lg: ...; */
-  /* --radius-md: ...; */
-  /* --radius-sm: ...; */
-  /* --text-primary: ...; */
-  /* --text-secondary: ...; */
-  /* --accent: ...; */
-  /* --accent-light: ...; */
-
+  /* Цвета */
+  --card-bg: #0F1629; /* Темно-синий фон карточек */
+  --text-primary: #FFFFFF; /* Основной текстовый цвет */
+  --text-secondary: #CBD5E1; /* Второстепенный текстовый цвет */
+  --accent: #59DEFA; /* Основной акцентный цвет (голубой) */
+  --accent-light: #8BEBFB; /* Светлый акцентный цвет */
+  
+  /* Радиусы скругления */
+  --radius-lg: 20px; /* Большой радиус */
+  --radius-md: 12px; /* Средний радиус */
+  --radius-sm: 8px; /* Маленький радиус */
+  
   /* Переменная для эффекта рассеивания у логотипов клиентов */
   --mask-fade-size: 55%;
 }
@@ -34,6 +36,7 @@ main {
   gap: 40px;
   width: 100%;
   margin-bottom: 60px;
+  margin-top: 100px;
   position: relative; /* Для абсолютного позиционирования ссылок */
 }
 
@@ -44,7 +47,7 @@ main {
   flex-direction: column;
   justify-content: center;
   padding: 40px 30px;
-  background: var(--card-bg);
+
   border-radius: var(--radius-lg);
 }
 
@@ -132,6 +135,7 @@ input.error, select.error {
 }
 
 /* ==================== ПЕРЕКЛЮЧАТЕЛЬ СОГЛАСИЯ ==================== */
+
 .consent-container {
   display: flex;
   align-items: center;
@@ -146,9 +150,8 @@ input.error, select.error {
 .consent-toggle {
   position: relative;
   display: inline-block;
-  width: 40px;
-  height: 20px;
-  flex-shrink: 0;
+  width: 33px;
+  height: 18px;
 }
 
 .consent-checkbox {
@@ -165,7 +168,7 @@ input.error, select.error {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #4a5568; /* Серый по умолчанию */
+  background-color: #4a5568;
   transition: .3s;
   border-radius: 24px;
 }
@@ -173,21 +176,22 @@ input.error, select.error {
 .consent-slider:before {
   position: absolute;
   content: "";
-  height: 16px;
-  width: 16px;
-  left: 2px;
-  bottom: 2px;
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%); /* Центрирует по вертикали */
   background-color: white;
   transition: .3s;
   border-radius: 50%;
 }
 
 .consent-checkbox:checked + .consent-slider {
-  background-color: #3b82f6; /* Синий при активации */
+  background-color: #3b82f6;
 }
 
 .consent-checkbox:checked + .consent-slider:before {
-  transform: translateX(20px);
+  transform: translate(18px, -50%); /* Сохраняет вертикальное центрирование */
 }
 
 .consent-checkbox:focus + .consent-slider {
@@ -212,19 +216,48 @@ input.error, select.error {
   border-bottom: 1px solid #59DEFA;
 }
 
+/* Адаптивность */
+@media (max-width: 768px) {
+  .consent-container {
+    flex-direction: row;
+    gap: 12px;
+    padding: 12px;
+  }
+  
+  .consent-text {
+    font-size: 0.9rem;
+  }
+  
+  .consent-toggle {
+    width: 45px;
+    height: 22px;
+  }
+  
+  .consent-slider:before {
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+  }
+  
+  .consent-checkbox:checked + .consent-slider:before {
+    transform: translate(28px, -50%);
+  }
+}
+
 /* ==================== КНОПКА ОТПРАВКИ ==================== */
 .submit-btn {
   width: 100%;
-  padding: 16px; /* Используем значение из предыдущего стиля */
-  font-size: 1.1rem; /* Используем значение из предыдущего стиля */
+  padding: 16px;
+  font-size: 1.1rem;
   font-weight: 600;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); /* Используем значение из предыдущего стиля */
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: #fff;
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); /* Используем значение из предыдущего стиля */
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -261,9 +294,9 @@ input.error, select.error {
 /* Стиль спиннера */
 .spinner {
   display: inline-block;
-  width: 18px; /* Используем размер из .submit-btn */
-  height: 18px; /* Используем размер из .submit-btn */
-  border: 2px solid #000; /* Используем цвет из предыдущего .spinner */
+  width: 18px;
+  height: 18px;
+  border: 2px solid #000;
   border-top-color: transparent;
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -399,8 +432,8 @@ input.error, select.error {
 
 .clients-track-inner {
   display: flex;
-  width: max-content;
-  animation: scroll 30s linear infinite;
+  gap: 4rem;
+  animation: scroll 10s linear infinite; /* Увеличил скорость */
 }
 
 @keyframes scroll {
@@ -408,7 +441,7 @@ input.error, select.error {
     transform: translateX(0);
   }
   100% {
-    transform: translateX(-50%);
+    transform: translateX(calc(-100% / 2)); /* Точное значение для бесшовности */
   }
 }
 
@@ -491,7 +524,6 @@ input.error, select.error {
   /* Адаптация изображения */
   .contact-image {
     min-height: 200px;
-    /* display: none;  Убрано, так как противоречит основной логике блока */
   }
 }
 
@@ -501,7 +533,8 @@ input.error, select.error {
   }
 
   .contact-info {
-    padding: 25px 15px;
+    
+    padding: 30px 15px;
   }
 
   .contact-info h2 {
@@ -528,10 +561,8 @@ input.error, select.error {
   }
 
   .contact-links-below-image {
-    flex-direction: column;
     align-items: center;
     gap: 10px;
-    bottom: 10px;
   }
 
   .contact-link--below {
@@ -554,4 +585,7 @@ input.error, select.error {
     height: 40px;
     margin: 0 15px;
   }
+  
+.contact-layout {
+  margin-top: 2.3rem;
 }
