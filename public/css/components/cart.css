@@ -111,6 +111,7 @@ body {
   scroll-snap-type: y mandatory;
 }
 
+
 .cart-item {
   display: flex;
   gap: 1rem;
