@@ -1,0 +1,24 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /private/
+Disallow: /tmp/
+Disallow: /cgi-bin/
+Disallow: /*utm_*
+Disallow: /*openstat*
+Disallow: /*_openstat*
+Disallow: /*gclid=*
+Disallow: /*yclid=*
+Disallow: /*fbclid=*
+Disallow: /*from=*
+Disallow: /*_ga=*
+Disallow: /*_gl=*
+Disallow: /*ref=*
+Disallow: /*source=*
+Disallow: /*campaign=*
+Disallow: /*medium=*
+Disallow: /*term=*
+Disallow: /*content=*
+
+Sitemap: https://bizon-business.ru/sitemap.xml
+
+Host: https://bizon-business.ru
