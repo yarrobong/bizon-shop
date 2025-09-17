@@ -146,7 +146,11 @@ header.scrolled {
   border: 1px solid rgba(59, 130, 246, 0.5);
 }
 
-/* Мобильная навигация */
+
+
+/* === МОБИЛЬНОЕ МЕНЮ === */
+@media (max-width: 768px) {
+  /* Мобильная навигация */
 .main-nav {
   position: fixed;
   top: 0;
@@ -168,9 +172,6 @@ header.scrolled {
 .main-nav.active {
   left: 0;
 }
-
-/* === МОБИЛЬНОЕ МЕНЮ === */
-@media (max-width: 768px) {
   .hamburger {
     display: flex;
   }
@@ -453,7 +454,7 @@ header.scrolled {
   }
   
   .main-nav {
-    width: 40%;
+    width: 50%;
   }
   
   .nav-list a {
