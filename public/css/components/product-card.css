@@ -66,20 +66,57 @@ main {
 
 /* === PRODUCT CARD === */
 .product-card {
-  background: #01033E;
-  backdrop-filter: blur(10px);
-  border: 3px solid #2B53C1;
-  border-radius: 1rem;
-  overflow: hidden;
-  transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  box-shadow: 0 0 15px 4px rgba(43, 83, 193, 0.7);
+  align-items: center; /* если нужно центрировать содержимое по горизонтали */
+  gap: 24px; /* как в feature-card, чтобы сохранить пропорции отступов */
+  padding: 24px; /* как в feature-card */
+  
+  /* Жидкое стекло — точно как в feature-card */
+  background: rgba(11, 11, 38, 0.35);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  
+  border-radius: 20px; /* как в feature-card, вместо 1rem */
+  border: 2px solid rgba(43, 83, 193, 0.7); /* как в feature-card */
+
+  /* Неоновое свечение — идентичное feature-card */
+  box-shadow: 
+    0 0 10px rgba(43, 83, 193, 0.8),
+    0 0 25px rgba(43, 83, 193, 0.6),
+    0 0 50px rgba(43, 83, 193, 0.4);
+
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  height: 100%; /* сохранил, как было */
 }
 
+/* Подсветка при ховере — точно так же, как в feature-card */
 .product-card:hover {
-  transform: scale(1.03);
+  transform: translateY(-6px); /* вместо scale(1.03) — для единства эффекта */
+  border-color: rgba(59, 130, 246, 0.9);
+  box-shadow: 
+    0 0 15px rgba(59, 130, 246, 1),
+    0 0 35px rgba(59, 130, 246, 0.8),
+    0 0 70px rgba(59, 130, 246, 0.6);
+}
+
+/* Доп. свечение внутри — градиент, как в feature-card */
+.product-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(0,0,0,0));
+  opacity: 0.6;
+  z-index: 0;
+}
+
+/* Все дочерние элементы — поверх эффекта */
+.product-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* === PRODUCT CONTENT === */
