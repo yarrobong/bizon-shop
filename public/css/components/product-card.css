@@ -70,7 +70,6 @@ main {
   flex-direction: column;
   align-items: center; /* если нужно центрировать содержимое по горизонтали */
   gap: 24px; /* как в feature-card, чтобы сохранить пропорции отступов */
-  padding: 24px; /* как в feature-card */
   
   /* Жидкое стекло — точно как в feature-card */
   background: rgba(11, 11, 38, 0.35);
