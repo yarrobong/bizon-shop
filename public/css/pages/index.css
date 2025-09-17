@@ -245,49 +245,55 @@ section {
 /* ==================== FEATURE CARD — ГОРИЗОНТАЛЬНЫЙ МАКЕТ ==================== */
 .feature-card {
   display: flex;
-  align-items: center; /* по центру по вертикали */
+  align-items: center;
   gap: 24px;
-  padding: 20px;
-  background: #01033E;
-  backdrop-filter: blur(10px);
-  border: 3px solid #2B53C1;
-  border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0, 100, 255, 0.2);
+  padding: 24px;
+  
+  /* жидкое стекло */
+  background: rgba(11, 11, 38, 0.35); /* прозрачный тёмный слой */
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  
+  border-radius: 20px;
+  border: 2px solid rgba(43, 83, 193, 0.7);
+
+  /* неон */
+  box-shadow: 
+    0 0 10px rgba(43, 83, 193, 0.8),
+    0 0 25px rgba(43, 83, 193, 0.6),
+    0 0 50px rgba(43, 83, 193, 0.4);
+
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
 }
 
+/* Подсветка при ховере */
+.feature-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(59, 130, 246, 0.9);
+  box-shadow: 
+    0 0 15px rgba(59, 130, 246, 1),
+    0 0 35px rgba(59, 130, 246, 0.8),
+    0 0 70px rgba(59, 130, 246, 0.6);
+}
+
+/* Доп. свечение внутри */
 .feature-card::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent);
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(0,0,0,0));
+  opacity: 0.6;
   z-index: 0;
-  border-radius: 16px;
 }
 
-.feature-card:hover::before {
-  opacity: 1;
+.feature-card > * {
+  position: relative; /* чтобы текст и иконки были над эффектом */
+  z-index: 1;
 }
 
-.feature-card:hover {
-  transform: translateY(-6px);
-  border-color: rgba(59, 130, 246, 0.6);
-}
-
-/* ==================== ИКОНКА С НЕОНОМ ==================== */
-.feature-icon {
-  flex-shrink: 0;
-  /* Убираем всё: фон, рамку, тени, радиус */
-  /* Оставляем только выравнивание */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-}
 
 .feature-icon svg {
   width: 80px;

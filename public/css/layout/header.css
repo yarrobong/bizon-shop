@@ -4,18 +4,17 @@ header {
   max-width: 1280px;
   margin: 1rem auto;
   padding: 0.75rem 1.5rem;
-  display: flex; /* Основной контейнер flex */
-  align-items: center; /* Выравнивание по вертикальному центру */
-  /* Убираем justify-content: space-between */
+  display: flex;
+  align-items: center;
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
-  background: rgba(15, 23, 42, 0.85);
+  background: rgba(7, 8, 11, 0.3);
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: 16px;
+  -webkit-backdrop-filter: blur(4px);
+  border-radius: 50px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   transition: all 0.3s ease;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
@@ -25,9 +24,9 @@ header {
 /* Эффект при скролле */
 header.scrolled {
   padding: 0.5rem 1.5rem;
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(7, 8, 11, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(6px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   margin: 0.5rem auto;
 }
@@ -39,9 +38,8 @@ header.scrolled {
   gap: 10px;
   transition: opacity 0.3s ease;
   z-index: 2;
-  /* Логотип не растягивается и не сжимается, занимает своё место */
-  flex-shrink: 0; /* Предотвращает сжатие */
-  margin-right: 2rem; /* Отступ справа от логотипа до навигации */
+  flex-shrink: 0;
+  margin-right: 2rem;
 }
 
 .logo:hover {
@@ -105,9 +103,7 @@ header.scrolled {
 /* === NAVIGATION === */
 .main-nav {
   display: flex;
-  /* Навигация занимает всё оставшееся пространство */
   flex-grow: 1;
-  /* Выравниваем содержимое навигации по левому краю */
   justify-content: flex-start;
 }
 
@@ -116,35 +112,94 @@ header.scrolled {
   list-style: none;
   margin: 0;
   padding: 0;
-  gap: 4px;
-  /* Убираем flex-wrap: nowrap, так как это значение по умолчанию */
-  /* Выравниваем элементы списка по левому краю */
-  justify-content: flex-start;
+  gap: 10px;
 }
 
 .nav-list a {
   color: #fff;
   text-decoration: none;
-  padding: 10px 10px;
-  border-radius: 6px;
+  padding: 12px 20px;
+  border-radius: 16px;
   font-weight: 500;
   font-size: 15px;
-  /* flex-wrap: nowrap; Убираем, это для flex-контейнера */
   opacity: 0.9;
-  flex-shrink: 0; /* Предотвращает сжатие пунктов меню */
   transition: all 0.2s ease;
-  white-space: nowrap; /* Предотвращает перенос текста внутри ссылки */
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .nav-list a:hover {
   opacity: 1;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+  transform: translateY(-2px);
 }
 
 .nav-list a.active {
-  background: #3b82f6;
+  background: rgba(59, 130, 246, 0.25);
   opacity: 1;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
+  border: 1px solid rgba(59, 130, 246, 0.5);
+}
+
+/* Мобильная навигация */
+.main-nav {
+  position: fixed;
+  top: 0;
+  left: -350px;
+  width: 260px;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.90);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-right: 1px solid rgba(59, 130, 246, 0.3);
+  z-index: 999;
+  transition: left 0.3s ease;
+  flex-direction: column;
+  padding: 80px 20px 20px;
+}
+
+.main-nav.active {
+  left: 0;
+}
+
+/* === МОБИЛЬНОЕ МЕНЮ === */
+@media (max-width: 768px) {
+  .hamburger {
+    display: flex;
+  }
+
+  .main-nav {
+    display: none;
+  }
+
+  .main-nav {
+    display: flex;
+  }
+
+  /* При открытии меню блокируем прокрутку body */
+  body.menu-open {
+    overflow: hidden;
+  }
+
+  .nav-list {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .nav-list a {
+    width: 100%;
+    text-align: left;
+    padding: 14px 20px;
+    border-radius: 12px;
+    font-size: 16px;
+  }
 }
 
 /* === HEADER ACTIONS (поиск и корзина) === */
@@ -152,7 +207,7 @@ header.scrolled {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-left: auto; /* Отправляет действия вправо */
+  margin-left: auto;
   flex-shrink: 0;
 }
 
@@ -200,8 +255,8 @@ header.scrolled {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: linear-gradient(90deg, #3b82f6, #9333ea);
-  border: none;
+  background: rgba(59, 130, 246, 0.25);
+  border: 2px solid #3b82f6;
   color: white;
   padding: 0.75rem 1.5rem;
   border-radius: 1rem;
@@ -236,7 +291,6 @@ header.scrolled {
   justify-content: center;
   flex-shrink: 0;
 }
-
 
 /* Адаптация для планшетов (768px) */
 @media (max-width: 768px) {
@@ -291,7 +345,6 @@ header.scrolled {
     margin: 0.5rem 0.5rem;
     padding: 0.5rem 1rem;
     border-radius: 10px;
-    /* На мобильных возвращаем space-between для логотипа и гамбургера */
     justify-content: space-between;
   }
   
@@ -302,7 +355,7 @@ header.scrolled {
   
   .logo {
     gap: 0px;
-    margin-right: 0; /* Убираем отступ, так как гамбургер справа */
+    margin-right: 0;
   }
   
   .logo-icon img {
@@ -314,34 +367,8 @@ header.scrolled {
     font-size: 1.25rem;
   }
   
-  /* Показываем гамбургер и скрываем навигацию */
   .hamburger {
     display: flex;
-  }
-  
-  .main-nav {
-    /* Стили для мобильного меню (остаются как есть) */
-    position: fixed;
-    top: 0;
-    right: -100%;
-    width: 70%;
-    height: 100vh;
-    background: rgba(15, 23, 42, 0.95);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    transition: right 0.3s ease;
-    z-index: 9;
-    margin: 0;
-    border-radius: 0;
-    align-items: center;
-    justify-content: center;
-    /* Важно: скрываем по умолчанию на мобильных */
-    display: none;
-  }
-  
-  .main-nav.active {
-    right: 0;
-    display: flex; /* Показываем при активации */
   }
   
   .nav-list {
@@ -392,28 +419,30 @@ header.scrolled {
   main {
     padding-top: 5rem;
   }
+  
   .hamburger {
     display: flex;
-    /* Примеры отступов: */
-    margin-left: 1rem;   /* Внешний отступ слева */
-    margin-right: 0.5rem; 
+    margin-left: 1rem;
+    margin-right: 0.5rem;
+  }
 }
-}
-
 
 /* Очень маленькие экраны (до 480px) */
 @media (max-width: 480px) {
   header {
-    margin: 0.25rem 0.25rem;
-    padding: 0.375rem 0.75rem;
-    border-radius: 8px;
+    margin: 0;
+    margin-bottom: 0.25rem;
+    padding: 12px;
+    border-radius: 0 0 24px 24px;
   }
   
   header.scrolled {
-    margin: 0.125rem 0.25rem;
-    padding: 0.25rem 0.75rem;
+    margin: 0;
+    margin-bottom: 0.125rem;
+    padding: 8px;
+    border-radius: 0 0 24px 24px;
   }
-  
+
   .logo-icon img {
     width: 30px;
     height: 30px;
@@ -424,7 +453,7 @@ header.scrolled {
   }
   
   .main-nav {
-    width: 80%;
+    width: 40%;
   }
   
   .nav-list a {
@@ -437,7 +466,7 @@ header.scrolled {
   }
 
   .search {
-    width: 100px;
+    width: 135px;
     padding: 0.3rem 0.6rem;
   }
 
