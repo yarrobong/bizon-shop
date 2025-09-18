@@ -4,12 +4,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.currentCategory = 'все'; // Устанавливаем начальную категорию
 });
 
-const path = window.location.pathname;
-let pageKey = 'index'; // по умолчанию — главная
+const url = window.location.href;
+let pageKey = 'index';
 
-if (path.includes('catalog.html')) pageKey = 'catalog';
-else if (path.includes('about.html')) pageKey = 'about';
-else if (path.includes('contact.html')) pageKey = 'contact';
+if (url.includes('/catalog')) pageKey = 'catalog';
+else if (url.includes('/contact')) pageKey = 'contact';
 
 const activeLink = document.querySelector(`.main-nav a[data-page="${pageKey}"]`);
 if (activeLink) {
