@@ -31,8 +31,8 @@
     flex-wrap: wrap;
     gap: 0.75rem;
     /* Устанавливаем отступы сверху и снизу, боковые отступы */
-    padding: 60px 1.5rem 1.5rem 1.5rem; /* Верх(60px) Право(1.5rem) Низ(1.5rem) Лево(1.5rem) */
-    margin: 60px 0 1.5rem 0; /* Внешние отступы: сверху(60px) справа(0) снизу(1.5rem) слева(0) */
+    padding: 120px 1.5rem 1.5rem 1.5rem; /* Верх(60px) Право(1.5rem) Низ(1.5rem) Лево(1.5rem) */
+    
     border-bottom: 3px solid var(--text-primary); /* Граница снизу белого цвета */
 }
 
