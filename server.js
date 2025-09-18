@@ -416,7 +416,6 @@ const cleanPhone = phone.replace(/[^0-9+]/g, '');
 
   } catch (error) {
     console.error('КРИТИЧЕСКАЯ ОШИБКА обработки заявки:', error);
-    // Очищаем хэш при ошибке
     req.app.locals.lastContactRequest = null;
     
     // Отправляем клиенту сообщение об ошибке
