@@ -25,7 +25,6 @@ const PORT = process.env.PORT || 3000;
 const { Pool } = require('pg');
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
 // Позволяем открывать страницы без .html
 app.get('/:page', (req, res, next) => {
   const filePath = path.join(__dirname, 'public', `${req.params.page}.html`);
@@ -35,6 +34,8 @@ app.get('/:page', (req, res, next) => {
     next();
   }
 });
+app.use(express.static(path.join(__dirname, 'public')));
+
 
 // === Подключение к БД ===
 const pool = new Pool({
