@@ -1,15 +1,7 @@
 // main.js
 document.addEventListener('DOMContentLoaded', async () => {
- 
-  
   // Инициализируем начальное состояние
   window.currentCategory = 'все'; // Устанавливаем начальную категорию
-  
-
-  
-
-  
-  
 });
 
 const path = window.location.pathname;
@@ -61,18 +53,18 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Мобильное меню
-        const hamburger = document.getElementById('hamburger');
-        const nav = document.getElementById('mainNav');
+const hamburger = document.getElementById('hamburger');
+const nav = document.getElementById('mainNav');
 
-        hamburger.addEventListener('click', () => {
-            hamburger.classList.toggle('active');
-            nav.classList.toggle('active');
-        });
+hamburger.addEventListener('click', () => {
+    hamburger.classList.toggle('active');
+    nav.classList.toggle('active');
+});
 
-        // Закрытие меню при клике на ссылку
-        document.querySelectorAll('.nav-list a').forEach(link => {
-            link.addEventListener('click', () => {
-                hamburger.classList.remove('active');
-                nav.classList.remove('active');
-            });
-        });
+// Закрытие меню при клике на ссылку
+document.querySelectorAll('.nav-list a').forEach(link => {
+    link.addEventListener('click', () => {
+        hamburger.classList.remove('active');
+        nav.classList.remove('active');
+    });
+});
