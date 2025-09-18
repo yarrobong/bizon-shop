@@ -381,7 +381,6 @@ section {
 
 .trade-in-text p {
   color: #CBD5E1;
-  margin-bottom: 30px;
   line-height: 1.7;
   font-size: 1rem;
 }
@@ -435,6 +434,7 @@ section {
   flex: 1;
   border-radius: 24px;
   border: 1px solid rgba(89, 222, 250, 0.3);
+  padding: 20px;
 }
 
 .step-content h4 {
