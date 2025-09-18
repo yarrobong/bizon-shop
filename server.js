@@ -35,6 +35,10 @@ app.get('/:page', (req, res, next) => {
   }
 });
 app.use(express.static(path.join(__dirname, 'public')));
+// Если ни один маршрут не совпал, отправляем 404
+app.use((req, res, next) => {
+  res.status(404).sendFile(path.join(__dirname, 'public', '404.html')); // Укажите правильный путь к вашему файлу 404.html
+});
 
 
 // === Подключение к БД ===
