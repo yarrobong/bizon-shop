@@ -434,11 +434,7 @@ body.modal-open .tags {
   pointer-events: none;
 }
 
-/* Блокировка скролла */
-body.modal-open {
-  overflow: hidden;
-  padding-right: var(--scrollbar-width, 0px);
-}
+
 
 #send-order {
   width: 100%;
