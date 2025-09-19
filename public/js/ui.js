@@ -356,6 +356,16 @@ function setupEventListeners() {
     consentCheckbox.addEventListener('change', updateSendOrderButton);
   }
 
+  // Закрытие модального окна при клике вне его содержимого
+document.querySelectorAll('.modal').forEach(modal => {
+  modal.addEventListener('click', (event) => {
+    // Если клик был именно по .modal (оверлею), а не по внутреннему содержимому
+    if (event.target === modal) {
+      modal.classList.remove('open');
+    }
+  });
+});
+
   // Отправка заказа
   if (sendOrderBtn) {
     let isSending = false;
