@@ -14,8 +14,6 @@ const successMessage = document.getElementById('success-message');
 const yearSpan = document.getElementById('year');
 let renderProductsTimeout;
 
-
-
 // local-data.js или в начале ui.js
 const LOCAL_PRODUCTS = [
   {
@@ -37,6 +35,7 @@ const LOCAL_PRODUCTS = [
 if (yearSpan) {
   yearSpan.textContent = new Date().getFullYear();
 }
+
 function getScrollbarWidth() {
   const outer = document.createElement('div');
   outer.style.visibility = 'hidden';
@@ -53,6 +52,68 @@ function getScrollbarWidth() {
   
   return scrollbarWidth;
 }
+
+// Форматирование цены
+function formatPrice(price) {
+  return new Intl.NumberFormat('ru-RU', {
+    style: 'currency',
+    currency: 'RUB',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(price);
+}
+
+// Получение корзины из localStorage
+function getCart() {
+  const cart = localStorage.getItem('cart');
+  return cart ? JSON.parse(cart) : [];
+}
+
+// Добавление в корзину
+function addToCart(product) {
+  const cart = getCart();
+  const existingItem = cart.find(item => item.product.id === product.id);
+  
+  if (existingItem) {
+    existingItem.qty += 1;
+  } else {
+    cart.push({ product, qty: 1 });
+  }
+  
+  localStorage.setItem('cart', JSON.stringify(cart));
+}
+
+// Обновление количества в корзине
+function updateQuantity(productId, change) {
+  const cart = getCart();
+  const item = cart.find(item => item.product.id === productId);
+  
+  if (item) {
+    item.qty += change;
+    if (item.qty <= 0) {
+      const index = cart.indexOf(item);
+      cart.splice(index, 1);
+    }
+    localStorage.setItem('cart', JSON.stringify(cart));
+  }
+}
+
+// Очистка корзины
+function clearCart() {
+  localStorage.removeItem('cart');
+}
+
+// Обновление счетчика корзины
+function updateCartCount() {
+  const cart = getCart();
+  const count = cart.reduce((sum, item) => sum + item.qty, 0);
+  const cartCount = document.getElementById('cart-count');
+  if (cartCount) {
+    cartCount.textContent = count;
+    cartCount.style.display = count > 0 ? 'block' : 'none';
+  }
+}
+
 // Асинхронная загрузка и рендеринг товаров
 // Улучшенная версия renderProducts с debounce
 async function renderProducts() {
@@ -365,6 +426,7 @@ function openCartModal() {
   }
   cartModal.classList.add('open');
 }
+
 function sanitizePhoneInput(event) {
   event.target.value = event.target.value.replace(/[^0-9+]/g, '');
 }
@@ -423,7 +485,6 @@ function updateSendOrderButton() {
   }
 }
 
-
 // Привязка событий
 function setupEventListeners() {
   const searchInput = document.getElementById('search-input');
@@ -469,16 +530,6 @@ function setupEventListeners() {
   if (consentCheckbox) {
     consentCheckbox.addEventListener('change', updateSendOrderButton);
   }
-
-  // Закрытие модального окна при клике вне его содержимого
-document.querySelectorAll('.modal').forEach(modal => {
-  modal.addEventListener('click', (event) => {
-    // Если клик был именно по .modal (оверлею), а не по внутреннему содержимому
-    if (event.target === modal) {
-      modal.classList.remove('open');
-    }
-  });
-});
 
   // Отправка заказа
   if (sendOrderBtn) {
@@ -616,6 +667,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // Инициализируем состояние кнопки отправки заказа
   updateSendOrderButton();
+  updateCartCount();
 });
 
 // Улучшенная функция renderProducts с четкой фильтрацией по категориям

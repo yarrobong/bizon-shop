@@ -313,13 +313,10 @@
 
 /* Когда модальное окно открыто - скрываем шапку */
 body.modal-open header {
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-100%);
-  transition: all 0.3s ease;
+  opacity: 0.3;
+  filter: blur(2px);
+   transition: all 0.3s ease;
   pointer-events: none;
-  overflow: hidden;
-  padding-right: 0; /* Убираем возможный скроллбар */
 }
 
 /* Альтернативный вариант - просто затемнить шапку */
