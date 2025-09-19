@@ -4,8 +4,7 @@
   position: fixed;
   inset: 0;
   overflow: hidden; /* Важно! */
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -22,7 +21,9 @@
 
 
 .modal-content {
-  background: #1f2937;
+  background: rgba(11, 11, 38, 0.35);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-radius: 1rem;
   max-width: 1024px;
   width: 90%;
@@ -31,6 +32,58 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
+  
+  /* Неоновая рамка */
+  border: 1px solid rgba(100, 100, 255, 0.3);
+  box-shadow: 
+    0 0 20px rgba(100, 100, 255, 0.2),
+    0 0 40px rgba(100, 100, 255, 0.1),
+    inset 0 0 20px rgba(100, 100, 255, 0.1);
+  
+  /* Анимация появления */
+  animation: modalAppear 0.3s ease-out;
+  transform: scale(1);
+}
+
+/* Анимация появления модального окна */
+@keyframes modalAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Кнопка закрытия в неоновом стиле */
+.modal-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 50, 50, 0.2);
+  border: 1px solid rgba(255, 50, 50, 0.3);
+  border-radius: 50%;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.modal-close:hover {
+  background: rgba(255, 50, 50, 0.4);
+  border-color: rgba(255, 100, 100, 0.6);
+  box-shadow: 
+    0 0 15px rgba(255, 50, 50, 0.4),
+    0 0 30px rgba(255, 50, 50, 0.2);
+  transform: scale(1.1);
 }
 
 .modal-header {
@@ -265,6 +318,8 @@ body.modal-open header {
   transform: translateY(-100%);
   transition: all 0.3s ease;
   pointer-events: none;
+  overflow: hidden;
+  padding-right: 0; /* Убираем возможный скроллбар */
 }
 
 /* Альтернативный вариант - просто затемнить шапку */

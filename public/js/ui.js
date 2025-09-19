@@ -14,127 +14,210 @@ const successMessage = document.getElementById('success-message');
 const yearSpan = document.getElementById('year');
 let renderProductsTimeout;
 
+
+
+// local-data.js или в начале ui.js
+const LOCAL_PRODUCTS = [
+  {
+    id: 1,
+    title: "BOBOVR BD3",
+    description: "Док-станция для B100",
+    price: 3390,
+    category: "Док станции",
+    images: [
+      { url: "/assets/Images-Products/Док станции/BOBOVR BD3 для B100/1.png", alt: "BOBOVR BD3" }
+    ],
+    tag: "Хит",
+    available: true
+  },
+  // ... другие товары
+];
+
 // Установка года
 if (yearSpan) {
   yearSpan.textContent = new Date().getFullYear();
 }
-
+function getScrollbarWidth() {
+  const outer = document.createElement('div');
+  outer.style.visibility = 'hidden';
+  outer.style.overflow = 'scroll';
+  outer.style.msOverflowStyle = 'scrollbar';
+  document.body.appendChild(outer);
+  
+  const inner = document.createElement('div');
+  outer.appendChild(inner);
+  
+  const scrollbarWidth = outer.offsetWidth - inner.offsetWidth;
+  
+  outer.parentNode.removeChild(outer);
+  
+  return scrollbarWidth;
+}
 // Асинхронная загрузка и рендеринг товаров
 // Улучшенная версия renderProducts с debounce
 async function renderProducts() {
-  // Отменяем предыдущий таймаут
   if (renderProductsTimeout) {
     clearTimeout(renderProductsTimeout);
   }
   
-  // Задержка 300ms перед выполнением
   renderProductsTimeout = setTimeout(async () => {
+    let PRODUCTS = [];
+    let useLocalData = false;
+    
     try {
+      // Пытаемся загрузить с сервера
       const res = await fetch('/api/products');
       
       if (!res.ok) {
         throw new Error('Не удалось загрузить товары');
       }
       
-      const PRODUCTS = await res.json();
-      const query = (searchInput?.value || '').toLowerCase();
-
-      const filtered = PRODUCTS.filter(p => {
-        const available = p.available !== false;
-        const categoryMatch = window.currentCategory === 'все' || p.category === window.currentCategory;
-        const searchMatch = query === '' ||
-          p.title.toLowerCase().includes(query) ||
-          p.description.toLowerCase().includes(query);
-        
-        return available && categoryMatch && searchMatch;
-      });
-
-      if (!productsContainer) {
-        return;
-      }
-
-      productsContainer.innerHTML = '';
-
-      if (filtered.length === 0) {
-        productsContainer.innerHTML = `
-          <div class="empty">
-            <div class="text-6xl">🔍</div>
-            <h3>Товары не найдены</h3>
-            <p>Попробуйте изменить параметры поиска</p>
-          </div>
-        `;
-        return;
-      }
-
-      filtered.forEach((product) => {
-        const card = document.createElement('div');
-        card.className = 'product-card';
-        card.innerHTML = `
-          <div class="product-content">
-            <h3 class="product-title">${product.title}</h3>
-            <div class="product-image">
-              <img src="${product.images[0]?.url?.trim() || '/assets/placeholder.png'}" alt="${product.title}" />
-              ${product.tag ? `<div class="product-badge" data-tag="${product.tag.toLowerCase()}">${product.tag}</div>` : ''}
-            </div>
-            <div class="product-footer">
-              <div class="product-price">${formatPrice(product.price)}</div>
-              <div class="product-actions">
-                <button class="btn-details" data-id="${product.id}">Подробнее</button>
-                <button class="btn-cart" data-id="${product.id}">В корзину</button>
-              </div>
-            </div>
-          </div>
-        `;
-        productsContainer.appendChild(card);
-      });
+      PRODUCTS = await res.json();
       
-      // Обработчики для кликов по всей карточке товара
-document.querySelectorAll('.product-card').forEach(card => {
-  card.addEventListener('click', (event) => {
-    // Проверяем, что клик был не по кнопке "В корзину", чтобы избежать конфликта
-    if (event.target.classList.contains('btn-cart')) return;
-
-    const buttonDetails = card.querySelector('.btn-details');
-    if (!buttonDetails) return;
-
-    const productId = parseInt(buttonDetails.dataset.id);
-    const product = PRODUCTS.find(p => p.id === productId);
-
-    if (product) {
-      openProductModal(product);
-    }
-  });
-});
-
-      // Обработчики для кнопок "В корзину"
-      document.querySelectorAll('.btn-cart').forEach(button => {
-        button.addEventListener('click', (event) => {
-          const productId = parseInt(event.target.dataset.id);
-          const product = PRODUCTS.find(p => p.id === productId);
-          if (product) {
-            addToCart(product);
-            updateCartCount();
-          }
-        });
-      });
+      // Если сервер вернул пустой массив, используем локальные данные
+      if (!PRODUCTS || PRODUCTS.length === 0) {
+        console.warn('Сервер вернул пустой массив товаров, используем локальные данные');
+        PRODUCTS = LOCAL_PRODUCTS;
+        useLocalData = true;
+      }
       
     } catch (err) {
-      console.error('Ошибка загрузки товаров:', err);
-      if (productsContainer) {
-        productsContainer.innerHTML = `
-          <div class="empty">
-            <div class="text-6xl">⚠️</div>
-            <h3>Ошибка загрузки</h3>
-            <p>Попробуйте позже или свяжитесь с нами</p>
-          </div>
-        `;
-      }
+      console.error('Ошибка загрузки товаров с сервера:', err);
+      console.warn('Используем локальные данные как резервный вариант');
+      PRODUCTS = LOCAL_PRODUCTS;
+      useLocalData = true;
     }
-  }, 300); // 300ms задержка
+    
+    // Остальной код фильтрации и отображения...
+    const query = (searchInput?.value || '').toLowerCase();
+    const currentCategory = window.currentCategory || 'все';
+
+    const filtered = PRODUCTS.filter(p => {
+      const available = p.available !== false;
+      const categoryMatch = currentCategory === 'все' || p.category === currentCategory;
+      const searchMatch = query === '' ||
+        p.title.toLowerCase().includes(query) ||
+        (p.description && p.description.toLowerCase().includes(query));
+      
+      return available && categoryMatch && searchMatch;
+    });
+
+    // Отображение товаров...
+    if (!productsContainer) return;
+
+    productsContainer.innerHTML = '';
+
+    if (filtered.length === 0) {
+      productsContainer.innerHTML = `
+        <div class="empty">
+          <div class="text-6xl">🔍</div>
+          <h3>Товары не найдены</h3>
+          <p>Попробуйте изменить параметры поиска</p>
+          ${useLocalData ? '<small class="text-muted">Отображаются локальные данные</small>' : ''}
+        </div>
+      `;
+      return;
+    }
+
+    // Рендеринг карточек...
+    filtered.forEach((product) => {
+      const card = document.createElement('div');
+      card.className = 'product-card';
+      card.innerHTML = `
+        <div class="product-content">
+          <h3 class="product-title">${product.title}</h3>
+          <div class="product-image">
+            <img src="${product.images[0]?.url?.trim() || '/assets/placeholder.png'}" alt="${product.title}" />
+            ${product.tag ? `<div class="product-badge" data-tag="${product.tag.toLowerCase()}">${product.tag}</div>` : ''}
+          </div>
+          <div class="product-footer">
+            <div class="product-price">${formatPrice(product.price)}</div>
+            <div class="product-actions">
+              <button class="btn-details" data-id="${product.id}">Подробнее</button>
+              <button class="btn-cart" data-id="${product.id}">В корзину</button>
+            </div>
+          </div>
+        </div>
+      `;
+      productsContainer.appendChild(card);
+    });
+    
+    // Обработчики для кликов по всей карточке товара
+    document.querySelectorAll('.product-card').forEach(card => {
+      card.addEventListener('click', (event) => {
+        // Проверяем, что клик был не по кнопке "В корзину", чтобы избежать конфликта
+        if (event.target.classList.contains('btn-cart')) return;
+
+        const buttonDetails = card.querySelector('.btn-details');
+        if (!buttonDetails) return;
+
+        const productId = parseInt(buttonDetails.dataset.id);
+        const product = PRODUCTS.find(p => p.id === productId);
+
+        if (product) {
+          openProductModal(product);
+        }
+      });
+    });
+
+    // Обработчики для кнопок "Подробнее"
+    document.querySelectorAll('.btn-details').forEach(button => {
+      button.addEventListener('click', (event) => {
+        const productId = parseInt(event.target.dataset.id);
+        const product = PRODUCTS.find(p => p.id === productId);
+        if (product) {
+          openProductModal(product);
+        }
+      });
+    });
+
+    // Обработчики для кнопок "В корзину"
+    document.querySelectorAll('.btn-cart').forEach(button => {
+      button.addEventListener('click', (event) => {
+        const productId = parseInt(event.target.dataset.id);
+        const product = PRODUCTS.find(p => p.id === productId);
+        if (product) {
+          addToCart(product);
+          updateCartCount();
+        }
+      });
+    });
+    
+    // Добавляем визуальный индикатор, если используются локальные данные
+    if (useLocalData) {
+      const indicator = document.createElement('div');
+      indicator.className = 'local-data-indicator';
+      indicator.innerHTML = '⚠️ Используются локальные данные';
+      indicator.style.cssText = `
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background: #ff6b6b;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        z-index: 10000;
+      `;
+      document.body.appendChild(indicator);
+      
+      // Удаляем индикатор через 5 секунд
+      setTimeout(() => {
+        if (indicator.parentNode) {
+          indicator.parentNode.removeChild(indicator);
+        }
+      }, 5000);
+    }
+    
+  }, 300);
 }
 
 // Открытие модального окна товара
 function openProductModal(product) {
+  // Блокируем скролл
+  document.body.classList.add('modal-open');
+  document.body.style.setProperty('--scrollbar-width', getScrollbarWidth() + 'px');
+  
   document.getElementById('product-title').textContent = product.title;
   document.getElementById('product-description').textContent = product.description;
   document.getElementById('product-price').textContent = formatPrice(product.price);
@@ -164,6 +247,8 @@ function openProductModal(product) {
 
 // Открытие модального окна корзины
 function openCartModal() {
+  document.body.classList.add('modal-open');
+  document.body.style.setProperty('--scrollbar-width', getScrollbarWidth() + 'px');
   if (cartItems) {
     const cart = getCart();
     if (cart.length === 0) {

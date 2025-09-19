@@ -118,7 +118,7 @@ body {
   padding: 1rem;
   background: rgba(255, 255, 255, 0.08);
   border-radius: 0.75rem;
-  margin-bottom: 0.75rem;
+  margin: 0.75rem;
   align-items: center;
   transition: background 0.2s ease;
 }
@@ -204,7 +204,7 @@ body {
 
 .total-row {
   padding: 1.25rem 1rem;
-  margin-top: 1rem;
+  margin: 0;
   border-top: 1px solid rgba(255, 255, 255, 0.15);
   display: flex;
   justify-content: space-between;
@@ -212,7 +212,7 @@ body {
   font-weight: 600;
   color: white;
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 0.75rem;
+  
 }
 
 /* === MODAL FOOTER (for checkout) === */
