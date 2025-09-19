@@ -363,6 +363,7 @@ function openCartModal() {
        phoneInput.addEventListener('input', sanitizePhoneInput);
     }
   }
+  cartModal.classList.add('open');
 }
 function sanitizePhoneInput(event) {
   event.target.value = event.target.value.replace(/[^0-9+]/g, '');
@@ -372,7 +373,35 @@ function sanitizePhoneInput(event) {
 function closeModals() {
   const modal = document.querySelector('.modal.open');
   if (modal) modal.classList.remove('open');
+
+   // Разблокируем скролл
+  document.body.classList.remove('modal-open');
+  document.body.style.removeProperty('--scrollbar-width');
 }
+
+// Также обновите обработчики закрытия
+document.querySelectorAll('[data-close]').forEach(btn => {
+  btn.addEventListener('click', closeModals);
+});
+
+// Закрытие по клику вне модального окна
+document.querySelectorAll('.modal').forEach(modal => {
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) {
+      closeModals();
+    }
+  });
+});
+
+// Закрытие по клавише Escape
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    const openModal = document.querySelector('.modal.open');
+    if (openModal) {
+      closeModals();
+    }
+  }
+});
 
 // Обновление состояния кнопки "Оформить заказ"
 function updateSendOrderButton() {
