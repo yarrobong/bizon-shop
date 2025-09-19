@@ -88,16 +88,23 @@ async function renderProducts() {
         productsContainer.appendChild(card);
       });
       
-      // Обработчики для кнопок "Подробнее"
-      document.querySelectorAll('.btn-details').forEach(button => {
-        button.addEventListener('click', (event) => {
-          const productId = parseInt(event.target.dataset.id);
-          const product = PRODUCTS.find(p => p.id === productId);
-          if (product) {
-            openProductModal(product);
-          }
-        });
-      });
+      // Обработчики для кликов по всей карточке товара
+document.querySelectorAll('.product-card').forEach(card => {
+  card.addEventListener('click', (event) => {
+    // Проверяем, что клик был не по кнопке "В корзину", чтобы избежать конфликта
+    if (event.target.classList.contains('btn-cart')) return;
+
+    const buttonDetails = card.querySelector('.btn-details');
+    if (!buttonDetails) return;
+
+    const productId = parseInt(buttonDetails.dataset.id);
+    const product = PRODUCTS.find(p => p.id === productId);
+
+    if (product) {
+      openProductModal(product);
+    }
+  });
+});
 
       // Обработчики для кнопок "В корзину"
       document.querySelectorAll('.btn-cart').forEach(button => {

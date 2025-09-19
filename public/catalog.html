@@ -68,11 +68,17 @@
   <!-- Шапка -->
 <header class="header" role="banner">
     <a href="https://bizon-business.ru" class="logo">
-        <div class="logo-icon">
-            <img src="assets/logo/logo-Photoroom.png" alt="Логотип BIZON" width="45" height="45">
-        </div>
-        <div class="logo-title">BIZON</div>
-    </a>
+  <div class="logo-icon">
+    <!-- Используем <picture> для выбора формата -->
+    <picture>
+      <!-- Предлагаем WebP -->
+      <source srcset="/assets/logo/logo-Photoroom.webp" type="image/webp">
+      <!-- Резервный вариант - обычный PNG -->
+      <img src="/assets/logo/logo-Photoroom.png" alt="Логотип BIZON" width="45" height="45">
+    </picture>
+  </div>
+  <div class="logo-title">BIZON</div>
+</a>
 
     <!-- Навигация для десктопа (скрывается на мобильных) -->
     <nav class="main-nav" id="mainNav" role="navigation" aria-label="Основная навигация">
