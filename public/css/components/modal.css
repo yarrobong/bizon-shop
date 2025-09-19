@@ -1,17 +1,17 @@
-
 /* === MODAL (CART & PRODUCT) === */
 .modal {
   position: fixed;
   inset: 0;
-  overflow: hidden; /* Важно! */
+  overflow: hidden;
   background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 50;
+  z-index: 10000;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
+  padding: 1rem;
 }
 
 .modal.open {
@@ -19,14 +19,13 @@
   pointer-events: all;
 }
 
-
 .modal-content {
   background: rgba(11, 11, 38, 0.35);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-radius: 1rem;
   max-width: 1024px;
-  width: 90%;
+  width: 100%;
   max-height: 90vh;
   overflow: hidden;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
@@ -98,19 +97,9 @@
   font-size: 1.5rem;
   font-weight: bold;
   color: white;
+  margin: 0;
 }
 
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: rgba(255, 255, 255, 0.6);
-  cursor: pointer;
-}
-
-.modal-close:hover {
-  color: white;
-}
 /* === PRODUCT MODAL === */
 .product-modal-body {
   display: flex;
@@ -118,14 +107,151 @@
   gap: 1.5rem;
   padding: 1.5rem;
   flex: 1;
-  overflow-y: auto; /* Лучше: overflow-y, а не overflow */
-  min-height: 0; /* Важно для flex-распределения */
+  overflow-y: auto;
+  min-height: 0;
 }
 
+/* Адаптив для модального окна */
 @media (min-width: 768px) {
   .product-modal-body {
     flex-direction: row;
     gap: 2rem;
+  }
+  
+  .modal-title {
+    font-size: 1.8rem;
+  }
+  
+  .modal-header {
+    padding: 2rem;
+  }
+  
+  .product-modal-body {
+    padding: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .modal-content {
+    max-width: 1200px;
+  }
+  
+  .modal-title {
+    font-size: 2rem;
+  }
+}
+
+/* Мобильные устройства */
+@media (max-width: 767px) {
+  .modal {
+    padding: 0.5rem;
+    overflow-y: auto;
+
+  }
+  
+  .modal-content {
+    max-height: 95vh;
+    margin: 1rem 0;
+    border-radius: 0.75rem;
+  }
+  
+  .modal-header {
+    padding: 1rem;
+  }
+  
+  .modal-title {
+    font-size: 1.3rem;
+  }
+  
+  .modal-close {
+    top: 10px;
+    right: 10px;
+    width: 28px;
+    height: 28px;
+    font-size: 18px;
+  }
+  
+  .product-modal-body {
+    padding: 1rem;
+    gap: 1rem;
+  }
+  
+  .product-price {
+    font-size: 1.5rem;
+  }
+  
+  .product-title,
+  #product-title {
+    font-size: 1.2rem;
+  }
+  
+  .product-description,
+  #product-description {
+    font-size: 0.9rem;
+    padding: 0.5rem;
+  }
+  
+  .btn-add,
+  .btn-buy {
+    padding: 0.75rem;
+    font-size: 0.95rem;
+  }
+  
+  .thumbnail {
+    width: 3rem;
+    height: 3rem;
+  }
+  
+  .product-thumbnails {
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+}
+
+/* Очень маленькие экраны */
+@media (max-width: 480px) {
+  .modal-content {
+    margin-top: 100px;
+    border-radius: 0.5rem;
+  }
+  
+  .modal-header {
+    padding: 0.75rem;
+  }
+  
+  .modal-title {
+    font-size: 1.1rem;
+  }
+  
+  .modal-close {
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    font-size: 16px;
+  }
+  
+  .product-modal-body {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+  
+  .product-price {
+    font-size: 1.3rem;
+  }
+  
+  .product-title,
+  #product-title {
+    font-size: 1rem;
+  }
+  
+  .thumbnail {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  
+  .product-thumbnails {
+    gap: 0.25rem;
   }
 }
 
@@ -158,12 +284,12 @@
 
 .product-thumbnails {
   display: flex;
-  justify-content: center; /* центрируем */
+  justify-content: center;
   gap: 0.75rem;
   margin-top: 1rem;
   padding-bottom: 0.5rem;
   align-items: center;
-  flex-wrap: wrap; /* чтобы переносились если не влезают */
+  flex-wrap: wrap;
 }
 
 .product-thumbnails::-webkit-scrollbar {
@@ -187,6 +313,7 @@
   border: 2px solid transparent;
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .thumbnail:hover {
@@ -204,22 +331,17 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  /* УБРАТЬ: justify-content: space-between */
-  /* Заменить на: */
-  justify-content: space-between; /* или оставить по умолчанию */
-  gap: 0.5rem; /* можно добавить отступ между элементами */
- 
+  gap: 0.5rem;
   padding-right: 4px;
 }
 
-/* Обёртка для заголовка, описания и цены — займёт всё свободное место */
 .product-info {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  padding: 0.5rem 0; /* небольшой внутренний отступ */
-  min-height: 0; /* позволяет flex: 1 работать корректно */
+  padding: 0.5rem 0;
+  min-height: 0;
 }
 
 .product-modal-right::-webkit-scrollbar {
@@ -235,6 +357,7 @@
   background: #6b7280;
   border-radius: 3px;
 }
+
 .product-title,
 #product-title {
   font-size: 1.3rem;
@@ -255,7 +378,6 @@
   background: rgba(255, 255, 255, 0.05);
   border-radius: 0.5rem;
   overflow: hidden;
-  /* НЕ ставим flex: 1 — обёртка уже даёт место */
 }
 
 .product-price {
@@ -263,7 +385,6 @@
   font-weight: bold;
   color: #ffffff;
   text-align: center;
-  /* НЕ задаём margin здесь, чтобы не влиял везде */
 }
 
 #product-price {
@@ -271,15 +392,15 @@
   text-align: left;
 }
 
-/* Контейнер для кнопок — создаёт отступ между ними */
+/* Контейнер для кнопок */
 .buttons-container {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem; /* расстояние между кнопками */
+  gap: 0.75rem;
   width: 100%;
 }
 
-/* Твои классы кнопок — оставляем, но добавляем стили */
+/* Кнопки */
 .btn-add,
 .btn-buy {
   width: 100%;
@@ -311,46 +432,21 @@
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
-/* Когда модальное окно открыто - скрываем шапку */
-body.modal-open header {
+/* Затемнение хедера и тегов при открытом модальном окне */
+body.modal-open header,
+body.modal-open .tags {
   opacity: 0.3;
   filter: blur(2px);
-   transition: all 0.3s ease;
+  transition: all 0.1s ease;
   pointer-events: none;
 }
 
-/* Альтернативный вариант - просто затемнить шапку */
-/*
-body.modal-open header {
-  opacity: 0.3;
-  filter: blur(2px);
-  transition: all 0.3s ease;
-  pointer-events: none;
-}
-*/
-
-/* Увеличиваем z-index модального окна, чтобы оно было поверх всего */
-.modal {
-  z-index: 10000; /* или любое большое число */
+/* Блокировка скролла */
+body.modal-open {
+  overflow: hidden;
+  padding-right: var(--scrollbar-width, 0px);
 }
 
-.modal.open {
-  opacity: 1;
-  pointer-events: all;
-}
-
-/* Также можно добавить немного затемнения заднего фона шапки */
-body.modal-open::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 120px; /* высота шапки */
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 9999;
-  pointer-events: none;
-}
 #send-order {
   width: 100%;
   padding: 1rem;
@@ -379,4 +475,19 @@ body.modal-open::before {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
+}
+
+/* Адаптив для формы заказа */
+@media (max-width: 767px) {
+  #send-order {
+    padding: 0.875rem;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  #send-order {
+    padding: 0.75rem;
+    font-size: 0.95rem;
+  }
 }
