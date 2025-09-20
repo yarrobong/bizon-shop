@@ -1,16 +1,15 @@
 /* ==================== ПУЛЬСЫ ==================== */
 .bg-overlay {
-  position: absolute; /* Изменил с fixed на absolute */
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: -2; /* Поверх точек, позади контента */
+  z-index: -2;
   overflow: hidden;
 }
 
-/* Пульсы — абсолютные, позиционируются относительно .bg-overlay */
 .pulse-1,
 .pulse-2,
 .pulse-3,
@@ -27,60 +26,16 @@
   animation: pulse 3s ease-in-out infinite;
 }
 
-.pulse-1 {
-  top: 0vh;
-  left: 70vw;
-  background: rgba(0, 4, 172, 0.9);
-}
-
-.pulse-2 {
-  top: 60vh;
-  right: 80vw;
-  background: rgba(0, 4, 172, 0.7);
-}
-
-.pulse-3 {
-  top: 160vh;
-  right: 10vw;
-  background: rgba(0, 4, 172, 0.7);
-}
-
-.pulse-4 {
-  top: 230vh;
-  right: 80vw;
-  background: rgba(0, 4, 172, 0.7);
-}
-
-.pulse-5 {
-  top: 300vh;
-  right: 0vw;
-  background: rgba(0, 4, 172, 0.7);
-}
-
-.pulse-6 {
-  top: 350vh;
-  right: 80vw;
-  background: rgba(0, 4, 172, 0.7);
-}
-/* ==================== ГЛАВНЫЕ СТИЛИ ==================== */
-main > section {
-  position: relative;
-  z-index: 1;
-}
-
-html {
-  scroll-behavior: smooth;
-}
+.pulse-1 { top: 0vh; left: 70vw; background: rgba(0, 4, 172, 0.9); }
+.pulse-2 { top: 60vh; right: 80vw; background: rgba(0, 4, 172, 0.7); }
+.pulse-3 { top: 160vh; right: 10vw; background: rgba(0, 4, 172, 0.7); }
+.pulse-4 { top: 230vh; right: 80vw; background: rgba(0, 4, 172, 0.7); }
+.pulse-5 { top: 300vh; right: 0vw; background: rgba(0, 4, 172, 0.7); }
+.pulse-6 { top: 350vh; right: 80vw; background: rgba(0, 4, 172, 0.7); }
 
 /* ==================== ГЛАВНЫЕ СТИЛИ ==================== */
-main > section {
-  position: relative;
-  z-index: 1;
-}
-
-html {
-  scroll-behavior: smooth;
-}
+main > section { position: relative; z-index: 1; }
+html { scroll-behavior: smooth; }
 
 /* ==================== ПАРАЛЛАКС ЭФФЕКТ ДЛЯ ГЕРОЯ ==================== */
 .hero {
@@ -91,23 +46,12 @@ html {
 }
 
 /* ==================== ГЛУБИНА ЧЕРЕЗ ТЕНИ И СЛОИ ==================== */
-main > section {
-  position: relative;
-  z-index: 1;
-}
+/* (Уже определено выше main > section) */
 
 /* ==================== ПЛАВНЫЙ СКРОЛЛ И ОБЪЁМ ==================== */
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  scroll-snap-type: y mandatory;
-}
-
-section {
-  scroll-snap-align: start;
-}
+/* scroll-snap убран для лучшей мобильной производительности */
+/* body { scroll-snap-type: y mandatory; }
+section { scroll-snap-align: start; } */
 
 /* ==================== ГЕРОЙ ==================== */
 .hero {
@@ -117,7 +61,6 @@ section {
   gap: 60px;
   position: relative;
   padding: 20px auto;
-  
 }
 
 .hero-content {
@@ -182,9 +125,6 @@ section {
   border-radius: 16px;
   overflow: hidden;
   position: relative;
-  
-  
-  
 }
 
 .hero-image::before {
@@ -193,7 +133,6 @@ section {
   inset: 0;
   border-radius: 16px;
   pointer-events: none;
-  
 }
 
 .hero-image img {
@@ -203,15 +142,9 @@ section {
 }
 
 @keyframes float {
-  0% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-15px);
-  }
-  100% {
-    transform: translateY(0px);
-  }
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+  100% { transform: translateY(0px); }
 }
 
 /* ==================== ПРЕИМУЩЕСТВА ==================== */
@@ -225,7 +158,6 @@ section {
   font-family: 'Montserrat', sans-serif;
   font-size: 2.8rem;
   margin-bottom: 30px;
-  /* Упрощаем градиентный текст */
   background: #ffffff;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -248,37 +180,29 @@ section {
   align-items: center;
   gap: 24px;
   padding: 24px;
-  
-  /* жидкое стекло */
-  background: rgba(11, 11, 38, 0.35); /* прозрачный тёмный слой */
+  background: rgba(11, 11, 38, 0.35);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  
   border-radius: 20px;
   border: 2px solid rgba(43, 83, 193, 0.7);
-
-  /* неон */
-  box-shadow: 
+  box-shadow:
     0 0 10px rgba(43, 83, 193, 0.8),
     0 0 25px rgba(43, 83, 193, 0.6),
     0 0 50px rgba(43, 83, 193, 0.4);
-
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
 }
 
-/* Подсветка при ховере */
 .feature-card:hover {
   transform: translateY(-6px);
   border-color: rgba(59, 130, 246, 0.9);
-  box-shadow: 
+  box-shadow:
     0 0 15px rgba(59, 130, 246, 1),
     0 0 35px rgba(59, 130, 246, 0.8),
     0 0 70px rgba(59, 130, 246, 0.6);
 }
 
-/* Доп. свечение внутри */
 .feature-card::before {
   content: "";
   position: absolute;
@@ -289,29 +213,18 @@ section {
   z-index: 0;
 }
 
-.feature-card > * {
-  position: relative; /* чтобы текст и иконки были над эффектом */
-  z-index: 1;
-}
-
+.feature-card > * { position: relative; z-index: 1; }
 
 .feature-icon svg {
   width: 80px;
   height: 80px;
-  /* Ключевой эффект: свечение вокруг иконки */
-  filter: 
+  filter:
     drop-shadow(0 0 8px rgba(89, 222, 250, 0.4))
     drop-shadow(0 0 15px rgba(89, 222, 250, 0.4))
     drop-shadow(0 0 25px rgba(89, 222, 250, 0.3));
-  /* Делаем саму иконку чуть ярче */
   opacity: 1;
-  
 }
 
-
-
-
-/* ==================== ТЕКСТ: ЗАГОЛОВОК СВЕРХУ, ОПИСАНИЕ СНИЗУ ==================== */
 .feature-text {
   flex: 1;
   display: flex;
@@ -322,7 +235,7 @@ section {
 .feature-text h3 {
   font-size: 1.5rem;
   color: #e2e8f0;
-  margin-bottom: 8px; /* между заголовком и описанием */
+  margin-bottom: 8px;
   font-weight: 600;
   position: relative;
   z-index: 1;
@@ -336,22 +249,12 @@ section {
   z-index: 1;
 }
 
-.traid-in {
-  max-width: 600px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
 /* ==================== TRADE-IN — НОВЫЙ ДИЗАЙН ==================== */
 .trade-in {
   padding: 80px 0;
-  
   position: relative;
   overflow: hidden;
 }
-
-
 
 .trade-in-content {
   display: flex;
@@ -364,7 +267,6 @@ section {
   align-items: center;
 }
 
-/* Текстовая часть */
 .trade-in-text {
   flex: 1;
   color: #FFFFFF;
@@ -394,7 +296,6 @@ section {
   font-weight: 700;
 }
 
-/* Шаги трейд-ина */
 .trade-in-step {
   margin-bottom: 30px;
   position: relative;
@@ -439,7 +340,6 @@ section {
 
 .step-content h4 {
   color: #FFFFFF;
-  
   font-size: 1.1rem;
   font-weight: 600;
 }
@@ -450,7 +350,6 @@ section {
   line-height: 1.6;
 }
 
-/* Призыв к действию */
 .trade-in-call-to-action {
   font-size: 1.2rem;
   font-weight: 600;
@@ -460,7 +359,6 @@ section {
   line-height: 1.4;
 }
 
-/* Изображение VR-шлема */
 .trade-in-image {
   flex: 1;
   display: flex;
@@ -472,442 +370,8 @@ section {
   max-width: 100%;
   height: auto;
   border-radius: 16px;
-  
   filter: drop-shadow(0 0 10px rgba(89, 222, 250, 0.3));
   transition: transform 0.3s ease;
-}
-
-
-
-/* Адаптивность */
-@media (max-width: 1024px) {
-  
-  .trade-in-content {
-    flex-direction: column;
-    text-align: justify;
-  }
-
-  .trade-in-text {
-    order: 2;
-  }
-  .trade-in-step {
-    max-width: 500px; /* Используйте max-width вместо width, если хотите гибкость */
-  /* width: 500px; */ /* Уберите фиксированную ширину, если не нужно строго 500px */
-  margin: 0 auto;
-  }
-
-  .trade-in-image {
-    order: 1;
-    margin-bottom: 40px;
-    display: none;
-  }
-}
-
-@media (max-width: 768px) {
-  .trade-in {
-    padding: 60px 0;
-  }
-
-  .trade-in-text h2 {
-    font-size: 1.6rem;
-  }
-
-  .trade-in-text h3 {
-    font-size: 1.3rem;
-  }
-
-  .trade-in-call-to-action {
-    font-size: 1.1rem;
-  }
-
-  .trade-in-image img {
-    display: none;
-  }
-}
-
-.clients {
-  padding: 4rem 1.5rem;
-  text-align: center;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.clients h2 {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 2.8rem;
-  margin-bottom: 30px;
-  background: linear-gradient(to right, var(--secondary-color), var(--primary-color));
-  background-clip: text;
-  text-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
-}
-
-.clients-track {
-  overflow: hidden;
-  padding: 1rem 0;
-  width: 100%;
- 
-}
-
-.clients-track-inner {
-  display: flex;
-  gap: 4rem;
-  animation: scroll 20s linear infinite; /* Увеличил скорость */
-}
-
-.client-logo {
-  max-height: 50px;
-  width: auto;
-  opacity: 0.7;
-  transition: all 0.3s ease;
-  flex-shrink: 0;
-  user-select: none;
-}
-
-.client-logo:hover {
-  opacity: 1;
-  filter: grayscale(0%);
-  transform: scale(1.1);
-}
-
-@keyframes scroll {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(calc(-100% / 1));
-  }
-}
-
-
-/* Адаптивность */
-@media (max-width: 768px) {
-  .clients-track-inner {
-    gap: 3rem;
-    animation-duration: 8s; /* Адаптируем скорость под мобильные */
-  }
-
-  .client-logo {
-    max-height: 40px;
-  }
-}
-
-@media (max-width: 480px) {
-  .clients-track-inner {
-    gap: 2rem;
-    animation-duration: 6s;
-  }
-
-  .client-logo {
-    max-height: 35px;
-  }
-}
-/* ==================== CTA (ПРИЗЫВ К ДЕЙСТВИЮ) ==================== */
-.cta {
-  padding: 100px 20px;
-  text-align: center;
-  position: relative;
-  background: rgba(15, 23, 42, 0.4);
-  border-top: 1px solid rgba(59, 130, 246, 0.2);
-  border-bottom: 1px solid rgba(59, 130, 246, 0.2);
-}
-
-.cta::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(to right, transparent, rgba(59, 130, 246, 0.5), transparent);
-}
-
-.cta-content {
-  max-width: 700px;
-  margin: 0 auto;
-}
-
-.cta h2 {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 2.8rem;
-  margin-bottom: 20px;
-  color: white;
-  text-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
-}
-
-.cta p {
-  font-size: 1.2rem;
-  margin-bottom: 30px;
-  color: #cbd5e1;
-  opacity: 0.9;
-}
-
-.cta-list {
-  text-align: left;
-  margin: 30px 0;
-  padding-left: 20px;
-}
-
-.cta-list p {
-  margin-bottom: 15px;
-  position: relative;
-  padding-left: 30px;
-}
-
-.cta-list p::before {
-  content: "✓";
-  color: #3b82f6;
-  font-weight: bold;
-  position: absolute;
-  left: 0;
-}
-
-/* ==================== КНОПКИ ==================== */
-.btn-primary,
-.btn-secondary,
-.btn-outline {
-  padding: 14px 32px;
-  font-weight: 600;
-  font-size: 16px;
-  border-radius: 8px;
-  text-decoration: none;
-  display: inline-block;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  z-index: 1;
-  border: none;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: white;
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
-}
-
-.btn-primary:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
-}
-
-.btn-secondary {
-  background: transparent;
-  color: white;
-  border: 2px solid #3b82f6;
-  margin-left: 12px;
-}
-
-.btn-secondary:hover {
-  background: rgba(59, 130, 246, 0.15);
-  border-color: #60a5fa;
-  transform: translateY(-3px);
-}
-
-.btn-outline {
-  background: transparent;
-  color: #3b82f6;
-  border: 2px solid #3b82f6;
-  margin-top: 30px;
-}
-
-.btn-outline:hover {
-  background: #3b82f6;
-  color: white;
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
-}
-
-
-
-/* ==================== АДАПТИВ ==================== */
-@media (max-width: 1200px) {
-  .hero {
-    gap: 40px;
-  }
-
-  .hero h1 {
-    font-size: 3.2rem;
-  }
-
-  .hero-image {
-    max-width: 450px;
-    
-  }
-}
-
-@media (max-width: 1070px) {
-  .hero {
-    flex-direction: column;
-    text-align: center;
-
-    min-height: auto;
-    gap: 40px;
-  }
-
-  .hero-content {
-    align-items: center;
-  }
-
-  .hero-trust {
-
-    justify-content: center;
-  }
-
-  .hero-buttons {
-    justify-content: center;
-  }
-
-  .features h2, .cta h2, .clients h2, .trade-in h2 {
-    font-size: 2.4rem;
-  }
-
- 
-
-  .hero-image {
-    
-    display: none;
-  
-  }
-}
-
-@media (max-width: 768px) {
-  .hero h1 {
-    font-size: 2.8rem;
-  }
-
-  .hero-buttons {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .btn-secondary {
-    margin-left: 0;
-    margin-top: 10px;
-  }
-
-  
-
-
-
-  .hero-trust {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .features-grid {
-    grid-template-columns: 1fr;
-    padding: 20px;
-  }
-
-  .clients-grid {
-    gap: 30px;
-  }
-
-  .client-logo {
-    height: 40px;
-  }
-
-  .cta h2 {
-    font-size: 2.2rem;
-  }
-
-  .trade-in h2 {
-    text-align: center;
-  }
-
-  .features h2 {
-    font-size: 2.2rem;
-  }
-
-  .clients h2 {
-    font-size: 2.2rem;
-  }
-}
-
-@media (max-width: 576px) {
-  .hero {
-    padding: 0px 20px;
-    gap: 30px;
-  }
-
-  .hero h1 {
-    font-size: 2.4rem;
-  }
-
-  .hero-subtitle {
-    font-size: 1.1rem;
-  }
-
-  .hero-buttons {
-    gap: 12px;
-  }
-
-  .btn-primary,
-  .btn-secondary,
-  .btn-outline {
-    padding: 12px 24px;
-    font-size: 15px;
-  }
-
-  .features h2,
-  .cta h2,
-  .clients h2,
-  .trade-in h2 {
-    font-size: 2rem;
-  }
-
-  .feature-card {
-    padding: 24px;
-  }
-
-  .feature-icon {
-    font-size: 2.4rem;
-  }
-
-  .trade-in-steps p,
-  .cta-list p {
-    font-size: 0.95rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .hero h1 {
-    font-size: 2.2rem;
-  }
-
-  .hero-subtitle {
-    font-size: 1rem;
-  }
-
-  .btn-primary,
-  .btn-secondary,
-  .btn-outline {
-    padding: 10px 20px;
-    font-size: 14px;
-  }
-
-  .features h2,
-  .cta h2,
-  .clients h2,
-  .trade-in h2 {
-    font-size: 1.8rem;
-  }
-
-  .feature-card {
-    padding: 20px;
-  }
-
-  .feature-icon {
-    font-size: 2.2rem;
-  }
-
-  .trade-in-steps p,
-  .cta-list p {
-    font-size: 0.9rem;
-  }
-
-  .client-logo {
-    height: 30px;
-  }
 }
 
 /* === FAQ / Аккордеон === */
@@ -994,4 +458,276 @@ section {
 .accordion-panel.open {
   max-height: 200px;
   padding: 0 1.5rem 1.5rem;
+}
+
+/* ==================== КЛИЕНТЫ ==================== */
+.clients {
+  padding: 4rem 1.5rem;
+  text-align: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.clients h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.8rem;
+  margin-bottom: 30px;
+  background: linear-gradient(to right, var(--secondary-color), var(--primary-color));
+  background-clip: text;
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+}
+
+.clients-track {
+  overflow: hidden;
+  padding: 1rem 0;
+  width: 100%;
+}
+
+.clients-track-inner {
+  display: flex;
+  gap: 4rem;
+  animation: scroll 20s linear infinite;
+}
+
+.client-logo {
+  max-height: 50px;
+  width: auto;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.client-logo:hover {
+  opacity: 1;
+  filter: grayscale(0%);
+  transform: scale(1.1);
+}
+
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ==================== CTA (ПРИЗЫВ К ДЕЙСТВИЮ) ==================== */
+.cta {
+  padding: 100px 20px;
+  text-align: center;
+  position: relative;
+  background: rgba(15, 23, 42, 0.4);
+  border-top: 1px solid rgba(59, 130, 246, 0.2);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.cta::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(59, 130, 246, 0.5), transparent);
+}
+
+.cta-content {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.cta h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.8rem;
+  margin-bottom: 20px;
+  color: white;
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
+
+.cta p {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  color: #cbd5e1;
+  opacity: 0.9;
+}
+
+/* ==================== КНОПКИ ==================== */
+.btn-primary,
+.btn-secondary,
+.btn-outline {
+  padding: 14px 32px;
+  font-weight: 600;
+  font-size: 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  border: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: white;
+  border: 2px solid #3b82f6;
+  margin-left: 12px;
+}
+
+.btn-secondary:hover {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: #60a5fa;
+  transform: translateY(-3px);
+}
+
+.btn-outline {
+  background: transparent;
+  color: #3b82f6;
+  border: 2px solid #3b82f6;
+  margin-top: 30px;
+}
+
+.btn-outline:hover {
+  background: #3b82f6;
+  color: white;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+}
+
+/* ==================== АДАПТИВ ==================== */
+@media (max-width: 1200px) {
+  .hero { gap: 40px; }
+  .hero h1 { font-size: 3.2rem; }
+  .hero-image { max-width: 450px; }
+}
+
+@media (max-width: 1070px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    min-height: auto;
+    gap: 40px;
+  }
+  .hero-content { align-items: center; }
+  .hero-trust { justify-content: center; }
+  .hero-buttons { justify-content: center; }
+  .features h2, .cta h2, .clients h2, .trade-in h2 { font-size: 2.4rem; }
+  .hero-image { display: none; }
+}
+
+@media (max-width: 768px) {
+  .hero h1 { font-size: 2.8rem; }
+  .hero-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  .btn-secondary { margin-left: 0; margin-top: 10px; }
+  .hero-trust {
+    flex-direction: column;
+    align-items: center;
+  }
+  .features-grid {
+    grid-template-columns: 1fr;
+    padding: 20px;
+  }
+  .clients-grid { gap: 30px; }
+  .client-logo { height: 40px; }
+  .cta h2 { font-size: 2.2rem; }
+  .trade-in h2 { text-align: center; }
+  .features h2, .clients h2 { font-size: 2.2rem; }
+  
+  .clients-track-inner { gap: 3rem; animation-duration: 8s; }
+  .clients-track-inner:hover { animation-play-state: paused; } /* Останавливаем на hover на мобилке */
+}
+
+@media (max-width: 576px) {
+  .hero {
+    padding: 0px 20px;
+    gap: 30px;
+  }
+  .hero h1 { font-size: 2.4rem; }
+  .hero-subtitle { font-size: 1.1rem; }
+  .hero-buttons { gap: 12px; }
+  .btn-primary,
+  .btn-secondary,
+  .btn-outline {
+    padding: 12px 24px;
+    font-size: 15px;
+  }
+  .features h2,
+  .cta h2,
+  .clients h2,
+  .trade-in h2 { font-size: 2rem; }
+  .feature-card { padding: 24px; }
+  .feature-icon { font-size: 2.4rem; }
+  .trade-in-steps p,
+  .cta-list p { font-size: 0.95rem; }
+  
+  .trade-in-content { flex-direction: column; text-align: justify; }
+  .trade-in-text { order: 2; }
+  .trade-in-step { max-width: 500px; margin: 0 auto; margin-top: 30px;}
+  .trade-in-image { order: 1; margin-bottom: 40px; display: none; }
+  .btn-primary:hover,
+  .btn-secondary:hover {
+    transform: none; /* Отключаем трансформации */
+    
+  }
+  
+}
+
+
+
+@media (max-width: 480px) {
+  .hero h1 { font-size: 2.2rem; }
+  .hero-subtitle { font-size: 1rem; }
+  .btn-primary,
+  .btn-secondary,
+  .btn-outline {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+ 
+  .btn-primary:hover,
+  .btn-secondary:hover {
+    transform: none; /* Отключаем трансформации */
+    
+  }
+  .features h2,
+  .cta h2,
+  .clients h2,
+  .trade-in h2 { font-size: 1.8rem; }
+  .feature-card { padding: 20px; }
+  .feature-icon { font-size: 2.2rem; }
+  .trade-in-steps p,
+  .cta-list p { font-size: 0.9rem; }
+  .client-logo { height: 30px; }
+  
+  .clients-track-inner { gap: 2rem; animation-duration: 6s; }
+  .trade-in-image img { display: none; }
+  .trade-in-text h2 { font-size: 1.6rem; }
+  .trade-in-text h3 { font-size: 1.3rem; }
+  .trade-in-call-to-action { font-size: 1.1rem; }
+}
+/* Отключение hover-эффектов на устройствах без точного указателя (например, сенсорные экраны) */
+@media (hover: none) and (pointer: coarse) {
+  .feature-card:hover,
+  .btn-primary:hover,
+  .btn-secondary:hover,
+  .client-logo:hover {
+    transform: none;
+    box-shadow: none;
+    background: inherit;
+    border-color: inherit;
+    opacity: inherit;
+  }
 }
