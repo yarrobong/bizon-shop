@@ -425,14 +425,7 @@
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
-/* Затемнение хедера и тегов при открытом модальном окне */
-body.modal-open header,
-body.modal-open .tags {
-  opacity: 0.3;
-  filter: blur(2px);
-  transition: all 0.1s ease;
-  pointer-events: none;
-}
+
 
 /* Блокировка скролла */
 body.modal-open {
