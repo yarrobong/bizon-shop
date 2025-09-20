@@ -273,11 +273,16 @@ async function renderProducts() {
   }, 300);
 }
 
-// Открытие модального окна товара
+/// Открытие модального окна товара
 function openProductModal(product) {
-  // Блокируем скролл
+  // Сохраняем текущую позицию прокрутки
+  const scrollY = window.scrollY || window.pageYOffset;
+  document.body.setAttribute('data-scroll-position', scrollY);
+  
+  // Блокируем скролл, но сохраняем позицию
   document.body.classList.add('modal-open');
   document.body.style.setProperty('--scrollbar-width', getScrollbarWidth() + 'px');
+  document.body.style.top = `-${scrollY}px`;
   
   document.getElementById('product-title').textContent = product.title;
   document.getElementById('product-description').textContent = product.description;
@@ -308,8 +313,15 @@ function openProductModal(product) {
 
 // Открытие модального окна корзины
 function openCartModal() {
+  // Сохраняем текущую позицию прокрутки
+  const scrollY = window.scrollY || window.pageYOffset;
+  document.body.setAttribute('data-scroll-position', scrollY);
+  
+  // Блокируем скролл, но сохраняем позицию
   document.body.classList.add('modal-open');
   document.body.style.setProperty('--scrollbar-width', getScrollbarWidth() + 'px');
+  document.body.style.top = `-${scrollY}px`;
+  
   if (cartItems) {
     const cart = getCart();
     if (cart.length === 0) {
@@ -360,6 +372,7 @@ function openCartModal() {
       });
     }
   }
+  
   // Проверяем, что jQuery и maskedinput доступны, и элемент существует
   if (typeof $ !== 'undefined' && $.fn.mask && phoneInput) {
     // Сначала удаляем любую существующую маску, чтобы избежать конфликтов
@@ -380,8 +393,7 @@ function openCartModal() {
   }
 
   updateSendOrderButton();
-  cartModal.classList.add('open');
- 
+  
   // 1. Убедимся, что модальное окно видимо для ассистивных технологий ДО добавления класса 'open'
   cartModal.setAttribute('aria-hidden', 'false');
   // Также убедимся, что оно фокусируемо
@@ -424,7 +436,6 @@ function openCartModal() {
        phoneInput.addEventListener('input', sanitizePhoneInput);
     }
   }
-  cartModal.classList.add('open');
 }
 
 function sanitizePhoneInput(event) {
@@ -436,9 +447,16 @@ function closeModals() {
   const modal = document.querySelector('.modal.open');
   if (modal) modal.classList.remove('open');
 
-   // Разблокируем скролл
+  // Восстанавливаем позицию прокрутки
+  const scrollY = document.body.getAttribute('data-scroll-position');
   document.body.classList.remove('modal-open');
   document.body.style.removeProperty('--scrollbar-width');
+  document.body.style.removeProperty('top');
+  
+  if (scrollY) {
+    window.scrollTo(0, parseInt(scrollY));
+    document.body.removeAttribute('data-scroll-position');
+  }
 }
 
 // Также обновите обработчики закрытия
