@@ -44,6 +44,7 @@
             <button class="nav-btn active" data-tab="products">Товары</button>
             <button class="nav-btn" data-tab="categories">Категории</button>
             <button class="nav-btn" data-tab="orders">Заказы</button>
+            <button class="nav-btn" data-tab="supplier-catalog">Каталог для заказа</button>
         </nav>
 
         <main class="admin-main">
@@ -76,6 +77,18 @@
                     <!-- Заказы будут подгружаться сюда -->
                 </div>
             </section>
+            <section id="supplier-catalog-tab" class="tab-content">
+        <div class="tab-header">
+            <h2>Каталог для заказа у поставщика</h2>
+            <div>
+                <input type="text" id="supplier-catalog-search" placeholder="Поиск по названию или ссылке..." class="search-input">
+            </div>
+        </div>
+        <div id="supplier-catalog-grid" class="admin-grid">
+            <!-- Товары будут подгружаться сюда -->
+            <div class="empty">Загрузка товаров...</div>
+        </div>
+    </section>
         </main>
     </div>
 

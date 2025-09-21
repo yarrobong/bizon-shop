@@ -20,6 +20,7 @@ class AdminPanel {
         await this.loadProducts();
         await this.loadCategories(); // Загружаем категории для селекта
         await this.loadOrders();
+        await this.loadSupplierCatalog(); // Загружаем каталог при инициализации
     }
 
     setupEventListeners() {
@@ -85,21 +86,42 @@ class AdminPanel {
 
         // Настройка drag & drop для изображений
         this.setupImageEventListeners();
+
+        const searchInput = document.getElementById('supplier-catalog-search');
+if (searchInput) {
+    let searchTimeout;
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        const term = e.target.value.trim();
+        // Добавляем небольшую задержку, чтобы не делать запрос на каждое нажатие клавиши
+        searchTimeout = setTimeout(() => {
+            this.loadSupplierCatalog(term);
+        }, 300);
+    });
+}
     }
 
     switchTab(tabName) {
-        document.querySelectorAll('.tab-content').forEach(tab => {
-            tab.classList.remove('active');
-        });
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.getElementById(`${tabName}-tab`).classList.add('active');
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    this.currentTab = tabName;
 
-        document.getElementById(`${tabName}-tab`).classList.add('active');
-        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-        
-        this.currentTab = tabName;
+    // Добавь перезагрузку каталога при переходе на вкладку
+    if (tabName === 'supplier-catalog') {
+        // Сбрасываем поиск при переходе на вкладку
+        const searchInput = document.getElementById('supplier-catalog-search');
+        if (searchInput) {
+            searchInput.value = '';
+        }
+        this.loadSupplierCatalog(); // Перезагружаем каталог
     }
+}
 
     setupImageEventListeners() {
         // Кнопка добавления изображения через файловый диалог
@@ -150,6 +172,96 @@ class AdminPanel {
             });
         }
     }
+
+    async loadSupplierCatalog(searchTerm = '') {
+    const tab = document.getElementById('supplier-catalog-tab');
+    if (!tab) return;
+
+    const container = document.getElementById('supplier-catalog-grid');
+    if (!container) return;
+
+    try {
+        // Показываем индикатор загрузки
+        container.innerHTML = '<div class="empty">Загрузка товаров...</div>';
+
+        // Загружаем все товары (включая недоступные, так как они тоже могут быть у поставщика)
+        const response = await fetch('/api/products?admin=true');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const products = await response.json();
+
+        // Фильтруем товары на стороне клиента
+        let filteredProducts = products;
+        if (searchTerm) {
+            const term = searchTerm.toLowerCase();
+            filteredProducts = products.filter(product =>
+                (product.title && product.title.toLowerCase().includes(term)) ||
+                (product.supplier_link && product.supplier_link.toLowerCase().includes(term))
+            );
+        }
+
+        this.renderSupplierCatalog(filteredProducts);
+    } catch (error) {
+        console.error('Ошибка загрузки каталога для поставщика:', error);
+        container.innerHTML = '<div class="empty">Ошибка загрузки товаров</div>';
+    }
+}
+
+renderSupplierCatalog(products) {
+    const container = document.getElementById('supplier-catalog-grid');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (!products || products.length === 0) {
+        container.innerHTML = '<div class="empty">Нет товаров для отображения</div>';
+        return;
+    }
+
+    products.forEach(product => {
+        const card = document.createElement('div');
+        card.className = 'product-card'; // Используем существующий класс для сетки
+
+        // Получаем изображение (первое из списка или заглушку)
+        const imageUrl = product.images && product.images.length > 0 ?
+            product.images[0].url : '/assets/placeholder.png';
+
+        // Формируем содержимое ссылки/текста поставщика
+        let supplierContent = 'Информация отсутствует';
+        if (product.supplier_link) {
+            // Проверяем, является ли supplier_link URL
+            try {
+                new URL(product.supplier_link);
+                supplierContent = `<a href="${product.supplier_link}" target="_blank" rel="noopener noreferrer">${product.supplier_link}</a>`;
+            } catch (e) {
+                // Не URL, отображаем как текст
+                supplierContent = this.escapeHtml(product.supplier_link);
+            }
+        }
+
+        card.innerHTML = `
+            <div class="supplier-product-card">
+                <img src="${imageUrl}" alt="${this.escapeHtml(product.title)}" 
+                     class="supplier-product-image" 
+                     onerror="this.src='/assets/placeholder.png'">
+                <div class="supplier-product-info">
+                    <h3 class="supplier-product-title">${this.escapeHtml(product.title)}</h3>
+                    <div class="supplier-link-section">
+                        <div class="supplier-link-label">Где купить:</div>
+                        <div class="supplier-link-content">${supplierContent}</div>
+                        ${
+                            product.supplier_notes ?
+                            `<div class="supplier-notes">${this.escapeHtml(product.supplier_notes)}</div>` :
+                            ''
+                        }
+                    </div>
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
 
     // Обработка выбранных файлов (и через drag & drop, и через файловый диалог)
     
