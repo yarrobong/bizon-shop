@@ -477,3 +477,42 @@ body.modal-open {
     font-size: 0.95rem;
   }
 }
+
+
+
+/* Стили для вариантов в модальном окне */
+.product-variants-container {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.product-variants {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.product-variant-btn {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9em;
+}
+
+.product-variant-btn:hover {
+    border-color: #007bff;
+    background-color: #e6f0ff;
+}
+
+.product-variant-btn.active {
+    border-color: #007bff;
+    background-color: #007bff;
+    color: white;
+}
+
+/* ... остальные стили ... */

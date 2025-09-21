@@ -116,27 +116,49 @@ module.exports = { pool, getProducts };
 // === API: Получить товары ===
 app.get('/api/products', async (req, res) => {
   try {
-    const isAdmin = req.query.admin === 'true';
+    // 1. Получите все товары из таблицы products
+    const productsResult = await pool.query('SELECT * FROM products');
+    let products = productsResult.rows;
 
-    let query = `
-      SELECT
-        id, title, description, price, tag, available, category, brand, compatibility,
-        supplier_link, supplier_notes, -- Добавлены новые поля
-        images_json as images
-      FROM products
-    `;
+    // 2. Для каждого товара проверьте, есть ли у него варианты
+    const productsWithVariants = await Promise.all(products.map(async (product) => {
+      // Найдем все product_id из той же группы, что и product.id
+      const variantsResult = await pool.query(
+        `SELECT p.* 
+         FROM product_variants_link pvl1
+         JOIN product_variants_link pvl2 ON pvl1.group_id = pvl2.group_id
+         JOIN products p ON pvl2.product_id = p.id
+         WHERE pvl1.product_id = $1 AND p.id != $1`, // Исключаем сам товар
+        [product.id]
+      );
 
-    if (!isAdmin) {
-      query += ' WHERE available = true ';
-    }
+      // Если варианты найдены, добавим их к товару
+      if (variantsResult.rows.length > 0) {
+        // Форматируем изображения из JSON
+        const formattedVariants = variantsResult.rows.map(variant => ({
+          ...variant,
+          images: variant.images_json ? JSON.parse(variant.images_json) : []
+        }));
 
-    query += ' ORDER BY id';
+        return {
+          ...product,
+          images: product.images_json ? JSON.parse(product.images_json) : [],
+          variants: formattedVariants // Добавляем массив вариантов
+        };
+      } else {
+        // Если вариантов нет, просто форматируем изображения
+        return {
+          ...product,
+          images: product.images_json ? JSON.parse(product.images_json) : [],
+          variants: [] // Пустой массив вариантов
+        };
+      }
+    }));
 
-    const result = await pool.query(query);
-    res.json(result.rows);
+    res.json(productsWithVariants);
   } catch (err) {
-    console.error('Ошибка загрузки товаров:', err);
-    res.status(500).json({ error: 'Не удалось загрузить товары' });
+    console.error(err);
+    res.status(500).json({ error: 'Ошибка сервера' });
   }
 });
 
