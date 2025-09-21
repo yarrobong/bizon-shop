@@ -251,9 +251,22 @@ renderSupplierCatalog(products) {
             }
         }
 
-        // Формируем текст для копирования: "___ штук Название товара примечение ссылка"
-        // Используем заглушку "___" для количества, так как оно не хранится в товаре
-        const copyText = `___ штук ${product.title || ''} ${product.supplier_notes || ''} ${product.supplier_link || ''}`.trim();
+        // Формируем текст для копирования:
+        // Название товара
+        // ___ штук
+        // примечение
+        // ссыолка (если есть)
+        const copyLines = [
+            product.title || '',
+            '___ штук'
+        ];
+        if (product.supplier_notes) {
+            copyLines.push(product.supplier_notes);
+        }
+        if (product.supplier_link) {
+            copyLines.push(product.supplier_link);
+        }
+        const copyText = copyLines.join('\n'); // Объединяем строки с помощью символа новой строки
 
         card.innerHTML = `
             <div class="supplier-product-card">
@@ -266,7 +279,7 @@ renderSupplierCatalog(products) {
                         <div class="supplier-link-label">Где купить:</div>
                         <div class="supplier-link-content">
                             ${supplierContent}
-                            ${product.supplier_link ? `<button class="supplier-copy-btn" data-copy-text="${this.escapeHtml(copyText)}" title="Копировать: ${this.escapeHtml(copyText)}">Копировать</button>` : ''}
+                            ${product.supplier_link ? `<button class="supplier-copy-btn" data-copy-text="${this.escapeHtml(copyText)}" title="Копировать информацию о поставщике">Копировать</button>` : ''}
                         </div>
                         ${
                             product.supplier_notes ?
