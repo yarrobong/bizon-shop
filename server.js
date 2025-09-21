@@ -171,70 +171,69 @@ app.get('/api/products', async (req, res) => {
 
     // 2. Для каждого товара проверьте, есть ли у него варианты
     const productsWithVariants = await Promise.all(products.map(async (product) => {
-      // Найдем все product_id из той же группы, что и product.id (включая сам товар для полноты, если нужно)
-      // Изменил запрос, чтобы он был немного проще и надежнее
-      let variants = [];
-      const variantsGroupResult = await pool.query(
-        `SELECT group_id FROM product_variants_link WHERE product_id = $1`,
+      // Найдем все product_id из той же группы, что и product.id
+      const variantsResult = await pool.query(
+        `SELECT p.*
+         FROM product_variants_link pvl1
+         JOIN product_variants_link pvl2 ON pvl1.group_id = pvl2.group_id
+         JOIN products p ON pvl2.product_id = p.id
+         WHERE pvl1.product_id = $1 AND p.id != $1`, // Исключаем сам товар
         [product.id]
       );
 
-      if (variantsGroupResult.rows.length > 0) {
-        const groupId = variantsGroupResult.rows[0].group_id;
-        const variantsResult = await pool.query(
-          `SELECT p.* 
-           FROM product_variants_link pvl
-           JOIN products p ON pvl.product_id = p.id
-           WHERE pvl.group_id = $1 AND p.id != $2`, // Исключаем сам исходный товар, если нужно только варианты
-          [groupId, product.id]
-        );
-        // Правильная обработка images_json для вариантов
-        variants = variantsResult.rows.map(variant => {
-           let images = [];
-           if (variant.images_json) {
-              // Проверяем, является ли images_json уже объектом/массивом (десериализовано pg)
-              if (typeof variant.images_json === 'string') {
-                 try {
-                    images = JSON.parse(variant.images_json);
-                 } catch (parseErr) {
-                    console.error(`Ошибка парсинга images_json для варианта ID ${variant.id}:`, parseErr);
-                    images = []; // или какое-то значение по умолчанию
-                 }
-              } else if (Array.isArray(variant.images_json) || typeof variant.images_json === 'object') {
-                 // Уже десериализованный объект/массив
-                 images = variant.images_json;
+      // --- Исправленная обработка images_json для вариантов ---
+      let formattedVariants = [];
+      if (variantsResult.rows.length > 0) {
+        formattedVariants = variantsResult.rows.map(variant => {
+          let images = [];
+          // Проверяем, существует ли images_json и не null/undefined
+          if (variant.images_json != null) { // Используем != null для проверки и null, и undefined
+            // Проверяем тип: если строка - парсим, если объект/массив - используем как есть
+            if (typeof variant.images_json === 'string') {
+              try {
+                images = JSON.parse(variant.images_json); // Парсим только строки
+              } catch (parseErr) {
+                console.error(`Ошибка парсинга images_json для варианта ID ${variant.id}:`, parseErr);
+                // Можно установить images в пустой массив или значение по умолчанию
               }
-              // Если ни строка, ни объект/массив - оставляем пустой массив или обрабатываем иначе
-           }
-           return {
-              ...variant,
-              images: images
-           };
+            } else if (Array.isArray(variant.images_json) || (typeof variant.images_json === 'object' && variant.images_json !== null)) {
+              // Уже десериализованный объект или массив
+              images = variant.images_json;
+            }
+            // Если другой тип (например, число, булево) - images останется пустым массивом или обработайте по-другому
+          }
+          return {
+            ...variant,
+            images: images
+          };
         });
       }
+      // --- Конец исправленной обработки для вариантов ---
 
-
-      // Правильная обработка images_json для основного товара
+      // --- Исправленная обработка images_json для основного товара ---
       let productImages = [];
-      if (product.images_json) {
-         if (typeof product.images_json === 'string') {
-            try {
-               productImages = JSON.parse(product.images_json);
-            } catch (parseErr) {
-               console.error(`Ошибка парсинга images_json для товара ID ${product.id}:`, parseErr);
-               productImages = []; // или какое-то значение по умолчанию
-            }
-         } else if (Array.isArray(product.images_json) || typeof product.images_json === 'object') {
-            // Уже десериализованный объект/массив
-            productImages = product.images_json;
-         }
-         // Если ни строка, ни объект/массив - оставляем пустой массив или обрабатываем иначе
+      // Проверяем, существует ли images_json и не null/undefined
+      if (product.images_json != null) {
+        // Проверяем тип: если строка - парсим, если объект/массив - используем как есть
+        if (typeof product.images_json === 'string') {
+          try {
+            productImages = JSON.parse(product.images_json); // Парсим только строки
+          } catch (parseErr) {
+            console.error(`Ошибка парсинга images_json для товара ID ${product.id}:`, parseErr);
+            // Можно установить productImages в пустой массив или значение по умолчанию
+          }
+        } else if (Array.isArray(product.images_json) || (typeof product.images_json === 'object' && product.images_json !== null)) {
+          // Уже десериализованный объект или массив
+          productImages = product.images_json;
+        }
+        // Если другой тип - productImages останется пустым массивом или обработайте по-другому
       }
+      // --- Конец исправленной обработки для основного товара ---
 
       return {
         ...product,
-        images: productImages,
-        variants: variants // Добавляем массив вариантов (может быть пустым)
+        images: productImages, // Используем обработанные изображения
+        variants: formattedVariants // Добавляем массив обработанных вариантов
       };
     }));
 
@@ -269,12 +268,11 @@ app.post('/api/products', async (req, res) => {
 app.get('/api/products/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    // Лучше явно перечислить поля, особенно если images_json может быть большим
     const result = await pool.query(`
       SELECT
         id, title, description, price, tag, available, category, brand, compatibility,
-        supplier_link, supplier_notes, -- Добавлены новые поля
-        images_json -- Это поле будет обработано ниже
+        supplier_link, supplier_notes,
+        images_json -- Поле будет обработано ниже
       FROM products
       WHERE id = $1
     `, [id]);
@@ -285,20 +283,21 @@ app.get('/api/products/:id', async (req, res) => {
 
     const product = result.rows[0];
     let productImages = [];
-    if (product.images_json) {
+    // --- Исправленная обработка images_json для товара по ID ---
+    if (product.images_json != null) {
         if (typeof product.images_json === 'string') {
             try {
                 productImages = JSON.parse(product.images_json);
             } catch (parseErr) {
                 console.error(`Ошибка парсинга images_json для товара ID ${product.id}:`, parseErr);
-                productImages = [];
+                // productImages = []; // Уже пустой по умолчанию
             }
-        } else if (Array.isArray(product.images_json) || typeof product.images_json === 'object') {
+        } else if (Array.isArray(product.images_json) || (typeof product.images_json === 'object' && product.images_json !== null)) {
             productImages = product.images_json;
         }
     }
+    // --- Конец исправленной обработки ---
 
-    // Возвращаем объект товара с обработанными изображениями
     res.json({
        ...product,
        images: productImages
@@ -308,7 +307,6 @@ app.get('/api/products/:id', async (req, res) => {
     res.status(500).json({ error: 'Не удалось загрузить товар' });
   }
 });
-
 // === API: Обновить товар ===
 app.put('/api/products/:id', async (req, res) => {
   try {
