@@ -173,18 +173,19 @@
     </div>
   </div>
 
-  <!-- Модальное окно: Товар (обновленный фрагмент) -->
+  <!-- Модальное окно: Товар -->
 <div id="product-modal" class="modal" role="dialog" aria-labelledby="product-title" aria-hidden="true">
   <div class="modal-content">
     <div class="product-modal-body">
       <button class="modal-close" data-close="product" aria-label="Закрыть">&times;</button>
+      
       <div class="product-modal-left">
         <div class="product-modal-image">
           <img id="product-main-image" src="" alt="Изображение товара" />
         </div>
         <div class="product-thumbnails" id="thumbnails" role="group" aria-label="Миниатюры изображений"></div>
         
-        <!-- Новый контейнер для вариантов -->
+        <!-- Контейнер для вариантов -->
         <div id="product-variants-container" class="product-variants-container" style="display: none;">
             <h4>Варианты:</h4>
             <div id="product-variants" class="product-variants"></div>
@@ -192,6 +193,7 @@
         <!-- --- -->
         
       </div>
+      
       <div class="product-modal-right">
         <div class="product-info">
           <h3 id="product-title" class="product-title"></h3>
@@ -203,10 +205,10 @@
           <button id="buy-now-btn" class="btn-buy full-width">Купить сейчас</button>
         </div>
       </div>
+      
     </div>
   </div>
 </div>
-<!-- ... -->
 
   <!-- Подвал -->
   <footer role="contentinfo">

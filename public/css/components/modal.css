@@ -515,4 +515,57 @@ body.modal-open {
     color: white;
 }
 
+/* public/css/main.css */
+
+/* ... существующие стили ... */
+
+/* Стили для вариантов в модальном окне */
+.product-variants-container {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.product-variants {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.product-variant-btn {
+    padding: 8px 12px;
+    border: 2px solid #ddd; /* Более толстая рамка для четкости */
+    border-radius: 4px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9em;
+    /* Центрируем текст по вертикали, если нужно */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.product-variant-btn:hover {
+    border-color: #007bff;
+    background-color: #e6f0ff;
+}
+
+/* Подсветка выбранного варианта */
+.product-variant-btn.selected {
+    border-color: #007bff;
+    background-color: #007bff;
+    color: white;
+    font-weight: bold; /* Дополнительное выделение */
+}
+
+/* Если у вариантов будут миниатюры, можно добавить стиль для изображения внутри кнопки */
+.product-variant-btn img {
+    max-width: 30px; /* Ограничиваем размер миниатюры */
+    max-height: 30px;
+    margin-right: 5px; /* Отступ между миниатюрой и текстом */
+    border-radius: 2px; /* Сlightly rounded corners for thumbnails */
+}
+
 /* ... остальные стили ... */
