@@ -339,63 +339,82 @@ function openProductModal(product) {
         // --- УБРАЛИ кнопку для "основного" товара ---
 
         // Создаем кнопки ТОЛЬКО для каждого варианта
-        product.variants.forEach(variant => {
-            const variantBtn = document.createElement('button');
-            
-            // Попробуем извлечь название варианта из title или другого поля
-            // Простой способ: использовать часть названия после последнего " - " или "-"
-            let variantName = variant.title;
-            if (variant.title.includes(' - ')) {
-                variantName = variant.title.split(' - ').pop().trim();
-            } else if (variant.title.includes(' -')) { // На случай одного пробела
-                 variantName = variant.title.split(' -').pop().trim();
-            } else if (variant.title.includes('-')) { // На случай дефиса без пробелов
-                 variantName = variant.title.split('-').pop().trim();
-            }
-            
-            // Если не удалось извлечь, используем ID или часть основного названия
-            if (variantName === variant.title) {
-                 // Попробуем найти слово после основного названия товара
-                 const mainTitle = product.title.toLowerCase();
-                 const variantTitleLower = variant.title.toLowerCase();
-                 if (variantTitleLower.startsWith(mainTitle)) {
-                     variantName = variant.title.substring(mainTitle.length).trim().replace(/^[-\s]+/, ''); // Убираем начальные дефисы/пробелы
-                 }
-                 // Если и это не помогло, просто используем ID или полное название
-                 if (!variantName || variantName === variant.title) {
-                      variantName = `Вар. ${variant.id}`; // Или variant.title
-                 }
-            }
+product.variants.forEach(variant => {
+    const variantBtn = document.createElement('button');
+    
+    // --- Обновленная логика формирования содержимого кнопки ---
+    // Попробуем извлечь название варианта (как и раньше)
+    let variantName = variant.title;
+    if (variant.title.includes(' - ')) {
+        variantName = variant.title.split(' - ').pop().trim();
+    } else if (variant.title.includes(' -')) {
+         variantName = variant.title.split(' -').pop().trim();
+    } else if (variant.title.includes('-')) {
+         variantName = variant.title.split('-').pop().trim();
+    }
+    if (variantName === variant.title) {
+         const mainTitle = product.title.toLowerCase();
+         const variantTitleLower = variant.title.toLowerCase();
+         if (variantTitleLower.startsWith(mainTitle)) {
+             variantName = variant.title.substring(mainTitle.length).trim().replace(/^[-\s]+/, '');
+         }
+         if (!variantName || variantName === variant.title) {
+              variantName = `Вар. ${variant.id}`;
+         }
+    }
 
-            variantBtn.textContent = variantName;
-            variantBtn.className = 'product-variant-btn'; // НЕ добавляем 'active' по умолчанию
-            variantBtn.dataset.variantId = variant.id;
-            
-            // Добавляем обработчик клика
-            variantBtn.addEventListener('click', () => {
-                // Выбираем этот вариант как отображаемый
-                selectVariantInModal(product, variant);
-                // Обновляем подсветку кнопок
-                document.querySelectorAll('.product-variant-btn').forEach(btn => btn.classList.remove('selected'));
-                variantBtn.classList.add('selected');
-            });
-            
-            variantsList.appendChild(variantBtn);
-        });
+    // Получаем URL главного изображения варианта
+    let variantImageUrl = '/assets/placeholder.png'; // По умолчанию
+    if (variant.images && variant.images.length > 0 && variant.images[0].url) {
+        variantImageUrl = variant.images[0].url.trim();
+    } else if (product.images && product.images.length > 0 && product.images[0].url) {
+        // Если у варианта нет изображений, используем первое изображение основного товара
+        variantImageUrl = product.images[0].url.trim();
+    }
+
+    // Создаем элемент изображения
+    const imgElement = document.createElement('img');
+    imgElement.src = variantImageUrl;
+    imgElement.alt = `Фото ${variantName}`;
+    imgElement.className = 'variant-thumbnail'; // Применяем стиль
+
+    // Создаем текстовый элемент для названия
+    const textElement = document.createElement('span');
+    textElement.textContent = variantName;
+
+    // Добавляем изображение и текст в кнопку
+    variantBtn.appendChild(imgElement);
+    variantBtn.appendChild(textElement);
+    // --- Конец обновленной логики ---
+
+    variantBtn.className = 'product-variant-btn'; // НЕ добавляем 'active' по умолчанию
+    variantBtn.dataset.variantId = variant.id;
+    
+    // Добавляем обработчик клика
+    variantBtn.addEventListener('click', () => {
+        // Выбираем этот вариант как отображаемый
+        selectVariantInModal(product, variant);
+        // Обновляем подсветку кнопок
+        document.querySelectorAll('.product-variant-btn').forEach(btn => btn.classList.remove('selected'));
+        variantBtn.classList.add('selected');
+    });
+    
+    variantsList.appendChild(variantBtn);
+});
 
         // --- Подсвечиваем первый вариант по умолчанию ---
         // Выбираем первый вариант из списка как отображаемый при открытии
         const firstVariant = product.variants[0];
-        if (firstVariant) {
-             // Найдем кнопку первого варианта и "кликнем" по ней программно
-             // или просто вызовем selectVariantInModal и обновим класс
-             selectVariantInModal(product, firstVariant);
-             // Найдем соответствующую кнопку и подсветим её
-             const firstVariantBtn = document.querySelector(`.product-variant-btn[data-variant-id="${firstVariant.id}"]`);
-             if (firstVariantBtn) {
-                 firstVariantBtn.classList.add('selected');
-             }
-        }
+if (firstVariant) {
+     // Найдем кнопку первого варианта и "кликнем" по ней программно
+     // или просто вызовем selectVariantInModal и обновим класс
+     selectVariantInModal(product, firstVariant);
+     // Найдем соответствующую кнопку и подсветим её
+     const firstVariantBtn = document.querySelector(`.product-variant-btn[data-variant-id="${firstVariant.id}"]`);
+     if (firstVariantBtn) {
+         firstVariantBtn.classList.add('selected');
+     }
+}
 
     } else {
         // Если у товара нет вариантов

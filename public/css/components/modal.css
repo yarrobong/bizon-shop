@@ -568,4 +568,54 @@ body.modal-open {
     border-radius: 2px; /* Сlightly rounded corners for thumbnails */
 }
 
-/* ... остальные стили ... */
+/* Стили для вариантов в модальном окне */
+.product-variants-container {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.product-variants {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.product-variant-btn {
+    /* Убираем display: flex из предыдущего примера, если он есть */
+    padding: 8px 12px;
+    border: 2px solid #ddd; /* Более толстая рамка для четкости */
+    border-radius: 4px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9em;
+    /* Для размещения изображения и текста */
+    display: flex;
+    align-items: center; /* Выравнивание по вертикальному центру */
+    gap: 8px; /* Расстояние между изображением и текстом */
+    min-height: 40px; /* Минимальная высота для удобства клика */
+}
+
+.product-variant-btn:hover {
+    border-color: #007bff;
+    background-color: #e6f0ff;
+}
+
+/* Подсветка выбранного варианта */
+.product-variant-btn.selected {
+    border-color: #007bff;
+    background-color: #007bff;
+    color: white;
+    font-weight: bold; /* Дополнительное выделение */
+}
+
+/* Стиль для миниатюры внутри кнопки варианта */
+.product-variant-btn .variant-thumbnail {
+    width: 30px; /* Фиксированная ширина */
+    height: 30px; /* Фиксированная высота */
+    object-fit: cover; /* Обрезка изображения до нужного размера */
+    border-radius: 3px; /* Сlightly rounded corners */
+    flex-shrink: 0; /* Изображение не будет сжиматься */
+}
