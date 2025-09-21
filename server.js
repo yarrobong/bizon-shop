@@ -162,26 +162,86 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
-// === API: Получить товар по ID ===
-app.get('/api/products/:id', async (req, res) => {
+// === API: Получить товары ===
+app.get('/api/products', async (req, res) => {
   try {
-    const { id } = req.params;
-    const result = await pool.query(`
-      SELECT
-        id, title, description, price, tag, available, category, brand, compatibility,
-        supplier_link, supplier_notes, -- Добавлены новые поля
-        images_json as images
-      FROM products
-      WHERE id = $1
-    `, [id]);
+    // 1. Получите все товары из таблицы products
+    const productsResult = await pool.query('SELECT * FROM products');
+    let products = productsResult.rows;
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Товар не найден' });
-    }
-    res.json(result.rows[0]);
+    // 2. Для каждого товара проверьте, есть ли у него варианты
+    const productsWithVariants = await Promise.all(products.map(async (product) => {
+      // Найдем все product_id из той же группы, что и product.id (включая сам товар для полноты, если нужно)
+      // Изменил запрос, чтобы он был немного проще и надежнее
+      let variants = [];
+      const variantsGroupResult = await pool.query(
+        `SELECT group_id FROM product_variants_link WHERE product_id = $1`,
+        [product.id]
+      );
+
+      if (variantsGroupResult.rows.length > 0) {
+        const groupId = variantsGroupResult.rows[0].group_id;
+        const variantsResult = await pool.query(
+          `SELECT p.* 
+           FROM product_variants_link pvl
+           JOIN products p ON pvl.product_id = p.id
+           WHERE pvl.group_id = $1 AND p.id != $2`, // Исключаем сам исходный товар, если нужно только варианты
+          [groupId, product.id]
+        );
+        // Правильная обработка images_json для вариантов
+        variants = variantsResult.rows.map(variant => {
+           let images = [];
+           if (variant.images_json) {
+              // Проверяем, является ли images_json уже объектом/массивом (десериализовано pg)
+              if (typeof variant.images_json === 'string') {
+                 try {
+                    images = JSON.parse(variant.images_json);
+                 } catch (parseErr) {
+                    console.error(`Ошибка парсинга images_json для варианта ID ${variant.id}:`, parseErr);
+                    images = []; // или какое-то значение по умолчанию
+                 }
+              } else if (Array.isArray(variant.images_json) || typeof variant.images_json === 'object') {
+                 // Уже десериализованный объект/массив
+                 images = variant.images_json;
+              }
+              // Если ни строка, ни объект/массив - оставляем пустой массив или обрабатываем иначе
+           }
+           return {
+              ...variant,
+              images: images
+           };
+        });
+      }
+
+
+      // Правильная обработка images_json для основного товара
+      let productImages = [];
+      if (product.images_json) {
+         if (typeof product.images_json === 'string') {
+            try {
+               productImages = JSON.parse(product.images_json);
+            } catch (parseErr) {
+               console.error(`Ошибка парсинга images_json для товара ID ${product.id}:`, parseErr);
+               productImages = []; // или какое-то значение по умолчанию
+            }
+         } else if (Array.isArray(product.images_json) || typeof product.images_json === 'object') {
+            // Уже десериализованный объект/массив
+            productImages = product.images_json;
+         }
+         // Если ни строка, ни объект/массив - оставляем пустой массив или обрабатываем иначе
+      }
+
+      return {
+        ...product,
+        images: productImages,
+        variants: variants // Добавляем массив вариантов (может быть пустым)
+      };
+    }));
+
+    res.json(productsWithVariants);
   } catch (err) {
-    console.error('Ошибка загрузки товара:', err);
-    res.status(500).json({ error: 'Не удалось загрузить товар' });
+    console.error('Ошибка в /api/products:', err); // Более конкретная ошибка в логах
+    res.status(500).json({ error: 'Ошибка сервера при получении товаров' }); // Более конкретное сообщение
   }
 });
 
@@ -203,6 +263,49 @@ app.post('/api/products', async (req, res) => {
   } catch (err) {
     console.error('Ошибка создания товара:', err);
     res.status(500).json({ error: 'Не удалось создать товар' });
+  }
+});
+// === API: Получить товар по ID ===
+app.get('/api/products/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    // Лучше явно перечислить поля, особенно если images_json может быть большим
+    const result = await pool.query(`
+      SELECT
+        id, title, description, price, tag, available, category, brand, compatibility,
+        supplier_link, supplier_notes, -- Добавлены новые поля
+        images_json -- Это поле будет обработано ниже
+      FROM products
+      WHERE id = $1
+    `, [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Товар не найден' });
+    }
+
+    const product = result.rows[0];
+    let productImages = [];
+    if (product.images_json) {
+        if (typeof product.images_json === 'string') {
+            try {
+                productImages = JSON.parse(product.images_json);
+            } catch (parseErr) {
+                console.error(`Ошибка парсинга images_json для товара ID ${product.id}:`, parseErr);
+                productImages = [];
+            }
+        } else if (Array.isArray(product.images_json) || typeof product.images_json === 'object') {
+            productImages = product.images_json;
+        }
+    }
+
+    // Возвращаем объект товара с обработанными изображениями
+    res.json({
+       ...product,
+       images: productImages
+    });
+  } catch (err) {
+    console.error('Ошибка загрузки товара по ID:', err);
+    res.status(500).json({ error: 'Не удалось загрузить товар' });
   }
 });
 
