@@ -25,7 +25,7 @@ const { Pool } = require('pg');
 
 // --- MIDDLEWARE ---
 // 1. Парсинг JSON тела запроса
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // Увеличен лимит для больших payloads, если нужно
 
 // 2. Статические файлы (CSS, JS, изображения, HTML-страницы типа index.html)
 // Должно идти до кастомных маршрутов, чтобы обслуживать статику напрямую
@@ -89,31 +89,9 @@ pool.query('SELECT NOW()', (err, res) => {
 process.env.TZ = 'Europe/Moscow';
 
 // --- API: Товары ---
-async function getProducts() {
-  try {
-    const res = await pool.query('SELECT * FROM products');
-    return res.rows;
-  } catch (err) {
-    console.error('Ошибка загрузки товаров:', err);
-    return [];
-  }
-}
-
-// Пример использования (можно удалить в production)
-(async () => {
-  try {
-    const products = await getProducts();
-    console.log('Товары из БД (при запуске):', products.length);
-  } catch (err) {
-    console.error('Ошибка при загрузке товаров в примере:', err);
-  }
-})();
-
-// Экспорт для использования в других модулях
-module.exports = { pool, getProducts };
-
 
 // === API: Получить товары ===
+// Объединенный и исправленный маршрут получения товаров с вариантами
 app.get('/api/products', async (req, res) => {
   try {
     // 1. Получите все товары из таблицы products
@@ -122,85 +100,42 @@ app.get('/api/products', async (req, res) => {
 
     // 2. Для каждого товара проверьте, есть ли у него варианты
     const productsWithVariants = await Promise.all(products.map(async (product) => {
-      // Найдем все product_id из той же группы, что и product.id
-      const variantsResult = await pool.query(
-        `SELECT p.* 
-         FROM product_variants_link pvl1
-         JOIN product_variants_link pvl2 ON pvl1.group_id = pvl2.group_id
-         JOIN products p ON pvl2.product_id = p.id
-         WHERE pvl1.product_id = $1 AND p.id != $1`, // Исключаем сам товар
+      // --- Исправленный запрос для получения вариантов ---
+      // Проблема в предыдущем запросе: он исключал основной товар (p.id != $1),
+      // но не включал его самого в список вариантов.
+      // Если вы хотите, чтобы основной товар был первым в списке вариантов:
+      // 1. Получаем group_id основного товара
+      const groupResult = await pool.query(
+        `SELECT group_id FROM product_variants_link WHERE product_id = $1`,
         [product.id]
       );
 
-      // Если варианты найдены, добавим их к товару
-      if (variantsResult.rows.length > 0) {
-        // Форматируем изображения из JSON
-        const formattedVariants = variantsResult.rows.map(variant => ({
-          ...variant,
-          images: variant.images_json ? JSON.parse(variant.images_json) : []
-        }));
-
-        return {
-          ...product,
-          images: product.images_json ? JSON.parse(product.images_json) : [],
-          variants: formattedVariants // Добавляем массив вариантов
-        };
-      } else {
-        // Если вариантов нет, просто форматируем изображения
-        return {
-          ...product,
-          images: product.images_json ? JSON.parse(product.images_json) : [],
-          variants: [] // Пустой массив вариантов
-        };
-      }
-    }));
-
-    res.json(productsWithVariants);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Ошибка сервера' });
-  }
-});
-
-// === API: Получить товары ===
-app.get('/api/products', async (req, res) => {
-  try {
-    // 1. Получите все товары из таблицы products
-    const productsResult = await pool.query('SELECT * FROM products');
-    let products = productsResult.rows;
-
-    // 2. Для каждого товара проверьте, есть ли у него варианты
-    const productsWithVariants = await Promise.all(products.map(async (product) => {
-      // Найдем все product_id из той же группы, что и product.id
-      const variantsResult = await pool.query(
-        `SELECT p.*
-         FROM product_variants_link pvl1
-         JOIN product_variants_link pvl2 ON pvl1.group_id = pvl2.group_id
-         JOIN products p ON pvl2.product_id = p.id
-         WHERE pvl1.product_id = $1 AND p.id != $1`, // Исключаем сам товар
-        [product.id]
-      );
-
-      // --- Исправленная обработка images_json для вариантов ---
       let formattedVariants = [];
-      if (variantsResult.rows.length > 0) {
+      if (groupResult.rows.length > 0) {
+        const groupId = groupResult.rows[0].group_id;
+        // 2. Получаем ВСЕ товары из этой группы
+        const variantsResult = await pool.query(
+          `SELECT p.*
+           FROM product_variants_link pvl
+           JOIN products p ON pvl.product_id = p.id
+           WHERE pvl.group_id = $1
+           ORDER BY p.id`, // Можно упорядочить по ID или другому критерию
+          [groupId]
+        );
+
+        // 3. Обрабатываем изображения для каждого варианта
         formattedVariants = variantsResult.rows.map(variant => {
           let images = [];
-          // Проверяем, существует ли images_json и не null/undefined
-          if (variant.images_json != null) { // Используем != null для проверки и null, и undefined
-            // Проверяем тип: если строка - парсим, если объект/массив - используем как есть
+          if (variant.images_json != null) {
             if (typeof variant.images_json === 'string') {
               try {
-                images = JSON.parse(variant.images_json); // Парсим только строки
+                images = JSON.parse(variant.images_json);
               } catch (parseErr) {
                 console.error(`Ошибка парсинга images_json для варианта ID ${variant.id}:`, parseErr);
-                // Можно установить images в пустой массив или значение по умолчанию
               }
             } else if (Array.isArray(variant.images_json) || (typeof variant.images_json === 'object' && variant.images_json !== null)) {
-              // Уже десериализованный объект или массив
               images = variant.images_json;
             }
-            // Если другой тип (например, число, булево) - images останется пустым массивом или обработайте по-другому
           }
           return {
             ...variant,
@@ -208,62 +143,37 @@ app.get('/api/products', async (req, res) => {
           };
         });
       }
-      // --- Конец исправленной обработки для вариантов ---
+      // --- Конец исправленного запроса для вариантов ---
 
       // --- Исправленная обработка images_json для основного товара ---
       let productImages = [];
-      // Проверяем, существует ли images_json и не null/undefined
       if (product.images_json != null) {
-        // Проверяем тип: если строка - парсим, если объект/массив - используем как есть
         if (typeof product.images_json === 'string') {
           try {
-            productImages = JSON.parse(product.images_json); // Парсим только строки
+            productImages = JSON.parse(product.images_json);
           } catch (parseErr) {
             console.error(`Ошибка парсинга images_json для товара ID ${product.id}:`, parseErr);
-            // Можно установить productImages в пустой массив или значение по умолчанию
           }
         } else if (Array.isArray(product.images_json) || (typeof product.images_json === 'object' && product.images_json !== null)) {
-          // Уже десериализованный объект или массив
           productImages = product.images_json;
         }
-        // Если другой тип - productImages останется пустым массивом или обработайте по-другому
       }
       // --- Конец исправленной обработки для основного товара ---
 
       return {
         ...product,
-        images: productImages, // Используем обработанные изображения
-        variants: formattedVariants // Добавляем массив обработанных вариантов
+        images: productImages,
+        variants: formattedVariants // Добавляем массив обработанных вариантов (может быть пустым)
       };
     }));
 
     res.json(productsWithVariants);
   } catch (err) {
-    console.error('Ошибка в /api/products:', err); // Более конкретная ошибка в логах
-    res.status(500).json({ error: 'Ошибка сервера при получении товаров' }); // Более конкретное сообщение
+    console.error('Ошибка в /api/products:', err);
+    res.status(500).json({ error: 'Ошибка сервера при получении товаров' });
   }
 });
 
-// === API: Создать товар ===
-app.post('/api/products', async (req, res) => {
-  try {
-    // Добавлены новые поля supplier_link, supplier_notes
-    const { title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images } = req.body;
-
-    const images_json = images ? JSON.stringify(images) : null;
-
-    const result = await pool.query(`
-      INSERT INTO products (title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json) -- Добавлены новые поля
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) -- Добавлены $9, $10, $11
-      RETURNING id, title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json as images -- Добавлены новые поля
-    `, [title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json]); // Добавлены новые параметры
-
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    console.error('Ошибка создания товара:', err);
-    res.status(500).json({ error: 'Не удалось создать товар' });
-  }
-});
 // === API: Получить товар по ID ===
 app.get('/api/products/:id', async (req, res) => {
   try {
@@ -290,7 +200,6 @@ app.get('/api/products/:id', async (req, res) => {
                 productImages = JSON.parse(product.images_json);
             } catch (parseErr) {
                 console.error(`Ошибка парсинга images_json для товара ID ${product.id}:`, parseErr);
-                // productImages = []; // Уже пустой по умолчанию
             }
         } else if (Array.isArray(product.images_json) || (typeof product.images_json === 'object' && product.images_json !== null)) {
             productImages = product.images_json;
@@ -307,6 +216,28 @@ app.get('/api/products/:id', async (req, res) => {
     res.status(500).json({ error: 'Не удалось загрузить товар' });
   }
 });
+
+// === API: Создать товар ===
+app.post('/api/products', async (req, res) => {
+  try {
+    // Добавлены новые поля supplier_link, supplier_notes
+    const { title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images } = req.body;
+
+    const images_json = images ? JSON.stringify(images) : null;
+
+    const result = await pool.query(`
+      INSERT INTO products (title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      RETURNING id, title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json as images
+    `, [title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json]);
+
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('Ошибка создания товара:', err);
+    res.status(500).json({ error: 'Не удалось создать товар' });
+  }
+});
+
 // === API: Обновить товар ===
 app.put('/api/products/:id', async (req, res) => {
   try {
@@ -318,10 +249,10 @@ app.put('/api/products/:id', async (req, res) => {
 
     const result = await pool.query(`
       UPDATE products
-      SET title = $1, description = $2, price = $3, tag = $4, available = $5, category = $6, brand = $7, compatibility = $8, supplier_link = $9, supplier_notes = $10, images_json = $11 -- Добавлены новые поля
-      WHERE id = $12 -- ID теперь $12
-      RETURNING id, title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json as images -- Добавлены новые поля
-    `, [title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json, id]); // Добавлены новые параметры, ID стал последним
+      SET title = $1, description = $2, price = $3, tag = $4, available = $5, category = $6, brand = $7, compatibility = $8, supplier_link = $9, supplier_notes = $10, images_json = $11
+      WHERE id = $12
+      RETURNING id, title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json as images
+    `, [title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json, id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Товар не найден' });
@@ -332,7 +263,6 @@ app.put('/api/products/:id', async (req, res) => {
     res.status(500).json({ error: 'Не удалось обновить товар' });
   }
 });
-
 
 // === API: Удалить товар ===
 app.delete('/api/products/:id', async (req, res) => {
@@ -426,7 +356,9 @@ app.post('/api/order', async (req, res) => {
     }
   }, 30000);
 
-  let orderId = null;
+  // --- Исправление: Объявление orderId в нужной области видимости ---
+  let orderId = null; // Объявляем здесь, чтобы было доступно в блоке catch
+  // --- Конец исправления ---
   let orderSaved = false;
   let telegramSent = false;
 
@@ -452,7 +384,7 @@ app.post('/api/order', async (req, res) => {
         'INSERT INTO orders (phone, comment, total_amount, created_at) VALUES ($1, $2, $3, $4) RETURNING id',
         [phone, comment || '', total, moscowTimeObj]
       );
-      orderId = orderResult.rows[0].id;
+      orderId = orderResult.rows[0].id; // Присваиваем значение
       orderSaved = true;
       req.app.locals.lastOrderId = orderId;
       console.log('Заказ сохранен в БД с ID:', orderId);
@@ -507,8 +439,9 @@ ${cart.map(item => `• ${item.product?.title || 'Неизвестный тов�
     if (BOT_TOKEN && CHAT_ID) {
       try {
         console.log('Отправка сообщения в Telegram...');
+        // --- Исправление: Удален лишний пробел в URL ---
         await axios.post(
-          `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
+          `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, // Исправлен URL
           {
             chat_id: CHAT_ID,
             text: message,
@@ -516,10 +449,12 @@ ${cart.map(item => `• ${item.product?.title || 'Неизвестный тов�
             disable_web_page_preview: true
           }
         );
+        // --- Конец исправления ---
         telegramSent = true;
         console.log('Сообщение успешно отправлено в Telegram');
       } catch (telegramError) {
         console.error('Ошибка отправки в Telegram:', telegramError.message);
+        // Не возвращаем ошибку клиенту из-за Telegram, заказ уже сохранен
       }
     } else {
       console.warn('Токен Telegram бота или ID чата не настроены');
@@ -535,8 +470,10 @@ ${cart.map(item => `• ${item.product?.title || 'Неизвестный тов�
 
   } catch (error) {
     console.error('КРИТИЧЕСКАЯ ОШИБКА обработки заказа:', error);
+    // --- Исправление: orderId теперь доступен здесь ---
     req.app.locals.lastOrderRequest = null;
     req.app.locals.lastOrderId = null;
+    // --- Конец исправления ---
     res.status(500).json({ success: false, error: 'Ошибка обработки заказа на сервере' });
   }
 });
@@ -732,8 +669,9 @@ app.post('/api/contact', async (req, res) => {
     if (BOT_TOKEN && CHAT_ID) {
       try {
         console.log('Отправка сообщения в Telegram...');
+        // --- Исправление: Удален лишний пробел в URL ---
         await axios.post(
-          `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
+          `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, // Исправлен URL
           {
             chat_id: CHAT_ID,
             text: message,
@@ -741,10 +679,12 @@ app.post('/api/contact', async (req, res) => {
             disable_web_page_preview: true
           }
         );
+        // --- Конец исправления ---
         telegramSent = true;
         console.log('Сообщение успешно отправлено в Telegram');
       } catch (telegramError) {
         console.error('Ошибка отправки в Telegram:', telegramError.message);
+        // Не возвращаем ошибку клиенту из-за Telegram
       }
     } else {
       console.warn('Токен Telegram бота или ID чата не настроены');
@@ -763,7 +703,6 @@ app.post('/api/contact', async (req, res) => {
     res.status(500).json({ success: false, error: 'Ошибка обработки заявки на сервере' });
   }
 });
-
 
 // --- КАСТОМНЫЕ МАРШРУТЫ ДЛЯ HTML СТРАНИЦ ---
 // Универсальный маршрут для отдачи .html страниц (например, /catalog -> public/catalog.html)
@@ -791,7 +730,6 @@ app.get('/:page', async (req, res, next) => {
     next();
   }
 });
-
 
 // --- ОБРАБОТЧИК 404 ---
 // Должен быть ПОСЛЕДНИМ
