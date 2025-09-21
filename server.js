@@ -1,5 +1,4 @@
 require('dotenv').config();
-
 const express = require('express');
 const path = require('path');
 const fs = require('fs').promises;
@@ -11,10 +10,45 @@ const { Pool } = require('pg');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// --- Pool PostgreSQL ---
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL && process.env.DATABASE_URL !== 'undefined'
+    ? process.env.DATABASE_URL
+    : `postgres://${process.env.DB_USER}:${encodeURIComponent(process.env.DB_PASSWORD)}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
+  ssl: process.env.DB_HOST === 'localhost' || process.env.DB_HOST === '127.0.0.1' ? false : {
+    rejectUnauthorized: false
+  }
+});
+
+pool.on('error', (err) => {
+  console.error('Неожиданная ошибка в пуле подключений PostgreSQL:', err);
+  process.exit(-1);
+});
+
+// --- Middleware ---
+app.use(express.json({ limit: '10mb' }));
+app.use(express.static(path.join(__dirname, 'public')));
+
+// --- Multer ---
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, path.join(__dirname, 'public', 'uploads')),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+const upload = multer({ storage });
+
+// --- Endpoint загрузки файлов ---
+app.post('/api/upload', upload.single('image'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Файл не был загружен' });
+  res.json({ url: `/uploads/${req.file.filename}` });
+});
+
+// --- Старт сервера ---
 app.listen(PORT, async () => {
   console.log(`✅ Сервер запущен на http://localhost:${PORT}`);
 
-  // Логи переменных окружения один раз
   console.log('=== Environment Variables ===');
   console.log('DATABASE_URL:', process.env.DATABASE_URL);
   console.log('DB_HOST:', process.env.DB_HOST);
@@ -24,81 +58,11 @@ app.listen(PORT, async () => {
   console.log('DB_NAME:', process.env.DB_NAME);
   console.log('============================');
 
-  // Проверка подключения к БД
   try {
-    const pool = new Pool({
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-    });
     const res = await pool.query('SELECT NOW()');
     console.log('✅ Успешное подключение к БД. Текущее время на сервере:', res.rows[0].now);
   } catch (err) {
     console.error('❌ Ошибка подключения к БД при старте:', err);
-  }
-});
-
-// --- MIDDLEWARE ---
-// 1. Парсинг JSON тела запроса
-app.use(express.json({ limit: '10mb' })); // Увеличен лимит для больших payloads, если нужно
-
-// 2. Статические файлы (CSS, JS, изображения, HTML-страницы типа index.html)
-// Должно идти до кастомных маршрутов, чтобы обслуживать статику напрямую
-app.use(express.static(path.join(__dirname, 'public')));
-
-// --- API МАРШРУТЫ ---
-// Все API маршруты должны идти ДО универсального маршрута :page и обработчика 404
-
-// Настройка хранилища для multer
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    // Убедитесь, что папка public/uploads существует
-    cb(null, path.join(__dirname, 'public', 'uploads'));
-  },
-  filename: function (req, file, cb) {
-    // Генерируем уникальное имя файла
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-const upload = multer({ storage: storage });
-
-// Endpoint для загрузки файлов
-app.post('/api/upload', upload.single('image'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'Файл не был загружен' });
-  }
-  // Возвращаем путь, по которому файл будет доступен через статику
-  const fileUrl = `/uploads/${req.file.filename}`;
-  res.json({ url: fileUrl });
-});
-
-// === Подключение к БД ===
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL && process.env.DATABASE_URL !== 'undefined'
-    ? process.env.DATABASE_URL
-    : `postgres://${process.env.DB_USER}:${encodeURIComponent(process.env.DB_PASSWORD)}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
-  // Отключаем SSL для локального подключения
-  ssl: process.env.DB_HOST === 'localhost' || process.env.DB_HOST === '127.0.0.1' ? false : {
-    rejectUnauthorized: false
-  }
-});
-
-// Обработчики ошибок пула
-pool.on('error', (err) => {
-  console.error('Неожиданная ошибка в пуле подключений PostgreSQL:', err);
-  process.exit(-1);
-});
-
-// Проверка подключения при запуске приложения
-pool.query('SELECT NOW()', (err, res) => {
-  if (err) {
-    console.error('❌ Ошибка подключения к БД при запуске:', err.message);
-    console.error('Код ошибки:', err.code);
-  } else {
-    console.log('✅ Успешное подключение к БД. Текущее время на сервере:', res.rows[0].now);
   }
 });
 
