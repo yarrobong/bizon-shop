@@ -251,16 +251,7 @@ renderSupplierCatalog(products) {
             }
         }
 
-        // Формируем текст для копирования:
-        // ___ штук Название товара, Примечание
-        // ссылка (если есть)
-        let copyFirstLine = `___ штук ${product.title || ''}`;
-        if (product.supplier_notes) {
-            copyFirstLine += `, ${product.supplier_notes}`;
-        }
-        const copyText = product.supplier_link ? 
-            `${copyFirstLine}\n${product.supplier_link}` : 
-            copyFirstLine;
+        const copyText = product.supplier_link || '';
 
         card.innerHTML = `
             <div class="supplier-product-card">
