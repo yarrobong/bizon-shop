@@ -208,7 +208,7 @@ app.get('/api/products/:id', async (req, res) => {
   if (product.images_json != null) {
       if (typeof product.images_json === 'string') {
           try {
-              productImages = JSON.parse(product.images_json); 
+              productImages = product.images_json;
           } catch (parseErr) {
               console.error(`Ошибка парсинга images_json для товара ID ${product.id}:`, parseErr);
           }
