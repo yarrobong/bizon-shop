@@ -121,6 +121,7 @@ app.get('/api/products', async (req, res) => {
     let query = `
       SELECT
         id, title, description, price, tag, available, category, brand, compatibility,
+        supplier_link, supplier_notes, -- Добавлены новые поля
         images_json as images
       FROM products
     `;
@@ -146,6 +147,7 @@ app.get('/api/products/:id', async (req, res) => {
     const result = await pool.query(`
       SELECT
         id, title, description, price, tag, available, category, brand, compatibility,
+        supplier_link, supplier_notes, -- Добавлены новые поля
         images_json as images
       FROM products
       WHERE id = $1
@@ -164,15 +166,16 @@ app.get('/api/products/:id', async (req, res) => {
 // === API: Создать товар ===
 app.post('/api/products', async (req, res) => {
   try {
-    const { title, description, price, tag, available, category, brand, compatibility, images } = req.body;
+    // Добавлены новые поля supplier_link, supplier_notes
+    const { title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images } = req.body;
 
     const images_json = images ? JSON.stringify(images) : null;
 
     const result = await pool.query(`
-      INSERT INTO products (title, description, price, tag, available, category, brand, compatibility, images_json)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-      RETURNING id, title, description, price, tag, available, category, brand, compatibility, images_json as images
-    `, [title, description, price, tag, available, category, brand, compatibility, images_json]);
+      INSERT INTO products (title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json) -- Добавлены новые поля
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) -- Добавлены $9, $10, $11
+      RETURNING id, title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json as images -- Добавлены новые поля
+    `, [title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json]); // Добавлены новые параметры
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -185,16 +188,17 @@ app.post('/api/products', async (req, res) => {
 app.put('/api/products/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, price, tag, available, category, brand, compatibility, images } = req.body;
+    // Добавлены новые поля supplier_link, supplier_notes
+    const { title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images } = req.body;
 
     const images_json = images ? JSON.stringify(images) : null;
 
     const result = await pool.query(`
       UPDATE products
-      SET title = $1, description = $2, price = $3, tag = $4, available = $5, category = $6, brand = $7, compatibility = $8, images_json = $9
-      WHERE id = $10
-      RETURNING id, title, description, price, tag, available, category, brand, compatibility, images_json as images
-    `, [title, description, price, tag, available, category, brand, compatibility, images_json, id]);
+      SET title = $1, description = $2, price = $3, tag = $4, available = $5, category = $6, brand = $7, compatibility = $8, supplier_link = $9, supplier_notes = $10, images_json = $11 -- Добавлены новые поля
+      WHERE id = $12 -- ID теперь $12
+      RETURNING id, title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json as images -- Добавлены новые поля
+    `, [title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json, id]); // Добавлены новые параметры, ID стал последним
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Товар не найден' });
@@ -205,6 +209,7 @@ app.put('/api/products/:id', async (req, res) => {
     res.status(500).json({ error: 'Не удалось обновить товар' });
   }
 });
+
 
 // === API: Удалить товар ===
 app.delete('/api/products/:id', async (req, res) => {
