@@ -149,6 +149,8 @@ app.get('/api/products', async (req, res) => {
 
       // Поскольку images_json в БД имеет тип jsonb, pg автоматически парсит его в JS-объект/массив.
 if (product.images_json != null) {
+  console.log('Тип images_json:', typeof product.images_json);
+console.log('Значение images_json:', product.images_json);
     if (Array.isArray(product.images_json)) {
         productImages = product.images_json; // Уже правильный массив
     } else if (typeof product.images_json === 'object' && product.images_json !== null) {
