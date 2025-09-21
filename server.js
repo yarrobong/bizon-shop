@@ -1,27 +1,44 @@
-// server.js
 require('dotenv').config();
-
-// Временный вывод для отладки (можете удалить в production)
-console.log('=== Environment Variables ===');
-console.log('DATABASE_URL:', process.env.DATABASE_URL);
-console.log('DB_HOST:', process.env.DB_HOST);
-console.log('DB_PORT:', process.env.DB_PORT);
-console.log('DB_USER:', process.env.DB_USER);
-console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? '[СКРЫТ]' : 'undefined');
-console.log('DB_NAME:', process.env.DB_NAME);
-console.log('============================');
 
 const express = require('express');
 const path = require('path');
-const fs = require('fs').promises; // Используем промисы для fs
+const fs = require('fs').promises;
 const axios = require('axios');
 const bcrypt = require('bcryptjs');
 const multer = require('multer');
+const { Pool } = require('pg');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const { Pool } = require('pg');
+app.listen(PORT, async () => {
+  console.log(`✅ Сервер запущен на http://localhost:${PORT}`);
+
+  // Логи переменных окружения один раз
+  console.log('=== Environment Variables ===');
+  console.log('DATABASE_URL:', process.env.DATABASE_URL);
+  console.log('DB_HOST:', process.env.DB_HOST);
+  console.log('DB_PORT:', process.env.DB_PORT);
+  console.log('DB_USER:', process.env.DB_USER);
+  console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? '[СКРЫТ]' : 'undefined');
+  console.log('DB_NAME:', process.env.DB_NAME);
+  console.log('============================');
+
+  // Проверка подключения к БД
+  try {
+    const pool = new Pool({
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+    });
+    const res = await pool.query('SELECT NOW()');
+    console.log('✅ Успешное подключение к БД. Текущее время на сервере:', res.rows[0].now);
+  } catch (err) {
+    console.error('❌ Ошибка подключения к БД при старте:', err);
+  }
+});
 
 // --- MIDDLEWARE ---
 // 1. Парсинг JSON тела запроса
