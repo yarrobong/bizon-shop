@@ -343,55 +343,9 @@ product.variants.forEach(variant => {
     const variantBtn = document.createElement('button');
 
     // --- Исправленная логика формирования содержимого кнопки ---
-    let variantName = `Вар. ${variant.id}`; // Название по умолчанию
+    let variantName = product.title || `Товар ${product.id}`; // На всякий случай, если title пусто
 
-    // Попробуем извлечь более осмысленное название варианта из title
-    // Предполагаем, что формат title такой: "НазваниеТовара - НазваниеВарианта" или "НазваниеТовара - НазваниеВарианта" и т.д.
-    if (product.title && variant.title) {
-        const mainTitle = product.title.trim().toLowerCase();
-        const fullVariantTitle = variant.title.trim();
-
-        // Простой способ: если название варианта начинается с названия основного товара, берем "хвост"
-        if (fullVariantTitle.toLowerCase().startsWith(mainTitle)) {
-            // Извлекаем часть после основного названия
-            let potentialName = fullVariantTitle.substring(mainTitle.length).trim();
-            // Убираем начальные символы вроде "-", "–", "—", ":", " "
-            potentialName = potentialName.replace(/^[-–—:\s]+/, '');
-            if (potentialName) {
-                variantName = potentialName; // Используем извлеченное название
-            }
-        } else {
-            // Если не начинается, попробуем найти по разделителям
-            // Пример: "Товар - Красный" -> "Красный"
-            const separators = [' - ', ' – ', ' — ', ' -', '- ']; // Разные виды дефисов и пробелов
-            for (const sep of separators) {
-                if (fullVariantTitle.includes(sep)) {
-                    const parts = fullVariantTitle.split(sep);
-                    // Берем последнюю часть как название варианта
-                    if (parts.length > 1) {
-                        const lastPart = parts[parts.length - 1].trim();
-                        if (lastPart) {
-                            variantName = lastPart;
-                            break; // Нашли подходящее разделение
-                        }
-                    }
-                }
-            }
-            // Если не нашли по разделителям, просто используем ID или часть названия
-            if (variantName === `Вар. ${variant.id}`) {
-                 // Простая попытка: убрать слово "Вариант" и цифры в начале, если есть
-                 let tempName = fullVariantTitle.replace(/^Вариант\s*\d*\s*[-–—:]?\s*/i, '').trim();
-                 if (tempName && tempName !== fullVariantTitle) {
-                     variantName = tempName;
-                 }
-                 // Или просто использовать часть оригинального названия, если оно короткое и не совпадает с основным
-                 else if (fullVariantTitle.length > 0 && fullVariantTitle.length < 50 && fullVariantTitle.toLowerCase() !== mainTitle) {
-                      // Ограничиваем длину для кнопки
-                      variantName = fullVariantTitle.length > 20 ? fullVariantTitle.substring(0, 20) + '...' : fullVariantTitle;
-                 }
-            }
-        }
-    }
+    
 
     // Получаем URL главного изображения варианта
     let variantImageUrl = '/assets/placeholder.png'; // По умолчанию
