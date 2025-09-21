@@ -94,92 +94,80 @@ process.env.TZ = 'Europe/Moscow';
 // Объединенный и исправленный маршрут получения товаров с вариантами
 app.get('/api/products', async (req, res) => {
   try {
-    // 1. Получите все товары из таблицы products
+    // 1. Получаем все товары из таблицы products
     const productsResult = await pool.query('SELECT * FROM products');
-    let products = productsResult.rows;
+    const products = productsResult.rows;
 
-    // 2. Для каждого товара проверьте, есть ли у него варианты
+    // 2. Для каждого товара проверяем, есть ли у него варианты
     const productsWithVariants = await Promise.all(products.map(async (product) => {
-      // --- Исправленный запрос для получения вариантов ---
-      // 1. Получаем group_id основного товара
+      // --- Варианты ---
+      let formattedVariants = [];
+
       const groupResult = await pool.query(
         `SELECT group_id FROM product_variants_link WHERE product_id = $1`,
         [product.id]
       );
 
-      let formattedVariants = [];
       if (groupResult.rows.length > 0) {
         const groupId = groupResult.rows[0].group_id;
-        // 2. Получаем ВСЕ товары из этой группы
+
         const variantsResult = await pool.query(
           `SELECT p.*
            FROM product_variants_link pvl
            JOIN products p ON pvl.product_id = p.id
            WHERE pvl.group_id = $1
-           ORDER BY p.id`, 
+           ORDER BY p.id`,
           [groupId]
         );
 
-        // 3. Обрабатываем изображения для каждого варианта
-        // Поскольку images_json в БД имеет тип jsonb, pg автоматически парсит его в JS-объект/массив.
-        formattedVariants = variantsResult.rows.map(variant => {
+        formattedVariants = variantsResult.rows.map((variant) => {
           let images = [];
-          // Используем значение напрямую, если оно существует и является массивом или объектом
+
           if (variant.images_json != null) {
             if (Array.isArray(variant.images_json)) {
-              images = variant.images_json; // Уже правильный массив
-            } else if (typeof variant.images_json === 'object' && variant.images_json !== null) {
-              // Если вдруг это объект, а не массив, обернуть в массив
+              images = variant.images_json;
+            } else if (typeof variant.images_json === 'object') {
               images = [variant.images_json];
               console.warn(`Ожидался массив images_json для варианта ID ${variant.id}, но получен объект:`, variant.images_json);
             } else {
-              // Если другой тип (строка, число и т.д.), обернуть в массив
               images = [variant.images_json];
               console.warn(`Неожиданный тип images_json для варианта ID ${variant.id}:`, typeof variant.images_json, variant.images_json);
             }
           }
-          
 
           return {
             ...variant,
-            images: images
+            images
           };
         });
       }
 
-      // Поскольку images_json в БД имеет тип jsonb, pg автоматически парсит его в JS-объект/массив.
-if (product.images_json != null) {
-  console.log('Тип images_json:', typeof product.images_json);
-console.log('Значение images_json:', product.images_json);
-    if (Array.isArray(product.images_json)) {
-        productImages = product.images_json; // Уже правильный массив
-    } else if (typeof product.images_json === 'object' && product.images_json !== null) {
-        // Если вдруг это объект, а не массив, обернуть в массив
-        productImages = [product.images_json];
-        console.warn(`Ожидался массив images_json для товара ID ${product.id}, но получен объект:`, product.images_json);
-    } else {
-        // Если другой тип (строка, число и т.д.), обернуть в массив
-        productImages = [product.images_json];
-        console.warn(`Неожиданный тип images_json для товара ID ${product.id}:`, typeof product.images_json, product.images_json);
-    }
-}
-      
-      // --- Конец исправленной обработки images_json для основного товара ---
-    
+      // --- Основной товар ---
+      let productImages = [];
+      if (product.images_json != null) {
+        if (Array.isArray(product.images_json)) {
+          productImages = product.images_json;
+        } else if (typeof product.images_json === 'object') {
+          productImages = [product.images_json];
+          console.warn(`Ожидался массив images_json для товара ID ${product.id}, но получен объект:`, product.images_json);
+        } else {
+          productImages = [product.images_json];
+          console.warn(`Неожиданный тип images_json для товара ID ${product.id}:`, typeof product.images_json, product.images_json);
+        }
+      }
 
       return {
         ...product,
         images: productImages,
-        variants: formattedVariants // Добавляем массив обработанных вариантов (может быть пустым)
+        variants: formattedVariants
       };
     }));
 
     res.json(productsWithVariants);
   } catch (err) {
     console.error('Ошибка в /api/products:', err);
-    // Добавим больше деталей об ошибке в лог, если это ошибка из Promise.all
     if (err.message && err.message.includes('JSON.parse')) {
-       console.error('Вероятно, ошибка связана с некорректными данными в поле images_json в БД или неправильной обработкой.');
+      console.error('Похоже, где-то некорректные данные в images_json.');
     }
     res.status(500).json({ error: 'Ошибка сервера при получении товаров' });
   }
