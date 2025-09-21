@@ -252,21 +252,15 @@ renderSupplierCatalog(products) {
         }
 
         // Формируем текст для копирования:
-        // Название товара
-        // ___ штук
-        // примечение
-        // ссыолка (если есть)
-        const copyLines = [
-            product.title || '',
-            '___ штук'
-        ];
+        // ___ штук Название товара, Примечание
+        // ссылка (если есть)
+        let copyFirstLine = `___ штук ${product.title || ''}`;
         if (product.supplier_notes) {
-            copyLines.push(product.supplier_notes);
+            copyFirstLine += `, ${product.supplier_notes}`;
         }
-        if (product.supplier_link) {
-            copyLines.push(product.supplier_link);
-        }
-        const copyText = copyLines.join('\n'); // Объединяем строки с помощью символа новой строки
+        const copyText = product.supplier_link ? 
+            `${copyFirstLine}\n${product.supplier_link}` : 
+            copyFirstLine;
 
         card.innerHTML = `
             <div class="supplier-product-card">
