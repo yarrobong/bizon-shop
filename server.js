@@ -753,8 +753,3 @@ app.use((req, res, next) => {
   console.log(`404 Not Found: ${req.originalUrl}`); // Для отладки
   res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
-
-// --- ЗАПУСК СЕРВЕРА ---
-app.listen(PORT, () => {
-  console.log(`✅ Сервер запущен на http://localhost:${PORT}`);
-});
