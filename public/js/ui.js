@@ -95,12 +95,17 @@ function updateQuantity(productId, change) {
       cart.splice(index, 1);
     }
     localStorage.setItem('cart', JSON.stringify(cart));
+    updateCartCount();
+    // Также перерисовываем модальное окно корзины, чтобы отразить изменения
+    openCartModal(); // или можно вызвать renderCartItems() если такая функция есть
+
   }
 }
 
 // Очистка корзины
 function clearCart() {
   localStorage.removeItem('cart');
+   updateCartCount();
 }
 
 // Обновление счетчика корзины
@@ -649,6 +654,7 @@ function setupEventListeners() {
     }
     closeModals();
     openCartModal();
+    updateCartCount();
   });
 
   phoneInput?.addEventListener('input', () => {
