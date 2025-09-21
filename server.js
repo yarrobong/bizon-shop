@@ -124,41 +124,82 @@ app.get('/api/products', async (req, res) => {
         );
 
         // 3. Обрабатываем изображения для каждого варианта
-        formattedVariants = variantsResult.rows.map(variant => {
-          let images = [];
-          if (variant.images_json != null) {
-            if (typeof variant.images_json === 'string') {
-              try {
-                images = JSON.parse(variant.images_json);
-              } catch (parseErr) {
-                console.error(`Ошибка парсинга images_json для варианта ID ${variant.id}:`, parseErr);
-              }
-            } else if (Array.isArray(variant.images_json) || (typeof variant.images_json === 'object' && variant.images_json !== null)) {
-              images = variant.images_json;
-            }
-          }
-          return {
-            ...variant,
-            images: images
-          };
-        });
+        // ...
+// 3. Обрабатываем изображения для каждого варианта
+formattedVariants = variantsResult.rows.map(variant => {
+  let images = [];
+  if (variant.images_json != null) {
+    if (Array.isArray(variant.images_json)) {
+      images = variant.images_json;
+    } else if (typeof variant.images_json === 'object' && variant.images_json !== null) {
+      // Обработка, аналогичная product.images_json
+      images = [variant.images_json]; // Или другая логика
+    } else if (typeof variant.images_json === 'string') {
+      try {
+        const parsed = JSON.parse(variant.images_json);
+        // Убедимся, что результат - массив
+         if (Array.isArray(parsed)) {
+            images = parsed;
+         } else if (parsed !== null && typeof parsed === 'object') {
+            images = [parsed];
+         } else {
+            images = [parsed];
+            console.warn(`Результат парсинга images_json для варианта ID ${variant.id} не является массивом или объектом:`, parsed);
+         }
+      } catch (parseErr) {
+        console.error(`Ошибка парсинга images_json для варианта ID ${variant.id}:`, parseErr);
+      }
+    }
+    // Обработка других типов при необходимости
+  }
+  return {
+    ...variant,
+    images: images
+  };
+});
+// ...
+
       }
       // --- Конец исправленного запроса для вариантов ---
 
       // --- Исправленная обработка images_json для основного товара ---
-      let productImages = [];
-      if (product.images_json != null) {
-        if (typeof product.images_json === 'string') {
-          try {
-            productImages = JSON.parse(product.images_json);
-          } catch (parseErr) {
-            console.error(`Ошибка парсинга images_json для товара ID ${product.id}:`, parseErr);
-          }
-        } else if (Array.isArray(product.images_json) || (typeof product.images_json === 'object' && product.images_json !== null)) {
-          productImages = product.images_json;
-        }
+let productImages = [];
+// Проверяем, не является ли images_json уже объектом или массивом
+if (product.images_json != null) {
+  if (Array.isArray(product.images_json)) {
+    // Если это уже массив, используем его напрямую
+    productImages = product.images_json;
+  } else if (typeof product.images_json === 'object' && product.images_json !== null) {
+    // Если это объект (но не null), возможно, это уже распарсенные данные
+    // Вы можете вернуть его как есть или обернуть в массив, в зависимости от вашей логики
+    // Предположим, что если это объект, он представляет собой один элемент массива
+     productImages = [product.images_json]; // Или просто product.images_json, если ожидается объект
+     // Или, если вы всегда ожидаете массив:
+     // console.warn(`Ожидалась строка JSON или массив для product ID ${product.id}, но получен объект.`, product.images_json);
+     // productImages = []; // или какая-то другая логика обработки
+  } else if (typeof product.images_json === 'string') {
+    // Если это строка, пытаемся распарсить
+    try {
+      const parsed = JSON.parse(product.images_json);
+      // Убедимся, что результат - массив
+      if (Array.isArray(parsed)) {
+         productImages = parsed;
+      } else if (parsed !== null && typeof parsed === 'object') {
+         // Если результат - объект, обернем его в массив
+         productImages = [parsed];
+      } else {
+         // Если результат - примитив (строка, число и т.д.), обернем его
+         productImages = [parsed];
+         console.warn(`Результат парсинга images_json для товара ID ${product.id} не является массивом или объектом:`, parsed);
       }
-      // --- Конец исправленной обработки для основного товара ---
+    } catch (parseErr) {
+      console.error(`Ошибка парсинга images_json для товара ID ${product.id}:`, parseErr);
+      // productImages остается пустым массивом или можно установить значение по умолчанию
+    }
+  }
+  // Если тип другой (например, число), можно добавить обработку или просто игнорировать
+}
+    
 
       return {
         ...product,
