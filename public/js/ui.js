@@ -341,26 +341,56 @@ function openProductModal(product) {
         // Создаем кнопки ТОЛЬКО для каждого варианта
 product.variants.forEach(variant => {
     const variantBtn = document.createElement('button');
-    
-    // --- Обновленная логика формирования содержимого кнопки ---
-    // Попробуем извлечь название варианта (как и раньше)
-    let variantName = variant.title;
-    if (variant.title.includes(' - ')) {
-        variantName = variant.title.split(' - ').pop().trim();
-    } else if (variant.title.includes(' -')) {
-         variantName = variant.title.split(' -').pop().trim();
-    } else if (variant.title.includes('-')) {
-         variantName = variant.title.split('-').pop().trim();
-    }
-    if (variantName === variant.title) {
-         const mainTitle = product.title.toLowerCase();
-         const variantTitleLower = variant.title.toLowerCase();
-         if (variantTitleLower.startsWith(mainTitle)) {
-             variantName = variant.title.substring(mainTitle.length).trim().replace(/^[-\s]+/, '');
-         }
-         if (!variantName || variantName === variant.title) {
-              variantName = `Вар. ${variant.id}`;
-         }
+
+    // --- Исправленная логика формирования содержимого кнопки ---
+    let variantName = `Вар. ${variant.id}`; // Название по умолчанию
+
+    // Попробуем извлечь более осмысленное название варианта из title
+    // Предполагаем, что формат title такой: "НазваниеТовара - НазваниеВарианта" или "НазваниеТовара - НазваниеВарианта" и т.д.
+    if (product.title && variant.title) {
+        const mainTitle = product.title.trim().toLowerCase();
+        const fullVariantTitle = variant.title.trim();
+
+        // Простой способ: если название варианта начинается с названия основного товара, берем "хвост"
+        if (fullVariantTitle.toLowerCase().startsWith(mainTitle)) {
+            // Извлекаем часть после основного названия
+            let potentialName = fullVariantTitle.substring(mainTitle.length).trim();
+            // Убираем начальные символы вроде "-", "–", "—", ":", " "
+            potentialName = potentialName.replace(/^[-–—:\s]+/, '');
+            if (potentialName) {
+                variantName = potentialName; // Используем извлеченное название
+            }
+        } else {
+            // Если не начинается, попробуем найти по разделителям
+            // Пример: "Товар - Красный" -> "Красный"
+            const separators = [' - ', ' – ', ' — ', ' -', '- ']; // Разные виды дефисов и пробелов
+            for (const sep of separators) {
+                if (fullVariantTitle.includes(sep)) {
+                    const parts = fullVariantTitle.split(sep);
+                    // Берем последнюю часть как название варианта
+                    if (parts.length > 1) {
+                        const lastPart = parts[parts.length - 1].trim();
+                        if (lastPart) {
+                            variantName = lastPart;
+                            break; // Нашли подходящее разделение
+                        }
+                    }
+                }
+            }
+            // Если не нашли по разделителям, просто используем ID или часть названия
+            if (variantName === `Вар. ${variant.id}`) {
+                 // Простая попытка: убрать слово "Вариант" и цифры в начале, если есть
+                 let tempName = fullVariantTitle.replace(/^Вариант\s*\d*\s*[-–—:]?\s*/i, '').trim();
+                 if (tempName && tempName !== fullVariantTitle) {
+                     variantName = tempName;
+                 }
+                 // Или просто использовать часть оригинального названия, если оно короткое и не совпадает с основным
+                 else if (fullVariantTitle.length > 0 && fullVariantTitle.length < 50 && fullVariantTitle.toLowerCase() !== mainTitle) {
+                      // Ограничиваем длину для кнопки
+                      variantName = fullVariantTitle.length > 20 ? fullVariantTitle.substring(0, 20) + '...' : fullVariantTitle;
+                 }
+            }
+        }
     }
 
     // Получаем URL главного изображения варианта
@@ -375,17 +405,16 @@ product.variants.forEach(variant => {
     // Создаем элемент изображения
     const imgElement = document.createElement('img');
     imgElement.src = variantImageUrl;
-    imgElement.alt = `Фото ${variantName}`;
+    imgElement.alt = `Фото ${variantName}`; // Альт текст для изображения
     imgElement.className = 'variant-thumbnail'; // Применяем стиль
 
-    // Создаем текстовый элемент для названия
+    // Создаем текстовый элемент для названия (уже без лишнего "Фото")
     const textElement = document.createElement('span');
-    textElement.textContent = variantName;
+    textElement.textContent = variantName; // Только название
 
     // Добавляем изображение и текст в кнопку
     variantBtn.appendChild(imgElement);
     variantBtn.appendChild(textElement);
-    // --- Конец обновленной логики ---
 
     variantBtn.className = 'product-variant-btn'; // НЕ добавляем 'active' по умолчанию
     variantBtn.dataset.variantId = variant.id;
