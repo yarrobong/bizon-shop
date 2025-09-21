@@ -647,3 +647,94 @@ body {
         margin-top: 10px;
     }
 }
+/* Стили для новой функциональности в каталоге поставщика */
+.supplier-product-card {
+    position: relative; /* Для позиционирования кнопки копирования */
+}
+
+.supplier-truncated-text {
+    display: inline-block;
+    max-width: 200px; /* Ограничение ширины */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: bottom; /* Выравнивание по нижнему краю */
+}
+
+.supplier-copy-btn {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-left: 5px;
+    transition: background-color 0.2s ease;
+}
+
+.supplier-copy-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.supplier-copy-btn.copied {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.supplier-copy-btn.copied::after {
+    content: " ✓";
+}
+
+.supplier-product-info {
+    padding: 15px;
+}
+
+.supplier-product-title {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.supplier-link-section {
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+.supplier-link-label {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.supplier-link-content {
+    word-break: break-word;
+    margin-bottom: 5px;
+}
+
+.supplier-link-content a {
+    color: #0066cc;
+    text-decoration: none;
+}
+
+.supplier-link-content a:hover {
+    text-decoration: underline;
+}
+
+.supplier-notes {
+    font-size: 12px;
+    color: #555;
+    background-color: #f9f9f9;
+    padding: 8px;
+    border-radius: 4px;
+    margin-top: 8px;
+    border-left: 3px solid #0066cc;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .supplier-truncated-text {
+        max-width: 150px;
+    }
+}

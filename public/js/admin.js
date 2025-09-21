@@ -229,16 +229,31 @@ renderSupplierCatalog(products) {
 
         // Формируем содержимое ссылки/текста поставщика
         let supplierContent = 'Информация отсутствует';
+        let displayLink = '';
+        let isUrl = false;
+
         if (product.supplier_link) {
             // Проверяем, является ли supplier_link URL
             try {
                 new URL(product.supplier_link);
-                supplierContent = `<a href="${product.supplier_link}" target="_blank" rel="noopener noreferrer">${product.supplier_link}</a>`;
+                isUrl = true;
+                // Для отображения обрезаем длинные URL
+                displayLink = product.supplier_link.length > 50 ? 
+                    product.supplier_link.substring(0, 47) + '...' : 
+                    product.supplier_link;
+                supplierContent = `<a href="${product.supplier_link}" target="_blank" rel="noopener noreferrer">${this.escapeHtml(displayLink)}</a>`;
             } catch (e) {
                 // Не URL, отображаем как текст
-                supplierContent = this.escapeHtml(product.supplier_link);
+                displayLink = product.supplier_link.length > 50 ? 
+                    product.supplier_link.substring(0, 47) + '...' : 
+                    product.supplier_link;
+                supplierContent = `<span class="supplier-truncated-text" title="${this.escapeHtml(product.supplier_link)}">${this.escapeHtml(displayLink)}</span>`;
             }
         }
+
+        // Формируем текст для копирования: "___ штук Название товара примечение ссылка"
+        // Используем заглушку "___" для количества, так как оно не хранится в товаре
+        const copyText = `___ штук ${product.title || ''} ${product.supplier_notes || ''} ${product.supplier_link || ''}`.trim();
 
         card.innerHTML = `
             <div class="supplier-product-card">
@@ -249,7 +264,10 @@ renderSupplierCatalog(products) {
                     <h3 class="supplier-product-title">${this.escapeHtml(product.title)}</h3>
                     <div class="supplier-link-section">
                         <div class="supplier-link-label">Где купить:</div>
-                        <div class="supplier-link-content">${supplierContent}</div>
+                        <div class="supplier-link-content">
+                            ${supplierContent}
+                            ${product.supplier_link ? `<button class="supplier-copy-btn" data-copy-text="${this.escapeHtml(copyText)}" title="Копировать: ${this.escapeHtml(copyText)}">Копировать</button>` : ''}
+                        </div>
                         ${
                             product.supplier_notes ?
                             `<div class="supplier-notes">${this.escapeHtml(product.supplier_notes)}</div>` :
@@ -260,6 +278,29 @@ renderSupplierCatalog(products) {
             </div>
         `;
         container.appendChild(card);
+    });
+
+    // Добавляем обработчики событий для кнопок копирования
+    container.querySelectorAll('.supplier-copy-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const textToCopy = button.getAttribute('data-copy-text');
+            if (textToCopy) {
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    // Визуальная обратная связь
+                    const originalText = button.textContent;
+                    button.textContent = 'Скопировано!';
+                    button.classList.add('copied');
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.classList.remove('copied');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Ошибка копирования текста: ', err);
+                    this.showMessage('Не удалось скопировать текст', 'error');
+                });
+            }
+        });
     });
 }
 
