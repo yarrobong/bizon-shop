@@ -727,6 +727,9 @@ if (order.items && Array.isArray(order.items) && order.items.length > 0) {
             
             document.getElementById('product-description').value = product.description || '';
             document.getElementById('product-price').value = product.price || '';
+
+            document.getElementById('product-supplier-link').value = product.supplier_link || '';
+document.getElementById('product-supplier-notes').value = product.supplier_notes || '';
             
             // Установка категории
             const categorySelect = document.getElementById('product-category');
@@ -751,6 +754,9 @@ if (order.items && Array.isArray(order.items) && order.items.length > 0) {
             form.reset();
             document.getElementById('product-id').value = '';
             document.getElementById('product-available').checked = true;
+
+            document.getElementById('product-supplier-link').value = '';
+document.getElementById('product-supplier-notes').value = '';
             
             // Очистка и показ подсказки для нового товара
             this.clearImageFields();
@@ -814,6 +820,9 @@ if (order.items && Array.isArray(order.items) && order.items.length > 0) {
         const category = (formData.get('product-category') || '').toString().trim();
         const available = formData.get('product-available') === 'on';
 
+        const supplier_link = (formData.get('product-supplier-link') || '').toString().trim();
+const supplier_notes = (formData.get('product-supplier-notes') || '').toString().trim();
+
         // 4. Получаем изображения из формы
         const images = this.getImagesFromForm();
         console.log('Полученные изображения:', images);
@@ -827,6 +836,8 @@ if (order.items && Array.isArray(order.items) && order.items.length > 0) {
             available: available,
             images: images
         };
+        productData.supplier_link = supplier_link;
+productData.supplier_notes = supplier_notes;
 
         console.log('Сформированный productData для отправки:', productData);
 
@@ -936,6 +947,7 @@ if (order.items && Array.isArray(order.items) && order.items.length > 0) {
             if (response.ok) {
                 const product = await response.json();
                 this.openProductModal(product);
+
             } else {
                 throw new Error('Товар не найден');
             }
