@@ -151,20 +151,20 @@ app.get('/api/products', async (req, res) => {
       // --- Исправленная обработка images_json для основного товара ---
       // Поскольку images_json в БД имеет тип jsonb, pg автоматически парсит его в JS-объект/массив.
       let productImages = [];
-      // Используем значение напрямую, если оно существует и является массивом или объектом
-      if (product.images_json != null) {
+    // Используем значение напрямую, если оно существует и является массивом или объектом
+    if (product.images_json != null) {
         if (Array.isArray(product.images_json)) {
-          productImages = product.images_json; // Уже правильный массив
+            productImages = product.images_json; // Уже правильный массив
         } else if (typeof product.images_json === 'object' && product.images_json !== null) {
-          // Если вдруг это объект, а не массив, обернуть в массив
-          productImages = [product.images_json];
-          console.warn(`Ожидался массив images_json для товара ID ${product.id}, но получен объект:`, product.images_json);
+            // Если вдруг это объект, а не массив, обернуть в массив
+            productImages = [product.images_json];
+            console.warn(`Ожидался массив images_json для товара ID ${product.id}, но получен объект:`, product.images_json);
         } else {
-          // Если другой тип (строка, число и т.д.), обернуть в массив
-          productImages = [product.images_json];
-          console.warn(`Неожиданный тип images_json для товара ID ${product.id}:`, typeof product.images_json, product.images_json);
+            // Если другой тип (строка, число и т.д.), обернуть в массив
+            productImages = [product.images_json];
+            console.warn(`Неожиданный тип images_json для товара ID ${product.id}:`, typeof product.images_json, product.images_json);
         }
-      }
+    }
       // Никакого JSON.parse() больше не нужно!
       // --- Конец исправленной обработки images_json для основного товара ---
     
@@ -206,17 +206,17 @@ app.get('/api/products/:id', async (req, res) => {
 
     const product = result.rows[0];
     let productImages = [];
-    // --- Исправленная обработка images_json для товара по ID ---
-    if (product.images_json != null) {
-        if (typeof product.images_json === 'string') {
-            try {
-                productImages = JSON.parse(product.images_json);
-            } catch (parseErr) {
-                console.error(`Ошибка парсинга images_json для товара ID ${product.id}:`, parseErr);
-            }
-        } else if (Array.isArray(product.images_json) || (typeof product.images_json === 'object' && product.images_json !== null)) {
-            productImages = product.images_json;
-        }
+  // --- Исправленная обработка images_json для товара по ID ---
+  if (product.images_json != null) {
+      if (typeof product.images_json === 'string') {
+          try {
+              productImages = JSON.parse(product.images_json); // ❌ ОШИБКА ЗДЕСЬ
+          } catch (parseErr) {
+              console.error(`Ошибка парсинга images_json для товара ID ${product.id}:`, parseErr);
+          }
+      } else if (Array.isArray(product.images_json) || (typeof product.images_json === 'object' && product.images_json !== null)) {
+          productImages = product.images_json;
+      }
     }
     // --- Конец исправленной обработки ---
 
