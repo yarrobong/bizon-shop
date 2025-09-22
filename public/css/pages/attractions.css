@@ -375,7 +375,6 @@ main {
     padding-top: 75%; /* Соотношение сторон 4:3 (можно изменить) */
     overflow: hidden;
     border-radius: 8px;
-    background-color: #f8f8f8;
 }
 
 .attraction-main-image {
