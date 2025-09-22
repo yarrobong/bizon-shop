@@ -79,59 +79,65 @@
   }
 
   // --- Rendering ---
-  function renderAttractions() {
-    // Проверка наличия контейнера
-    if (!attractionsContainer) {
-      console.error('Контейнер для аттракционов (#attractions-container) не найден в DOM');
-      return;
-    }
+function renderAttractions() {
+  // Проверка наличия контейнера
+  if (!attractionsContainer) {
+    console.error('Контейнер для аттракционов (#attractions-container) не найден в DOM');
+    return;
+  }
 
-    // Очистка контейнера перед рендерингом
-    attractionsContainer.innerHTML = '';
+  // Очистка контейнера перед рендерингом
+  attractionsContainer.innerHTML = '';
 
-    // Проверка, были ли данные загружены
-    if (!ATTRACTIONS || ATTRACTIONS.length === 0) {
-      // Этот случай должен обрабатываться в loadAttractions, но на всякий случай
-      console.warn('renderAttractions вызван, но данные ATTRACTIONS пусты или не определены.');
-      // attractionsContainer.innerHTML = '<div class="empty">Аттракционы не загружены</div>';
-      return; // Просто выходим, если данных нет
-    }
+  // Проверка, были ли данные загружены
+  if (!ATTRACTIONS || ATTRACTIONS.length === 0) {
+    // Этот случай должен обрабатываться в loadAttractions, но на всякий случай
+    console.warn('renderAttractions вызван, но данные ATTRACTIONS пусты или не определены.');
+    return; // Просто выходим, если данных нет
+  }
 
-    // Получение текущего поискового запроса и категории
-    const query = (searchInput?.value || '').toLowerCase().trim();
-    // currentCategory определяется в handleCategoryClick и изначально 'все'
+  // Получение текущего поискового запроса и категории
+  const query = (searchInput?.value || '').toLowerCase().trim();
+  // currentCategory определяется в handleCategoryClick и изначально 'все'
 
-    // Фильтрация данных
-    const filtered = ATTRACTIONS.filter(attraction => {
-      const matchesCategory = currentCategory === 'все' || attraction.category === currentCategory;
-      const matchesSearch = !query ||
-        (attraction.title && attraction.title.toLowerCase().includes(query)) ||
-        (attraction.description && attraction.description.toLowerCase().includes(query));
+  // Фильтрация данных
+  const filtered = ATTRACTIONS.filter(attraction => {
+    const matchesCategory = currentCategory === 'все' || attraction.category === currentCategory;
+    const matchesSearch = !query ||
+      (attraction.title && attraction.title.toLowerCase().includes(query)) ||
+      (attraction.description && attraction.description.toLowerCase().includes(query));
 
-      return matchesCategory && matchesSearch;
-    });
+    return matchesCategory && matchesSearch;
+  });
 
-    // Отображение состояния "ничего не найдено"
-    if (filtered.length === 0) {
-      attractionsContainer.innerHTML = `
-        <div class="empty">
-          <div class="text-6xl">🔍</div>
-          <h3>Аттракционы не найдены</h3>
-          <p>Попробуйте изменить параметры поиска или фильтрации.</p>
-        </div>
-      `;
-      return;
-    }
+  // Отображение состояния "ничего не найдено"
+  if (filtered.length === 0) {
+    attractionsContainer.innerHTML = `
+      <div class="empty">
+        <div class="text-6xl">🔍</div>
+        <h3>Аттракционы не найдены</h3>
+        <p>Попробуйте изменить параметры поиска или фильтрации.</p>
+      </div>
+    `;
+    return;
+  }
 
-    // Рендеринг карточек для отфильтрованных аттракционов
-    filtered.forEach(attraction => {
-      const card = createAttractionCard(attraction); // Теперь createAttractionCard определена выше
-      attractionsContainer.appendChild(card);
-    });
+  // Рендеринг карточек для отфильтрованных аттракционов
+  filtered.forEach(attraction => {
+    const card = createAttractionCard(attraction);
+    attractionsContainer.appendChild(card);
+  });
 
-    // Навешивание обработчиков событий на вновь созданные элементы
-    document.querySelectorAll('.attraction-card').forEach(card => {
-      const detailsBtn = card.querySelector('.btn-details');
+  // Навешивание обработчиков событий на вновь созданные элементы
+  document.querySelectorAll('.attraction-card').forEach(card => {
+    const detailsBtn = card.querySelector('.btn-details');
+    const cartBtn = card.querySelector('.btn-cart');
+    const attractionId = detailsBtn?.dataset.id || cartBtn?.dataset.id; // Получаем ID из кнопки
+
+    // Находим объект аттракциона по ID
+    const attraction = ATTRACTIONS.find(a => a.id == attractionId);
+
+    if (attraction) { // Убедимся, что аттракцион найден
       if (detailsBtn) {
         // Предотвращаем всплытие клика с кнопки на карточку
         detailsBtn.addEventListener('click', (e) => {
@@ -140,7 +146,6 @@
         });
       }
 
-      const cartBtn = card.querySelector('.btn-cart');
       if (cartBtn) {
         // Предотвращаем всплытие клика с кнопки на карточку
         cartBtn.addEventListener('click', (e) => {
@@ -158,40 +163,11 @@
 
       // Клик по всей карточке открывает модальное окно
       card.addEventListener('click', () => openAttractionModal(attraction));
-    });
-  }
-
-  // --- Функция для создания карточки аттракциона ---
-  function createAttractionCard(attraction) {
-    const card = document.createElement('div');
-    card.className = 'attraction-card';
-    card.innerHTML = `
-      <div class="attraction-image">
-        <img src="${attraction.image}" alt="${attraction.title}" />
-      </div>
-      <div class="attraction-info">
-        <h3 class="attraction-title">${attraction.title}</h3>
-        <div class="attraction-price">${window.formatPrice(attraction.price)}</div> <!-- Функция из utils.js -->
-        <div class="attraction-specs">
-          <div class="spec-item">
-            <span class="spec-label">Мест:</span> <span class="spec-value">${attraction.specs?.places || 'N/A'}</span>
-          </div>
-          <div class="spec-item">
-            <span class="spec-label">Мощность:</span> <span class="spec-value">${attraction.specs?.power || 'N/A'}</span>
-          </div>
-          <div class="spec-item">
-            <span class="spec-label">Игры:</span> <span class="spec-value">${attraction.specs?.games || 'N/A'}</span>
-          </div>
-        </div>
-        <div class="attraction-description">${attraction.description.substring(0, 100)}${attraction.description.length > 100 ? '...' : ''}</div>
-        <div class="product-actions">
-          <button class="btn-details" data-id="${attraction.id}">Подробнее</button>
-          <button class="btn-cart" data-id="${attraction.id}">В корзину</button>
-        </div>
-      </div>
-    `;
-    return card;
-  }
+    } else {
+      console.error(`Аттракцион с ID ${attractionId} не найден в данных ATTRACTIONS.`);
+    }
+  });
+}
 
 
   // --- Modals ---
