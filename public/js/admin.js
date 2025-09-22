@@ -672,7 +672,7 @@ class AdminPanel {
 
         imageItem.innerHTML = `
       ${imageUrl ?
-                `<img src="${imageUrl}" alt="${imageAlt}" onerror="this.src='/assets/placeholder.png'">` :
+                `<img src="${imageUrl}" alt="${imageAlt}" onerror="this.src='/assets/icons/placeholder1.png'">` :
                 `<div class="image-placeholder">Изображение не загружено</div>`
             }
       <input type="hidden" class="image-input" value="${imageUrl}">
@@ -824,10 +824,10 @@ class AdminPanel {
 
             // Получаем изображение
             const imageUrl = product.images && product.images.length > 0 ?
-                product.images[0].url : '/assets/placeholder.png';
+                product.images[0].url : '/assets/icons/placeholder1.png';
 
             item.innerHTML = `
-            <img src="${imageUrl}" alt="${this.escapeHtml(product.title)}" onerror="this.src='/assets/placeholder.png'">
+            <img src="${imageUrl}" alt="${this.escapeHtml(product.title)}" onerror="this.src='/assets/icons/placeholder1.png">
             <span class="variant-title">${this.escapeHtml(product.title)}</span>
             <span class="variant-price">${this.formatPrice(product.price)}</span>
         `;
@@ -1025,7 +1025,7 @@ class AdminPanel {
 
         imageItem.innerHTML = `
             ${imageUrl ?
-                `<img src="${imageUrl}" alt="${imageAlt}" class="image-preview" onerror="this.src='/assets/placeholder.png'">` :
+                `<img src="${imageUrl}" alt="${imageAlt}" class="image-preview" onerror="this.src='/assets/icons/placeholder1.png'">` :
                 `<div class="image-preview-placeholder">Нет изображения</div>`
             }
             <button type="button" class="delete-image-btn" onclick="adminPanel.deleteImage(${imageId})">×</button>
@@ -1229,11 +1229,11 @@ class AdminPanel {
             card.className = 'product-card';
 
             // Предполагаем, что у товара есть поле images - массив объектов {url, alt}
-            const imageUrl = product.images && product.images.length > 0 ? product.images[0].url : '/assets/placeholder.png';
+            const imageUrl = product.images && product.images.length > 0 ? product.images[0].url : '/assets/icons/placeholder1.png';
 
             // Временно показываем все поля товара для отладки
             card.innerHTML = `
-            <img src="${imageUrl}" alt="${product.title}" onerror="this.src='/assets/placeholder.png'">
+            <img src="${imageUrl}" alt="${product.title}" onerror="this.src='/assets/icons/placeholder1.png'">
             <h3>${this.escapeHtml(product.title)}</h3>
             <p>Цена: ${this.formatPrice(product.price)}</p>
             <p>Категория: ${this.escapeHtml(product.category || 'Не указана')}</p>
