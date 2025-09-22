@@ -259,6 +259,13 @@
             </form>
         </div>
     </div>
-    <script src="js/admin.js"></script>
+    <!-- Убедитесь, что admin-core.js подключен первым -->
+<script src="js/admin-core.js"></script>
+<!-- Затем подключите остальные модули -->
+<script src="js/admin-products.js"></script>
+<script src="js/admin-attractions.js"></script>
+<script src="js/admin-categories.js"></script>
+<script src="js/admin-orders.js"></script>
+<script src="js/admin-supplier-catalog.js"></script>
 </body>
 </html>
