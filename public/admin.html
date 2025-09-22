@@ -138,6 +138,27 @@
                 <input type="checkbox" id="product-available" name="product-available" checked> Доступен
             </label>
 
+            <!-- Новый раздел: Варианты товара -->
+            <div class="variants-section">
+                <h3>Варианты товара</h3>
+                <p class="hint">Выберите товары, которые являются вариантами этого товара (например, разные цвета или объемы).</p>
+                
+                <!-- Список выбранных вариантов -->
+                <div id="selected-variants-list" class="selected-variants-list">
+                    <!-- Выбранные варианты будут отображаться здесь -->
+                </div>
+
+                <!-- Поле поиска для добавления вариантов -->
+                <div class="variant-search-container">
+                    <input type="text" id="variant-search" placeholder="Поиск товаров для добавления как варианты..." autocomplete="off">
+                    <div id="variant-search-results" class="variant-search-results hidden">
+                        <!-- Результаты поиска будут отображаться здесь -->
+                    </div>
+                </div>
+                <!-- Скрытое поле для хранения ID выбранных вариантов -->
+                <input type="hidden" id="selected-variant-ids" name="selected-variant-ids">
+            </div>
+
             <div class="modal-actions">
                 <button type="button" id="cancel-btn" class="btn-secondary">Отмена</button>
                 <button type="submit" class="btn-primary">Сохранить</button>

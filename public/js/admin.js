@@ -12,6 +12,9 @@ class AdminPanel {
         this.currentTab = 'products';
         this.images = []; // Массив для хранения изображений
         this.draggedImage = null;
+        this.allProductsCache = []; // Инициализация кэша
+    this.selectedVariants = []; // Инициализация выбранных вариантов
+
         this.init();
     }
 
@@ -21,6 +24,8 @@ class AdminPanel {
         await this.loadCategories(); // Загружаем категории для селекта
         await this.loadOrders();
         await this.loadSupplierCatalog(); // Загружаем каталог при инициализации
+        await this.loadAllProductsCache();
+    this.setupVariantsFunctionality();
     }
 
     setupEventListeners() {
@@ -300,6 +305,232 @@ renderSupplierCatalog(products) {
             }
         });
     });
+}
+
+async loadAllProductsCache() {
+    try {
+        const response = await fetch('/api/products?admin=true'); // Загружаем все, включая недоступные
+        if (!response.ok) {
+            console.warn('Не удалось загрузить полный список товаров для поиска вариантов.');
+            return [];
+        }
+        this.allProductsCache = await response.json();
+        console.log('Кэш всех товаров загружен для поиска вариантов:', this.allProductsCache.length, 'товаров');
+    } catch (error) {
+        console.error('Ошибка при загрузке кэша товаров:', error);
+        this.allProductsCache = [];
+    }
+}
+
+setupVariantsFunctionality() {
+    const searchInput = document.getElementById('variant-search');
+    const searchResults = document.getElementById('variant-search-results');
+    const selectedList = document.getElementById('selected-variants-list');
+    const selectedIdsInput = document.getElementById('selected-variant-ids');
+
+    if (!searchInput || !searchResults || !selectedList || !selectedIdsInput) {
+        console.warn('Не найдены элементы для функционала вариантов в модальном окне.');
+        return;
+    }
+
+    // Обработчик ввода в поле поиска
+    let searchTimeout;
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        const term = e.target.value.trim();
+
+        if (term.length < 2) {
+            searchResults.classList.add('hidden');
+            return;
+        }
+
+        // Добавляем небольшую задержку, чтобы не делать запрос на каждое нажатие клавиши
+        searchTimeout = setTimeout(() => {
+            this.performVariantSearch(term, searchResults);
+        }, 300);
+    });
+
+    // Закрытие результатов поиска при клике вне поля
+    document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+            searchResults.classList.add('hidden');
+        }
+    });
+}
+
+/**
+ * Выполняет поиск товаров для добавления в качестве вариантов.
+ * @param {string} term - Поисковый запрос.
+ * @param {HTMLElement} container - Контейнер для отображения результатов.
+ */
+performVariantSearch(term, container) {
+    const currentProductId = document.getElementById('product-id').value;
+    const lowerTerm = term.toLowerCase();
+
+    // Фильтруем товары из кэша
+    const filteredProducts = this.allProductsCache.filter(p =>
+        p.id != currentProductId && // Исключаем текущий товар
+        (
+            (p.title && p.title.toLowerCase().includes(lowerTerm)) ||
+            (p.description && p.description.toLowerCase().includes(lowerTerm)) ||
+            (p.category && p.category.toLowerCase().includes(lowerTerm))
+        )
+    );
+
+    container.innerHTML = '';
+    if (filteredProducts.length === 0) {
+        container.innerHTML = '<div class="no-results">Товары не найдены</div>';
+        container.classList.remove('hidden');
+        return;
+    }
+
+    filteredProducts.forEach(product => {
+        const item = document.createElement('div');
+        item.className = 'variant-search-item';
+        item.dataset.productId = product.id;
+
+        // Получаем изображение
+        const imageUrl = product.images && product.images.length > 0 ?
+            product.images[0].url : '/assets/placeholder.png';
+
+        item.innerHTML = `
+            <img src="${imageUrl}" alt="${this.escapeHtml(product.title)}" onerror="this.src='/assets/placeholder.png'">
+            <span class="variant-title">${this.escapeHtml(product.title)}</span>
+            <span class="variant-price">${this.formatPrice(product.price)}</span>
+        `;
+
+        item.addEventListener('click', () => {
+            this.addVariantToSelection(product);
+            document.getElementById('variant-search').value = ''; // Очищаем поле поиска
+            container.classList.add('hidden'); // Скрываем результаты
+        });
+
+        container.appendChild(item);
+    });
+
+    container.classList.remove('hidden');
+}
+
+/**
+ * Добавляет товар в список выбранных вариантов.
+ * @param {Object} product - Объект товара.
+ */
+addVariantToSelection(product) {
+    // Проверяем, не добавлен ли уже
+    if (this.selectedVariants.some(v => v.id === product.id)) {
+        console.log('Товар уже выбран как вариант:', product.id);
+        return;
+    }
+
+    this.selectedVariants.push(product);
+    this.renderSelectedVariants();
+    this.updateSelectedVariantsInput();
+    console.log('Вариант добавлен:', product.id, this.selectedVariants);
+}
+
+/**
+ * Удаляет товар из списка выбранных вариантов.
+ * @param {number} productId - ID товара для удаления.
+ */
+removeVariantFromSelection(productId) {
+    this.selectedVariants = this.selectedVariants.filter(v => v.id !== productId);
+    this.renderSelectedVariants();
+    this.updateSelectedVariantsInput();
+    console.log('Вариант удален:', productId, this.selectedVariants);
+}
+
+/**
+ * Отображает список выбранных вариантов в модальном окне.
+ */
+renderSelectedVariants() {
+    const container = document.getElementById('selected-variants-list');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (this.selectedVariants.length === 0) {
+        // container.innerHTML = '<p class="hint">Нет выбранных вариантов.</p>';
+        return; // Просто оставляем пустым
+    }
+
+    this.selectedVariants.forEach(variant => {
+        const item = document.createElement('div');
+        item.className = 'selected-variant-item';
+        item.dataset.variantId = variant.id;
+
+        item.innerHTML = `
+            <span>${this.escapeHtml(variant.title)}</span>
+            <button type="button" class="remove-variant-btn" data-id="${variant.id}" title="Удалить">&times;</button>
+        `;
+
+        const removeBtn = item.querySelector('.remove-variant-btn');
+        removeBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.removeVariantFromSelection(parseInt(e.target.dataset.id));
+        });
+
+        container.appendChild(item);
+    });
+}
+
+/**
+ * Обновляет скрытое поле ввода с ID выбранных вариантов.
+ */
+updateSelectedVariantsInput() {
+    const input = document.getElementById('selected-variant-ids');
+    if (input) {
+        input.value = JSON.stringify(this.selectedVariants.map(v => v.id));
+    }
+}
+
+/**
+ * Загружает и отображает уже привязанные варианты для редактируемого товара.
+ * @param {number} productId - ID товара.
+ */
+async loadLinkedVariants(productId) {
+    try {
+        // Сбрасываем список
+        this.selectedVariants = [];
+
+        // Получаем ID всех вариантов для этого товара из API
+        // Поскольку API уже возвращает variants при запросе /api/products,
+        // мы можем использовать это при загрузке списка товаров.
+        // Но для конкретного товара по ID API пока не возвращает variants напрямую.
+        // Поэтому делаем отдельный запрос к списку товаров и фильтруем.
+
+        // Альтернатива: можно добавить эндпоинт /api/products/:id/variants
+        // Пока используем кэш.
+
+        // Найдем товар в кэше
+        const productInCache = this.allProductsCache.find(p => p.id == productId);
+        if (productInCache && productInCache.variants && productInCache.variants.length > 0) {
+            // Загружаем полные объекты вариантов из кэша
+            this.selectedVariants = productInCache.variants.map(variantIdOrObj => {
+                // API может возвращать как ID, так и полный объект. Уточняем.
+                // По коду из server.js, variants - это массив полных объектов.
+                if (typeof variantIdOrObj === 'object' && variantIdOrObj.id) {
+                     return variantIdOrObj;
+                }
+                // Если по какой-то причине пришел ID, ищем в кэше
+                const id = typeof variantIdOrObj === 'object' ? variantIdOrObj.id : variantIdOrObj;
+                return this.allProductsCache.find(p => p.id == id);
+            }).filter(v => v && v.id != productId); // Исключаем сам товар и null
+
+            console.log('Загружены связанные варианты для товара', productId, ':', this.selectedVariants);
+        } else {
+            console.log('Для товара', productId, 'связанные варианты не найдены или отсутствуют.');
+        }
+
+        this.renderSelectedVariants();
+        this.updateSelectedVariantsInput();
+
+    } catch (error) {
+        console.error('Ошибка при загрузке связанных вариантов:', error);
+        this.selectedVariants = [];
+        this.renderSelectedVariants();
+        this.updateSelectedVariantsInput();
+    }
 }
 
     // Обработка выбранных файлов (и через drag & drop, и через файловый диалог)
@@ -900,6 +1131,9 @@ document.getElementById('product-supplier-notes').value = product.supplier_notes
             
             // Загрузка изображений
             this.loadImagesToForm(product.images || []);
+            if (product.id) {
+             this.loadLinkedVariants(product.id);
+        }
         } else {
             title.textContent = 'Добавить товар';
             form.reset();
@@ -911,6 +1145,9 @@ document.getElementById('product-supplier-notes').value = '';
             
             // Очистка и показ подсказки для нового товара
             this.clearImageFields();
+            this.selectedVariants = [];
+        this.renderSelectedVariants();
+        this.updateSelectedVariantsInput();
         }
 
         modal.style.display = 'block';
@@ -977,6 +1214,17 @@ const supplier_notes = (formData.get('product-supplier-notes') || '').toString()
         // 4. Получаем изображения из формы
         const images = this.getImagesFromForm();
         console.log('Полученные изображения:', images);
+        let selectedVariantIds = [];
+        try {
+            const idsString = document.getElementById('selected-variant-ids').value;
+            if (idsString) {
+                selectedVariantIds = JSON.parse(idsString);
+                console.log('Выбранные ID вариантов:', selectedVariantIds);
+            }
+        } catch (e) {
+            console.error('Ошибка парсинга selected-variant-ids:', e);
+            selectedVariantIds = [];
+        }
 
         // 5. Формируем объект productData
         const productData = {
@@ -1050,6 +1298,27 @@ productData.supplier_notes = (formData.get('product-supplier-notes') || '').toSt
                 errorMessage = errorText || errorMessage;
             }
             throw new Error(errorMessage);
+            // После успешного сохранения/обновления товара, сохраняем его варианты
+        // Предполагаем, что savedProduct.id содержит ID нового/обновленного товара
+        if (savedProduct && savedProduct.id) {
+             const variantLinkResponse = await fetch(`/api/products/${savedProduct.id}/variants`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ variantIds: selectedVariantIds })
+    });
+             if (!variantLinkResponse.ok) {
+                 // Можно показать предупреждение, но не прерывать весь процесс
+                 console.error('Ошибка при сохранении связей с вариантами:', variantLinkResponse.statusText);
+                 this.showMessage('Товар сохранен, но возникла ошибка при сохранении вариантов. Проверьте связи.', 'warning');
+             } else {
+                 console.log('Связи с вариантами успешно сохранены.');
+             }
+        } else {
+            console.error('Не удалось получить ID сохраненного товара для установки вариантов.');
+            this.showMessage('Товар сохранен, но не удалось обновить связи с вариантами.', 'warning');
+        }
         }
     } catch (error) {
         // 10. Обрабатываем любые ошибки (сетевые, логические, от сервера)
