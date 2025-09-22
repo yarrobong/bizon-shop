@@ -294,6 +294,8 @@ function setupAttractionImageDragEvents(imageItem) {
         window.draggedAttractionImage = imageItem;
         imageItem.classList.add('dragging');
         e.dataTransfer.effectAllowed = 'move';
+        // Используем 'text/plain' для обхода ограничений Chrome, передавая ID элемента
+        e.dataTransfer.setData('text/plain', imageItem.dataset.id); 
     });
 
     imageItem.addEventListener('dragend', () => {
@@ -322,16 +324,36 @@ function setupAttractionImageDragEvents(imageItem) {
         e.preventDefault();
         imageItem.classList.remove('drag-over');
 
-        if (window.draggedAttractionImage && window.draggedAttractionImage !== imageItem) {
+        // Получаем ID перетаскиваемого элемента из dataTransfer
+        const draggedId = e.dataTransfer.getData('text/plain');
+        // Находим сам элемент по ID на случай, если window.draggedAttractionImage стал недействительным
+        const draggedElement = document.querySelector(`#attraction-images-container .image-item[data-id="${draggedId}"]`);
+        
+        // Проверяем, что перетаскиваемый элемент существует и это не тот же элемент
+        if (draggedElement && draggedElement !== imageItem) {
             const container = document.getElementById('attraction-images-container');
             if (container) {
+                // Определяем, куда вставлять: после imageItem или перед ним
                 const rect = imageItem.getBoundingClientRect();
                 const isAfter = e.clientX > rect.left + rect.width / 2;
+                
+                // --- ИСПРАВЛЕНИЕ ---
+                // ВАЖНО: Сначала удаляем draggedElement из его текущего родителя
+                // Метод insertBefore автоматически перемещает элемент, если он уже в DOM,
+                // но для гарантии корректного поведения явно удалим его.
+                // Однако стандартная практика с insertBefore - это просто вставить на новое место,
+                // и элемент автоматически переместится.
+                
                 if (isAfter) {
-                    container.insertBefore(window.draggedAttractionImage, imageItem.nextSibling);
+                    // Вставляем ПОСЛЕ imageItem
+                    // nextSibling - это следующий элемент или null (вставка в конец)
+                    container.insertBefore(draggedElement, imageItem.nextSibling);
                 } else {
-                    container.insertBefore(window.draggedAttractionImage, imageItem);
+                    // Вставляем ПЕРЕД imageItem
+                    container.insertBefore(draggedElement, imageItem);
                 }
+                // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
+                
                 updateAttractionImagesOrder();
             }
         }
