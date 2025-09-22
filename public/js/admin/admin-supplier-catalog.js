@@ -1,6 +1,7 @@
 // admin-supplier-catalog.js
 
 async function loadSupplierCatalogTab() {
+    console.log("Загрузка вкладки каталога поставщика");
     
     // Сбрасываем поиск при переходе на вкладку
     const searchInput = document.getElementById('supplier-catalog-search');
@@ -11,26 +12,27 @@ async function loadSupplierCatalogTab() {
 }
 
 async function loadSupplierCatalog(searchTerm = '') {
-    console.log("Начало loadSupplierCatalog, searchTerm:", searchTerm); // <-- Отладка 1
-    const tab = document.getElementById('supplier-catalog-tab');
-    console.log("tab элемент:", tab); // <-- Отладка 2
-    if (!tab) return;
+    console.log("Начало loadSupplierCatalog, searchTerm:", searchTerm);
     const container = document.getElementById('supplier-catalog-grid');
-    console.log("container элемент:", container); // <-- Отладка 3
-    if (!container) return;
+    if (!container) {
+        console.warn("Контейнер #supplier-catalog-grid не найден");
+        return;
+    }
 
     try {
         container.innerHTML = '<div class="empty">Загрузка товаров...</div>';
-        console.log("Запрос к /api/products?admin=true"); // <-- Отладка 4
+        console.log("Запрос к /api/products?admin=true");
         const response = await fetch('/api/products?admin=true');
-        console.log("Ответ от /api/products?admin=true, статус:", response.status); // <-- Отладка 5
+        console.log("Ответ от /api/products?admin=true, статус:", response.status);
+        
         if (!response.ok) {
-            console.error(`HTTP error! status: ${response.status}`, errorText); // <-- Отладка 6
+            const errorText = await response.text();
+            console.error(`HTTP error! status: ${response.status}`, errorText);
             throw new Error(`HTTP error! status: ${response.status}`);
-            
         }
+        
         const products = await response.json();
-        console.log("Полученные товары:", products); // <-- Отладка 7
+        console.log("Полученные товары:", products);
 
         let filteredProducts = products;
         if (searchTerm) {
@@ -40,23 +42,22 @@ async function loadSupplierCatalog(searchTerm = '') {
                 (product.supplier_link && product.supplier_link.toLowerCase().includes(term))
             );
         }
-         console.log("Отфильтрованные товары:", filteredProducts); // <-- Отладка 8
+        console.log("Отфильтрованные товары:", filteredProducts);
 
         renderSupplierCatalog(filteredProducts);
-        console.log("renderSupplierCatalog завершена"); // <-- Отладка 9
+        console.log("renderSupplierCatalog завершена");
     } catch (error) {
-        onsole.error('❌ Ошибка загрузки каталога для поставщика:', error); // <-- Отладка 10
-        console.error('Ошибка загрузки каталога для поставщика:', error);
+        console.error('❌ Ошибка загрузки каталога для поставщика:', error);
         container.innerHTML = '<div class="empty">Ошибка загрузки товаров</div>';
     }
 }
 
 function renderSupplierCatalog(products) {
-         console.log("Начало renderSupplierCatalog, products:", products); // <-- Отладка 11
+    console.log("Начало renderSupplierCatalog, products:", products);
     const container = document.getElementById('supplier-catalog-grid');
     if (!container) {
-         console.warn("Элемент #supplier-catalog-grid не найден в renderSupplierCatalog");
-         return; // <-- ВАЖНО: return, если контейнер не найден
+        console.warn("Элемент #supplier-catalog-grid не найден в renderSupplierCatalog");
+        return;
     }
 
     container.innerHTML = '';
@@ -120,6 +121,7 @@ function renderSupplierCatalog(products) {
         container.appendChild(card);
     });
 
+    // Добавляем обработчики событий для кнопок копирования
     container.querySelectorAll('.supplier-copy-btn').forEach(button => {
         button.addEventListener('click', (e) => {
             e.preventDefault();
@@ -141,10 +143,11 @@ function renderSupplierCatalog(products) {
         });
     });
 }
-
-// Инициализация после загрузки DOM и установка обработчика поиска
+// Инициализация после загрузки DOM
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOMContentLoaded сработал для admin-supplier-catalog.js"); // <-- Отладка 12
+    console.log("DOMContentLoaded сработал для admin-supplier-catalog.js");
+    
+    // Устанавливаем обработчик поиска
     const searchInput = document.getElementById('supplier-catalog-search');
     if (searchInput) {
         let searchTimeout;
@@ -157,8 +160,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Проверяем, активна ли вкладка при загрузке страницы
     if (document.getElementById('supplier-catalog-tab')?.classList.contains('active')) {
+        console.log("Вкладка каталога поставщика активна при загрузке");
         loadSupplierCatalogTab();
     }
 });
+
+// Экспортируем функцию для использования из других модулей
 window.loadSupplierCatalogTab = loadSupplierCatalogTab;
