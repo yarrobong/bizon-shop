@@ -223,7 +223,7 @@ class AdminPanel {
 
             // Получаем изображение (первое из списка или заглушку)
             const imageUrl = product.images && product.images.length > 0 ?
-                product.images[0].url : '/assets/placeholder.png';
+                product.images[0].url : '/assets/icons/placeholder1.webp';
 
             // Формируем содержимое ссылки/текста поставщика
             let supplierContent = 'Информация отсутствует';
@@ -255,7 +255,7 @@ class AdminPanel {
             <div class="supplier-product-card">
                 <img src="${imageUrl}" alt="${this.escapeHtml(product.title)}" 
                      class="supplier-product-image" 
-                     onerror="this.src='/assets/placeholder.png'">
+                     onerror="this.src='/assets/icons/placeholder1.webp'">
                 <div class="supplier-product-info">
                     <h3 class="supplier-product-title">${this.escapeHtml(product.title)}</h3>
                     <div class="supplier-link-section">
@@ -387,10 +387,10 @@ class AdminPanel {
             card.className = 'product-card'; // Используем тот же класс, что и для товаров
 
             // Предполагаем, что у аттракциона есть поле image
-            const imageUrl = attraction.image || '/assets/placeholder.png';
+            const imageUrl = attraction.image || '/assets/icons/placeholder1.webp';
 
             card.innerHTML = `
-        <img src="${imageUrl}" alt="${attraction.title}" onerror="this.src='/assets/placeholder.png'">
+        <img src="${imageUrl}" alt="${attraction.title}" onerror="this.src='/assets/icons/placeholder1.webp'">
         <h3>${this.escapeHtml(attraction.title)}</h3>
         <p>Цена: ${this.formatPrice(attraction.price)}</p>
         <p>Категория: ${this.escapeHtml(attraction.category || 'Не указана')}</p>
