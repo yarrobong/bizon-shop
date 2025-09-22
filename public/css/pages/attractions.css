@@ -360,166 +360,184 @@ main {
     flex-direction: column;
     gap: 30px;
 }
+/* --- Галерея изображений внутри карточки --- */
 
-/* --- Галерея изображений --- */
-.attraction-gallery {
+/* Контейнер галереи внутри карточки */
+.attraction-card .attraction-gallery {
     position: relative;
-    width: 100%;
-    max-width: 600px; /* Максимальная ширина главного изображения */
-    margin: 0 auto;
-}
-
-.attraction-main-image-container {
-    position: relative;
-    width: 100%;
-    padding-top: 75%; /* Соотношение сторон 4:3 (можно изменить) */
+    width: 35%; /* Занимает ту же ширину, что и старый .attraction-image */
+    height: 100%;
+    /* Убираем стандартные margin/padding, так как они заданы родителем */
+    margin: 0;
+    padding: 0;
     overflow: hidden;
-    border-radius: 8px;
+    border-right: 2px solid rgba(0, 123, 255, 0.3); /* Разделительная линия, как у старого .attraction-image */
+    border-radius: 1rem 0 0 1rem; /* Скругляем только левую часть */
+    /* position: relative; и z-index: 1; уже наследуются от .attraction-card > * */
 }
 
-.attraction-main-image {
+/* Контейнер для главного изображения */
+.attraction-card .attraction-main-image-container {
+    position: relative;
+    width: 100%;
+    /* Используем viewport height для высоты, чтобы изображение было видно */
+    /* 40vh - это пример, можно подобрать */
+    height: 40vh;
+    min-height: 200px; /* Минимальная высота для очень маленьких экранов */
+    overflow: hidden;
+    /* border-radius переносится сюда */
+    border-radius: 1rem 0 0 1rem;
+    background-color: rgba(0, 0, 0, 0.2); /* Фон, если изображение грузится медленно */
+}
+
+/* Главное изображение */
+.attraction-card .attraction-main-image {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    object-fit: contain; /* Или cover, в зависимости от предпочтений */
+    object-fit: cover; /* Изображение заполняет контейнер, обрезая края. Можете изменить на 'contain' если нужно показывать всё изображение. */
     transition: opacity 0.3s ease;
+    /* z-index: 1; уже наследуется */
 }
 
-/* Стрелки навигации */
-.attraction-gallery-nav {
+/* Стрелки навигации внутри карточки */
+.attraction-card .attraction-gallery-nav {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
     background-color: rgba(0, 0, 0, 0.5);
     color: white;
     border: none;
-    padding: 10px 15px;
+    padding: 10px 12px; /* Сlightly smaller padding for cards */
     cursor: pointer;
-    font-size: 18px;
-    border-radius: 0 4px 4px 0; /* Для левой стрелки */
+    font-size: 18px; /* Или меньше, например, 16px */
+    /* border-radius убираем, пусть квадратные */
     z-index: 2;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, opacity 0.3s ease;
+    opacity: 0; /* Скрываем по умолчанию */
 }
 
-.attraction-gallery-nav:hover {
+/* Показываем стрелки при наведении на галерею */
+.attraction-card .attraction-gallery:hover .attraction-gallery-nav {
+    opacity: 1;
+}
+
+.attraction-card .attraction-gallery-nav:hover {
     background-color: rgba(0, 0, 0, 0.8);
 }
 
-.attraction-gallery-nav.prev {
-    left: 0;
-    border-radius: 0 4px 4px 0;
+.attraction-card .attraction-gallery-nav.prev {
+    left: 10px; /* Отступ от края */
 }
 
-.attraction-gallery-nav.next {
-    right: 0;
-    border-radius: 4px 0 0 4px;
+.attraction-card .attraction-gallery-nav.next {
+    right: 10px; /* Отступ от края */
 }
 
-/* Миниатюры */
-.attraction-thumbnails {
+/* Миниатюры внутри карточки */
+.attraction-card .attraction-thumbnails {
     display: flex;
     justify-content: center;
-    gap: 10px;
-    margin-top: 15px;
-    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px; /* Меньше отступ между миниатюрами */
+    padding: 10px 5px; /* Внутренний отступ сверху/снизу и по краям */
+    background-color: rgba(0, 0, 0, 0.1); /* Легкий фон для контраста */
+    /* border-radius переносится сюда */
+    border-radius: 0 0 0 1rem;
+    flex-wrap: nowrap; /* Предотвращаем перенос на маленьких экранах, если возможно */
+    overflow-x: auto; /* Горизонтальная прокрутка, если миниатюр много */
+    scrollbar-width: thin; /* Тонкая полоса прокрутки для Firefox */
+    scrollbar-color: rgba(0, 123, 255, 0.5) transparent; /* Цвет полосы прокрутки для Firefox */
 }
 
-.attraction-thumbnail {
-    width: 80px;
-    height: 60px;
-    object-fit: cover;
+/* Стили для полосы прокрутки в Webkit (Chrome, Safari) */
+.attraction-card .attraction-thumbnails::-webkit-scrollbar {
+    height: 6px; /* Высота горизонтальной полосы */
+}
+
+.attraction-card .attraction-thumbnails::-webkit-scrollbar-track {
+    background: transparent; /* Фон трека */
+}
+
+.attraction-card .attraction-thumbnails::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 123, 255, 0.5); /* Цвет "бегунка" */
+    border-radius: 3px; /* Скругление бегунка */
+}
+
+.attraction-card .attraction-thumbnail {
+    width: 50px; /* Ширина миниатюры */
+    height: 40px; /* Высота миниатюры */
+    object-fit: cover; /* Миниатюры также покрывают контейнер */
     border: 2px solid transparent;
     border-radius: 4px;
     cursor: pointer;
     transition: border-color 0.3s ease, transform 0.2s ease;
+    flex-shrink: 0; /* Предотвращаем сжатие миниатюр */
 }
 
-.attraction-thumbnail:hover {
-    transform: scale(1.05);
+.attraction-card .attraction-thumbnail:hover {
+    transform: scale(1.1); /* Немного увеличиваем при наведении */
 }
 
-.attraction-thumbnail.active {
+.attraction-card .attraction-thumbnail.active {
     border-color: #007bff; /* Цвет активной миниатюры */
 }
 
-/* --- Описание и спецификации --- */
-.attraction-detail-description,
-.attraction-detail-specs {
-    background-color: #f9f9f9;
-    padding: 20px;
-    border-radius: 8px;
-}
-
-.attraction-detail-description h3,
-.attraction-detail-specs h3 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    font-size: 1.3rem;
-    color: #333;
-}
-
-.attraction-detail-description p {
-    margin: 0;
-    line-height: 1.6;
-    color: #555;
-}
-
-.attraction-specs-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 15px;
-}
-
-.attraction-spec-item {
-    display: flex;
-    flex-direction: column;
-}
-
-.attraction-spec-label {
-    font-weight: 600;
-    margin-bottom: 5px;
-    color: #444;
-}
-
-.attraction-spec-value {
-    color: #666;
-}
-
-/* --- Кнопка "В корзину" --- */
-.attraction-add-to-cart {
-    align-self: flex-start;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    font-size: 1rem;
-    font-weight: 600;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.attraction-add-to-cart:hover {
-    background-color: #218838;
-}
-
-/* --- Адаптивность --- */
-@media (min-width: 768px) {
-    .attraction-detail-content {
-        flex-direction: row;
-    }
-
-    .attraction-gallery {
-        flex: 1;
-        max-width: none; /* Убираем ограничение на больших экранах */
-    }
-
-    .attraction-detail-info {
-        flex: 1;
-        display: flex;
+/* Адаптивность для карточек с галереей */
+@media (max-width: 768px) {
+    /* На мобильных карточка становится колонкой */
+    .attraction-card {
         flex-direction: column;
-        gap: 20px;
+    }
+
+    /* Галерея растягивается на всю ширину */
+    .attraction-card .attraction-gallery {
+        width: 100%;
+        height: auto; /* Высота определяется контентом */
+        border-right: none; /* Убираем правую границу */
+        border-bottom: 2px solid rgba(0, 123, 255, 0.3); /* Добавляем нижнюю границу */
+        border-radius: 1rem 1rem 0 0; /* Скругляем верх */
+    }
+
+    /* Контейнер изображения на мобильных */
+    .attraction-card .attraction-main-image-container {
+        height: 30vh; /* Меньше высота на мобильных */
+        min-height: 150px;
+        border-radius: 1rem 1rem 0 0; /* Скругляем верх */
+    }
+
+    /* Миниатюры на мобильных */
+    .attraction-card .attraction-thumbnails {
+        border-radius: 0 0 1rem 1rem; /* Скругляем низ */
+        /* justify-content: flex-start; */ /* Если хотите выравнивание по левому краю */
+    }
+
+    /* Информационная часть растягивается на всю ширину */
+    .attraction-card .attraction-info {
+        width: 100%;
+        padding: 1rem;
+    }
+
+    /* Скрываем стрелки на мобильных, так как есть миниатюры */
+    .attraction-card .attraction-gallery-nav {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .attraction-card .attraction-info {
+        padding: 0.75rem;
+    }
+
+    .attraction-card .attraction-main-image-container {
+        height: 25vh;
+        min-height: 120px;
+    }
+
+    .attraction-card .attraction-thumbnail {
+        width: 40px; /* Ещё меньше миниатюры */
+        height: 30px;
     }
 }
