@@ -42,6 +42,7 @@
 
         <nav class="admin-nav">
             <button class="nav-btn active" data-tab="products">Товары</button>
+            <button class="nav-btn" data-tab="attractions">Аттракционы</button>
             <button class="nav-btn" data-tab="categories">Категории</button>
             <button class="nav-btn" data-tab="orders">Заказы</button>
             <button class="nav-btn" data-tab="supplier-catalog">Каталог для заказа</button>
@@ -56,6 +57,17 @@
                 </div>
                 <div id="admin-products-grid" class="admin-grid">
                     <!-- Товары будут подгружаться сюда -->
+                </div>
+            </section>
+            <!-- Новая вкладка Аттракционы -->
+            <section id="attractions-tab" class="tab-content">
+                <div class="tab-header">
+                    <h2>Управление аттракционами</h2>
+                    <button id="add-attraction-btn" class="btn-primary">Добавить аттракцион</button>
+                </div>
+                <div id="admin-attractions-grid" class="admin-grid">
+                    <!-- Аттракционы будут подгружаться сюда -->
+                    <div class="empty">Загрузка аттракционов...</div>
                 </div>
             </section>
 
@@ -166,7 +178,73 @@
         </form>
     </div>
 </div>
+<!-- Модальное окно для аттракциона -->
+<div id="attraction-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-attraction-modal close">&times;</span>
+        <h2 id="attraction-modal-title">Добавить аттракцион</h2>
+        <form id="attraction-form">
+            <input type="hidden" id="attraction-id" name="attraction-id">
 
+            <label for="attraction-title">Название:</label>
+            <input type="text" id="attraction-title" name="attraction-title" required>
+
+            <label for="attraction-description">Описание:</label>
+            <textarea id="attraction-description" name="attraction-description" required></textarea>
+
+            <label for="attraction-price">Цена (руб.):</label>
+            <input type="number" id="attraction-price" name="attraction-price" step="0.01" required>
+
+            <label for="attraction-category">Категория:</label>
+            <input type="text" id="attraction-category" name="attraction-category" list="attraction-categories" required>
+            <datalist id="attraction-categories">
+                <!-- Опции будут загружены динамически -->
+            </datalist>
+
+            <label for="attraction-stock">Остаток:</label>
+            <input type="number" id="attraction-stock" name="attraction-stock" min="0" value="0">
+
+            <!-- Спецификации аттракциона -->
+            <div class="specs-section">
+                <h3>Спецификации</h3>
+
+                <label for="attraction-specs-places">Мест:</label>
+                <input type="text" id="attraction-specs-places" name="attraction-specs-places">
+
+                <label for="attraction-specs-power">Мощность:</label>
+                <input type="text" id="attraction-specs-power" name="attraction-specs-power">
+
+                <label for="attraction-specs-games">Игры:</label>
+                <input type="text" id="attraction-specs-games" name="attraction-specs-games">
+
+                <label for="attraction-specs-area">Площадь:</label>
+                <input type="text" id="attraction-specs-area" name="attraction-specs-area">
+
+                <label for="attraction-specs-dimensions">Размеры:</label>
+                <input type="text" id="attraction-specs-dimensions" name="attraction-specs-dimensions">
+            </div>
+
+            <!-- Управление изображениями -->
+            <div class="images-section">
+                <h3>Изображение аттракциона</h3>
+                <div id="attraction-images-drop-zone" class="images-drop-zone">
+                    <div id="attraction-images-container" class="images-grid">
+                        <!-- Изображение будет добавлено сюда динамически -->
+                    </div>
+                    <div id="attraction-drop-hint" class="drop-hint">
+                        <p>Перетащите изображение сюда или нажмите "Добавить изображение"</p>
+                    </div>
+                </div>
+                <button type="button" id="add-attraction-image-btn" class="btn-secondary">Добавить изображение</button>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" id="cancel-attraction-btn" class="btn-secondary">Отмена</button>
+                <button type="submit" class="btn-primary">Сохранить</button>
+            </div>
+        </form>
+    </div>
+</div>
     <!-- Модальное окно для категории -->
     <div id="category-modal" class="modal">
         <div class="modal-content">

@@ -875,6 +875,222 @@ app.get('/api/attractions', async (req, res) => {
       return attraction;
     });
 
+    // --- API endpoint для получения аттракционов ---
+app.get('/api/attractions', async (req, res) => {
+  console.log('Получение списка аттракционов из БД...');
+  try {
+    const query = `
+      SELECT
+        id,
+        title,
+        price,
+        category,
+        image_url AS image,
+        description,
+        stock,
+        specs_places AS "specs.places",
+        specs_power AS "specs.power",
+        specs_games AS "specs.games",
+        specs_area AS "specs.area",
+        specs_dimensions AS "specs.dimensions"
+      FROM attractions
+      ORDER BY id ASC;
+    `;
+    const result = await pool.query(query);
+
+    const attractions = result.rows.map(row => {
+      return {
+        id: row.id,
+        title: row.title,
+        price: parseFloat(row.price),
+        category: row.category,
+        image: row.image,
+        description: row.description,
+        stock: row.stock !== null ? parseInt(row.stock, 10) : null,
+        specs: {
+          places: row["specs.places"] || null,
+          power: row["specs.power"] || null,
+          games: row["specs.games"] || null,
+          area: row["specs.area"] || null,
+          dimensions: row["specs.dimensions"] || null
+        }
+      };
+    });
+
+    console.log(`✅ Успешно получено ${attractions.length} аттракционов из БД`);
+    res.json(attractions);
+  } catch (err) {
+    console.error('❌ Ошибка при получении аттракционов из БД:', err);
+    res.status(500).json({ error: 'Не удалось загрузить аттракционы', details: err.message });
+  }
+});
+
+// --- API endpoint для получения аттракциона по ID ---
+app.get('/api/attractions/:id', async (req, res) => {
+  const { id } = req.params;
+  console.log(`Получение аттракциона с ID ${id} из БД...`);
+  try {
+    const query = `
+      SELECT
+        id,
+        title,
+        price,
+        category,
+        image_url AS image,
+        description,
+        stock,
+        specs_places AS "specs.places",
+        specs_power AS "specs.power",
+        specs_games AS "specs.games",
+        specs_area AS "specs.area",
+        specs_dimensions AS "specs.dimensions"
+      FROM attractions
+      WHERE id = $1;
+    `;
+    const result = await pool.query(query, [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Аттракцион не найден' });
+    }
+
+    const row = result.rows[0];
+    const attraction = {
+      id: row.id,
+      title: row.title,
+      price: parseFloat(row.price),
+      category: row.category,
+      image: row.image,
+      description: row.description,
+      stock: row.stock !== null ? parseInt(row.stock, 10) : null,
+      specs: {
+        places: row["specs.places"] || null,
+        power: row["specs.power"] || null,
+        games: row["specs.games"] || null,
+        area: row["specs.area"] || null,
+        dimensions: row["specs.dimensions"] || null
+      }
+    };
+
+    console.log(`✅ Успешно получен аттракцион с ID ${id} из БД`);
+    res.json(attraction);
+  } catch (err) {
+    console.error(`❌ Ошибка при получении аттракциона с ID ${id} из БД:`, err);
+    res.status(500).json({ error: 'Не удалось загрузить аттракцион', details: err.message });
+  }
+});
+
+// --- API endpoint для создания аттракциона ---
+app.post('/api/attractions', async (req, res) => {
+  const { title, price, category, image, description, stock, specs } = req.body;
+  console.log('Создание нового аттракциона:', req.body);
+  try {
+    const query = `
+      INSERT INTO attractions (
+        title, price, category, image_url, description, stock,
+        specs_places, specs_power, specs_games, specs_area, specs_dimensions
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      RETURNING id;
+    `;
+    const values = [
+      title,
+      price,
+      category,
+      image,
+      description,
+      stock !== undefined && stock !== null ? stock : null,
+      specs?.places || null,
+      specs?.power || null,
+      specs?.games || null,
+      specs?.area || null,
+      specs?.dimensions || null
+    ];
+
+    const result = await pool.query(query, values);
+    const newId = result.rows[0].id;
+    console.log(`✅ Аттракцион с ID ${newId} успешно создан в БД`);
+    res.status(201).json({ id: newId, message: 'Аттракцион создан' });
+  } catch (err) {
+    console.error('❌ Ошибка при создании аттракциона в БД:', err);
+    res.status(500).json({ error: 'Не удалось создать аттракцион', details: err.message });
+  }
+});
+
+// --- API endpoint для обновления аттракциона ---
+app.put('/api/attractions/:id', async (req, res) => {
+  const { id } = req.params;
+  const { title, price, category, image, description, stock, specs } = req.body;
+  console.log(`Обновление аттракциона с ID ${id}:`, req.body);
+  try {
+    const query = `
+      UPDATE attractions
+      SET
+        title = $1,
+        price = $2,
+        category = $3,
+        image_url = $4,
+        description = $5,
+        stock = $6,
+        specs_places = $7,
+        specs_power = $8,
+        specs_games = $9,
+        specs_area = $10,
+        specs_dimensions = $11
+      WHERE id = $12;
+    `;
+    const values = [
+      title,
+      price,
+      category,
+      image,
+      description,
+      stock !== undefined && stock !== null ? stock : null,
+      specs?.places || null,
+      specs?.power || null,
+      specs?.games || null,
+      specs?.area || null,
+      specs?.dimensions || null,
+      id
+    ];
+
+    await pool.query(query, values);
+    console.log(`✅ Аттракцион с ID ${id} успешно обновлен в БД`);
+    res.json({ message: 'Аттракцион обновлен' });
+  } catch (err) {
+    console.error(`❌ Ошибка при обновлении аттракциона с ID ${id} в БД:`, err);
+    res.status(500).json({ error: 'Не удалось обновить аттракцион', details: err.message });
+  }
+});
+
+// --- API endpoint для удаления аттракциона ---
+app.delete('/api/attractions/:id', async (req, res) => {
+  const { id } = req.params;
+  console.log(`Удаление аттракциона с ID ${id} из БД...`);
+  try {
+    await pool.query('DELETE FROM attractions WHERE id = $1', [id]);
+    console.log(`✅ Аттракцион с ID ${id} успешно удален из БД`);
+    res.json({ message: 'Аттракцион удален' });
+  } catch (err) {
+    console.error(`❌ Ошибка при удалении аттракциона с ID ${id} из БД:`, err);
+    res.status(500).json({ error: 'Не удалось удалить аттракцион', details: err.message });
+  }
+});
+
+// --- API endpoint для получения уникальных категорий аттракционов ---
+app.get('/api/attractions/categories', async (req, res) => {
+  console.log('Получение уникальных категорий аттракционов из БД...');
+  try {
+    const query = 'SELECT DISTINCT category FROM attractions WHERE category IS NOT NULL ORDER BY category;';
+    const result = await pool.query(query);
+    const categories = result.rows.map(row => row.category);
+    console.log(`✅ Успешно получено ${categories.length} уникальных категорий аттракционов из БД`);
+    res.json(categories);
+  } catch (err) {
+    console.error('❌ Ошибка при получении категорий аттракционов из БД:', err);
+    res.status(500).json({ error: 'Не удалось загрузить категории аттракционов', details: err.message });
+  }
+});
+
     console.log(`✅ Успешно получено ${attractions.length} аттракционов из БД`);
     // Отправляем JSON-массив аттракционов клиенту
     res.json(attractions);
