@@ -887,7 +887,8 @@ app.post('/api/attractions', async (req, res) => {
     const { title, price, category, description, specs, images } = req.body; // <-- Получаем images (массив)
     console.log('Создание нового аттракциона:', req.body);
 
-    // Обработка массива изображений: берем URL первого изображения или null
+    // Обработка массива изображений: берем URL первого изображения или null для image_url
+    // Это нужно для обратной совместимости (например, отображение в списке)
     let primaryImageUrl = null;
     if (images && Array.isArray(images) && images.length > 0 && images[0].url) {
         primaryImageUrl = images[0].url;
@@ -931,7 +932,8 @@ app.put('/api/attractions/:id', async (req, res) => {
     const { title, price, category, description, specs, images } = req.body; // <-- Получаем images (массив)
     console.log(`Обновление аттракциона с ID ${id}:`, req.body);
 
-    // Обработка массива изображений: берем URL первого изображения или null
+    // Обработка массива изображений: берем URL первого изображения или null для image_url
+     // Это нужно для обратной совместимости (например, отображение в списке)
     let primaryImageUrl = null;
     if (images && Array.isArray(images) && images.length > 0 && images[0].url) {
         primaryImageUrl = images[0].url;
