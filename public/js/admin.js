@@ -417,7 +417,7 @@ class AdminPanel {
             document.getElementById('attraction-description').value = attraction.description || '';
             document.getElementById('attraction-price').value = attraction.price || '';
             document.getElementById('attraction-category').value = attraction.category || '';
-            document.getElementById('attraction-stock').value = attraction.stock !== undefined ? attraction.stock : '';
+            
 
             // Заполняем спецификации
             const specs = attraction.specs || {};
@@ -469,7 +469,7 @@ class AdminPanel {
             description: formData.get('attraction-description'),
             price: parseFloat(formData.get('attraction-price')),
             category: formData.get('attraction-category'),
-            stock: parseInt(formData.get('attraction-stock')) || 0,
+            
             specs: {
                 places: formData.get('attraction-specs-places'),
                 power: formData.get('attraction-specs-power'),
