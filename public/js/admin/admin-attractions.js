@@ -1,11 +1,15 @@
 // admin-attractions.js
 
+// Глобальные переменные для аттракционов
 let attractionImages = []; // Массив для хранения изображений аттракциона
 
+// Инициализация вкладки аттракционов
 async function loadAttractionsTab() {
     await loadAttractions();
     await loadAttractionCategoryOptions();
 }
+
+// --- Функции для работы с аттракционами ---
 
 async function loadAttractions() {
     try {
@@ -41,16 +45,19 @@ function renderAttractions(attractions) {
     }
 
     attractions.forEach(attraction => {
-        // Используем первое изображение из массива, если оно есть
-        const imageUrl = (attraction.images && attraction.images.length > 0) ? attraction.images[0].url : '/assets/icons/placeholder1.webp';
+        // Используем первое изображение из массива images, если оно есть
+        // Совместимость со старым форматом (поле image)
+        const imageUrl = (attraction.images && attraction.images.length > 0) ?
+            attraction.images[0].url :
+            (attraction.image || '/assets/icons/placeholder1.webp');
 
         const card = document.createElement('div');
         card.className = 'product-card';
         card.innerHTML = `
-            <img src="${imageUrl}" alt="${adminPanel.escapeHtml(attraction.title)}" onerror="this.src='/assets/icons/placeholder1.webp'">
-            <h3>${adminPanel.escapeHtml(attraction.title)}</h3>
-            <p>Цена: ${adminPanel.formatPrice(attraction.price)}</p>
-            <p>Категория: ${adminPanel.escapeHtml(attraction.category || 'Не указана')}</p>
+            <img src="${imageUrl}" alt="${escapeHtml(attraction.title)}" onerror="this.src='/assets/icons/placeholder1.webp'">
+            <h3>${escapeHtml(attraction.title)}</h3>
+            <p>Цена: ${formatPrice(attraction.price)}</p>
+            <p>Категория: ${escapeHtml(attraction.category || 'Не указана')}</p>
             <div class="product-actions">
                 <button onclick="openAttractionModal(${attraction.id})" class="btn-primary">Редактировать</button>
                 <button onclick="deleteAttraction(${attraction.id})" class="btn-danger">Удалить</button>
@@ -60,19 +67,30 @@ function renderAttractions(attractions) {
     });
 }
 
+// --- Модальное окно аттракциона ---
+
 function openAttractionModal(attractionId = null) {
     const modal = document.getElementById('attraction-modal');
     const title = document.getElementById('attraction-modal-title');
     const form = document.getElementById('attraction-form');
     const idInput = document.getElementById('attraction-id');
 
+    if (!modal || !title || !form || !idInput) {
+        console.error('Элементы модального окна аттракциона не найдены');
+        return;
+    }
+
+    // Сброс формы и изображений
+    form.reset();
+    clearAttractionImageFields(); // Очищает массив attractionImages и DOM
+
     if (attractionId) {
+        // Редактирование
         loadAttractionForEdit(attractionId);
     } else {
+        // Добавление нового
         title.textContent = 'Добавить аттракцион';
-        form.reset();
         idInput.value = '';
-        clearAttractionImageFields(); // Очищает массив attractionImages и DOM
         modal.style.display = 'block';
         document.body.classList.add('modal-open');
     }
@@ -85,7 +103,7 @@ async function loadAttractionForEdit(attractionId) {
             const attraction = await response.json();
             const title = document.getElementById('attraction-modal-title');
             title.textContent = 'Редактировать аттракцион';
-            document.getElementById('attraction-id').value = attraction.id;
+            document.getElementById('attraction-id').value = attraction.id || '';
             document.getElementById('attraction-title').value = attraction.title || '';
             document.getElementById('attraction-description').value = attraction.description || '';
             document.getElementById('attraction-price').value = attraction.price || '';
@@ -99,15 +117,14 @@ async function loadAttractionForEdit(attractionId) {
             document.getElementById('attraction-specs-dimensions').value = specs.dimensions || '';
 
             // Загружаем изображения в форму (массив)
+            // Совместимость со старым форматом (поле image)
+            let imagesToLoad = [];
             if (attraction.images && Array.isArray(attraction.images)) {
-                loadAttractionImagesToForm(attraction.images);
-            } else {
-                // Если images не массив, пытаемся обработать как одно изображение или очистить
-                clearAttractionImageFields();
-                if (attraction.image) { // Старый формат?
-                     addAttractionImageField({ url: attraction.image, alt: attraction.title || 'Изображение' });
-                }
+                imagesToLoad = attraction.images;
+            } else if (attraction.image) {
+                imagesToLoad = [{ url: attraction.image, alt: attraction.title || 'Изображение' }];
             }
+            loadAttractionImagesToForm(imagesToLoad);
 
             const modal = document.getElementById('attraction-modal');
             modal.style.display = 'block';
@@ -117,11 +134,11 @@ async function loadAttractionForEdit(attractionId) {
         }
     } catch (error) {
         console.error('Ошибка загрузки аттракциона для редактирования:', error);
-        adminPanel.showMessage(`Ошибка загрузки аттракциона: ${error.message}`, 'error');
+        showMessage(`Ошибка загрузки аттракциона: ${error.message}`, 'error');
     }
 }
 
-// --- Обработчики событий формы ---
+// Обработчики событий формы
 document.getElementById('attraction-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     await saveAttraction();
@@ -131,12 +148,12 @@ document.getElementById('add-attraction-btn')?.addEventListener('click', () => {
     openAttractionModal();
 });
 
-// Закрытие модального окна
+// Закрытие модального окна аттракциона
 document.querySelector('#attraction-modal .close-attraction-modal')?.addEventListener('click', () => {
-    adminPanel.closeModal('attraction-modal');
+    closeModal('attraction-modal');
 });
 document.getElementById('cancel-attraction-btn')?.addEventListener('click', () => {
-    adminPanel.closeModal('attraction-modal');
+    closeModal('attraction-modal');
 });
 
 // --- Работа с изображениями аттракционов (МНОЖЕСТВЕННЫЕ) ---
@@ -164,7 +181,7 @@ function setupAttractionImageEventListeners() {
     if (dropZone) {
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
-            e.dataTransfer.dropEffect = 'copy'; // Изменено на 'copy'
+            e.dataTransfer.dropEffect = 'copy';
             dropZone.classList.add('drag-over');
         });
 
@@ -185,7 +202,7 @@ function setupAttractionImageEventListeners() {
                 if (imageFiles.length > 0) {
                     await handleAttractionFilesSelect(imageFiles);
                 } else {
-                    adminPanel.showMessage('Пожалуйста, перетащите изображения', 'error');
+                    showMessage('Пожалуйста, перетащите изображения', 'error');
                 }
             }
         });
@@ -216,36 +233,61 @@ async function handleAttractionFilesSelect(files) {
                 addAttractionImageField({ url: data.url, alt: file.name });
             } catch (error) {
                 console.error('Ошибка при загрузке файла:', error);
-                adminPanel.showMessage(`Ошибка загрузки ${file.name}: ${error.message}`, 'error');
+                showMessage(`Ошибка загрузки ${file.name}: ${error.message}`, 'error');
             }
         } else {
-            adminPanel.showMessage(`Файл ${file.name} не является изображением`, 'error');
+            showMessage(`Файл ${file.name} не является изображением`, 'error');
         }
     }
 }
 
-function addProductImageField(imageData = null) {
-    const container = document.getElementById('images-container');
-    const dropHint = document.getElementById('drop-hint');
+// --- Функции управления изображениями в DOM и массиве ---
+
+// Загрузить массив изображений в форму
+function loadAttractionImagesToForm(images) {
+    clearAttractionImageFields(); // Очищаем всё перед загрузкой
+    if (images && Array.isArray(images) && images.length > 0) {
+        images.forEach(image => {
+            addAttractionImageField(image);
+        });
+        // Скрываем подсказку, если есть изображения
+        const dropHint = document.getElementById('drop-hint');
+        if (dropHint) {
+            dropHint.classList.remove('show');
+        }
+    } else {
+        // Показываем подсказку, если массив пуст
+        const dropHint = document.getElementById('drop-hint');
+        if (dropHint) {
+            dropHint.classList.add('show');
+        }
+    }
+}
+
+// Добавить новое поле для изображения
+function addAttractionImageField(imageData = null) {
+    const container = document.getElementById('images-container'); // Предполагаем, что ID такой же
+    const dropHint = document.getElementById('drop-hint'); // Предполагаем, что ID такой же
 
     if (!container) return;
 
-    if (dropHint) {
+    // Скрываем подсказку, если добавляем первое изображение
+    if (dropHint && container.children.length === 0) {
         dropHint.classList.remove('show');
     }
 
-    const imageId = Date.now() + Math.floor(Math.random() * 10000);
+    const imageId = Date.now() + Math.floor(Math.random() * 10000); // Уникальный ID
     const imageItem = document.createElement('div');
     imageItem.className = 'image-item';
     imageItem.dataset.id = imageId;
-    imageItem.draggable = true;
+    imageItem.draggable = true; // Разрешаем перетаскивание
 
     const imageUrl = imageData?.url || '';
-    const imageAlt = imageData?.alt || '';
+    const imageAlt = imageData?.alt || `Изображение ${attractionImages.length + 1}`;
 
     imageItem.innerHTML = `
         ${imageUrl ?
-            `<img src="${imageUrl}" alt="${imageAlt}" onerror="this.src='/assets/icons/placeholder1.webp'">` :
+            `<img src="${imageUrl}" alt="${escapeHtml(imageAlt)}" onerror="this.src='/assets/icons/placeholder1.webp'">` :
             `<div class="image-placeholder">Изображение не загружено</div>`
         }
         <input type="hidden" class="image-input" value="${imageUrl}">
@@ -254,14 +296,17 @@ function addProductImageField(imageData = null) {
 
     container.appendChild(imageItem);
 
-    setupProductImageDragEvents(imageItem);
+    // Добавляем drag & drop события для этого элемента
+    setupAttractionImageDragEvents(imageItem);
 
-    productImages.push({
+    // Сохраняем изображение в массив
+    attractionImages.push({
         id: imageId,
         url: imageUrl,
         alt: imageAlt
     });
 
+    // Показываем кнопку удаления при наведении
     imageItem.addEventListener('mouseenter', () => {
         const deleteBtn = imageItem.querySelector('.delete-image-btn');
         if (deleteBtn) deleteBtn.style.opacity = '1';
@@ -272,19 +317,24 @@ function addProductImageField(imageData = null) {
         if (deleteBtn) deleteBtn.style.opacity = '0';
     });
 
+    // Обработчик удаления изображения
     const deleteBtn = imageItem.querySelector('.delete-image-btn');
     if (deleteBtn) {
         deleteBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            deleteProductImage(imageId);
+            removeAttractionImage(imageId);
         });
     }
 }
 
-function setupProductImageDragEvents(imageItem) {
+// Настройка событий перетаскивания для изображения
+// Исправленная функция setupAttractionImageDragEvents
+function setupAttractionImageDragEvents(imageItem) {
+    let draggedImage = null; // Локальная переменная для текущего перетаскивания
+
     imageItem.addEventListener('dragstart', (e) => {
-        adminPanel.draggedImage = imageItem;
+        draggedImage = imageItem;
         imageItem.classList.add('dragging');
         e.dataTransfer.effectAllowed = 'move';
     });
@@ -296,13 +346,14 @@ function setupProductImageDragEvents(imageItem) {
             const draggables = container.querySelectorAll('.image-item.drag-over');
             draggables.forEach(item => item.classList.remove('drag-over'));
         }
-        adminPanel.draggedImage = null;
+        draggedImage = null;
     });
 
     imageItem.addEventListener('dragover', (e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-        if (adminPanel.draggedImage !== imageItem) {
+
+        if (draggedImage !== imageItem) {
             imageItem.classList.add('drag-over');
         }
     });
@@ -315,242 +366,85 @@ function setupProductImageDragEvents(imageItem) {
         e.preventDefault();
         imageItem.classList.remove('drag-over');
 
-        if (adminPanel.draggedImage && adminPanel.draggedImage !== imageItem) {
+        if (draggedImage && draggedImage !== imageItem) {
             const container = document.getElementById('images-container');
             if (container) {
+                // Определяем позицию для вставки
                 const rect = imageItem.getBoundingClientRect();
                 const isAfter = e.clientX > rect.left + rect.width / 2;
+
                 if (isAfter) {
-                    container.insertBefore(adminPanel.draggedImage, imageItem.nextSibling);
+                    container.insertBefore(draggedImage, imageItem.nextSibling);
                 } else {
-                    container.insertBefore(adminPanel.draggedImage, imageItem);
+                    container.insertBefore(draggedImage, imageItem);
                 }
-                updateProductImagesOrder();
+
+                // Обновляем порядок изображений в массиве
+                updateAttractionImagesOrder();
             }
         }
     });
 }
 
-function updateProductImagesOrder() {
+
+// Обновить порядок изображений в массиве после перетаскивания
+// Исправленная функция updateAttractionImagesOrder
+function updateAttractionImagesOrder() {
     const imageItems = document.querySelectorAll('.image-item');
     const newImages = [];
+
     imageItems.forEach(item => {
-        const id = parseInt(item.dataset.id);
-        const image = productImages.find(img => img.id === id);
-        if (image) newImages.push(image);
+        const id = parseInt(item.dataset.id, 10); // Указываем основание 10
+        const image = attractionImages.find(img => img.id === id);
+        if (image) {
+            newImages.push(image);
+        }
     });
-    productImages = newImages;
+
+    attractionImages = newImages;
 }
 
-function deleteProductImage(imageId) {
+
+// Удалить изображение
+function removeAttractionImage(imageId) {
     const imageItem = document.querySelector(`.image-item[data-id="${imageId}"]`);
-    if (imageItem) imageItem.remove();
-    productImages = productImages.filter(img => img.id !== imageId);
+    if (imageItem) {
+        imageItem.remove();
+        // Удаляем из массива
+        attractionImages = attractionImages.filter(img => img.id !== imageId);
+
+        // Показываем подсказку, если не осталось изображений
+        const container = document.getElementById('images-container');
+        const dropHint = document.getElementById('drop-hint');
+        if (container && dropHint && container.children.length === 0) {
+            dropHint.classList.add('show');
+        }
+    }
+}
+
+// Очистить все поля изображений
+function clearAttractionImageFields() {
     const container = document.getElementById('images-container');
     const dropHint = document.getElementById('drop-hint');
-    if (container && dropHint && container.children.length === 0) {
-        dropHint.classList.add('show');
-    }
-}
 
-function clearProductImageFields() {
-    const container = document.getElementById('images-container');
-    const dropHint = document.getElementById('drop-hint');
-    if (container) container.innerHTML = '';
-    if (dropHint) dropHint.classList.add('show');
-    productImages = [];
-}
-
-function loadProductImagesToForm(images) {
-    clearProductImageFields();
-    if (images && Array.isArray(images) && images.length > 0) {
-        images.forEach(image => addProductImageField(image));
-        const dropHint = document.getElementById('drop-hint');
-        if (dropHint) dropHint.classList.remove('show');
-    } else {
-        const dropHint = document.getElementById('drop-hint');
-        if (dropHint) dropHint.classList.add('show');
-    }
-}
-
-function getProductImagesFromForm() {
-    const imageItems = document.querySelectorAll('.image-item');
-    const images = [];
-    imageItems.forEach((item, index) => {
-        const input = item.querySelector('.image-input');
-        const url = input ? input.value.trim() : '';
-        if (url) {
-            images.push({ url: url, alt: `Изображение ${index + 1}` });
-        }
-    });
-    return images;
-}
-
-// --- Работа с категориями в форме товара ---
-
-async function loadCategoriesForSelect() {
-    try {
-        const response = await fetch('/api/categories');
-        if (response.ok) {
-            const categories = await response.json();
-            const categorySelect = document.getElementById('product-category');
-            if (categorySelect) {
-                categorySelect.innerHTML = '<option value="">Выберите категорию...</option>';
-                categories.forEach(category => {
-                    const option = document.createElement('option');
-                    option.value = category.name;
-                    option.textContent = category.name;
-                    categorySelect.appendChild(option);
-                });
-            }
-        }
-    } catch (error) {
-        console.error('Ошибка загрузки категорий для селекта:', error);
-    }
-}
-
-// --- Работа с вариантами товаров ---
-
-async function loadAllProductsCache() {
-    try {
-        const response = await fetch('/api/products?admin=true');
-        if (!response.ok) {
-            console.warn('Не удалось загрузить полный список товаров для поиска вариантов.');
-            return;
-        }
-        allProductsCache = await response.json();
-        console.log('Кэш всех товаров загружен для поиска вариантов:', allProductsCache.length, 'товаров');
-    } catch (error) {
-        console.error('Ошибка при загрузке кэша товаров:', error);
-        allProductsCache = [];
-    }
-}
-
-function setupVariantsFunctionality() {
-    const searchInput = document.getElementById('variant-search');
-    const searchResults = document.getElementById('variant-search-results');
-    if (!searchInput || !searchResults) return;
-
-    let searchTimeout;
-    searchInput.addEventListener('input', (e) => {
-        clearTimeout(searchTimeout);
-        const term = e.target.value.trim();
-        if (term.length < 2) {
-            searchResults.classList.add('hidden');
-            return;
-        }
-        searchTimeout = setTimeout(() => {
-            performVariantSearch(term, searchResults);
-        }, 300);
-    });
-
-    document.addEventListener('click', (e) => {
-        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-            searchResults.classList.add('hidden');
-        }
-    });
-}
-
-function performVariantSearch(term, container) {
-    const currentProductId = document.getElementById('product-id').value;
-    const lowerTerm = term.toLowerCase();
-    const filteredProducts = allProductsCache.filter(p =>
-        p.id != currentProductId &&
-        (
-            (p.title && p.title.toLowerCase().includes(lowerTerm)) ||
-            (p.description && p.description.toLowerCase().includes(lowerTerm)) ||
-            (p.category && p.category.toLowerCase().includes(lowerTerm))
-        )
-    );
-
-    container.innerHTML = '';
-    if (filteredProducts.length === 0) {
-        container.innerHTML = '<div class="no-results">Товары не найдены</div>';
-        container.classList.remove('hidden');
-        return;
+    if (container) {
+        container.innerHTML = '';
     }
 
-    filteredProducts.forEach(product => {
-        const item = document.createElement('div');
-        item.className = 'variant-search-item';
-        item.dataset.productId = product.id;
-        const imageUrl = product.images && product.images.length > 0 ?
-            product.images[0].url : '/assets/icons/placeholder1.webp';
-        item.innerHTML = `
-            <img src="${imageUrl}" alt="${adminPanel.escapeHtml(product.title)}" onerror="this.src='/assets/icons/placeholder1.webp'">
-            <span class="variant-title">${adminPanel.escapeHtml(product.title)}</span>
-            <span class="variant-price">${adminPanel.formatPrice(product.price)}</span>
-        `;
-        item.addEventListener('click', () => {
-            addVariantToSelection(product);
-            document.getElementById('variant-search').value = '';
-            container.classList.add('hidden');
-        });
-        container.appendChild(item);
-    });
-    container.classList.remove('hidden');
-}
-
-function addVariantToSelection(product) {
-    if (selectedVariants.some(v => v.id === product.id)) return;
-    selectedVariants.push(product);
-    renderSelectedVariants();
-    updateSelectedVariantsInput();
-}
-
-function removeVariantFromSelection(productId) {
-    selectedVariants = selectedVariants.filter(v => v.id !== productId);
-    renderSelectedVariants();
-    updateSelectedVariantsInput();
-}
-
-function renderSelectedVariants() {
-    const container = document.getElementById('selected-variants-list');
-    if (!container) return;
-    container.innerHTML = '';
-    selectedVariants.forEach(variant => {
-        const item = document.createElement('div');
-        item.className = 'selected-variant-item';
-        item.dataset.variantId = variant.id;
-        item.innerHTML = `
-            <span>${adminPanel.escapeHtml(variant.title)}</span>
-            <button type="button" class="remove-variant-btn" data-id="${variant.id}" title="Удалить">&times;</button>
-        `;
-        const removeBtn = item.querySelector('.remove-variant-btn');
-        removeBtn.addEventListener('click', (e) => {
-            e.preventDefault(); e.stopPropagation();
-            removeVariantFromSelection(parseInt(e.target.dataset.id));
-        });
-        container.appendChild(item);
-    });
-}
-
-function updateSelectedVariantsInput() {
-    const input = document.getElementById('selected-variant-ids');
-    if (input) input.value = JSON.stringify(selectedVariants.map(v => v.id));
-}
-
-async function loadLinkedVariants(productId) {
-    try {
-        selectedVariants = [];
-        const productInCache = allProductsCache.find(p => p.id == productId);
-        if (productInCache && productInCache.variants && productInCache.variants.length > 0) {
-            selectedVariants = productInCache.variants.map(variantIdOrObj => {
-                if (typeof variantIdOrObj === 'object' && variantIdOrObj.id) return variantIdOrObj;
-                const id = typeof variantIdOrObj === 'object' ? variantIdOrObj.id : variantIdOrObj;
-                return allProductsCache.find(p => p.id == id);
-            }).filter(v => v && v.id != productId);
-        }
-        renderSelectedVariants();
-        updateSelectedVariantsInput();
-    } catch (error) {
-        console.error('Ошибка при загрузке связанных вариантов:', error);
-        selectedVariants = [];
-        renderSelectedVariants();
-        updateSelectedVariantsInput();
+    if (dropHint) {
+        dropHint.classList.add('show'); // Показываем подсказку при очистке
     }
+
+    attractionImages = []; // Очищаем массив
 }
 
+// Получить все изображения из формы (для отправки на сервер)
+function getAttractionImagesFromForm() {
+    // Возвращаем копию массива
+    return [...attractionImages];
+    // Или, если нужно в формате, совместимом с товаром:
+    // return attractionImages.map(img => ({ url: img.url, alt: img.alt }));
+}
 
 // --- Сохранение/Удаление аттракциона ---
 
@@ -596,8 +490,8 @@ async function saveAttraction() {
         if (response.ok) {
             const result = await response.json();
             console.log(`${isEdit ? 'Аттракцион обновлен' : 'Аттракцион создан'}:`, result);
-            adminPanel.showMessage(`${isEdit ? 'Аттракцион обновлен' : 'Аттракцион создан'} успешно!`, 'success');
-            adminPanel.closeModal('attraction-modal');
+            showMessage(`${isEdit ? 'Аттракцион обновлен' : 'Аттракцион создан'} успешно!`, 'success');
+            closeModal('attraction-modal');
             await loadAttractions(); // Перезагружаем список
         } else {
             const errorData = await response.json().catch(() => ({}));
@@ -605,7 +499,7 @@ async function saveAttraction() {
         }
     } catch (error) {
         console.error(`Ошибка ${isEdit ? 'обновления' : 'создания'} аттракциона:`, error);
-        adminPanel.showMessage(`Ошибка: ${error.message}`, 'error');
+        showMessage(`Ошибка: ${error.message}`, 'error');
     }
 }
 
@@ -615,7 +509,7 @@ async function deleteAttraction(id) {
         const response = await fetch(`/api/attractions/${id}`, { method: 'DELETE' });
         if (response.ok) {
             console.log('Аттракцион удален');
-            adminPanel.showMessage('Аттракцион удален успешно!', 'success');
+            showMessage('Аттракцион удален успешно!', 'success');
             await loadAttractions(); // Перезагружаем список
         } else {
             const errorData = await response.json().catch(() => ({}));
@@ -623,7 +517,7 @@ async function deleteAttraction(id) {
         }
     } catch (error) {
         console.error('Ошибка удаления аттракциона:', error);
-        adminPanel.showMessage(`Ошибка удаления: ${error.message}`, 'error');
+        showMessage(`Ошибка удаления: ${error.message}`, 'error');
     }
 }
 
@@ -646,6 +540,58 @@ async function loadAttractionCategoryOptions() {
         }
     } catch (error) {
         console.error('Ошибка загрузки категорий аттракционов для datalist:', error);
+    }
+}
+
+// --- Вспомогательные функции (локальные копии из admin-core.js) ---
+function formatPrice(price) {
+    if (price === null || price === undefined) {
+        return 'Цена не указана';
+    }
+    let numericPrice;
+    if (typeof price === 'string') {
+        numericPrice = parseFloat(price.trim().replace(',', '.'));
+    } else {
+        numericPrice = price;
+    }
+    if (typeof numericPrice !== 'number' || isNaN(numericPrice)) {
+        return 'Цена не указана';
+    }
+    return new Intl.NumberFormat('ru-RU', {
+        style: 'currency',
+        currency: 'RUB'
+    }).format(numericPrice);
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const map = {
+        '&': '&amp;',
+        '<': '<',
+        '>': '>',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.toString().replace(/[&<>"']/g, function (m) { return map[m]; });
+}
+
+function showMessage(message, type = 'info') {
+    const messageEl = document.createElement('div');
+    messageEl.className = `admin-message ${type}`;
+    messageEl.textContent = message;
+    document.body.appendChild(messageEl);
+    setTimeout(() => {
+        if (messageEl.parentNode) {
+            messageEl.parentNode.removeChild(messageEl);
+        }
+    }, 3000);
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.classList.remove('modal-open');
     }
 }
 
