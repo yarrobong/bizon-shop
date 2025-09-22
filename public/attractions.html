@@ -30,39 +30,74 @@
   <!-- ... -->
 </head>
 <body>
-  <!-- Фоновая анимация (скопируйте из catalog.html) -->
+  <!-- Фоновая анимация -->
   <div class="bg-overlay" aria-hidden="true">
-    <!-- ... -->
+    <div class="pulse-1"></div>
+    <div class="pulse-2"></div>
+    <div class="pulse-3"></div>
+    <div class="pulse-4"></div>
+    <div class="pulse-5"></div>
+    <div class="pulse-6"></div>
   </div>
 
-  <!-- Шапка (скопируйте из catalog.html) -->
-  <header class="header" role="banner">
-    <!-- ... -->
-    <!-- Убедитесь, что навигация включает ссылку на эту страницу -->
+  <!-- Шапка -->
+<header class="header" role="banner">
+    <a href="https://bizon-business.ru" class="logo">
+  <div class="logo-icon">
+    <!-- Используем <picture> для выбора формата -->
+    <picture>
+      <!-- Предлагаем WebP -->
+      <img src="/assets/logo/logo-Photoroom.webp" alt="jkbbjb">
+  
+    </picture>
+  </div>
+  <div class="logo-title">BIZON</div>
+</a>
+
+    <!-- Навигация для десктопа (скрывается на мобильных) -->
     <nav class="main-nav" id="mainNav" role="navigation" aria-label="Основная навигация">
-      <ul class="nav-list">
-        <li><a href="/">Главная</a></li>
-        <li><a href="/catalog">Каталог товаров</a></li>
-        <li><a href="/attractions" class="active">Аттракционы</a></li> <!-- Активная ссылка -->
-        <li><a href="/contact">Контакты</a></li>
-      </ul>
-    </nav>
+  <ul class="nav-list">
+    <li><a href="https://bizon-business.ru/" data-page="index">Главная</a></li>
+<li><a href="https://bizon-business.ru/catalog" data-page="catalog">Каталог</a></li>
+<li><a href="https://bizon-business.ru/contact" data-page="contact">Контакты</a></li>
+
+  </ul>
+</nav>
+
     <div class="header-actions">
-        <!-- Поиск -->
+        <!-- Поиск — показываем только на catalog.html -->
         <div class="search" id="header-search">
-            <svg class="search-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            <svg 
+                class="search-icon" 
+                aria-hidden="true" 
+                focusable="false" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor" 
+                fill="none" 
+                stroke-width="2"
+            >
+                <path 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round" 
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
+                />
             </svg>
-            <input type="text" id="search-input" placeholder="Поиск по аттракционам..." />
+            <input type="text" id="search-input" placeholder="Поиск по товарам..." />
         </div>
+
         <button id="cart-btn" class="cart-btn" aria-label="Корзина">
             Корзина
             <span id="cart-count" class="cart-count">0</span>
         </button>
     </div>
-    <!-- Гамбургер меню -->
-    <div class="hamburger" id="hamburger"> <!-- ... --> </div>
-  </header>
+
+    <!-- Гамбургер меню - теперь самое крайнее справа -->
+    <div class="hamburger" id="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+</header>
 
   <main role="main">
     <!-- Фильтры по категориям аттракционов -->
