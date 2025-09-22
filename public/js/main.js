@@ -1,19 +1,26 @@
-// main.js
 document.addEventListener('DOMContentLoaded', async () => {
   // Инициализируем начальное состояние
   window.currentCategory = 'все'; // Устанавливаем начальную категорию
+  
+  // Определяем текущую страницу и устанавливаем активный пункт меню
+  const url = window.location.href;
+  let pageKey = 'index';
+
+  if (url.includes('/catalog')) pageKey = 'catalog';
+  else if (url.includes('/attractions')) pageKey = 'attractions'; // Добавлено
+  else if (url.includes('/contact')) pageKey = 'contact';
+
+  // Удаляем активный класс со всех ссылок
+  document.querySelectorAll('.nav-list a').forEach(link => {
+    link.classList.remove('active');
+  });
+
+  // Добавляем активный класс нужной ссылке
+  const activeLink = document.querySelector(`.nav-list a[data-page="${pageKey}"]`);
+  if (activeLink) {
+    activeLink.classList.add('active');
+  }
 });
-
-const url = window.location.href;
-let pageKey = 'index';
-
-if (url.includes('/catalog')) pageKey = 'catalog';
-else if (url.includes('/contact')) pageKey = 'contact';
-
-const activeLink = document.querySelector(`.main-nav a[data-page="${pageKey}"]`);
-if (activeLink) {
-  activeLink.classList.add('active');
-}
 
 // Аккордеон для FAQ
 document.querySelectorAll('.accordion-header').forEach(button => {
