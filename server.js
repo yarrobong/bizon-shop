@@ -840,7 +840,6 @@ app.get('/api/attractions', async (req, res) => {
         category,
         image_url AS image,
         description,
-        stock,
         specs_places AS "specs.places",
         specs_power AS "specs.power",
         specs_games AS "specs.games",
@@ -859,7 +858,7 @@ app.get('/api/attractions', async (req, res) => {
         category: row.category,
         image: row.image,
         description: row.description,
-        stock: row.stock !== null ? parseInt(row.stock, 10) : null,
+        
         specs: {
           places: row["specs.places"] || null,
           power: row["specs.power"] || null,
@@ -897,7 +896,7 @@ app.get('/api/attractions/:id', async (req, res) => {
         category,
         image_url AS image,
         description,
-        stock,
+        
         specs_places AS "specs.places",
         specs_power AS "specs.power",
         specs_games AS "specs.games",
@@ -920,7 +919,7 @@ app.get('/api/attractions/:id', async (req, res) => {
       category: row.category,
       image: row.image,
       description: row.description,
-      stock: row.stock !== null ? parseInt(row.stock, 10) : null,
+     
       specs: {
         places: row["specs.places"] || null,
         power: row["specs.power"] || null,
@@ -940,12 +939,12 @@ app.get('/api/attractions/:id', async (req, res) => {
 
 // --- API endpoint для создания аттракциона ---
 app.post('/api/attractions', async (req, res) => {
-  const { title, price, category, image, description, stock, specs } = req.body;
+  const { title, price, category, image, description, specs } = req.body;
   console.log('Создание нового аттракциона:', req.body);
   try {
     const query = `
       INSERT INTO attractions (
-        title, price, category, image_url, description, stock,
+        title, price, category, image_url, description,
         specs_places, specs_power, specs_games, specs_area, specs_dimensions
       )
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
@@ -957,7 +956,7 @@ app.post('/api/attractions', async (req, res) => {
       category,
       image, // Убедитесь, что это URL, возвращенный из /api/upload
       description,
-      stock !== undefined && stock !== null ? stock : null,
+      
       specs?.places || null,
       specs?.power || null,
       specs?.games || null,
@@ -979,7 +978,7 @@ app.post('/api/attractions', async (req, res) => {
 // --- API endpoint для обновления аттракциона ---
 app.put('/api/attractions/:id', async (req, res) => {
   const { id } = req.params;
-  const { title, price, category, image, description, stock, specs } = req.body;
+  const { title, price, category, image, description, specs } = req.body;
   console.log(`Обновление аттракциона с ID ${id}:`, req.body);
   
   try {
@@ -997,12 +996,11 @@ app.put('/api/attractions/:id', async (req, res) => {
         category = $3,
         image_url = $4, -- Убедитесь, что это URL, возвращенный из /api/upload
         description = $5,
-        stock = $6,
-        specs_places = $7,
-        specs_power = $8,
-        specs_games = $9,
-        specs_area = $10,
-        specs_dimensions = $11
+        specs_places = $6,
+        specs_power = $7,
+        specs_games = $8,
+        specs_area = $9,
+        specs_dimensions = $10
       WHERE id = $12
       RETURNING id; -- Возвращаем ID, чтобы убедиться, что запись была
     `;
@@ -1012,7 +1010,7 @@ app.put('/api/attractions/:id', async (req, res) => {
       category,
       image,
       description,
-      stock !== undefined && stock !== null ? stock : null,
+      
       specs?.places || null,
       specs?.power || null,
       specs?.games || null,
