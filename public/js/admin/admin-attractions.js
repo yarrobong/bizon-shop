@@ -156,20 +156,19 @@ document.getElementById('cancel-attraction-btn')?.addEventListener('click', () =
     closeModal('attraction-modal');
 });
 
-// --- Работа с изображениями аттракционов (МНОЖЕСТВЕННЫЕ) ---
+// --- Работа с изображениями аттракционов ---
 
 function setupAttractionImageEventListeners() {
-    const addImageBtn = document.getElementById('add-image-btn'); // Предполагаем, что ID такой же, как у товаров
+    const addImageBtn = document.getElementById('add-attraction-image-btn');
     if (addImageBtn) {
         addImageBtn.addEventListener('click', () => {
             const fileInput = document.createElement('input');
             fileInput.type = 'file';
             fileInput.accept = 'image/*';
-            fileInput.multiple = true; // Разрешаем множественный выбор
+            fileInput.multiple = true;
             fileInput.style.display = 'none';
-            fileInput.addEventListener('change', async (e) => {
-                const files = e.target.files;
-                if (files.length > 0) await handleAttractionFilesSelect(files);
+            fileInput.addEventListener('change', (e) => {
+                handleAttractionFileSelect(e.target.files);
             });
             document.body.appendChild(fileInput);
             fileInput.click();
@@ -177,40 +176,32 @@ function setupAttractionImageEventListeners() {
         });
     }
 
-    const dropZone = document.getElementById('images-drop-zone'); // Предполагаем, что ID такой же
+    const dropZone = document.getElementById('attraction-images-drop-zone');
     if (dropZone) {
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
-            e.dataTransfer.dropEffect = 'copy';
+            e.dataTransfer.dropEffect = 'move';
             dropZone.classList.add('drag-over');
         });
 
         dropZone.addEventListener('dragleave', (e) => {
-            // Проверяем, действительно ли курсор вышел за пределы drop zone
             if (!dropZone.contains(e.relatedTarget)) {
                 dropZone.classList.remove('drag-over');
             }
         });
 
-        dropZone.addEventListener('drop', async (e) => {
+        dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
             dropZone.classList.remove('drag-over');
             const files = e.dataTransfer.files;
             if (files.length > 0) {
-                // Фильтруем только изображения
-                const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
-                if (imageFiles.length > 0) {
-                    await handleAttractionFilesSelect(imageFiles);
-                } else {
-                    showMessage('Пожалуйста, перетащите изображения', 'error');
-                }
+                handleAttractionFileSelect(files);
             }
         });
     }
 }
 
-async function handleAttractionFilesSelect(files) {
-    // Обрабатываем файлы один за другим
+async function handleAttractionFileSelect(files) {
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
         if (file.type.startsWith('image/')) {
@@ -229,7 +220,6 @@ async function handleAttractionFilesSelect(files) {
                 }
 
                 const data = await response.json();
-                // Добавляем загруженное изображение в форму
                 addAttractionImageField({ url: data.url, alt: file.name });
             } catch (error) {
                 console.error('Ошибка при загрузке файла:', error);
@@ -241,53 +231,28 @@ async function handleAttractionFilesSelect(files) {
     }
 }
 
-// --- Функции управления изображениями в DOM и массиве ---
-
-// Загрузить массив изображений в форму
-function loadAttractionImagesToForm(images) {
-    clearAttractionImageFields(); // Очищаем всё перед загрузкой
-    if (images && Array.isArray(images) && images.length > 0) {
-        images.forEach(image => {
-            addAttractionImageField(image);
-        });
-        // Скрываем подсказку, если есть изображения
-        const dropHint = document.getElementById('drop-hint');
-        if (dropHint) {
-            dropHint.classList.remove('show');
-        }
-    } else {
-        // Показываем подсказку, если массив пуст
-        const dropHint = document.getElementById('drop-hint');
-        if (dropHint) {
-            dropHint.classList.add('show');
-        }
-    }
-}
-
-// Добавить новое поле для изображения
 function addAttractionImageField(imageData = null) {
-    const container = document.getElementById('images-container'); // Предполагаем, что ID такой же
-    const dropHint = document.getElementById('drop-hint'); // Предполагаем, что ID такой же
+    const container = document.getElementById('attraction-images-container');
+    const dropHint = document.getElementById('attraction-drop-hint');
 
     if (!container) return;
 
-    // Скрываем подсказку, если добавляем первое изображение
-    if (dropHint && container.children.length === 0) {
+    if (dropHint) {
         dropHint.classList.remove('show');
     }
 
-    const imageId = Date.now() + Math.floor(Math.random() * 10000); // Уникальный ID
+    const imageId = Date.now() + Math.floor(Math.random() * 10000);
     const imageItem = document.createElement('div');
     imageItem.className = 'image-item';
     imageItem.dataset.id = imageId;
-    imageItem.draggable = true; // Разрешаем перетаскивание
+    imageItem.draggable = true;
 
     const imageUrl = imageData?.url || '';
-    const imageAlt = imageData?.alt || `Изображение ${attractionImages.length + 1}`;
+    const imageAlt = imageData?.alt || '';
 
     imageItem.innerHTML = `
         ${imageUrl ?
-            `<img src="${imageUrl}" alt="${escapeHtml(imageAlt)}" onerror="this.src='/assets/icons/placeholder1.webp'">` :
+            `<img src="${imageUrl}" alt="${imageAlt}" onerror="this.src='/assets/icons/placeholder1.webp'">` :
             `<div class="image-placeholder">Изображение не загружено</div>`
         }
         <input type="hidden" class="image-input" value="${imageUrl}">
@@ -296,17 +261,14 @@ function addAttractionImageField(imageData = null) {
 
     container.appendChild(imageItem);
 
-    // Добавляем drag & drop события для этого элемента
     setupAttractionImageDragEvents(imageItem);
 
-    // Сохраняем изображение в массив
     attractionImages.push({
         id: imageId,
         url: imageUrl,
         alt: imageAlt
     });
 
-    // Показываем кнопку удаления при наведении
     imageItem.addEventListener('mouseenter', () => {
         const deleteBtn = imageItem.querySelector('.delete-image-btn');
         if (deleteBtn) deleteBtn.style.opacity = '1';
@@ -317,43 +279,37 @@ function addAttractionImageField(imageData = null) {
         if (deleteBtn) deleteBtn.style.opacity = '0';
     });
 
-    // Обработчик удаления изображения
     const deleteBtn = imageItem.querySelector('.delete-image-btn');
     if (deleteBtn) {
         deleteBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            removeAttractionImage(imageId);
+            deleteAttractionImage(imageId);
         });
     }
 }
 
-// Настройка событий перетаскивания для изображения
-// Исправленная функция setupAttractionImageDragEvents
 function setupAttractionImageDragEvents(imageItem) {
-    let draggedImage = null; // Локальная переменная для текущего перетаскивания
-
     imageItem.addEventListener('dragstart', (e) => {
-        draggedImage = imageItem;
+        window.draggedAttractionImage = imageItem;
         imageItem.classList.add('dragging');
         e.dataTransfer.effectAllowed = 'move';
     });
 
     imageItem.addEventListener('dragend', () => {
         imageItem.classList.remove('dragging');
-        const container = document.getElementById('images-container');
+        const container = document.getElementById('attraction-images-container');
         if (container) {
             const draggables = container.querySelectorAll('.image-item.drag-over');
             draggables.forEach(item => item.classList.remove('drag-over'));
         }
-        draggedImage = null;
+        window.draggedAttractionImage = null;
     });
 
     imageItem.addEventListener('dragover', (e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-
-        if (draggedImage !== imageItem) {
+        if (window.draggedAttractionImage !== imageItem) {
             imageItem.classList.add('drag-over');
         }
     });
@@ -366,35 +322,28 @@ function setupAttractionImageDragEvents(imageItem) {
         e.preventDefault();
         imageItem.classList.remove('drag-over');
 
-        if (draggedImage && draggedImage !== imageItem) {
-            const container = document.getElementById('images-container');
+        if (window.draggedAttractionImage && window.draggedAttractionImage !== imageItem) {
+            const container = document.getElementById('attraction-images-container');
             if (container) {
-                // Определяем позицию для вставки
                 const rect = imageItem.getBoundingClientRect();
                 const isAfter = e.clientX > rect.left + rect.width / 2;
-
                 if (isAfter) {
-                    container.insertBefore(draggedImage, imageItem.nextSibling);
+                    container.insertBefore(window.draggedAttractionImage, imageItem.nextSibling);
                 } else {
-                    container.insertBefore(draggedImage, imageItem);
+                    container.insertBefore(window.draggedAttractionImage, imageItem);
                 }
-
-                // Обновляем порядок изображений в массиве
                 updateAttractionImagesOrder();
             }
         }
     });
 }
 
-
-// Обновить порядок изображений в массиве после перетаскивания
-// Исправленная функция updateAttractionImagesOrder
 function updateAttractionImagesOrder() {
-    const imageItems = document.querySelectorAll('.image-item');
+    const imageItems = document.querySelectorAll('#attraction-images-container .image-item');
     const newImages = [];
 
     imageItems.forEach(item => {
-        const id = parseInt(item.dataset.id, 10); // Указываем основание 10
+        const id = parseInt(item.dataset.id);
         const image = attractionImages.find(img => img.id === id);
         if (image) {
             newImages.push(image);
@@ -404,47 +353,55 @@ function updateAttractionImagesOrder() {
     attractionImages = newImages;
 }
 
-
-// Удалить изображение
-function removeAttractionImage(imageId) {
-    const imageItem = document.querySelector(`.image-item[data-id="${imageId}"]`);
+function deleteAttractionImage(imageId) {
+    const imageItem = document.querySelector(`#attraction-images-container .image-item[data-id="${imageId}"]`);
     if (imageItem) {
         imageItem.remove();
-        // Удаляем из массива
         attractionImages = attractionImages.filter(img => img.id !== imageId);
 
         // Показываем подсказку, если не осталось изображений
-        const container = document.getElementById('images-container');
-        const dropHint = document.getElementById('drop-hint');
+        const container = document.getElementById('attraction-images-container');
+        const dropHint = document.getElementById('attraction-drop-hint');
         if (container && dropHint && container.children.length === 0) {
             dropHint.classList.add('show');
         }
     }
 }
 
-// Очистить все поля изображений
 function clearAttractionImageFields() {
-    const container = document.getElementById('images-container');
-    const dropHint = document.getElementById('drop-hint');
+    const container = document.getElementById('attraction-images-container');
+    const dropHint = document.getElementById('attraction-drop-hint');
 
     if (container) {
         container.innerHTML = '';
     }
 
     if (dropHint) {
-        dropHint.classList.add('show'); // Показываем подсказку при очистке
+        dropHint.classList.add('show');
     }
 
-    attractionImages = []; // Очищаем массив
+    attractionImages = [];
 }
 
-// Получить все изображения из формы (для отправки на сервер)
-function getAttractionImagesFromForm() {
-    // Возвращаем копию массива
-    return [...attractionImages];
-    // Или, если нужно в формате, совместимом с товаром:
-    // return attractionImages.map(img => ({ url: img.url, alt: img.alt }));
+function loadAttractionImagesToForm(images) {
+    clearAttractionImageFields();
+    
+    if (images && Array.isArray(images) && images.length > 0) {
+        images.forEach(image => {
+            addAttractionImageField(image);
+        });
+        
+        const dropHint = document.getElementById('attraction-drop-hint');
+        if (dropHint) {
+            dropHint.classList.remove('show');
+        }
+    }
 }
+
+// Инициализация после загрузки DOM
+document.addEventListener('DOMContentLoaded', () => {
+    setupAttractionImageEventListeners();
+});
 
 // --- Сохранение/Удаление аттракциона ---
 
