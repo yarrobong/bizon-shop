@@ -62,13 +62,19 @@ class AdminPanel {
 
     this.currentTab = tabName;
 
-    // Триггеры для загрузки данных при переключении вкладок
-    const tabFunctionName = `load${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Tab`;
-    if (typeof window[tabFunctionName] === 'function') {
-        console.log(`Вызов функции: ${tabFunctionName}`);
-        window[tabFunctionName]();
+    // Исправленная проверка имени функции
+    let functionName;
+    if (tabName === 'supplier-catalog') {
+        functionName = 'loadSupplierCatalogTab';
     } else {
-        console.warn(`Функция ${tabFunctionName} не найдена`);
+        functionName = `load${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Tab`;
+    }
+    
+    if (typeof window[functionName] === 'function') {
+        console.log(`Вызов функции: ${functionName}`);
+        window[functionName]();
+    } else {
+        console.warn(`Функция ${functionName} не найдена`);
     }
 }
 
