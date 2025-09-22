@@ -50,7 +50,7 @@ main {
 }
 
 .attraction-image {
-  width: 50%; /* Занимает половину ширины */
+  width: 35%; /* Занимает половину ширины */
   height: 100%;
   position: relative;
   overflow: hidden;
