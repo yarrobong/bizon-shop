@@ -251,6 +251,48 @@ app.put('/api/products/:id/variants', async (req, res) => {
     client.release();
   }
 });
+
+// === API: Обновить товар ===
+app.put('/api/products/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    // Добавлены новые поля supplier_link, supplier_notes
+    const { title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images } = req.body;
+    const images_json = images ? JSON.stringify(images) : null;
+
+    const result = await pool.query(`
+      UPDATE products
+      SET title = $1, description = $2, price = $3, tag = $4, available = $5, category = $6, brand = $7, compatibility = $8, supplier_link = $9, supplier_notes = $10, images_json = $11
+      WHERE id = $12
+      RETURNING id, title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes -- images_json исключен для последующей обработки
+    `, [title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json, id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Товар не найден' });
+    }
+
+    // Обрабатываем images_json для ответа, как в GET /api/products/:id
+    const updatedProduct = result.rows[0];
+    let processedImages = [];
+    if (product.images_json != null) {
+      if (Array.isArray(product.images_json)) {
+        processedImages = product.images_json;
+      } else if (typeof product.images_json === 'object') {
+        processedImages = [product.images_json];
+      } else {
+        processedImages = [product.images_json];
+      }
+    }
+
+    res.json({
+      ...updatedProduct,
+      images: processedImages
+    });
+  } catch (err) {
+    console.error('Ошибка обновления товара:', err);
+    res.status(500).json({ error: 'Не удалось обновить товар' });
+  }
+});
 // === API: Получить товар по ID ===
 app.get('/api/products/:id', async (req, res) => {
   try {
