@@ -828,6 +828,63 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
+// --- API endpoint для получения аттракционов из БД ---
+app.get('/api/attractions', async (req, res) => {
+  console.log('Получение списка аттракционов из БД...');
+  try {
+    // Выполняем запрос к БД
+    // Предполагается, что таблица называется 'attractions'
+    const query = `
+      SELECT 
+        id, 
+        title, 
+        price, 
+        category, 
+        image_url AS image, 
+        description,
+        specs_places AS "specs.places",
+        specs_power AS "specs.power",
+        specs_games AS "specs.games",
+        specs_area AS "specs.area",
+        specs_dimensions AS "specs.dimensions"
+      FROM attractions
+      ORDER BY id ASC; -- или другой порядок, например, по названию или категории
+    `;
+    const result = await pool.query(query);
+
+    // Преобразуем результат из БД в формат, ожидаемый frontend'ом
+    // Особенно важно правильно сформировать объект `specs`
+    const attractions = result.rows.map(row => {
+      // Создаем объект аттракциона
+      const attraction = {
+        id: row.id,
+        title: row.title,
+        price: parseFloat(row.price), // Убедимся, что цена - число
+        category: row.category,
+        image: row.image, // URL изображения
+        description: row.description,
+        // Формируем объект specs из отдельных полей
+        specs: {
+          places: row["specs.places"] || "N/A",
+          power: row["specs.power"] || "N/A",
+          games: row["specs.games"] || "N/A",
+          area: row["specs.area"] || "N/A",
+          dimensions: row["specs.dimensions"] || "N/A"
+        }
+      };
+      return attraction;
+    });
+
+    console.log(`✅ Успешно получено ${attractions.length} аттракционов из БД`);
+    // Отправляем JSON-массив аттракционов клиенту
+    res.json(attractions);
+  } catch (err) {
+    console.error('❌ Ошибка при получении аттракционов из БД:', err);
+    // Отправляем клиенту ошибку
+    res.status(500).json({ error: 'Не удалось загрузить аттракционы', details: err.message });
+  }
+});
+
 // --- КАСТОМНЫЕ МАРШРУТЫ ДЛЯ HTML СТРАНИЦ ---
 // Универсальный маршрут для отдачи .html страниц (например, /catalog -> public/catalog.html)
 // Должен идти ПОСЛЕ API, но ДО обработчика 404
