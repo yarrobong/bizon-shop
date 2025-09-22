@@ -203,6 +203,37 @@ main {
   box-shadow: 0 4px 8px rgba(0, 98, 255, 0.3);
 }
 
+.specs-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Расстояние между элементами */
+    padding: 15px 0; /* Отступы сверху и снизу секции */
+}
+
+.specs-section h3 {
+    margin: 0 0 10px 0; /* Отступ только снизу у заголовка */
+}
+
+.specs-section label {
+    display: block;
+    margin-bottom: 5px; /* Небольшой отступ между лейблом и инпутом */
+    font-weight: bold; /* Сделать лейблы более заметными */
+}
+
+.specs-section input {
+    width: 100%; /* Инпуты занимают всю ширину контейнера */
+    padding: 8px 12px; /* Внутренние отступы */
+    border: 1px solid #ddd; /* Граница */
+    border-radius: 4px; /* Скругленные углы */
+    box-sizing: border-box; /* Ширина включает padding и border */
+}
+
+.specs-section input:focus {
+    outline: none;
+    border-color: #007bff; /* Цвет границы при фокусе */
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25); /* Тень при фокусе */
+}
+
 /* Адаптивность для карточек */
 @media (max-width: 768px) {
   .products-grid {
