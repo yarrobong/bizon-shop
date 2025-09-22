@@ -418,21 +418,27 @@ async function saveAttraction() {
 
     const formData = new FormData(form);
     // Подготавливаем данные, включая массив изображений
-    const attractionData = {
-        title: formData.get('attraction-title'),
-        description: formData.get('attraction-description'),
-        price: parseFloat(formData.get('attraction-price')) || 0,
-        category: formData.get('attraction-category'),
-        specs: {
-            places: formData.get('attraction-specs-places') || null,
-            power: formData.get('attraction-specs-power') || null,
-            games: formData.get('attraction-specs-games') || null,
-            area: formData.get('attraction-specs-area') || null,
-            dimensions: formData.get('attraction-specs-dimensions') || null
-        },
-        // Отправляем массив изображений
-        images: getAttractionImagesFromForm()
-    };
+    // Получаем массив изображений
+const imagesArray = getAttractionImagesFromForm();
+// Берем URL первого изображения или null
+const primaryImageUrl = imagesArray.length > 0 ? imagesArray[0].url : null;
+
+// Подготавливаем данные
+const attractionData = {
+    title: formData.get('attraction-title'),
+    description: formData.get('attraction-description'),
+    price: parseFloat(formData.get('attraction-price')) || 0,
+    category: formData.get('attraction-category'),
+    specs: {
+        places: formData.get('attraction-specs-places') || null,
+        power: formData.get('attraction-specs-power') || null,
+        games: formData.get('attraction-specs-games') || null,
+        area: formData.get('attraction-specs-area') || null,
+        dimensions: formData.get('attraction-specs-dimensions') || null
+    },
+    // Отправляем только первое изображение в старом поле
+    image: primaryImageUrl
+};
 
     try {
         let response;
