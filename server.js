@@ -828,15 +828,14 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
-// --- API endpoint для получения аттракционов из БД ---
-// Обновлен для загрузки массива изображений
+// --- API endpoint для получения аттракционов из БД (для админки - все аттракционы) ---
 app.get('/api/attractions', async (req, res) => {
-    console.log('Получение списка аттракционов из БД...');
+    console.log('Получение списка аттракционов из БД (для админки)...');
     try {
         // Получаем основные данные аттракционов
         const attractionsQuery = `
             SELECT
-                id, title, price, category, image_url AS image, description,
+                id, title, price, category, image_url AS image, description, available, -- <-- Добавлен available
                 specs_places AS "specs.places", specs_power AS "specs.power",
                 specs_games AS "specs.games", specs_area AS "specs.area",
                 specs_dimensions AS "specs.dimensions"
@@ -880,6 +879,7 @@ app.get('/api/attractions', async (req, res) => {
                 title: row.title,
                 price: parseFloat(row.price),
                 category: row.category,
+                available: row.available, // <-- Добавлен available
                 // image: row.image, // Можно убрать, если фронтенд полностью перешел на images
                 images: imagesForAttraction, // Массив изображений
                 description: row.description,
@@ -893,20 +893,100 @@ app.get('/api/attractions', async (req, res) => {
             };
         });
 
-        console.log(`✅ Успешно получено ${attractions.length} аттракционов из БД`);
+        console.log(`✅ Успешно получено ${attractions.length} аттракционов из БД (для админки)`);
         res.json(attractions);
     } catch (err) {
-        console.error('❌ Ошибка при получении аттракционов из БД:', err);
+        console.error('❌ Ошибка при получении аттракционов из БД (для админки):', err);
         res.status(500).json({ error: 'Не удалось загрузить аттракционы', details: err.message });
     }
 });
 
+// --- API endpoint для получения ДОСТУПНЫХ аттракционов из БД (для пользовательской части) ---
+app.get('/api/attractions/public', async (req, res) => {
+    console.log('Получение списка ДОСТУПНЫХ аттракционов из БД (для пользовательской части)...');
+    try {
+        // Получаем только доступные аттракционы
+        const attractionsQuery = `
+            SELECT
+                id, title, price, category, image_url AS image, description, -- available не нужен для публичного API
+                specs_places AS "specs.places", specs_power AS "specs.power",
+                specs_games AS "specs.games", specs_area AS "specs.area",
+                specs_dimensions AS "specs.dimensions"
+            FROM attractions
+            WHERE available = true -- <-- Фильтр по доступности
+            ORDER BY id ASC;
+        `;
+        const attractionsResult = await pool.query(attractionsQuery);
+        
+        // Получаем все изображения для доступных аттракционов за один запрос
+        // Сначала получим ID доступных аттракционов
+        const availableAttractionIds = attractionsResult.rows.map(r => r.id);
+        let imagesQuery, imagesResult;
+        if (availableAttractionIds.length > 0) {
+            const placeholders = availableAttractionIds.map((_, i) => `$${i + 1}`).join(', ');
+            imagesQuery = `
+                SELECT attraction_id, url, alt, sort_order
+                FROM attraction_images
+                WHERE attraction_id IN (${placeholders})
+                ORDER BY attraction_id, sort_order ASC;
+            `;
+            imagesResult = await pool.query(imagesQuery, availableAttractionIds);
+        } else {
+            imagesResult = { rows: [] }; // Пустой результат, если нет доступных аттракционов
+        }
 
+        // Преобразуем массив изображений в Map для быстрого поиска
+        const imagesMap = {};
+        imagesResult.rows.forEach(img => {
+            if (!imagesMap[img.attraction_id]) {
+                imagesMap[img.attraction_id] = [];
+            }
+            imagesMap[img.attraction_id].push({
+                url: img.url,
+                alt: img.alt || ''
+            });
+        });
+
+        // Формируем финальный массив доступных аттракционов с изображениями
+        const attractions = attractionsResult.rows.map(row => {
+            // Получаем изображения для текущего аттракциона или пустой массив
+            const imagesForAttraction = imagesMap[row.id] || [];
+            
+            // Для обратной совместимости: если массив пуст, используем старое поле image
+            if (imagesForAttraction.length === 0 && row.image) {
+                 imagesForAttraction.push({ url: row.image, alt: row.title || 'Изображение' });
+            }
+
+            return {
+                id: row.id,
+                title: row.title,
+                price: parseFloat(row.price),
+                category: row.category,
+                // available: row.available, // Убираем из публичного API
+                // image: row.image, // Можно убрать, если фронтенд полностью перешел на images
+                images: imagesForAttraction, // Массив изображений
+                description: row.description,
+                specs: {
+                    places: row["specs.places"] || null,
+                    power: row["specs.power"] || null,
+                    games: row["specs.games"] || null,
+                    area: row["specs.area"] || null,
+                    dimensions: row["specs.dimensions"] || null
+                }
+            };
+        });
+
+        console.log(`✅ Успешно получено ${attractions.length} ДОСТУПНЫХ аттракционов из БД (для пользовательской части)`);
+        res.json(attractions);
+    } catch (err) {
+        console.error('❌ Ошибка при получении ДОСТУПНЫХ аттракционов из БД (для пользовательской части):', err);
+        res.status(500).json({ error: 'Не удалось загрузить аттракционы', details: err.message });
+    }
+});
 
 // --- API endpoint для создания аттракциона ---
-// Обновлен для сохранения массива изображений
 app.post('/api/attractions', async (req, res) => {
-    const { title, price, category, description, specs, images } = req.body; // <-- Получаем images (массив)
+    const { title, price, category, description, specs, images, available } = req.body; // <-- Добавлен available
     console.log('Создание нового аттракциона:', req.body);
 
     // URL первого изображения для поля image_url (для обратной совместимости)
@@ -915,74 +995,46 @@ app.post('/api/attractions', async (req, res) => {
         primaryImageUrl = images[0].url;
     }
 
-    const client = await pool.connect(); // Используем клиент для транзакции
+    // Значение по умолчанию для available - true
+    const isAvailable = available !== false; // Если available undefined или true, будет true. Если false, будет false.
+
     try {
-        await client.query('BEGIN'); // Начинаем транзакцию
-
-        // 1. Вставляем основные данные аттракциона
-        const attractionQuery = `
-            INSERT INTO attractions (
-                title, price, category, image_url, description,
-                specs_places, specs_power, specs_games, specs_area, specs_dimensions
-            )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-            RETURNING id;
-        `;
-        const attractionValues = [
-            title, price, category, primaryImageUrl, description,
-            specs?.places || null, specs?.power || null, specs?.games || null,
-            specs?.area || null, specs?.dimensions || null
+        const query = `
+      INSERT INTO attractions (
+        title, price, category, image_url, description, available, -- <-- Добавлен available
+        specs_places, specs_power, specs_games, specs_area, specs_dimensions
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) -- <-- Добавлен $6
+      RETURNING id;
+    `;
+        const values = [
+            title,
+            price,
+            category,
+            primaryImageUrl,
+            description,
+            isAvailable, // <-- Используем isAvailable
+            specs?.places || null,
+            specs?.power || null,
+            specs?.games || null,
+            specs?.area || null,
+            specs?.dimensions || null
         ];
-        const attractionResult = await client.query(attractionQuery, attractionValues);
-        const newAttractionId = attractionResult.rows[0].id;
-
-        // 2. Вставляем изображения, если они есть
-        if (images && Array.isArray(images) && images.length > 0) {
-            // Подготавливаем данные для множественной вставки
-            const imageInserts = images.map((img, index) => ({
-                attraction_id: newAttractionId,
-                url: img.url,
-                alt: img.alt || '',
-                sort_order: index
-            }));
-
-            // Создаем массивы значений для запроса
-            const insertValues = imageInserts.flatMap(img => [img.attraction_id, img.url, img.alt, img.sort_order]);
-            const placeholders = imageInserts.map((_, i) => 
-                `($${i * 4 + 1}, $${i * 4 + 2}, $${i * 4 + 3}, $${i * 4 + 4})`
-            ).join(', ');
-
-            const imagesQuery = `
-                INSERT INTO attraction_images (attraction_id, url, alt, sort_order)
-                VALUES ${placeholders};
-            `;
-            await client.query(imagesQuery, insertValues);
-        }
-
-        await client.query('COMMIT'); // Завершаем транзакцию успешно
-        console.log(`✅ Аттракцион с ID ${newAttractionId} успешно создан в БД`);
-        res.status(201).json({ id: newAttractionId, message: 'Аттракцион создан' });
-        
+        const result = await pool.query(query, values);
+        const newId = result.rows[0].id;
+        console.log(`✅ Аттракцион с ID ${newId} успешно создан в БД`);
+        res.status(201).json({ id: newId, message: 'Аттракцион создан' });
     } catch (err) {
-        await client.query('ROLLBACK'); // Откатываем транзакцию в случае ошибки
         console.error('❌ Ошибка при создании аттракциона в БД:', err);
         res.status(500).json({ error: 'Не удалось создать аттракцион', details: err.message });
-    } finally {
-        client.release(); // Возвращаем клиент в пул
     }
 });
 
 // --- API endpoint для обновления аттракциона ---
-// Обновлен для обновления массива изображений
 app.put('/api/attractions/:id', async (req, res) => {
     const { id } = req.params;
-    const { title, price, category, description, specs, images } = req.body; // <-- Получаем images (массив)
+    const { title, price, category, description, specs, images, available } = req.body; // <-- Добавлен available
     console.log(`Обновление аттракциона с ID ${id}:`, req.body);
-
-    const attractionId = parseInt(id, 10);
-    if (isNaN(attractionId)) {
-        return res.status(400).json({ error: 'Некорректный ID аттракциона' });
-    }
 
     // URL первого изображения для поля image_url (для обратной совместимости)
     let primaryImageUrl = null;
@@ -990,68 +1042,54 @@ app.put('/api/attractions/:id', async (req, res) => {
         primaryImageUrl = images[0].url;
     }
 
-    const client = await pool.connect(); // Используем клиент для транзакции
+    // Значение по умолчанию для available - true (если не передано, считаем, что не меняется или true)
+    // Лучше явно проверить, было ли поле передано
+    const isAvailableProvided = 'available' in req.body;
+    const isAvailable = isAvailableProvided ? available === true : undefined; // undefined означает "не обновлять"
+
     try {
-        await client.query('BEGIN'); // Начинаем транзакцию
+        const attractionId = parseInt(id, 10);
+        if (isNaN(attractionId)) {
+            return res.status(400).json({ error: 'Некорректный ID аттракциона' });
+        }
+        
+        // Динамически строим запрос UPDATE
+        let query = `UPDATE attractions SET `;
+        const values = [];
+        let paramCounter = 1;
 
-        // 1. Обновляем основные данные аттракциона
-        const attractionQuery = `
-            UPDATE attractions
-            SET
-                title = $1, price = $2, category = $3, image_url = $4, description = $5,
-                specs_places = $6, specs_power = $7, specs_games = $8,
-                specs_area = $9, specs_dimensions = $10
-            WHERE id = $11
-            RETURNING id;
-        `;
-        const attractionValues = [
-            title, price, category, primaryImageUrl, description,
-            specs?.places || null, specs?.power || null, specs?.games || null,
-            specs?.area || null, specs?.dimensions || null, attractionId
+        const fieldsToUpdate = [
+            { field: 'title', value: title },
+            { field: 'price', value: price },
+            { field: 'category', value: category },
+            { field: 'image_url', value: primaryImageUrl },
+            { field: 'description', value: description },
+            { field: 'specs_places', value: specs?.places || null },
+            { field: 'specs_power', value: specs?.power || null },
+            { field: 'specs_games', value: specs?.games || null },
+            { field: 'specs_area', value: specs?.area || null },
+            { field: 'specs_dimensions', value: specs?.dimensions || null }
         ];
-        const attractionResult = await client.query(attractionQuery, attractionValues);
+        
+        // Добавляем available только если оно было передано
+        if (isAvailableProvided) {
+             fieldsToUpdate.push({ field: 'available', value: isAvailable });
+        }
 
-        if (attractionResult.rows.length === 0) {
-            await client.query('ROLLBACK');
+        query += fieldsToUpdate.map(f => `${f.field} = $${paramCounter++}`).join(', ');
+        values.push(...fieldsToUpdate.map(f => f.value));
+        query += ` WHERE id = $${paramCounter} RETURNING id;`;
+        values.push(attractionId);
+
+        const result = await pool.query(query, values);
+        if (result.rows.length === 0) {
             return res.status(404).json({ error: 'Аттракцион не найден для обновления' });
         }
-
-        // 2. Удаляем старые изображения
-        await client.query('DELETE FROM attraction_images WHERE attraction_id = $1', [attractionId]);
-
-        // 3. Вставляем новые изображения, если они есть
-        if (images && Array.isArray(images) && images.length > 0) {
-            // Подготавливаем данные для множественной вставки
-            const imageInserts = images.map((img, index) => ({
-                attraction_id: attractionId,
-                url: img.url,
-                alt: img.alt || '',
-                sort_order: index
-            }));
-
-            // Создаем массивы значений для запроса
-            const insertValues = imageInserts.flatMap(img => [img.attraction_id, img.url, img.alt, img.sort_order]);
-            const placeholders = imageInserts.map((_, i) => 
-                `($${i * 4 + 1}, $${i * 4 + 2}, $${i * 4 + 3}, $${i * 4 + 4})`
-            ).join(', ');
-
-            const imagesQuery = `
-                INSERT INTO attraction_images (attraction_id, url, alt, sort_order)
-                VALUES ${placeholders};
-            `;
-            await client.query(imagesQuery, insertValues);
-        }
-
-        await client.query('COMMIT'); // Завершаем транзакцию успешно
         console.log(`✅ Аттракцион с ID ${id} успешно обновлен в БД`);
         res.json({ message: 'Аттракцион обновлен' });
-        
     } catch (err) {
-        await client.query('ROLLBACK'); // Откатываем транзакцию в случае ошибки
         console.error(`❌ Ошибка при обновлении аттракциона с ID ${id} в БД:`, err);
         res.status(500).json({ error: 'Не удалось обновить аттракцион', details: err.message });
-    } finally {
-        client.release(); // Возвращаем клиент в пул
     }
 });
 

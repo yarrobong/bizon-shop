@@ -14,7 +14,7 @@ async function loadAttractionsTab() {
 async function loadAttractions() {
     try {
         console.log('Загрузка аттракционов...');
-        const response = await fetch('/api/attractions');
+        const response = await fetch('/api/attractions/public');
         console.log('Ответ от /api/attractions:', response.status);
         if (response.ok) {
             const attractions = await response.json();
@@ -108,6 +108,14 @@ async function loadAttractionForEdit(attractionId) {
             document.getElementById('attraction-description').value = attraction.description || '';
             document.getElementById('attraction-price').value = attraction.price || '';
             document.getElementById('attraction-category').value = attraction.category || '';
+
+            // --- ИЗМЕНЕНИЕ: Загрузка состояния доступности ---
+            const availableCheckbox = document.getElementById('attraction-available');
+            if (availableCheckbox) {
+                // Если поле available отсутствует в данных, считаем его доступным (true)
+                availableCheckbox.checked = attraction.available !== false;
+            }
+            // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
             const specs = attraction.specs || {};
             document.getElementById('attraction-specs-places').value = specs.places || '';
@@ -447,6 +455,7 @@ const attractionData = {
     description: formData.get('attraction-description'),
     price: parseFloat(formData.get('attraction-price')) || 0,
     category: formData.get('attraction-category'),
+    available: formData.get('attraction-available') === 'on', // Чекбоксы отправляют 'on' если отмечены
     specs: {
         
         places: formData.get('attraction-specs-places') || null,
