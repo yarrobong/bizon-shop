@@ -87,52 +87,57 @@
   }
 
   // --- Функция для создания карточки аттракциона ---
-  // Эта функция должна быть определена здесь, выше, чем она используется
-  function createAttractionCard(attraction) {
-    // Извлекаем спецификации из объекта
-    const specs = attraction.specs || {};
-    const places = specs.places || 'N/A';
-    const power = specs.power || 'N/A';
-    const games = specs.games || 'N/A';
-    const area = specs.area || 'N/A';
-    const dimensions = specs.dimensions || 'N/A';
+// Эта функция должна быть определена здесь, выше, чем она используется
+function createAttractionCard(attraction) {
+  // Извлекаем спецификации из объекта
+  const specs = attraction.specs || {};
+  const places = specs.places || 'N/A';
+  const power = specs.power || 'N/A';
+  const games = specs.games || 'N/A';
+  const area = specs.area || 'N/A';
+  const dimensions = specs.dimensions || 'N/A';
 
-    const card = document.createElement('div');
-    card.className = 'attraction-card';
-    card.innerHTML = `
-      <div class="attraction-image">
-        <img src="${attraction.image}" onerror="this.onerror=null; this.src='/assets/placeholder.png';" alt="${attraction.title}" />
-      </div>
-      <div class="attraction-info">
-        <h3 class="attraction-title">${attraction.title}</h3>
-        <div class="attraction-price">${formatPrice(attraction.price)}</div>
-        <div class="attraction-specs">
-          <div class="spec-item">
-            <span class="spec-label">Мест:</span> <span class="spec-value">${places}</span>
-          </div>
-          <div class="spec-item">
-            <span class="spec-label">Мощность:</span> <span class="spec-value">${power}</span>
-          </div>
-          <div class="spec-item">
-            <span class="spec-label">Игры:</span> <span class="spec-value">${games}</span>
-          </div>
-          <div class="spec-item">
-            <span class="spec-label">Площадь:</span> <span class="spec-value">${area}</span>
-          </div>
-          <div class="spec-item">
-            <span class="spec-label">Размеры:</span> <span class="spec-value">${dimensions}</span>
-          </div>
+  // Предположим, у объекта attraction есть поле stock
+  // Если нет, замените attraction.stock на 'N/A' или другую заглушку
+  const stockInfo = attraction.stock !== undefined ? attraction.stock : 'N/A';
+
+  const card = document.createElement('div');
+  card.className = 'attraction-card';
+  card.innerHTML = `
+    <div class="attraction-image">
+      <img src="${attraction.image}" onerror="this.onerror=null; this.src='/assets/placeholder.png';" alt="${attraction.title}" />
+    </div>
+    <div class="attraction-info">
+      <h3 class="attraction-title">${attraction.title}</h3>
+      <div class="attraction-price">${window.formatPrice ? window.formatPrice(attraction.price) : `${attraction.price}₽`}</div>
+      <div class="attraction-stock">Остаток: ${stockInfo}</div>
+      <div class="attraction-specs">
+        <div class="spec-item">
+          <span class="spec-label">Мест:</span> <span class="spec-value">${places}</span>
         </div>
-        <div class="attraction-description">${attraction.description ? (attraction.description.substring(0, 100) + (attraction.description.length > 100 ? '...' : '')) : ''}</div>
-        <div class="product-actions">
-          <!-- Убираем кнопку "Подробнее", оставляем только "В корзину" -->
-          <!-- <button class="btn-details" data-id="${attraction.id}">Подробнее</button> -->
-          <button class="btn-cart" data-id="${attraction.id}">В корзину</button>
+        <div class="spec-item">
+          <span class="spec-label">Мощность:</span> <span class="spec-value">${power}</span>
+        </div>
+        <div class="spec-item">
+          <span class="spec-label">Игры:</span> <span class="spec-value">${games}</span>
+        </div>
+        <div class="spec-item">
+          <span class="spec-label">Площадь:</span> <span class="spec-value">${area}</span>
+        </div>
+        <div class="spec-item">
+          <span class="spec-label">Размеры:</span> <span class="spec-value">${dimensions}</span>
         </div>
       </div>
-    `;
-    return card;
-  }
+      <div class="attraction-description">${attraction.description ? (attraction.description) : ''}</div>
+      <div class="product-actions">
+        <!-- Убираем кнопку "Подробнее", оставляем только "В корзину" -->
+        <!-- <button class="btn-details" data-id="${attraction.id}">Подробнее</button> -->
+        <button class="btn-cart" data-id="${attraction.id}">В корзину</button>
+      </div>
+    </div>
+  `;
+  return card;
+}
 
   // --- Rendering ---
   function renderAttractions() {
