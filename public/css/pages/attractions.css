@@ -4,7 +4,7 @@
 .products-grid {
   display: grid;
   /* Пример адаптивной сетки, настройте под себя */
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Минимум 280px, максимум 1fr */
+  grid-template-columns: repeat(1, minmax(280px, 1fr)); /* Минимум 280px, максимум 1fr */
   gap: 2rem; /* Отступы между карточками */
   padding: 2rem;
   margin: 0 auto;
