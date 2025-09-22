@@ -1,6 +1,6 @@
 // admin-attractions.js
 
-let attractionImages = [];
+let attractionImages = []; // Массив для хранения изображений аттракциона
 
 async function loadAttractionsTab() {
     await loadAttractions();
@@ -41,10 +41,11 @@ function renderAttractions(attractions) {
     }
 
     attractions.forEach(attraction => {
+        // Используем первое изображение из массива, если оно есть
+        const imageUrl = (attraction.images && attraction.images.length > 0) ? attraction.images[0].url : '/assets/icons/placeholder1.webp';
+
         const card = document.createElement('div');
         card.className = 'product-card';
-        const imageUrl = attraction.image || '/assets/icons/placeholder1.webp';
-
         card.innerHTML = `
             <img src="${imageUrl}" alt="${adminPanel.escapeHtml(attraction.title)}" onerror="this.src='/assets/icons/placeholder1.webp'">
             <h3>${adminPanel.escapeHtml(attraction.title)}</h3>
@@ -71,7 +72,7 @@ function openAttractionModal(attractionId = null) {
         title.textContent = 'Добавить аттракцион';
         form.reset();
         idInput.value = '';
-        clearAttractionImageFields();
+        clearAttractionImageFields(); // Очищает массив attractionImages и DOM
         modal.style.display = 'block';
         document.body.classList.add('modal-open');
     }
@@ -97,10 +98,15 @@ async function loadAttractionForEdit(attractionId) {
             document.getElementById('attraction-specs-area').value = specs.area || '';
             document.getElementById('attraction-specs-dimensions').value = specs.dimensions || '';
 
-            if (attraction.image) {
-                loadAttractionImageToForm({ url: attraction.image, alt: attraction.title });
+            // Загружаем изображения в форму (массив)
+            if (attraction.images && Array.isArray(attraction.images)) {
+                loadAttractionImagesToForm(attraction.images);
             } else {
+                // Если images не массив, пытаемся обработать как одно изображение или очистить
                 clearAttractionImageFields();
+                if (attraction.image) { // Старый формат?
+                     addAttractionImageField({ url: attraction.image, alt: attraction.title || 'Изображение' });
+                }
             }
 
             const modal = document.getElementById('attraction-modal');
@@ -115,6 +121,7 @@ async function loadAttractionForEdit(attractionId) {
     }
 }
 
+// --- Обработчики событий формы ---
 document.getElementById('attraction-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     await saveAttraction();
@@ -124,6 +131,7 @@ document.getElementById('add-attraction-btn')?.addEventListener('click', () => {
     openAttractionModal();
 });
 
+// Закрытие модального окна
 document.querySelector('#attraction-modal .close-attraction-modal')?.addEventListener('click', () => {
     adminPanel.closeModal('attraction-modal');
 });
@@ -131,20 +139,20 @@ document.getElementById('cancel-attraction-btn')?.addEventListener('click', () =
     adminPanel.closeModal('attraction-modal');
 });
 
-// --- Работа с изображениями аттракционов ---
+// --- Работа с изображениями аттракционов (МНОЖЕСТВЕННЫЕ) ---
 
 function setupAttractionImageEventListeners() {
-    const addImageBtn = document.getElementById('add-image-btn'); // Предполагаем, что ID такой же
+    const addImageBtn = document.getElementById('add-image-btn'); // Предполагаем, что ID такой же, как у товаров
     if (addImageBtn) {
         addImageBtn.addEventListener('click', () => {
             const fileInput = document.createElement('input');
             fileInput.type = 'file';
             fileInput.accept = 'image/*';
-            fileInput.multiple = false;
+            fileInput.multiple = true; // Разрешаем множественный выбор
             fileInput.style.display = 'none';
             fileInput.addEventListener('change', async (e) => {
                 const files = e.target.files;
-                if (files.length > 0) await handleAttractionImageUpload(files[0]);
+                if (files.length > 0) await handleAttractionFilesSelect(files);
             });
             document.body.appendChild(fileInput);
             fileInput.click();
@@ -156,78 +164,113 @@ function setupAttractionImageEventListeners() {
     if (dropZone) {
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy'; // Изменено на 'copy'
             dropZone.classList.add('drag-over');
         });
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('drag-over');
+
+        dropZone.addEventListener('dragleave', (e) => {
+            // Проверяем, действительно ли курсор вышел за пределы drop zone
+            if (!dropZone.contains(e.relatedTarget)) {
+                dropZone.classList.remove('drag-over');
+            }
         });
+
         dropZone.addEventListener('drop', async (e) => {
             e.preventDefault();
             dropZone.classList.remove('drag-over');
             const files = e.dataTransfer.files;
-            if (files.length > 0 && files[0].type.startsWith('image/')) {
-                await handleAttractionImageUpload(files[0]);
-            } else {
-                adminPanel.showMessage('Пожалуйста, перетащите изображение', 'error');
+            if (files.length > 0) {
+                // Фильтруем только изображения
+                const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+                if (imageFiles.length > 0) {
+                    await handleAttractionFilesSelect(imageFiles);
+                } else {
+                    adminPanel.showMessage('Пожалуйста, перетащите изображения', 'error');
+                }
             }
         });
     }
 }
 
-async function handleAttractionImageUpload(file) {
-    if (!file.type.startsWith('image/')) {
-        adminPanel.showMessage('Пожалуйста, выберите файл изображения', 'error');
-        return;
-    }
+async function handleAttractionFilesSelect(files) {
+    // Обрабатываем файлы один за другим
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.type.startsWith('image/')) {
+            try {
+                const formData = new FormData();
+                formData.append('image', file);
 
-    const formData = new FormData();
-    formData.append('image', file);
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
 
-    try {
-        const response = await fetch('/api/upload', {
-            method: 'POST',
-            body: formData
-        });
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `Ошибка загрузки: ${response.status}`);
+                }
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || `Ошибка загрузки: ${response.status}`);
+                const data = await response.json();
+                // Добавляем загруженное изображение в форму
+                addAttractionImageField({ url: data.url, alt: file.name });
+            } catch (error) {
+                console.error('Ошибка при загрузке файла:', error);
+                adminPanel.showMessage(`Ошибка загрузки ${file.name}: ${error.message}`, 'error');
+            }
+        } else {
+            adminPanel.showMessage(`Файл ${file.name} не является изображением`, 'error');
         }
-
-        const data = await response.json();
-        loadAttractionImageToForm({ url: data.url, alt: file.name });
-    } catch (error) {
-        console.error('Ошибка при загрузке файла:', error);
-        adminPanel.showMessage(`Ошибка загрузки ${file.name}: ${error.message}`, 'error');
     }
 }
 
-function loadAttractionImageToForm(imageData) {
-    clearAttractionImageFields();
-    addAttractionImageField(imageData);
+// --- Функции управления изображениями в DOM и массиве ---
+
+// Загрузить массив изображений в форму
+function loadAttractionImagesToForm(images) {
+    clearAttractionImageFields(); // Очищаем всё перед загрузкой
+    if (images && Array.isArray(images) && images.length > 0) {
+        images.forEach(image => {
+            addAttractionImageField(image);
+        });
+        // Скрываем подсказку, если есть изображения
+        const dropHint = document.getElementById('drop-hint');
+        if (dropHint) {
+            dropHint.classList.remove('show');
+        }
+    } else {
+        // Показываем подсказку, если массив пуст
+        const dropHint = document.getElementById('drop-hint');
+        if (dropHint) {
+            dropHint.classList.add('show');
+        }
+    }
 }
 
+// Добавить новое поле для изображения
 function addAttractionImageField(imageData = null) {
     const container = document.getElementById('images-container'); // Предполагаем, что ID такой же
     const dropHint = document.getElementById('drop-hint'); // Предполагаем, что ID такой же
 
     if (!container) return;
-    if (dropHint) dropHint.classList.remove('show');
 
-    // Очищаем контейнер перед добавлением нового изображения (только одно для аттракциона)
-    container.innerHTML = '';
+    // Скрываем подсказку, если добавляем первое изображение
+    if (dropHint && container.children.length === 0) {
+        dropHint.classList.remove('show');
+    }
 
-    const imageId = Date.now() + Math.floor(Math.random() * 10000);
+    const imageId = Date.now() + Math.floor(Math.random() * 10000); // Уникальный ID
     const imageItem = document.createElement('div');
     imageItem.className = 'image-item';
     imageItem.dataset.id = imageId;
+    imageItem.draggable = true; // Разрешаем перетаскивание
 
     const imageUrl = imageData?.url || '';
-    const imageAlt = imageData?.alt || '';
+    const imageAlt = imageData?.alt || `Изображение ${attractionImages.length + 1}`;
 
     imageItem.innerHTML = `
         ${imageUrl ?
-            `<img src="${imageUrl}" alt="${imageAlt}" onerror="this.src='/assets/icons/placeholder1.webp'">` :
+            `<img src="${imageUrl}" alt="${adminPanel.escapeHtml(imageAlt)}" onerror="this.src='/assets/icons/placeholder1.webp'">` :
             `<div class="image-placeholder">Изображение не загружено</div>`
         }
         <input type="hidden" class="image-input" value="${imageUrl}">
@@ -235,8 +278,18 @@ function addAttractionImageField(imageData = null) {
     `;
 
     container.appendChild(imageItem);
-    attractionImages = [{ id: imageId, url: imageUrl, alt: imageAlt }]; // Только одно изображение
 
+    // Добавляем drag & drop события для этого элемента
+    setupAttractionImageDragEvents(imageItem);
+
+    // Сохраняем изображение в массив
+    attractionImages.push({
+        id: imageId,
+        url: imageUrl,
+        alt: imageAlt
+    });
+
+    // Показываем кнопку удаления при наведении
     imageItem.addEventListener('mouseenter', () => {
         const deleteBtn = imageItem.querySelector('.delete-image-btn');
         if (deleteBtn) deleteBtn.style.opacity = '1';
@@ -247,34 +300,130 @@ function addAttractionImageField(imageData = null) {
         if (deleteBtn) deleteBtn.style.opacity = '0';
     });
 
+    // Обработчик удаления изображения
     const deleteBtn = imageItem.querySelector('.delete-image-btn');
     if (deleteBtn) {
         deleteBtn.addEventListener('click', (e) => {
-            e.preventDefault(); e.stopPropagation();
+            e.preventDefault();
+            e.stopPropagation();
             removeAttractionImage(imageId);
         });
     }
 }
 
+// Настройка событий перетаскивания для изображения
+function setupAttractionImageDragEvents(imageItem) {
+    let draggedImage = null; // Локальная переменная для текущего перетаскивания
+
+    imageItem.addEventListener('dragstart', (e) => {
+        draggedImage = imageItem;
+        imageItem.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+    });
+
+    imageItem.addEventListener('dragend', () => {
+        imageItem.classList.remove('dragging');
+        const container = document.getElementById('images-container');
+        if (container) {
+            const draggables = container.querySelectorAll('.image-item.drag-over');
+            draggables.forEach(item => item.classList.remove('drag-over'));
+        }
+        draggedImage = null;
+    });
+
+    imageItem.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+
+        if (draggedImage !== imageItem) {
+            imageItem.classList.add('drag-over');
+        }
+    });
+
+    imageItem.addEventListener('dragleave', () => {
+        imageItem.classList.remove('drag-over');
+    });
+
+    imageItem.addEventListener('drop', (e) => {
+        e.preventDefault();
+        imageItem.classList.remove('drag-over');
+
+        if (draggedImage && draggedImage !== imageItem) {
+            const container = document.getElementById('images-container');
+            if (container) {
+                // Определяем позицию для вставки
+                const rect = imageItem.getBoundingClientRect();
+                const isAfter = e.clientX > rect.left + rect.width / 2;
+                
+                if (isAfter) {
+                    container.insertBefore(draggedImage, imageItem.nextSibling);
+                } else {
+                    container.insertBefore(draggedImage, imageItem);
+                }
+                
+                // Обновляем порядок изображений в массиве
+                updateAttractionImagesOrder();
+            }
+        }
+    });
+}
+
+// Обновить порядок изображений в массиве после перетаскивания
+function updateAttractionImagesOrder() {
+    const imageItems = document.querySelectorAll('.image-item');
+    const newImages = [];
+    
+    imageItems.forEach(item => {
+        const id = parseInt(item.dataset.id);
+        const image = attractionImages.find(img => img.id === id);
+        if (image) {
+            newImages.push(image);
+        }
+    });
+    
+    attractionImages = newImages;
+}
+
+// Удалить изображение
 function removeAttractionImage(imageId) {
     const imageItem = document.querySelector(`.image-item[data-id="${imageId}"]`);
-    if (imageItem) imageItem.remove();
-    attractionImages = [];
-    const dropHint = document.getElementById('drop-hint'); // Предполагаем, что ID такой же
-    if (dropHint) dropHint.classList.add('show');
+    if (imageItem) {
+        imageItem.remove();
+        // Удаляем из массива
+        attractionImages = attractionImages.filter(img => img.id !== imageId);
+
+        // Показываем подсказку, если не осталось изображений
+        const container = document.getElementById('images-container');
+        const dropHint = document.getElementById('drop-hint');
+        if (container && dropHint && container.children.length === 0) {
+            dropHint.classList.add('show');
+        }
+    }
 }
 
+// Очистить все поля изображений
 function clearAttractionImageFields() {
-    const container = document.getElementById('images-container'); // Предполагаем, что ID такой же
-    const dropHint = document.getElementById('drop-hint'); // Предполагаем, что ID такой же
-    if (container) container.innerHTML = '';
-    if (dropHint) dropHint.classList.add('show');
-    attractionImages = [];
+    const container = document.getElementById('images-container');
+    const dropHint = document.getElementById('drop-hint');
+
+    if (container) {
+        container.innerHTML = '';
+    }
+
+    if (dropHint) {
+        dropHint.classList.add('show'); // Показываем подсказку при очистке
+    }
+
+    attractionImages = []; // Очищаем массив
 }
 
-function getAttractionImageFromForm() {
-    return attractionImages.length > 0 ? attractionImages[0].url : null;
+// Получить все изображения из формы (для отправки на сервер)
+function getAttractionImagesFromForm() {
+    return [...attractionImages]; // Возвращаем копию массива
+    // Или, если нужно в формате, совместимом с товаром:
+    // return attractionImages.map(img => ({ url: img.url, alt: img.alt }));
 }
+
 
 // --- Сохранение/Удаление аттракциона ---
 
@@ -284,24 +433,22 @@ async function saveAttraction() {
     const isEdit = !!id;
 
     const formData = new FormData(form);
+    // Подготавливаем данные, включая массив изображений
     const attractionData = {
         title: formData.get('attraction-title'),
         description: formData.get('attraction-description'),
-        price: parseFloat(formData.get('attraction-price')),
+        price: parseFloat(formData.get('attraction-price')) || 0,
         category: formData.get('attraction-category'),
         specs: {
-            places: formData.get('attraction-specs-places'),
-            power: formData.get('attraction-specs-power'),
-            games: formData.get('attraction-specs-games'),
-            area: formData.get('attraction-specs-area'),
-            dimensions: formData.get('attraction-specs-dimensions')
-        }
+            places: formData.get('attraction-specs-places') || null,
+            power: formData.get('attraction-specs-power') || null,
+            games: formData.get('attraction-specs-games') || null,
+            area: formData.get('attraction-specs-area') || null,
+            dimensions: formData.get('attraction-specs-dimensions') || null
+        },
+        // Отправляем массив изображений
+        images: getAttractionImagesFromForm()
     };
-
-    const imageUrl = getAttractionImageFromForm();
-    if (imageUrl) {
-        attractionData.image = imageUrl;
-    }
 
     try {
         let response;
@@ -324,7 +471,7 @@ async function saveAttraction() {
             console.log(`${isEdit ? 'Аттракцион обновлен' : 'Аттракцион создан'}:`, result);
             adminPanel.showMessage(`${isEdit ? 'Аттракцион обновлен' : 'Аттракцион создан'} успешно!`, 'success');
             adminPanel.closeModal('attraction-modal');
-            await loadAttractions();
+            await loadAttractions(); // Перезагружаем список
         } else {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.error || `Ошибка ${isEdit ? 'обновления' : 'создания'}: ${response.status}`);
@@ -342,7 +489,7 @@ async function deleteAttraction(id) {
         if (response.ok) {
             console.log('Аттракцион удален');
             adminPanel.showMessage('Аттракцион удален успешно!', 'success');
-            await loadAttractions();
+            await loadAttractions(); // Перезагружаем список
         } else {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.error || `Ошибка удаления: ${response.status}`);
@@ -375,9 +522,10 @@ async function loadAttractionCategoryOptions() {
     }
 }
 
-// Инициализация после загрузки DOM
+// --- Инициализация после загрузки DOM ---
 document.addEventListener('DOMContentLoaded', () => {
     setupAttractionImageEventListeners();
+    // Если вкладка аттракционов активна при загрузке, загрузить данные
     if (document.getElementById('attractions-tab')?.classList.contains('active')) {
         loadAttractionsTab();
     }
