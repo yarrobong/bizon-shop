@@ -21,7 +21,7 @@
     await loadAttractions(); // Загружаем данные
     renderAttractions(); // Рендерим карточки
     setupEventListeners(); // Навешиваем обработчики
-    window.updateCartCount(); // Обновляем счетчик корзины (из state.js)
+    if (window.updateCartCount) window.updateCartCount(); // Обновляем счетчик корзины (из state.js)
   });
 
   // --- Data Loading ---
@@ -78,24 +78,38 @@
   // --- Функция для создания карточки аттракциона ---
   // Эта функция должна быть определена здесь, выше, чем она используется
   function createAttractionCard(attraction) {
+    // Извлекаем спецификации из объекта
+    const specs = attraction.specs || {};
+    const places = specs.places || 'N/A';
+    const power = specs.power || 'N/A';
+    const games = specs.games || 'N/A';
+    const area = specs.area || 'N/A';
+    const dimensions = specs.dimensions || 'N/A';
+
     const card = document.createElement('div');
     card.className = 'attraction-card';
     card.innerHTML = `
       <div class="attraction-image">
-        <img src="${attraction.image}" alt="${attraction.title}" />
+        <img src="${attraction.image}" onerror="this.onerror=null; this.src='/assets/placeholder.png';" alt="${attraction.title}" />
       </div>
       <div class="attraction-info">
         <h3 class="attraction-title">${attraction.title}</h3>
-        <div class="attraction-price">${window.formatPrice ? window.formatPrice(attraction.price) : attraction.price + '₽'}</div>
+        <div class="attraction-price">${window.formatPrice ? window.formatPrice(attraction.price) : `${attraction.price}₽`}</div>
         <div class="attraction-specs">
           <div class="spec-item">
-            <span class="spec-label">Мест:</span> <span class="spec-value">${attraction.specs?.places || 'N/A'}</span>
+            <span class="spec-label">Мест:</span> <span class="spec-value">${places}</span>
           </div>
           <div class="spec-item">
-            <span class="spec-label">Мощность:</span> <span class="spec-value">${attraction.specs?.power || 'N/A'}</span>
+            <span class="spec-label">Мощность:</span> <span class="spec-value">${power}</span>
           </div>
           <div class="spec-item">
-            <span class="spec-label">Игры:</span> <span class="spec-value">${attraction.specs?.games || 'N/A'}</span>
+            <span class="spec-label">Игры:</span> <span class="spec-value">${games}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Площадь:</span> <span class="spec-value">${area}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Размеры:</span> <span class="spec-value">${dimensions}</span>
           </div>
         </div>
         <div class="attraction-description">${attraction.description ? (attraction.description.substring(0, 100) + (attraction.description.length > 100 ? '...' : '')) : ''}</div>
@@ -202,9 +216,18 @@
 
   // --- Modals ---
   function openAttractionModal(attraction) {
+    // Извлекаем спецификации из объекта
+    const specs = attraction.specs || {};
+    const places = specs.places || 'N/A';
+    const power = specs.power || 'N/A';
+    const games = specs.games || 'N/A';
+    const area = specs.area || 'N/A';
+    const dimensions = specs.dimensions || 'N/A';
+
     // Сохраняем позицию скролла
     const scrollY = window.scrollY || window.pageYOffset;
     document.body.setAttribute('data-scroll-position', scrollY);
+    // Блокируем скролл, но сохраняем позицию
     document.body.classList.add('modal-open');
     // Убедитесь, что getScrollbarWidth доступна, или определите её здесь
     const scrollbarWidth = window.getScrollbarWidth ? window.getScrollbarWidth() : (function() {
@@ -226,38 +249,42 @@
     const descriptionElement = document.getElementById('attraction-description');
     const priceElement = document.getElementById('attraction-price');
     const mainImageElement = document.getElementById('attraction-main-image');
-    const specsContainer = document.getElementById('attraction-specs');
+    const specsContainer = document.getElementById('attraction-specs'); // Используем существующий контейнер
     const thumbnailsContainer = document.getElementById('attraction-thumbnails');
     const addToCartBtn = document.getElementById('add-attraction-to-cart-btn');
     const buyNowBtn = document.getElementById('buy-attraction-now-btn');
 
     if (titleElement) titleElement.textContent = attraction.title;
     if (descriptionElement) descriptionElement.textContent = attraction.description || '';
-    if (priceElement) priceElement.textContent = window.formatPrice ? window.formatPrice(attraction.price) : attraction.price + '₽';
+    if (priceElement) priceElement.textContent = window.formatPrice ? window.formatPrice(attraction.price) : `${attraction.price}₽`;
     if (mainImageElement) {
         mainImageElement.src = attraction.image;
         mainImageElement.alt = attraction.title;
+        mainImageElement.onerror = function() {
+            this.onerror = null;
+            this.src = '/assets/placeholder.png';
+        };
     }
 
-    // Рендерим спецификации
-    if (specsContainer && attraction.specs) {
-        specsContainer.innerHTML = '';
-        for (const [key, value] of Object.entries(attraction.specs)) {
-            let label = key;
-            if (key === 'places') label = 'Мест';
-            else if (key === 'power') label = 'Мощность';
-            else if (key === 'games') label = 'Игры';
-            else if (key === 'area') label = 'Площадь';
-            else if (key === 'dimensions') label = 'Размеры';
-
-            const specItem = document.createElement('div');
-            specItem.className = 'spec-item';
-            specItem.innerHTML = `
-                <span class="spec-label">${label}:</span>
-                <span class="spec-value">${value}</span>
-            `;
-            specsContainer.appendChild(specItem);
-        }
+    // Рендерим спецификации в модальном окне
+    if (specsContainer) {
+        specsContainer.innerHTML = `
+          <div class="spec-item">
+            <span class="spec-label">Мест:</span> <span class="spec-value">${places}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Мощность:</span> <span class="spec-value">${power}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Игры:</span> <span class="spec-value">${games}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Площадь:</span> <span class="spec-value">${area}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Размеры:</span> <span class="spec-value">${dimensions}</span>
+          </div>
+        `;
     }
 
     // Упрощенный вариант для миниатюр - просто показываем главное изображение
@@ -267,6 +294,10 @@
         thumb.src = attraction.image;
         thumb.alt = `Миниатюра ${attraction.title}`;
         thumb.className = 'thumbnail active';
+        thumb.onerror = function() {
+            this.onerror = null;
+            this.src = '/assets/placeholder.png';
+        };
         thumb.addEventListener('click', () => {
              if(mainImageElement) {
                  mainImageElement.src = attraction.image;
