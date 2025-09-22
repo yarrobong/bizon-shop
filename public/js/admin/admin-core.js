@@ -46,28 +46,31 @@ class AdminPanel {
     }
 
     switchTab(tabName) {
-        document.querySelectorAll('.tab-content').forEach(tab => {
-            tab.classList.remove('active');
-        });
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
 
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
 
-        const targetTab = document.getElementById(`${tabName}-tab`);
-        const targetBtn = document.querySelector(`[data-tab="${tabName}"]`);
+    const targetTab = document.getElementById(`${tabName}-tab`);
+    const targetBtn = document.querySelector(`[data-tab="${tabName}"]`);
 
-        if (targetTab) targetTab.classList.add('active');
-        if (targetBtn) targetBtn.classList.add('active');
+    if (targetTab) targetTab.classList.add('active');
+    if (targetBtn) targetBtn.classList.add('active');
 
-        this.currentTab = tabName;
+    this.currentTab = tabName;
 
-        // Триггеры для загрузки данных при переключении вкладок
-        // Эти функции будут определены в соответствующих файлах
-        if (typeof window[`load${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Tab`] === 'function') {
-             window[`load${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Tab`]();
-        }
+    // Триггеры для загрузки данных при переключении вкладок
+    const tabFunctionName = `load${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Tab`;
+    if (typeof window[tabFunctionName] === 'function') {
+        console.log(`Вызов функции: ${tabFunctionName}`);
+        window[tabFunctionName]();
+    } else {
+        console.warn(`Функция ${tabFunctionName} не найдена`);
     }
+}
 
     logout() {
         localStorage.removeItem('isAdmin');
