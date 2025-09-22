@@ -39,15 +39,16 @@ function renderAttractions(attractions) {
 
     container.innerHTML = '';
 
-    // --- ВАЖНО: Здесь НЕ должно быть фильтрации по available ---
-    // if (!attractions || attractions.length === 0 || !attractions.some(a => a.available)) { 
+    // --- НЕТ ФИЛЬТРАЦИИ ПО available ЗДЕСЬ ---
+    // НЕ ДОЛЖНО БЫТЬ ЧЕГО-ТО ТАКОГО:
+    // if (!attractions || attractions.length === 0 || !attractions.some(a => a.available)) {
     //     container.innerHTML = '<div class="empty">Нет доступных аттракционов для отображения</div>';
     //     return;
     // }
     // attractions = attractions.filter(a => a.available); // <-- ЭТО НЕ НУЖНО
-    // --- КОНЕЦ ВАЖНО ---
+    // --- КОНЕЦ НЕПРАВИЛЬНОЙ ФИЛЬТРАЦИИ ---
 
-    // Должно быть просто:
+    // Должно быть просто проверка на пустой массив:
     if (!attractions || attractions.length === 0) {
         container.innerHTML = '<div class="empty">Нет аттракционов для отображения</div>';
         return;
@@ -55,17 +56,19 @@ function renderAttractions(attractions) {
 
     attractions.forEach(attraction => {
         // Используем первое изображение из массива images, если оно есть
-        // Совместимость со старым форматом (поле image)
         const imageUrl = (attraction.images && attraction.images.length > 0) ?
             attraction.images[0].url :
             (attraction.image || '/assets/icons/placeholder1.webp');
 
         const card = document.createElement('div');
         card.className = 'product-card';
+        
         // Можно добавить визуальный индикатор доступности
         if (attraction.available === false) {
              card.classList.add('unavailable'); // Добавим класс для стилизации
+             // Или просто добавим информацию в HTML
         }
+        
         card.innerHTML = `
             <img src="${imageUrl}" alt="${escapeHtml(attraction.title)}" onerror="this.src='/assets/icons/placeholder1.webp'">
             <h3>${escapeHtml(attraction.title)}</h3>
