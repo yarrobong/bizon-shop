@@ -1025,15 +1025,16 @@ class AdminPanel {
 
         imageItem.innerHTML = `
         ${imageUrl ?
-            `<div class="image-preview-wrapper">
-                <img src="${imageUrl}" alt="${imageAlt}" class="image-preview" onerror="this.src='/assets/placeholder.png'">
-                <div class="image-filename">${this.escapeHtml(imageAlt)}</div>
-            </div>` :
-            `<div class="image-preview-placeholder">Нет изображения</div>`
-        }
-        <button type="button" class="delete-image-btn" onclick="adminPanel.deleteImage(${imageId})">×</button>
-        <input type="hidden" class="image-input" value="${imageUrl}" data-id="${imageId}">
+            `<img src="${imageUrl}" alt="${imageAlt}" onerror="this.src='/assets/icons/placeholder1.webp'">` :
+                `<div class="image-placeholder">Изображение не загружено</div>`
+            }
+      <input type="hidden" class="image-input" value="${imageUrl}">
+      <button type="button" class="delete-image-btn" data-id="${imageId}" title="Удалить изображение">&times;</button>
     `;
+
+
+    
+                
 
         container.appendChild(imageItem);
 
