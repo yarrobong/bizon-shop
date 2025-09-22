@@ -1001,7 +1001,7 @@ app.put('/api/attractions/:id', async (req, res) => {
         specs_games = $8,
         specs_area = $9,
         specs_dimensions = $10
-      WHERE id = $12
+      WHERE id = $11
       RETURNING id; -- Возвращаем ID, чтобы убедиться, что запись была
     `;
     const values = [
@@ -1010,7 +1010,6 @@ app.put('/api/attractions/:id', async (req, res) => {
       category,
       image,
       description,
-      
       specs?.places || null,
       specs?.power || null,
       specs?.games || null,
