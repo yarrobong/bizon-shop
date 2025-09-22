@@ -161,3 +161,4 @@ document.addEventListener('DOMContentLoaded', () => {
         loadSupplierCatalogTab();
     }
 });
+window.loadSupplierCatalogTab = loadSupplierCatalogTab;
