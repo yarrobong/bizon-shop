@@ -176,27 +176,23 @@ function setupAttractionImageEventListeners() {
         });
     }
 
-    // Исправлено: добавляем обработчики drag & drop к контейнеру изображений, а не к зоне дропа
-    const imagesContainer = document.getElementById('attraction-images-container'); 
-    if (imagesContainer) {
-        // Обработчик dragover
-        imagesContainer.addEventListener('dragover', (e) => {
+    const dropZone = document.getElementById('attraction-images-drop-zone');
+    if (dropZone) {
+        dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
-            imagesContainer.classList.add('drag-over'); // Используем контейнер, а не зону дропа
+            dropZone.classList.add('drag-over');
         });
 
-        // Обработчик dragleave
-        imagesContainer.addEventListener('dragleave', (e) => {
-            if (!imagesContainer.contains(e.relatedTarget)) {
-                imagesContainer.classList.remove('drag-over');
+        dropZone.addEventListener('dragleave', (e) => {
+            if (!dropZone.contains(e.relatedTarget)) {
+                dropZone.classList.remove('drag-over');
             }
         });
 
-        // Обработчик drop
-        imagesContainer.addEventListener('drop', (e) => {
+        dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
-            imagesContainer.classList.remove('drag-over');
+            dropZone.classList.remove('drag-over');
             const files = e.dataTransfer.files;
             if (files.length > 0) {
                 handleAttractionFileSelect(files);
