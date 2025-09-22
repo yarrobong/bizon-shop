@@ -99,7 +99,7 @@ function createAttractionCard(attraction) {
 
   // Предположим, у объекта attraction есть поле stock
   // Если нет, замените attraction.stock на 'N/A' или другую заглушку
-  const stockInfo = attraction.stock !== undefined ? attraction.stock : 'N/A';
+
 
   const card = document.createElement('div');
   card.className = 'attraction-card';
@@ -110,7 +110,7 @@ function createAttractionCard(attraction) {
     <div class="attraction-info">
       <h3 class="attraction-title">${attraction.title}</h3>
       <div class="attraction-price">${window.formatPrice ? window.formatPrice(attraction.price) : `${attraction.price}₽`}</div>
-      <div class="attraction-stock">Остаток: ${stockInfo}</div>
+  
       <div class="attraction-specs">
         <div class="spec-item">
           <span class="spec-label">Мест:</span> <span class="spec-value">${places}</span>
