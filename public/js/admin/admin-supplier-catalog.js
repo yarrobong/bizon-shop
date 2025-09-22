@@ -1,6 +1,7 @@
 // admin-supplier-catalog.js
 
 async function loadSupplierCatalogTab() {
+    
     // Сбрасываем поиск при переходе на вкладку
     const searchInput = document.getElementById('supplier-catalog-search');
     if (searchInput) {
@@ -10,18 +11,26 @@ async function loadSupplierCatalogTab() {
 }
 
 async function loadSupplierCatalog(searchTerm = '') {
+    console.log("Начало loadSupplierCatalog, searchTerm:", searchTerm); // <-- Отладка 1
     const tab = document.getElementById('supplier-catalog-tab');
+    console.log("tab элемент:", tab); // <-- Отладка 2
     if (!tab) return;
     const container = document.getElementById('supplier-catalog-grid');
+    console.log("container элемент:", container); // <-- Отладка 3
     if (!container) return;
 
     try {
         container.innerHTML = '<div class="empty">Загрузка товаров...</div>';
+        console.log("Запрос к /api/products?admin=true"); // <-- Отладка 4
         const response = await fetch('/api/products?admin=true');
+        console.log("Ответ от /api/products?admin=true, статус:", response.status); // <-- Отладка 5
         if (!response.ok) {
+            console.error(`HTTP error! status: ${response.status}`, errorText); // <-- Отладка 6
             throw new Error(`HTTP error! status: ${response.status}`);
+            
         }
         const products = await response.json();
+        console.log("Полученные товары:", products); // <-- Отладка 7
 
         let filteredProducts = products;
         if (searchTerm) {
