@@ -260,34 +260,45 @@ app.put('/api/products/:id', async (req, res) => {
     const { title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images } = req.body;
     const images_json = images ? JSON.stringify(images) : null;
 
+    // 1. Обновляем основные данные товара
     const result = await pool.query(`
       UPDATE products
       SET title = $1, description = $2, price = $3, tag = $4, available = $5, category = $6, brand = $7, compatibility = $8, supplier_link = $9, supplier_notes = $10, images_json = $11
       WHERE id = $12
-      RETURNING id, title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes -- images_json исключен для последующей обработки
+      RETURNING id, title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json -- images_json будет обработано ниже
     `, [title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json, id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Товар не найден' });
     }
 
-    // Обрабатываем images_json для ответа, как в GET /api/products/:id
-    const updatedProduct = result.rows[0];
+    // 2. Обрабатываем images_json для ответа, как в GET /api/products/:id
+    const updatedProductFromDB = result.rows[0]; // <-- Используем корректное имя переменной
     let processedImages = [];
-    if (product.images_json != null) {
-      if (Array.isArray(product.images_json)) {
-        processedImages = product.images_json;
-      } else if (typeof product.images_json === 'object') {
-        processedImages = [product.images_json];
+    
+    // Проверяем и обрабатываем images_json из результата БД
+    if (updatedProductFromDB.images_json != null) { 
+      if (Array.isArray(updatedProductFromDB.images_json)) {
+        processedImages = updatedProductFromDB.images_json;
+      } else if (typeof updatedProductFromDB.images_json === 'object') {
+        processedImages = [updatedProductFromDB.images_json];
       } else {
-        processedImages = [product.images_json];
+        // Если это строка или другой тип, можно попробовать парсить или оставить пустой массив
+        // processedImages = []; // или попытка JSON.parse, если ожидается строка JSON
+         console.warn(`Неожиданный тип images_json для обновленного товара ID ${id}:`, typeof updatedProductFromDB.images_json);
+         processedImages = [];
       }
     }
+    // Если images_json null или undefined, processedImages остается []
 
+    // 3. Формируем финальный объект товара для ответа
+    const { images_json: _, ...productWithoutImagesJson } = updatedProductFromDB; // Убираем images_json из результата БД
+    
     res.json({
-      ...updatedProduct,
-      images: processedImages
+      ...productWithoutImagesJson, // Все поля, кроме images_json
+      images: processedImages       // Добавляем обработанное поле images
     });
+    
   } catch (err) {
     console.error('Ошибка обновления товара:', err);
     res.status(500).json({ error: 'Не удалось обновить товар' });
