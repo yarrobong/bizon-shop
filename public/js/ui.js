@@ -715,8 +715,7 @@ function setupEventListeners() {
           clearCart();
           phoneInput.value = '';
           commentInput.value = '';
-          successMessage.style.display = 'block';
-          updateCartCount();
+          successMessage.style.display = 'block';          
           openCartModal();
 
           setTimeout(() => {
@@ -736,7 +735,7 @@ function setupEventListeners() {
           phoneInput.value = '';
           commentInput.value = '';
           successMessage.style.display = 'block';
-          updateCartCount();
+          
           openCartModal();
 
           setTimeout(() => {
