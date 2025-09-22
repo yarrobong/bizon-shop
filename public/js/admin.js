@@ -1173,10 +1173,10 @@ document.getElementById('product-supplier-notes').value = '';
         }
     }
 
-    async saveProduct() {
+    // === ФУНКЦИЯ ИЗ admin.js (Pasted_Text_1758498726950.txt), ИСПРАВЛЕННАЯ ===
+async saveProduct() {
     try {
         console.log('Начало saveProduct');
-        
         // 1. Получаем форму
         const form = document.getElementById('product-form');
         if (!form) {
@@ -1184,39 +1184,35 @@ document.getElementById('product-supplier-notes').value = '';
             this.showMessage('Ошибка: Форма товара не найдена', 'error');
             return;
         }
-
         // 2. Получаем данные из формы
         const formData = new FormData(form);
         console.log('Данные из формы (все):', Object.fromEntries(formData));
-
         // 3. Извлекаем и обрабатываем каждое поле
         // Название (title) - критически важное поле
         const rawTitle = formData.get('product-title');
         console.log('Полученное значение product-title (до обработки):', `"${rawTitle}"`, typeof rawTitle);
-        
         // Обеспечиваем, что title будет непустой строкой
         let title = '';
         if (rawTitle !== null && rawTitle !== undefined) {
             title = String(rawTitle).trim();
         }
         console.log('Обработанный title:', `"${title}"`);
-
         // Остальные поля
         const description = (formData.get('product-description') || '').toString().trim();
         const rawPrice = formData.get('product-price');
         const price = rawPrice !== null && rawPrice !== '' ? parseFloat(rawPrice) : 0;
         const category = (formData.get('product-category') || '').toString().trim();
         const available = formData.get('product-available') === 'on';
-
         const supplier_link = (formData.get('product-supplier-link') || '').toString().trim();
-const supplier_notes = (formData.get('product-supplier-notes') || '').toString().trim();
-
+        const supplier_notes = (formData.get('product-supplier-notes') || '').toString().trim();
         // 4. Получаем изображения из формы
         const images = this.getImagesFromForm();
         console.log('Полученные изображения:', images);
+
+        // --- НОВОЕ: Получаем выбранные варианты ---
         let selectedVariantIds = [];
         try {
-            const idsString = document.getElementById('selected-variant-ids').value;
+            const idsString = document.getElementById('selected-variant-ids')?.value;
             if (idsString) {
                 selectedVariantIds = JSON.parse(idsString);
                 console.log('Выбранные ID вариантов:', selectedVariantIds);
@@ -1225,6 +1221,7 @@ const supplier_notes = (formData.get('product-supplier-notes') || '').toString()
             console.error('Ошибка парсинга selected-variant-ids:', e);
             selectedVariantIds = [];
         }
+        // --- КОНЕЦ НОВОГО ---
 
         // 5. Формируем объект productData
         const productData = {
@@ -1233,12 +1230,14 @@ const supplier_notes = (formData.get('product-supplier-notes') || '').toString()
             price: price,
             category: category,
             available: available,
-            images: images
+            images: images,
+            supplier_link: supplier_link,
+            supplier_notes: supplier_notes
+            // selectedVariantIds НЕ отправляем напрямую в основном запросе,
+            // так как логика сохранения вариантов обрабатывается отдельно
         };
-productData.supplier_link = (formData.get('product-supplier-link') || '').toString().trim();
-productData.supplier_notes = (formData.get('product-supplier-notes') || '').toString().trim();
 
-        console.log('Сформированный productData для отправки:', productData);
+        console.log('Сформированный productData для отправки (без вариантов):', productData);
 
         // 6. ВАЛИДАЦИЯ
         if (!productData.title) {
@@ -1246,27 +1245,23 @@ productData.supplier_notes = (formData.get('product-supplier-notes') || '').toSt
             this.showMessage('Пожалуйста, укажите название товара', 'error');
             return;
         }
-
         if (isNaN(productData.price) || productData.price <= 0) {
             this.showMessage('Пожалуйста, укажите корректную цену (больше 0)', 'error');
             return;
         }
-
         if (!productData.category) {
             this.showMessage('Пожалуйста, выберите категорию', 'error');
             return;
         }
 
-        // 7. Определяем метод и URL для fetch
+        // 7. Определяем метод и URL для fetch (основной товар)
         const productId = formData.get('product-id'); // Скрытое поле с ID
         const isUpdate = productId && productId.trim() !== '';
-        
         const method = isUpdate ? 'PUT' : 'POST';
         const url = isUpdate ? `/api/products/${productId.trim()}` : '/api/products';
-
         console.log(`Отправка данных товара: ${method} ${url}`, productData);
 
-        // 8. Отправляем данные на сервер
+        // 8. Отправляем данные основного товара на сервер
         const response = await fetch(url, {
             method: method,
             headers: {
@@ -1274,20 +1269,16 @@ productData.supplier_notes = (formData.get('product-supplier-notes') || '').toSt
             },
             body: JSON.stringify(productData)
         });
-
-        console.log('Ответ от сервера:', response.status, response.statusText);
+        console.log('Ответ от сервера (товар):', response.status, response.statusText);
 
         // 9. Обрабатываем ответ
+        let savedProduct;
         if (response.ok) {
-            // Успех
-            this.closeModal('product-modal');
-            await this.loadProducts(); // Перезагружаем список товаров
-            this.showMessage(
-                isUpdate ? 'Товар обновлен успешно!' : 'Товар создан успешно!', 
-                'success'
-            );
+            // Успех при сохранении товара
+            savedProduct = await response.json(); // Получаем сохраненный/обновленный товар с ID
+            console.log('Товар сохранен:', savedProduct);
         } else {
-            // Ошибка от сервера
+            // Ошибка от сервера при сохранении товара
             let errorMessage = `Ошибка сохранения товара: ${response.status}`;
             try {
                 const errorData = await response.json();
@@ -1298,16 +1289,19 @@ productData.supplier_notes = (formData.get('product-supplier-notes') || '').toSt
                 errorMessage = errorText || errorMessage;
             }
             throw new Error(errorMessage);
-            // После успешного сохранения/обновления товара, сохраняем его варианты
+        }
+
+        // --- НОВОЕ: Сохраняем связи с вариантами ---
+        // После успешного сохранения/обновления товара, сохраняем его варианты
         // Предполагаем, что savedProduct.id содержит ID нового/обновленного товара
         if (savedProduct && savedProduct.id) {
              const variantLinkResponse = await fetch(`/api/products/${savedProduct.id}/variants`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ variantIds: selectedVariantIds })
-    });
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ variantIds: selectedVariantIds })
+            });
              if (!variantLinkResponse.ok) {
                  // Можно показать предупреждение, но не прерывать весь процесс
                  console.error('Ошибка при сохранении связей с вариантами:', variantLinkResponse.statusText);
@@ -1319,13 +1313,25 @@ productData.supplier_notes = (formData.get('product-supplier-notes') || '').toSt
             console.error('Не удалось получить ID сохраненного товара для установки вариантов.');
             this.showMessage('Товар сохранен, но не удалось обновить связи с вариантами.', 'warning');
         }
-        }
+        // --- КОНЕЦ НОВОГО ---
+
+        // 10. Завершение
+        this.closeModal('product-modal');
+        await this.loadProducts(); // Перезагружаем список товаров
+        // Также обновляем кэш, если это новый товар или изменились варианты
+        await this.loadAllProductsCache(); // Убедитесь, что этот метод существует в вашем классе
+        this.showMessage(
+            isUpdate ? 'Товар и его варианты обновлены успешно!' : 'Товар и его варианты созданы успешно!',
+            'success'
+        );
+
     } catch (error) {
-        // 10. Обрабатываем любые ошибки (сетевые, логические, от сервера)
+        // 11. Обрабатываем любые ошибки (сетевые, логические, от сервера)
         console.error('Ошибка в функции saveProduct:', error);
         this.showMessage(`Ошибка сохранения товара: ${error.message}`, 'error');
     }
 }
+// === КОНЕЦ ИСПРАВЛЕННОЙ ФУНКЦИИ ===
 
     async saveCategory() {
         try {
