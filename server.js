@@ -877,65 +877,7 @@ app.get('/api/attractions', async (req, res) => {
   }
 });
 
-// --- API endpoint для получения аттракциона по ID ---
-app.get('/api/attractions/:id', async (req, res) => {
-  const { id } = req.params;
-  console.log(`Получение аттракциона с ID ${id} из БД...`);
-  try {
-    // Проверяем, является ли id числом
-    const attractionId = parseInt(id, 10);
-    if (isNaN(attractionId)) {
-      return res.status(400).json({ error: 'Некорректный ID аттракциона' });
-    }
 
-    const query = `
-      SELECT
-        id,
-        title,
-        price,
-        category,
-        image_url AS image,
-        description,
-        
-        specs_places AS "specs.places",
-        specs_power AS "specs.power",
-        specs_games AS "specs.games",
-        specs_area AS "specs.area",
-        specs_dimensions AS "specs.dimensions"
-      FROM attractions
-      WHERE id = $1;
-    `;
-    const result = await pool.query(query, [attractionId]); // Используем число
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Аттракцион не найден' });
-    }
-
-    const row = result.rows[0];
-    const attraction = {
-      id: row.id,
-      title: row.title,
-      price: parseFloat(row.price),
-      category: row.category,
-      image: row.image,
-      description: row.description,
-     
-      specs: {
-        places: row["specs.places"] || null,
-        power: row["specs.power"] || null,
-        games: row["specs.games"] || null,
-        area: row["specs.area"] || null,
-        dimensions: row["specs.dimensions"] || null
-      }
-    };
-
-    console.log(`✅ Успешно получен аттракцион с ID ${id} из БД`);
-    res.json(attraction);
-  } catch (err) {
-    console.error(`❌ Ошибка при получении аттракциона с ID ${id} из БД:`, err);
-    res.status(500).json({ error: 'Не удалось загрузить аттракцион', details: err.message });
-  }
-});
 
 // --- API endpoint для создания аттракциона ---
 app.post('/api/attractions', async (req, res) => {
@@ -1073,6 +1015,66 @@ app.get('/api/attractions/categories', async (req, res) => {
   } catch (err) {
     console.error('❌ Ошибка при получении категорий аттракционов из БД:', err);
     res.status(500).json({ error: 'Не удалось загрузить категории аттракционов', details: err.message });
+  }
+});
+
+// --- API endpoint для получения аттракциона по ID ---
+app.get('/api/attractions/:id', async (req, res) => {
+  const { id } = req.params;
+  console.log(`Получение аттракциона с ID ${id} из БД...`);
+  try {
+    // Проверяем, является ли id числом
+    const attractionId = parseInt(id, 10);
+    if (isNaN(attractionId)) {
+      return res.status(400).json({ error: 'Некорректный ID аттракциона' });
+    }
+
+    const query = `
+      SELECT
+        id,
+        title,
+        price,
+        category,
+        image_url AS image,
+        description,
+        
+        specs_places AS "specs.places",
+        specs_power AS "specs.power",
+        specs_games AS "specs.games",
+        specs_area AS "specs.area",
+        specs_dimensions AS "specs.dimensions"
+      FROM attractions
+      WHERE id = $1;
+    `;
+    const result = await pool.query(query, [attractionId]); // Используем число
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Аттракцион не найден' });
+    }
+
+    const row = result.rows[0];
+    const attraction = {
+      id: row.id,
+      title: row.title,
+      price: parseFloat(row.price),
+      category: row.category,
+      image: row.image,
+      description: row.description,
+     
+      specs: {
+        places: row["specs.places"] || null,
+        power: row["specs.power"] || null,
+        games: row["specs.games"] || null,
+        area: row["specs.area"] || null,
+        dimensions: row["specs.dimensions"] || null
+      }
+    };
+
+    console.log(`✅ Успешно получен аттракцион с ID ${id} из БД`);
+    res.json(attraction);
+  } catch (err) {
+    console.error(`❌ Ошибка при получении аттракциона с ID ${id} из БД:`, err);
+    res.status(500).json({ error: 'Не удалось загрузить аттракцион', details: err.message });
   }
 });
 
