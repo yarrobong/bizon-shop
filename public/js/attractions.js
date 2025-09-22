@@ -86,7 +86,7 @@
     }
   }
 
-  // --- Функция для создания карточки аттракциона ---
+// --- Функция для создания карточки аттракциона ---
 // Эта функция должна быть определена здесь, выше, чем она используется
 function createAttractionCard(attraction) {
   // Извлекаем спецификации из объекта
@@ -129,9 +129,8 @@ function createAttractionCard(attraction) {
         </div>
       </div>
       <div class="attraction-description">${attraction.description ? (attraction.description) : ''}</div>
+      <!-- Кнопка перемещена вниз -->
       <div class="product-actions">
-        <!-- Убираем кнопку "Подробнее", оставляем только "В корзину" -->
-        <!-- <button class="btn-details" data-id="${attraction.id}">Подробнее</button> -->
         <button class="btn-cart" data-id="${attraction.id}">В корзину</button>
       </div>
     </div>
