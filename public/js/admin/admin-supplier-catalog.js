@@ -40,17 +40,24 @@ async function loadSupplierCatalog(searchTerm = '') {
                 (product.supplier_link && product.supplier_link.toLowerCase().includes(term))
             );
         }
+         console.log("Отфильтрованные товары:", filteredProducts); // <-- Отладка 8
 
         renderSupplierCatalog(filteredProducts);
+        console.log("renderSupplierCatalog завершена"); // <-- Отладка 9
     } catch (error) {
+        onsole.error('❌ Ошибка загрузки каталога для поставщика:', error); // <-- Отладка 10
         console.error('Ошибка загрузки каталога для поставщика:', error);
         container.innerHTML = '<div class="empty">Ошибка загрузки товаров</div>';
     }
 }
 
 function renderSupplierCatalog(products) {
+         console.log("Начало renderSupplierCatalog, products:", products); // <-- Отладка 11
     const container = document.getElementById('supplier-catalog-grid');
-    if (!container) return;
+    if (!container) {
+         console.warn("Элемент #supplier-catalog-grid не найден в renderSupplierCatalog");
+         return; // <-- ВАЖНО: return, если контейнер не найден
+    }
 
     container.innerHTML = '';
 
@@ -137,6 +144,7 @@ function renderSupplierCatalog(products) {
 
 // Инициализация после загрузки DOM и установка обработчика поиска
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOMContentLoaded сработал для admin-supplier-catalog.js"); // <-- Отладка 12
     const searchInput = document.getElementById('supplier-catalog-search');
     if (searchInput) {
         let searchTimeout;
