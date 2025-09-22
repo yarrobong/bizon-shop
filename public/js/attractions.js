@@ -25,61 +25,65 @@
   });
 
   // --- Data Loading ---
-async function loadAttractions() {
+  async function loadAttractions() {
     // Всегда пытаемся загрузить данные с сервера
     try {
-        console.log('Запрос аттракционов с сервера...');
-        const response = await fetch('/api/attractions');
+      console.log('Запрос аттракционов с сервера...');
+      const response = await fetch('/api/attractions');
 
-        if (!response.ok) {
-            // Если статус не 2xx, генерируем ошибку
-            const errorData = await response.json().catch(() => ({})); // Пытаемся получить JSON ошибки
-            throw new Error(`HTTP error! status: ${response.status}. ${errorData.error || ''} Details: ${errorData.details || ''}`);
+      if (!response.ok) {
+        // Если статус не 2xx, генерируем ошибку
+        const errorData = await response.json().catch(() => ({})); // Пытаемся получить JSON ошибки
+        throw new Error(`HTTP error! status: ${response.status}. ${errorData.error || ''} Details: ${errorData.details || ''}`);
+      }
+
+      const data = await response.json();
+      console.log('Данные аттракционов успешно получены:', data);
+      ATTRACTIONS = data; // Сохраняем полученные данные
+
+      // Проверка на пустой массив
+      if (!ATTRACTIONS || ATTRACTIONS.length === 0) {
+        console.warn('Сервер вернул пустой список аттракционов.');
+        if (attractionsContainer) {
+          attractionsContainer.innerHTML = `
+            <div class="empty">
+              <div class="text-6xl">🪄</div>
+              <h3>Аттракционы не найдены</h3>
+              <p>Каталог аттракционов временно пуст. Загляните позже!</p>
+              <small class="text-muted">Данные были успешно загружены с сервера, но список пуст.</small>
+            </div>
+          `;
         }
-
-        const data = await response.json();
-        console.log('Данные аттракционов успешно получены:', data);
-        ATTRACTIONS = data; // Сохраняем полученные данные
-
-        // Проверка на пустой массив
-        if (!ATTRACTIONS || ATTRACTIONS.length === 0) {
-            console.warn('Сервер вернул пустой список аттракционов.');
-            attractionsContainer.innerHTML = `
-                <div class="empty">
-                    <div class="text-6xl">🪄</div>
-                    <h3>Аттракционы не найдены</h3>
-                    <p>Каталог аттракционов временно пуст. Загляните позже!</p>
-                    <small class="text-muted">Данные были успешно загружены с сервера, но список пуст.</small>
-                </div>
-            `;
-            return; // Выходим, так как данных нет
-        }
+        return; // Выходим, так как данных нет
+      }
 
     } catch (error) {
-        // Любая ошибка (сетевая, JSON.parse, HTTP status code и т.д.)
-        console.error('❌ Критическая ошибка загрузки аттракционов:', error);
+      // Любая ошибка (сетевая, JSON.parse, HTTP status code и т.д.)
+      console.error('❌ Критическая ошибка загрузки аттракционов:', error);
+      if (attractionsContainer) {
         attractionsContainer.innerHTML = `
-            <div class="empty error">
-                <div class="text-6xl">❗</div>
-                <h3>Ошибка загрузки</h3>
-                <p>Не удалось загрузить каталог аттракционов.</p>
-                <p class="error-details">Подробности в консоли разработчика (F12).</p>
-                <small class="text-muted">Это может быть связано с сетевой проблемой или внутренней ошибкой сервера.</small>
-                <button onclick="location.reload()" class="btn-details" style="margin-top: 1rem;">Повторить попытку</button>
-            </div>
+          <div class="empty error">
+            <div class="text-6xl">❗</div>
+            <h3>Ошибка загрузки</h3>
+            <p>Не удалось загрузить каталог аттракционов.</p>
+            <p class="error-details">Подробности в консоли разработчика (F12).</p>
+            <small class="text-muted">Это может быть связано с сетевой проблемой или внутренней ошибкой сервера.</small>
+            <button onclick="location.reload()" class="btn-details" style="margin-top: 1rem;">Повторить попытку</button>
+          </div>
         `;
-        // Можно также скрыть фильтры, если они есть, или сделать их неактивными
-        // document.querySelector('.tags')?.classList.add('disabled');
+      }
+      // Можно также скрыть фильтры, если они есть, или сделать их неактивными
+      // document.querySelector('.tags')?.classList.add('disabled');
     }
     // Если данные успешно загружены и не пусты, они будут отрендерены в renderAttractions()
-}
+  }
 
   // --- Rendering ---
-function renderAttractions() {
+  function renderAttractions() {
     // Проверка наличия контейнера
     if (!attractionsContainer) {
-        console.error('Контейнер для аттракционов (#attractions-container) не найден в DOM');
-        return;
+      console.error('Контейнер для аттракционов (#attractions-container) не найден в DOM');
+      return;
     }
 
     // Очистка контейнера перед рендерингом
@@ -87,10 +91,10 @@ function renderAttractions() {
 
     // Проверка, были ли данные загружены
     if (!ATTRACTIONS || ATTRACTIONS.length === 0) {
-        // Этот случай должен обрабатываться в loadAttractions, но на всякий случай
-        console.warn('renderAttractions вызван, но данные ATTRACTIONS пусты или не определены.');
-        // attractionsContainer.innerHTML = '<div class="empty">Аттракционы не загружены</div>';
-        return; // Просто выходим, если данных нет
+      // Этот случай должен обрабатываться в loadAttractions, но на всякий случай
+      console.warn('renderAttractions вызван, но данные ATTRACTIONS пусты или не определены.');
+      // attractionsContainer.innerHTML = '<div class="empty">Аттракционы не загружены</div>';
+      return; // Просто выходим, если данных нет
     }
 
     // Получение текущего поискового запроса и категории
@@ -99,63 +103,95 @@ function renderAttractions() {
 
     // Фильтрация данных
     const filtered = ATTRACTIONS.filter(attraction => {
-        const matchesCategory = currentCategory === 'все' || attraction.category === currentCategory;
-        const matchesSearch = !query ||
-            (attraction.title && attraction.title.toLowerCase().includes(query)) ||
-            (attraction.description && attraction.description.toLowerCase().includes(query));
+      const matchesCategory = currentCategory === 'все' || attraction.category === currentCategory;
+      const matchesSearch = !query ||
+        (attraction.title && attraction.title.toLowerCase().includes(query)) ||
+        (attraction.description && attraction.description.toLowerCase().includes(query));
 
-        return matchesCategory && matchesSearch;
+      return matchesCategory && matchesSearch;
     });
 
     // Отображение состояния "ничего не найдено"
     if (filtered.length === 0) {
-        attractionsContainer.innerHTML = `
-            <div class="empty">
-                <div class="text-6xl">🔍</div>
-                <h3>Аттракционы не найдены</h3>
-                <p>Попробуйте изменить параметры поиска или фильтрации.</p>
-            </div>
-        `;
-        return;
+      attractionsContainer.innerHTML = `
+        <div class="empty">
+          <div class="text-6xl">🔍</div>
+          <h3>Аттракционы не найдены</h3>
+          <p>Попробуйте изменить параметры поиска или фильтрации.</p>
+        </div>
+      `;
+      return;
     }
 
     // Рендеринг карточек для отфильтрованных аттракционов
     filtered.forEach(attraction => {
-        const card = createAttractionCard(attraction);
-        attractionsContainer.appendChild(card);
+      const card = createAttractionCard(attraction); // Теперь createAttractionCard определена выше
+      attractionsContainer.appendChild(card);
     });
 
     // Навешивание обработчиков событий на вновь созданные элементы
     document.querySelectorAll('.attraction-card').forEach(card => {
-        const detailsBtn = card.querySelector('.btn-details');
-        if (detailsBtn) {
-            // Предотвращаем всплытие клика с кнопки на карточку
-            detailsBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                openAttractionModal(attraction); // Открытие модального окна
-            });
-        }
+      const detailsBtn = card.querySelector('.btn-details');
+      if (detailsBtn) {
+        // Предотвращаем всплытие клика с кнопки на карточку
+        detailsBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openAttractionModal(attraction); // Открытие модального окна
+        });
+      }
 
-        const cartBtn = card.querySelector('.btn-cart');
-        if (cartBtn) {
-            // Предотвращаем всплытие клика с кнопки на карточку
-            cartBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                // Добавление в корзину (предполагается, что функция доступна глобально из state.js)
-                if (window.addToCart) {
-                    window.addToCart(attraction);
-                    // Обновление счетчика корзины (предполагается, что функция доступна глобально из state.js)
-                    if (window.updateCartCount) window.updateCartCount();
-                } else {
-                    console.error('Функция window.addToCart не найдена. Проверьте подключение state.js.');
-                }
-            });
-        }
+      const cartBtn = card.querySelector('.btn-cart');
+      if (cartBtn) {
+        // Предотвращаем всплытие клика с кнопки на карточку
+        cartBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          // Добавление в корзину (предполагается, что функция доступна глобально из state.js)
+          if (window.addToCart) {
+            window.addToCart(attraction);
+            // Обновление счетчика корзины (предполагается, что функция доступна глобально из state.js)
+            if (window.updateCartCount) window.updateCartCount();
+          } else {
+            console.error('Функция window.addToCart не найдена. Проверьте подключение state.js.');
+          }
+        });
+      }
 
-        // Клик по всей карточке открывает модальное окно
-        card.addEventListener('click', () => openAttractionModal(attraction));
+      // Клик по всей карточке открывает модальное окно
+      card.addEventListener('click', () => openAttractionModal(attraction));
     });
-}
+  }
+
+  // --- Функция для создания карточки аттракциона ---
+  function createAttractionCard(attraction) {
+    const card = document.createElement('div');
+    card.className = 'attraction-card';
+    card.innerHTML = `
+      <div class="attraction-image">
+        <img src="${attraction.image}" alt="${attraction.title}" />
+      </div>
+      <div class="attraction-info">
+        <h3 class="attraction-title">${attraction.title}</h3>
+        <div class="attraction-price">${window.formatPrice(attraction.price)}</div> <!-- Функция из utils.js -->
+        <div class="attraction-specs">
+          <div class="spec-item">
+            <span class="spec-label">Мест:</span> <span class="spec-value">${attraction.specs?.places || 'N/A'}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Мощность:</span> <span class="spec-value">${attraction.specs?.power || 'N/A'}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Игры:</span> <span class="spec-value">${attraction.specs?.games || 'N/A'}</span>
+          </div>
+        </div>
+        <div class="attraction-description">${attraction.description.substring(0, 100)}${attraction.description.length > 100 ? '...' : ''}</div>
+        <div class="product-actions">
+          <button class="btn-details" data-id="${attraction.id}">Подробнее</button>
+          <button class="btn-cart" data-id="${attraction.id}">В корзину</button>
+        </div>
+      </div>
+    `;
+    return card;
+  }
 
 
   // --- Modals ---
@@ -281,14 +317,16 @@ function renderAttractions() {
     }
 
     // Фильтрация по категориям
-    categoryButtons.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        categoryButtons.forEach(b => b.classList.remove('active'));
-        e.target.classList.add('active');
-        currentCategory = e.target.dataset.category || 'все';
-        renderAttractions();
+    if (categoryButtons.length > 0) {
+      categoryButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          categoryButtons.forEach(b => b.classList.remove('active'));
+          e.target.classList.add('active');
+          currentCategory = e.target.dataset.category || 'все';
+          renderAttractions();
+        });
       });
-    });
+    }
 
     // Кнопка корзины (открывает общую модалку корзины)
     if (cartBtn) {
