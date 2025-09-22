@@ -99,29 +99,21 @@ main {
   overflow: hidden; /* Скрываем переполнение */
 }
 
-/* Спецификации занимают половину от доступного пространства */
 .attraction-specs {
-  /* display: grid; */
-  /* grid-template-columns: 1fr; */ /* Одна колонка */
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around; /* Равномерно распределяем элементы */
-  gap: 0.25rem; /* Меньший отступ между строками */
-  font-size: 0.85rem; /* Меньший шрифт */
+  display: grid;
+  grid-template-columns: 1fr; /* Одна колонка */
+  gap: 0.5rem; /* Отступы между строками */
+  font-size: 0.9rem; /* Меньший шрифт */
   background: rgba(255, 255, 255, 0.05); /* Слегка светлый фон */
   padding: 0.75rem;
   border-radius: 0.5rem; /* Скругление углов */
-  margin-bottom: 0.75rem; /* Отступ снизу */
-  flex: 1; /* Занимает половину свободного пространства */
-  overflow-y: auto; /* Добавляем скролл, если не помещается */
 }
 
 .spec-item {
   display: flex;
   justify-content: space-between;
-  /* border-bottom: 1px solid rgba(255, 255, 255, 0.1); */ /* Убираем линию или делаем ее тоньше */
-  padding: 0.15rem 0;
-  flex-shrink: 0; /* Предотвращаем сжатие элементов */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Тонкая линия снизу */
+  padding: 0.25rem 0;
 }
 
 .spec-label {
@@ -131,24 +123,46 @@ main {
 
 .spec-value {
   color: #007bff; /* Синий цвет для значений */
-  text-align: right; /* Выравнивание значений по правому краю */
 }
 
-/* Описание занимает оставшееся пространство */
 .attraction-description {
   font-size: 0.9rem;
   line-height: 1.4;
   color: rgba(255, 255, 255, 0.8);
-  overflow-y: auto; /* Добавляем скролл, если не помещается */
-  padding: 0.5rem;
-  background: rgba(0, 0, 0, 0.2); /* Легкий фон для отделения */
-  border-radius: 0.25rem;
-  flex: 1; /* Занимает оставшееся пространство */
-  /* Можно ограничить количество строк и добавить многоточие, если нужно */
-  /* display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden; */
+  /* margin-top: auto; flex: 1; - если нужно, чтобы описание занимало оставшееся пространство */
+  /* overflow: hidden; - если нужно ограничить высоту */
+  /* display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; - для ограничения строк */
+}
+
+/* Стили для блока спецификаций в модальном окне */
+.attraction-specs-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Две колонки в модалке */
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.attraction-specs-details .spec-item {
+  display: flex;
+  flex-direction: column;
+  border-bottom: none; /* Убираем линию */
+  padding: 0;
+  gap: 0.25rem;
+}
+
+.attraction-specs-details .spec-label {
+  font-weight: 600;
+  color: #a0aec0; /* Серый цвет для меток */
+  font-size: 0.85rem;
+}
+
+.attraction-specs-details .spec-value {
+  color: #ffffff;
+  font-weight: 500;
 }
 
 .product-actions {
