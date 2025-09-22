@@ -398,7 +398,16 @@ function loadAttractionImagesToForm(images) {
     }
 }
 
-
+// --- Функция для получения данных изображений из формы ---
+function getAttractionImagesFromForm() {
+    // Так как мы храним изображения в глобальном массиве attractionImages,
+    // мы можем просто вернуть его.
+    // Убедимся, что возвращаем только url и alt, и что это массив объектов.
+    return attractionImages.map(img => ({
+        url: img.url,
+        alt: img.alt || ''
+    })).filter(img => img.url); // Фильтруем пустые url на всякий случай
+}
 
 // --- Сохранение/Удаление аттракциона ---
 
