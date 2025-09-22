@@ -492,6 +492,27 @@ main {
     border-color: #007bff; /* Цвет активной миниатюры */
 }
 
+/* Опционально: стилизация для недоступных аттракционов в админке */
+#admin-attractions-grid .product-card.unavailable {
+    opacity: 0.7;
+    border: 2px dashed #ccc;
+}
+#admin-attractions-grid .product-card.unavailable::after {
+    content: "Недоступен";
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: #ffc107;
+    color: #000;
+    padding: 2px 5px;
+    font-size: 0.8em;
+    border-radius: 3px;
+}
+/* Убедитесь, что .product-card имеет position: relative; если используете ::after */
+#admin-attractions-grid .product-card {
+    position: relative; /* Нужно для позиционирования ::after */
+}
+
 /* Адаптивность для карточек с галереей */
 @media (max-width: 768px) {
     /* На мобильных карточка становится колонкой */

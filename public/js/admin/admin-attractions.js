@@ -39,6 +39,15 @@ function renderAttractions(attractions) {
 
     container.innerHTML = '';
 
+    // --- ВАЖНО: Здесь НЕ должно быть фильтрации по available ---
+    // if (!attractions || attractions.length === 0 || !attractions.some(a => a.available)) { 
+    //     container.innerHTML = '<div class="empty">Нет доступных аттракционов для отображения</div>';
+    //     return;
+    // }
+    // attractions = attractions.filter(a => a.available); // <-- ЭТО НЕ НУЖНО
+    // --- КОНЕЦ ВАЖНО ---
+
+    // Должно быть просто:
     if (!attractions || attractions.length === 0) {
         container.innerHTML = '<div class="empty">Нет аттракционов для отображения</div>';
         return;
@@ -53,11 +62,17 @@ function renderAttractions(attractions) {
 
         const card = document.createElement('div');
         card.className = 'product-card';
+        // Можно добавить визуальный индикатор доступности
+        if (attraction.available === false) {
+             card.classList.add('unavailable'); // Добавим класс для стилизации
+        }
         card.innerHTML = `
             <img src="${imageUrl}" alt="${escapeHtml(attraction.title)}" onerror="this.src='/assets/icons/placeholder1.webp'">
             <h3>${escapeHtml(attraction.title)}</h3>
             <p>Цена: ${formatPrice(attraction.price)}</p>
             <p>Категория: ${escapeHtml(attraction.category || 'Не указана')}</p>
+            <!-- Отображаем статус доступности -->
+            <p>Доступность: ${attraction.available !== false ? 'Да' : 'Нет (только в админке)'}</p> 
             <div class="product-actions">
                 <button onclick="openAttractionModal(${attraction.id})" class="btn-primary">Редактировать</button>
                 <button onclick="deleteAttraction(${attraction.id})" class="btn-danger">Удалить</button>
@@ -66,7 +81,6 @@ function renderAttractions(attractions) {
         container.appendChild(card);
     });
 }
-
 // --- Модальное окно аттракциона ---
 
 function openAttractionModal(attractionId = null) {
