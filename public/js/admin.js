@@ -1,4 +1,3 @@
-// В самом начале admin.js, замените старую проверку на эту:
 // Проверка авторизации
 if (localStorage.getItem('isAdmin') !== 'true') {
     // Проверяем, не находится ли пользователь уже на странице логина
@@ -63,6 +62,7 @@ class AdminPanel {
         document.querySelector('.close-attraction-modal')?.addEventListener('click', () => {
             this.closeModal('attraction-modal');
         });
+
         document.getElementById('cancel-attraction-btn')?.addEventListener('click', () => {
             this.closeModal('attraction-modal');
         });
@@ -91,11 +91,13 @@ class AdminPanel {
             e.preventDefault();
             this.saveProduct();
         });
+
         // Новая форма для аттракциона
         document.getElementById('attraction-form')?.addEventListener('submit', (e) => {
             e.preventDefault();
             this.saveAttraction();
         });
+
         // Форма категории
         document.getElementById('category-form')?.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -119,8 +121,6 @@ class AdminPanel {
         }
     }
 
-
-
     setupImageEventListeners() {
         // Кнопка добавления изображения через файловый диалог
         const addImageBtn = document.getElementById('add-image-btn');
@@ -132,11 +132,9 @@ class AdminPanel {
                 fileInput.accept = 'image/*';
                 fileInput.multiple = true;
                 fileInput.style.display = 'none';
-
                 fileInput.addEventListener('change', (e) => {
                     this.handleFileSelect(e.target.files);
                 });
-
                 document.body.appendChild(fileInput);
                 fileInput.click();
                 document.body.removeChild(fileInput);
@@ -162,7 +160,6 @@ class AdminPanel {
             dropZone.addEventListener('drop', (e) => {
                 e.preventDefault();
                 dropZone.classList.remove('drag-over');
-
                 const files = e.dataTransfer.files;
                 if (files.length > 0) {
                     this.handleFileSelect(files);
@@ -174,7 +171,6 @@ class AdminPanel {
     async loadSupplierCatalog(searchTerm = '') {
         const tab = document.getElementById('supplier-catalog-tab');
         if (!tab) return;
-
         const container = document.getElementById('supplier-catalog-grid');
         if (!container) return;
 
@@ -272,6 +268,7 @@ class AdminPanel {
                 </div>
             </div>
         `;
+
             container.appendChild(card);
         });
 
@@ -298,7 +295,6 @@ class AdminPanel {
             });
         });
     }
-
 
     async loadAllProductsCache() {
         try {
@@ -331,12 +327,10 @@ class AdminPanel {
         searchInput.addEventListener('input', (e) => {
             clearTimeout(searchTimeout);
             const term = e.target.value.trim();
-
             if (term.length < 2) {
                 searchResults.classList.add('hidden');
                 return;
             }
-
             // Добавляем небольшую задержку, чтобы не делать запрос на каждое нажатие клавиши
             searchTimeout = setTimeout(() => {
                 this.performVariantSearch(term, searchResults);
@@ -376,12 +370,16 @@ class AdminPanel {
             console.error('Контейнер для аттракционов не найден');
             return;
         }
+
         container.innerHTML = '';
+
         if (!attractions || attractions.length === 0) {
             container.innerHTML = '<div class="empty">Нет аттракционов для отображения</div>';
             return;
         }
+
         console.log('Проверка структуры первого аттракциона:', attractions[0]);
+
         attractions.forEach(attraction => {
             const card = document.createElement('div');
             card.className = 'product-card'; // Используем тот же класс, что и для товаров
@@ -399,6 +397,7 @@ class AdminPanel {
             <button onclick="adminPanel.deleteAttraction(${attraction.id})" class="btn-danger">Удалить</button>
         </div>
       `;
+
             container.appendChild(card);
         });
     }
@@ -417,7 +416,6 @@ class AdminPanel {
             document.getElementById('attraction-description').value = attraction.description || '';
             document.getElementById('attraction-price').value = attraction.price || '';
             document.getElementById('attraction-category').value = attraction.category || '';
-            
 
             // Заполняем спецификации
             const specs = attraction.specs || {};
@@ -452,6 +450,7 @@ class AdminPanel {
         const modal = document.getElementById('attraction-modal');
         modal.style.display = 'none';
         document.body.classList.remove('modal-open');
+
         // Очищаем поля формы и изображения
         document.getElementById('attraction-form').reset();
         this.clearAttractionImageFields();
@@ -469,7 +468,6 @@ class AdminPanel {
             description: formData.get('attraction-description'),
             price: parseFloat(formData.get('attraction-price')),
             category: formData.get('attraction-category'),
-            
             specs: {
                 places: formData.get('attraction-specs-places'),
                 power: formData.get('attraction-specs-power'),
@@ -577,14 +575,12 @@ class AdminPanel {
                 fileInput.accept = 'image/*';
                 fileInput.multiple = false; // Только одно изображение для аттракциона
                 fileInput.style.display = 'none';
-
                 fileInput.addEventListener('change', async (e) => {
                     const files = e.target.files;
                     if (files.length > 0) {
                         await this.handleAttractionImageUpload(files[0]);
                     }
                 });
-
                 document.body.appendChild(fileInput);
                 fileInput.click();
                 document.body.removeChild(fileInput);
@@ -603,7 +599,7 @@ class AdminPanel {
                 dropZone.classList.remove('drag-over');
             });
 
-            dropZone.addEventListener('drop', async (e) => { 
+            dropZone.addEventListener('drop', async (e) => {
                 e.preventDefault();
                 dropZone.classList.remove('drag-over');
                 const files = e.dataTransfer.files;
@@ -653,6 +649,7 @@ class AdminPanel {
     addAttractionImageField(imageData = null) {
         const container = document.getElementById('attraction-images-container');
         const dropHint = document.getElementById('attraction-drop-hint');
+
         if (!container) return;
 
         // Скрываем подсказку, если есть изображения
@@ -664,6 +661,7 @@ class AdminPanel {
         const imageItem = document.createElement('div');
         imageItem.className = 'image-item';
         imageItem.dataset.id = imageId;
+
         // Для аттракциона разрешаем перетаскивание, но в UI будет только одно изображение
         // imageItem.draggable = true;
 
@@ -695,6 +693,7 @@ class AdminPanel {
                 deleteBtn.style.opacity = '1';
             }
         });
+
         imageItem.addEventListener('mouseleave', () => {
             const deleteBtn = imageItem.querySelector('.delete-image-btn');
             if (deleteBtn) {
@@ -735,12 +734,15 @@ class AdminPanel {
     clearAttractionImageFields() {
         const container = document.getElementById('attraction-images-container');
         const dropHint = document.getElementById('attraction-drop-hint');
+
         if (container) {
             container.innerHTML = '';
         }
+
         if (dropHint) {
             dropHint.classList.add('show');
         }
+
         this.attractionImages = [];
     }
 
@@ -770,9 +772,11 @@ class AdminPanel {
         document.querySelectorAll('.tab-content').forEach(tab => {
             tab.classList.remove('active');
         });
+
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.classList.remove('active');
         });
+
         document.getElementById(`${tabName}-tab`).classList.add('active');
         document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
         this.currentTab = tabName;
@@ -786,11 +790,13 @@ class AdminPanel {
             }
             this.loadSupplierCatalog(); // Перезагружаем каталог
         }
+
         // Добавляем перезагрузку аттракционов при переходе на вкладку
         if (tabName === 'attractions') {
             this.loadAttractions();
         }
     }
+
     /**
      * Выполняет поиск товаров для добавления в качестве вариантов.
      * @param {string} term - Поисковый запрос.
@@ -811,6 +817,7 @@ class AdminPanel {
         );
 
         container.innerHTML = '';
+
         if (filteredProducts.length === 0) {
             container.innerHTML = '<div class="no-results">Товары не найдены</div>';
             container.classList.remove('hidden');
@@ -931,10 +938,8 @@ class AdminPanel {
             // мы можем использовать это при загрузке списка товаров.
             // Но для конкретного товара по ID API пока не возвращает variants напрямую.
             // Поэтому делаем отдельный запрос к списку товаров и фильтруем.
-
             // Альтернатива: можно добавить эндпоинт /api/products/:id/variants
             // Пока используем кэш.
-
             // Найдем товар в кэше
             const productInCache = this.allProductsCache.find(p => p.id == productId);
             if (productInCache && productInCache.variants && productInCache.variants.length > 0) {
@@ -957,7 +962,6 @@ class AdminPanel {
 
             this.renderSelectedVariants();
             this.updateSelectedVariantsInput();
-
         } catch (error) {
             console.error('Ошибка при загрузке связанных вариантов:', error);
             this.selectedVariants = [];
@@ -967,7 +971,6 @@ class AdminPanel {
     }
 
     // Обработка выбранных файлов (и через drag & drop, и через файловый диалог)
-
     async handleFileSelect(files) {
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
@@ -992,7 +995,6 @@ class AdminPanel {
                     const data = await response.json();
                     // data.url - это путь к изображению на сервере, возвращаемый из /api/upload
                     this.addImageField({ url: data.url, alt: file.name });
-
                 } catch (error) {
                     console.error('Ошибка при загрузке файла:', error);
                     this.showMessage(`Ошибка загрузки ${file.name}: ${error.message}`, 'error');
@@ -1002,6 +1004,7 @@ class AdminPanel {
             }
         }
     }
+
     // Добавить новое поле для изображения
     addImageField(imageData = null) {
         const container = document.getElementById('images-container');
@@ -1031,10 +1034,6 @@ class AdminPanel {
       <input type="hidden" class="image-input" value="${imageUrl}">
       <button type="button" class="delete-image-btn" data-id="${imageId}" title="Удалить изображение">&times;</button>
     `;
-
-
-    
-                
 
         container.appendChild(imageItem);
 
@@ -1066,78 +1065,77 @@ class AdminPanel {
 
     // Настройка событий перетаскивания для изображения
     // Исправленная функция setupDragEvents
-setupDragEvents(imageItem) {
-    imageItem.addEventListener('dragstart', (e) => {
-        this.draggedImage = imageItem;
-        imageItem.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-        // Не нужно передавать HTML данные
-    });
+    setupDragEvents(imageItem) {
+        imageItem.addEventListener('dragstart', (e) => {
+            this.draggedImage = imageItem;
+            imageItem.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            // Не нужно передавать HTML данные
+        });
 
-    imageItem.addEventListener('dragend', () => {
-        imageItem.classList.remove('dragging');
-        const container = document.getElementById('images-container');
-        if (container) {
-            const draggables = container.querySelectorAll('.image-item.drag-over');
-            draggables.forEach(item => item.classList.remove('drag-over'));
-        }
-        this.draggedImage = null;
-    });
-
-    imageItem.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-
-        if (this.draggedImage !== imageItem) {
-            imageItem.classList.add('drag-over');
-        }
-    });
-
-    imageItem.addEventListener('dragleave', () => {
-        imageItem.classList.remove('drag-over');
-    });
-
-    imageItem.addEventListener('drop', (e) => {
-        e.preventDefault();
-        imageItem.classList.remove('drag-over');
-
-        if (this.draggedImage && this.draggedImage !== imageItem) {
+        imageItem.addEventListener('dragend', () => {
+            imageItem.classList.remove('dragging');
             const container = document.getElementById('images-container');
             if (container) {
-                // Определяем позицию для вставки
-                const rect = imageItem.getBoundingClientRect();
-                const isAfter = e.clientX > rect.left + rect.width / 2;
-                
-                if (isAfter) {
-                    container.insertBefore(this.draggedImage, imageItem.nextSibling);
-                } else {
-                    container.insertBefore(this.draggedImage, imageItem);
-                }
-                
-                // Обновляем порядок изображений в массиве
-                this.updateImagesOrder();
+                const draggables = container.querySelectorAll('.image-item.drag-over');
+                draggables.forEach(item => item.classList.remove('drag-over'));
             }
-        }
-    });
-}
+            this.draggedImage = null;
+        });
 
-// Добавьте этот новый метод для обновления порядка изображений
-updateImagesOrder() {
-    const imageItems = document.querySelectorAll('.image-item');
-    const newImages = [];
-    
-    imageItems.forEach(item => {
-        const id = parseInt(item.dataset.id);
-        const image = this.images.find(img => img.id === id);
-        if (image) {
-            newImages.push(image);
-        }
-    });
-    
-    this.images = newImages;
-}
+        imageItem.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
 
-// Также добавьте CSS для визуальной обратной связи
+            if (this.draggedImage !== imageItem) {
+                imageItem.classList.add('drag-over');
+            }
+        });
+
+        imageItem.addEventListener('dragleave', () => {
+            imageItem.classList.remove('drag-over');
+        });
+
+        imageItem.addEventListener('drop', (e) => {
+            e.preventDefault();
+            imageItem.classList.remove('drag-over');
+
+            if (this.draggedImage && this.draggedImage !== imageItem) {
+                const container = document.getElementById('images-container');
+                if (container) {
+                    // Определяем позицию для вставки
+                    const rect = imageItem.getBoundingClientRect();
+                    const isAfter = e.clientX > rect.left + rect.width / 2;
+                    
+                    if (isAfter) {
+                        container.insertBefore(this.draggedImage, imageItem.nextSibling);
+                    } else {
+                        container.insertBefore(this.draggedImage, imageItem);
+                    }
+                    
+                    // Обновляем порядок изображений в массиве
+                    this.updateImagesOrder();
+                }
+            }
+        });
+    }
+
+    // Добавьте этот новый метод для обновления порядка изображений
+    updateImagesOrder() {
+        const imageItems = document.querySelectorAll('.image-item');
+        const newImages = [];
+        
+        imageItems.forEach(item => {
+            const id = parseInt(item.dataset.id);
+            const image = this.images.find(img => img.id === id);
+            if (image) {
+                newImages.push(image);
+            }
+        });
+        
+        this.images = newImages;
+    }
+
 
     // Удалить изображение
     deleteImage(imageId) {
@@ -1218,18 +1216,14 @@ updateImagesOrder() {
         try {
             console.log('Загрузка товаров...');
             const response = await fetch('/api/products?admin=true');
-
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-
             const products = await response.json();
             console.log('Все товары загружены (включая недоступные):', products);
-
             // Проверим, есть ли недоступные товары
             const unavailableProducts = products.filter(product => product.available === false);
             console.log('Недоступные товары найдены:', unavailableProducts);
-
             this.renderProducts(products);
         } catch (error) {
             console.error('Ошибка загрузки товаров:', error);
@@ -1272,6 +1266,7 @@ updateImagesOrder() {
                 <button onclick="adminPanel.deleteProduct(${product.id})" class="btn-danger">Удалить</button>
             </div>
         `;
+
             container.appendChild(card);
         });
     }
@@ -1281,7 +1276,6 @@ updateImagesOrder() {
             console.log('Загрузка категорий...');
             const response = await fetch('/api/categories');
             console.log('Ответ от /api/categories:', response.status);
-
             if (response.ok) {
                 const categories = await response.json();
                 console.log('Категории загружены:', categories);
@@ -1319,6 +1313,7 @@ updateImagesOrder() {
         }
 
         console.log('Отрисовка категорий:', categories);
+
         // Предполагаем, что categories - это массив объектов {id, name}
         categories.forEach(category => {
             // Проверка на существование обязательных полей
@@ -1352,6 +1347,7 @@ updateImagesOrder() {
         }
 
         console.log('Загрузка опций категорий в селект:', categories);
+
         // Предполагаем, что categories - это массив объектов {id, name}
         categories.forEach(category => {
             // Проверка на существование обязательных полей
@@ -1475,6 +1471,7 @@ updateImagesOrder() {
                 <button class="btn-danger delete-order-btn" data-order-id="${order.id}">Удалить заказ</button>
             </div>
         `;
+
             container.appendChild(card);
         });
 
@@ -1563,15 +1560,12 @@ updateImagesOrder() {
             console.log('Редактируем товар:', product);
             title.textContent = 'Редактировать товар';
             document.getElementById('product-id').value = product.id || '';
-
             const titleValue = product.title || '';
             console.log('DEBUG openProductModal: Setting title to', `"${titleValue}"`);
             document.getElementById('product-title').value = titleValue;
             console.log('DEBUG openProductModal: Input value is now', `"${document.getElementById('product-title').value}"`);
-
             document.getElementById('product-description').value = product.description || '';
             document.getElementById('product-price').value = product.price || '';
-
             document.getElementById('product-supplier-link').value = product.supplier_link || '';
             document.getElementById('product-supplier-notes').value = product.supplier_notes || '';
 
@@ -1593,6 +1587,7 @@ updateImagesOrder() {
 
             // Загрузка изображений
             this.loadImagesToForm(product.images || []);
+
             if (product.id) {
                 this.loadLinkedVariants(product.id);
             }
@@ -1601,7 +1596,6 @@ updateImagesOrder() {
             form.reset();
             document.getElementById('product-id').value = '';
             document.getElementById('product-available').checked = true;
-
             document.getElementById('product-supplier-link').value = '';
             document.getElementById('product-supplier-notes').value = '';
 
@@ -1646,9 +1640,11 @@ updateImagesOrder() {
                 this.showMessage('Ошибка: Форма товара не найдена', 'error');
                 return;
             }
+
             // 2. Получаем данные из формы
             const formData = new FormData(form);
             console.log('Данные из формы (все):', Object.fromEntries(formData));
+
             // 3. Извлекаем и обрабатываем каждое поле
             // Название (title) - критически важное поле
             const rawTitle = formData.get('product-title');
@@ -1659,6 +1655,7 @@ updateImagesOrder() {
                 title = String(rawTitle).trim();
             }
             console.log('Обработанный title:', `"${title}"`);
+
             // Остальные поля
             const description = (formData.get('product-description') || '').toString().trim();
             const rawPrice = formData.get('product-price');
@@ -1667,6 +1664,7 @@ updateImagesOrder() {
             const available = formData.get('product-available') === 'on';
             const supplier_link = (formData.get('product-supplier-link') || '').toString().trim();
             const supplier_notes = (formData.get('product-supplier-notes') || '').toString().trim();
+
             // 4. Получаем изображения из формы
             const images = this.getImagesFromForm();
             console.log('Полученные изображения:', images);
@@ -1707,10 +1705,12 @@ updateImagesOrder() {
                 this.showMessage('Пожалуйста, укажите название товара', 'error');
                 return;
             }
+
             if (isNaN(productData.price) || productData.price <= 0) {
                 this.showMessage('Пожалуйста, укажите корректную цену (больше 0)', 'error');
                 return;
             }
+
             if (!productData.category) {
                 this.showMessage('Пожалуйста, выберите категорию', 'error');
                 return;
@@ -1721,6 +1721,7 @@ updateImagesOrder() {
             const isUpdate = productId && productId.trim() !== '';
             const method = isUpdate ? 'PUT' : 'POST';
             const url = isUpdate ? `/api/products/${productId.trim()}` : '/api/products';
+
             console.log(`Отправка данных товара: ${method} ${url}`, productData);
 
             // 8. Отправляем данные основного товара на сервер
@@ -1731,6 +1732,7 @@ updateImagesOrder() {
                 },
                 body: JSON.stringify(productData)
             });
+
             console.log('Ответ от сервера (товар):', response.status, response.statusText);
 
             // 9. Обрабатываем ответ
@@ -1764,6 +1766,7 @@ updateImagesOrder() {
                     },
                     body: JSON.stringify({ variantIds: selectedVariantIds })
                 });
+
                 if (!variantLinkResponse.ok) {
                     // Можно показать предупреждение, но не прерывать весь процесс
                     console.error('Ошибка при сохранении связей с вариантами:', variantLinkResponse.statusText);
@@ -1786,7 +1789,6 @@ updateImagesOrder() {
                 isUpdate ? 'Товар и его варианты обновлены успешно!' : 'Товар и его варианты созданы успешно!',
                 'success'
             );
-
         } catch (error) {
             // 11. Обрабатываем любые ошибки (сетевые, логические, от сервера)
             console.error('Ошибка в функции saveProduct:', error);
@@ -1835,7 +1837,6 @@ updateImagesOrder() {
             if (response.ok) {
                 const product = await response.json();
                 this.openProductModal(product);
-
             } else {
                 throw new Error('Товар не найден');
             }
@@ -1940,7 +1941,6 @@ updateImagesOrder() {
         const messageEl = document.createElement('div');
         messageEl.className = `admin-message ${type}`;
         messageEl.textContent = message;
-
         document.body.appendChild(messageEl);
 
         // Удаляем сообщение через 3 секунды
