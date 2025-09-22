@@ -1024,13 +1024,16 @@ class AdminPanel {
         const imageAlt = imageData?.alt || '';
 
         imageItem.innerHTML = `
-            ${imageUrl ?
-                `<img src="${imageUrl}" alt="${imageAlt}" class="image-preview" onerror="this.src='/assets/icons/placeholder1.webp'">` :
-                `<div class="image-preview-placeholder">Нет изображения</div>`
-            }
-            <button type="button" class="delete-image-btn" onclick="adminPanel.deleteImage(${imageId})">×</button>
-            <input type="hidden" class="image-input" value="${imageUrl}" data-id="${imageId}">
-        `;
+        ${imageUrl ?
+            `<div class="image-preview-wrapper">
+                <img src="${imageUrl}" alt="${imageAlt}" class="image-preview" onerror="this.src='/assets/placeholder.png'">
+                <div class="image-filename">${this.escapeHtml(imageAlt)}</div>
+            </div>` :
+            `<div class="image-preview-placeholder">Нет изображения</div>`
+        }
+        <button type="button" class="delete-image-btn" onclick="adminPanel.deleteImage(${imageId})">×</button>
+        <input type="hidden" class="image-input" value="${imageUrl}" data-id="${imageId}">
+    `;
 
         container.appendChild(imageItem);
 
