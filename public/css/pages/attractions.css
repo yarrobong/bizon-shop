@@ -129,7 +129,7 @@ main {
   font-size: 0.9rem;
   line-height: 1.4;
   color: rgba(255, 255, 255, 0.8);
-  margin-top: auto; flex: 1;
+  margin-top: 20px;
   /* overflow: hidden; - если нужно ограничить высоту */
   /* display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; - для ограничения строк */
 }
