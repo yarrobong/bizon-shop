@@ -290,9 +290,11 @@ function addProductImageField(imageData = null) {
 
 function setupProductImageDragEvents(imageItem) {
     imageItem.addEventListener('dragstart', (e) => {
-        adminPanel.draggedImage = imageItem;
+        // window.draggedImage = imageItem; // Устаревшая строка
         imageItem.classList.add('dragging');
         e.dataTransfer.effectAllowed = 'move';
+        // Используем 'text/plain' для обхода ограничений Chrome, передавая ID элемента
+        e.dataTransfer.setData('text/plain', imageItem.dataset.id); 
     });
 
     imageItem.addEventListener('dragend', () => {
@@ -302,13 +304,17 @@ function setupProductImageDragEvents(imageItem) {
             const draggables = container.querySelectorAll('.image-item.drag-over');
             draggables.forEach(item => item.classList.remove('drag-over'));
         }
-        adminPanel.draggedImage = null;
+        // window.draggedImage = null; // Устаревшая строка
     });
 
     imageItem.addEventListener('dragover', (e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-        if (adminPanel.draggedImage !== imageItem) {
+        // if (window.draggedImage !== imageItem) { // Устаревшая проверка
+        // Получаем ID перетаскиваемого элемента из dataTransfer
+        const draggedId = e.dataTransfer.getData('text/plain');
+        const draggedElement = document.querySelector(`#images-container .image-item[data-id="${draggedId}"]`);
+        if (draggedElement && draggedElement !== imageItem) {
             imageItem.classList.add('drag-over');
         }
     });
@@ -321,16 +327,27 @@ function setupProductImageDragEvents(imageItem) {
         e.preventDefault();
         imageItem.classList.remove('drag-over');
 
-        if (adminPanel.draggedImage && adminPanel.draggedImage !== imageItem) {
+        // Получаем ID перетаскиваемого элемента из dataTransfer
+        const draggedId = e.dataTransfer.getData('text/plain');
+        // Находим сам элемент по ID
+        const draggedElement = document.querySelector(`#images-container .image-item[data-id="${draggedId}"]`);
+        
+        // Проверяем, что перетаскиваемый элемент существует и это не тот же элемент
+        if (draggedElement && draggedElement !== imageItem) {
             const container = document.getElementById('images-container');
             if (container) {
+                // Определяем, куда вставлять: после imageItem или перед ним
                 const rect = imageItem.getBoundingClientRect();
                 const isAfter = e.clientX > rect.left + rect.width / 2;
+                
                 if (isAfter) {
-                    container.insertBefore(adminPanel.draggedImage, imageItem.nextSibling);
+                    // Вставляем ПОСЛЕ imageItem
+                    container.insertBefore(draggedElement, imageItem.nextSibling);
                 } else {
-                    container.insertBefore(adminPanel.draggedImage, imageItem);
+                    // Вставляем ПЕРЕД imageItem
+                    container.insertBefore(draggedElement, imageItem);
                 }
+                
                 updateProductImagesOrder();
             }
         }
