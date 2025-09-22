@@ -270,7 +270,7 @@ function addAttractionImageField(imageData = null) {
 
     imageItem.innerHTML = `
         ${imageUrl ?
-            `<img src="${imageUrl}" alt="${adminPanel.escapeHtml(imageAlt)}" onerror="this.src='/assets/icons/placeholder1.webp'">` :
+           `<img src="${imageUrl}" alt="${imageAlt}" onerror="this.src='/assets/icons/placeholder1.webp'">` :
             `<div class="image-placeholder">Изображение не загружено</div>`
         }
         <input type="hidden" class="image-input" value="${imageUrl}">
