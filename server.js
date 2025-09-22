@@ -71,58 +71,6 @@ process.env.TZ = 'Europe/Moscow';
 
 // --- API: Товары ---
 
-// === API: Получить варианты товара ===
-app.get('/api/products/:id/variants', async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // Находим группу, к которой принадлежит товар
-    const groupResult = await pool.query(
-      'SELECT group_id FROM product_variants_link WHERE product_id = $1',
-      [id]
-    );
-
-    if (groupResult.rows.length === 0) {
-      return res.json([]); // Нет группы - нет вариантов
-    }
-
-    const groupId = groupResult.rows[0].group_id;
-
-    // Получаем все товары из этой группы
-    const variantsResult = await pool.query(
-      `SELECT p.*
-       FROM product_variants_link pvl
-       JOIN products p ON pvl.product_id = p.id
-       WHERE pvl.group_id = $1 AND p.id != $2
-       ORDER BY p.id`,
-      [groupId, id] // Исключаем сам товар
-    );
-
-    // Форматируем изображения для каждого варианта
-    const formattedVariants = variantsResult.rows.map((variant) => {
-      let images = [];
-      if (variant.images_json != null) {
-        if (Array.isArray(variant.images_json)) {
-          images = variant.images_json;
-        } else if (typeof variant.images_json === 'object') {
-          images = [variant.images_json];
-        } else {
-          images = [variant.images_json];
-        }
-      }
-      return {
-        ...variant,
-        images
-      };
-    });
-
-    res.json(formattedVariants);
-  } catch (err) {
-    console.error('Ошибка загрузки вариантов товара:', err);
-    res.status(500).json({ error: 'Не удалось загрузить варианты товара' });
-  }
-});
-
 // === API: Установить варианты товара ===
 app.put('/api/products/:id/variants', async (req, res) => {
   const client = await pool.connect();
@@ -130,58 +78,115 @@ app.put('/api/products/:id/variants', async (req, res) => {
     await client.query('BEGIN');
 
     const { id } = req.params;
+    const productId = parseInt(id, 10); // Убедимся, что ID - это число
     const { variantIds } = req.body; // Ожидаем массив ID
 
+    // --- Валидация входных данных ---
+    if (isNaN(productId)) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Некорректный ID товара' });
+    }
+
     // Проверяем, существует ли основной товар
-    const productExists = await client.query('SELECT 1 FROM products WHERE id = $1', [id]);
+    const productExists = await client.query('SELECT 1 FROM products WHERE id = $1', [productId]);
     if (productExists.rows.length === 0) {
       await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Основной товар не найден' });
     }
 
-    console.log(`Установка вариантов для товара ID ${id}. Варианты:`, variantIds);
+    // Проверяем и нормализуем массив variantIds
+    let validatedVariantIds = [];
+    if (Array.isArray(variantIds)) {
+        // Фильтруем, оставляя только уникальные числовые ID, отличные от productId
+        validatedVariantIds = [...new Set(variantIds.map(vId => parseInt(vId, 10)).filter(vId => !isNaN(vId) && vId !== productId))];
+    }
+    console.log(`Установка вариантов для товара ID ${productId}. Валидные варианты:`, validatedVariantIds);
 
-    // Удаляем все существующие связи для этого товара
-    await client.query('DELETE FROM product_variants_link WHERE product_id = $1', [id]);
-    console.log(`Удалены старые связи вариантов для товара ID ${id}.`);
+    // --- Логика управления группой вариантов ---
+    // 1. Найти существующую группу для этого товара
+    const existingGroupRes = await client.query(
+      'SELECT group_id FROM product_variants_link WHERE product_id = $1',
+      [productId]
+    );
 
-    if (Array.isArray(variantIds) && variantIds.length > 0) {
-      const groupId = id; // Используем ID основного товара как group_id
+    let groupIdToUse = null;
 
-      // Добавляем связь "основной товар -> группа"
-      await client.query(
-        'INSERT INTO product_variants_link (product_id, group_id) VALUES ($1, $2) ON CONFLICT (product_id) DO UPDATE SET group_id = $2',
-        [id, groupId]
-      );
-
-      // Добавляем связи "вариант -> группа"
-      for (const variantId of variantIds) {
-        if (variantId != id) { // Исключаем основной товар
-          const variantExists = await client.query('SELECT 1 FROM products WHERE id = $1', [variantId]);
-          if (variantExists.rows.length > 0) {
-            await client.query(
-              'INSERT INTO product_variants_link (product_id, group_id) VALUES ($1, $2) ON CONFLICT (product_id) DO UPDATE SET group_id = $2',
-              [variantId, groupId]
-            );
-          } else {
-              console.warn(`Вариант с ID ${variantId} не найден.`);
-          }
+    if (validatedVariantIds.length > 0) {
+        // --- Сценарий: Нужно создать или обновить группу ---
+        if (existingGroupRes.rows.length > 0) {
+            // Товар уже в группе, используем её ID
+            groupIdToUse = existingGroupRes.rows[0].group_id;
+            console.log(`Товар ID ${productId} уже в группе ${groupIdToUse}. Обновляем состав.`);
+        } else {
+            // Товар не в группе, создаем новую, используя ID основного товара как group_id
+            groupIdToUse = productId;
+            console.log(`Товар ID ${productId} не в группе. Создаем новую группу ${groupIdToUse}.`);
         }
-      }
+
+        // 2. Удаляем все связи *для этой группы* (это очистит старые связи и подготовит к новым)
+        await client.query('DELETE FROM product_variants_link WHERE group_id = $1', [groupIdToUse]);
+        console.log(`Удалены все старые связи для группы ID ${groupIdToUse}.`);
+
+        // 3. Создаем новые связи для обновленной конфигурации группы
+        // Связываем основной товар с группой
+        await client.query(
+            'INSERT INTO product_variants_link (product_id, group_id) VALUES ($1, $2)',
+            [productId, groupIdToUse]
+        );
+        console.log(`Связь основного товара ID ${productId} с группой ID ${groupIdToUse} создана.`);
+
+        // Связываем варианты с группой
+        // Сначала проверим, существуют ли все указанные варианты
+        if (validatedVariantIds.length > 0) {
+            const placeholders = validatedVariantIds.map((_, i) => `$${i + 1}`).join(', ');
+            const checkVariantsQuery = `SELECT id FROM products WHERE id IN (${placeholders})`;
+            const checkResult = await client.query(checkVariantsQuery, validatedVariantIds);
+            const existingVariantIds = checkResult.rows.map(r => r.id);
+            const notFoundIds = validatedVariantIds.filter(id => !existingVariantIds.includes(id));
+            
+            if (notFoundIds.length > 0) {
+                console.warn(`Некоторые варианты не найдены и будут проигнорированы:`, notFoundIds);
+            }
+
+            // Вставляем связи только для существующих вариантов
+            for (const variantId of existingVariantIds) {
+                await client.query(
+                    'INSERT INTO product_variants_link (product_id, group_id) VALUES ($1, $2)',
+                    [variantId, groupIdToUse]
+                );
+                console.log(`Связь варианта ID ${variantId} с группой ID ${groupIdToUse} создана.`);
+            }
+        }
+
+    } else {
+        // --- Сценарий: Нужно удалить все варианты (очистить группу) ---
+        if (existingGroupRes.rows.length > 0) {
+            const oldGroupId = existingGroupRes.rows[0].group_id;
+            // Удаляем все связи *для этой группы*
+            await client.query('DELETE FROM product_variants_link WHERE group_id = $1', [oldGroupId]);
+            console.log(`Группа ID ${oldGroupId} (содержавшая товар ID ${productId}) была очищена и удалена.`);
+        } else {
+            console.log(`У товара ID ${productId} нет группы для очистки.`);
+        }
+        // Если validatedVariantIds пуст, то на этом шаге все старые связи уже удалены или их не было.
     }
 
     await client.query('COMMIT');
-    res.json({ success: true, message: 'Варианты товара обновлены' });
+    res.json({ success: true, message: 'Варианты товара обновлены', groupId: groupIdToUse });
 
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('Ошибка установки вариантов товара:', err);
-    res.status(500).json({ error: 'Не удалось обновить варианты товара' });
+    // Возвращаем более конкретную ошибку, если это ошибка клиента
+    if (err.code === '23503' || err.code === '23505') { //_foreign_key_violation или unique_violation
+         res.status(400).json({ error: 'Ошибка данных при обновлении вариантов' });
+    } else {
+         res.status(500).json({ error: 'Не удалось обновить варианты товара' });
+    }
   } finally {
     client.release();
   }
 });
-
 // === API: Получить товар по ID ===
 app.get('/api/products/:id', async (req, res) => {
   try {
@@ -200,24 +205,29 @@ app.get('/api/products/:id', async (req, res) => {
     }
 
     const product = result.rows[0];
+    // --- Исправленная обработка images_json для товара по ID ---
     let productImages = [];
-  // --- Исправленная обработка images_json для товара по ID ---
-  if (product.images_json != null) {
-      if (typeof product.images_json === 'string') {
-          try {
-              productImages = product.images_json;
-          } catch (parseErr) {
-              console.error(`Ошибка парсинга images_json для товара ID ${product.id}:`, parseErr);
-          }
-      } else if (Array.isArray(product.images_json) || (typeof product.images_json === 'object' && product.images_json !== null)) {
-          productImages = product.images_json;
-      }
+    // Ожидаем, что драйвер pg уже преобразовал JSON из БД в JS объект/массив
+    // Проверяем, является ли результат допустимым массивом или объектом
+    if (Array.isArray(product.images_json)) {
+      productImages = product.images_json;
+    } else if (product.images_json !== null && typeof product.images_json === 'object') {
+      // Если это объект (не null), оборачиваем его в массив
+      productImages = [product.images_json];
+    } else if (product.images_json === null || product.images_json === undefined) {
+      // Если null/undefined, оставляем пустой массив
+      productImages = [];
+    } else {
+      // Если это что-то другое (например, неправильно сохраненная строка),
+      // можно попробовать парсить или залогировать ошибку
+      console.warn(`Неожиданный тип или значение images_json для товара ID ${product.id}:`, typeof product.images_json, product.images_json);
+      productImages = []; // Или попытаться парсить: try { productImages = JSON.parse(product.images_json); } catch(e) { productImages = []; }
     }
     // --- Конец исправленной обработки ---
 
     res.json({
        ...product,
-       images: productImages
+       images: productImages // Теперь images - это массив
     });
   } catch (err) {
     console.error('Ошибка загрузки товара по ID:', err);
@@ -233,13 +243,27 @@ app.post('/api/products', async (req, res) => {
 
     const images_json = images ? JSON.stringify(images) : null;
 
+    // Возвращаем все поля, кроме images_json. images будет обработано отдельно.
     const result = await pool.query(`
       INSERT INTO products (title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-      RETURNING id, title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json as images
+      RETURNING id, title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes -- images_json исключен
     `, [title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json]);
 
-    res.status(201).json(result.rows[0]);
+    // Обрабатываем images_json для ответа, как в GET
+    const insertedProduct = result.rows[0];
+    let processedImages = [];
+    if (Array.isArray(images)) {
+      processedImages = images; // Возвращаем то, что клиент отправил
+    } else if (images !== null && typeof images === 'object') {
+      processedImages = [images];
+    }
+    // Если images было null/undefined/строкой, processedImages останется []
+
+    res.status(201).json({
+      ...insertedProduct,
+      images: processedImages // Добавляем корректно обработанное поле images
+    });
   } catch (err) {
     console.error('Ошибка создания товара:', err);
     res.status(500).json({ error: 'Не удалось создать товар' });
