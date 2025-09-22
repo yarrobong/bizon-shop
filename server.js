@@ -829,7 +829,7 @@ app.post('/api/contact', async (req, res) => {
 });
 
 // --- API endpoint для получения аттракционов из БД (для админки - все аттракционы) ---
-app.get('/api/attractions', async (req, res) => {
+app.get('/api/attractions/public', async (req, res) => {
     console.log('Получение списка аттракционов из БД (для админки)...');
     try {
         // Получаем основные данные аттракционов
@@ -902,7 +902,7 @@ app.get('/api/attractions', async (req, res) => {
 });
 
 // --- API endpoint для получения ДОСТУПНЫХ аттракционов из БД (для пользовательской части) ---
-app.get('/api/attractions/public', async (req, res) => {
+app.get('/api/attractions', async (req, res) => {
     console.log('Получение списка ДОСТУПНЫХ аттракционов из БД (для пользовательской части)...');
     try {
         // Получаем только доступные аттракционы
