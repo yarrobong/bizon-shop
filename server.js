@@ -832,53 +832,6 @@ app.post('/api/contact', async (req, res) => {
 app.get('/api/attractions', async (req, res) => {
   console.log('Получение списка аттракционов из БД...');
   try {
-    // Выполняем запрос к БД
-    // Предполагается, что таблица называется 'attractions'
-    const query = `
-      SELECT 
-        id, 
-        title, 
-        price, 
-        category, 
-        image_url AS image, 
-        description,
-        specs_places AS "specs.places",
-        specs_power AS "specs.power",
-        specs_games AS "specs.games",
-        specs_area AS "specs.area",
-        specs_dimensions AS "specs.dimensions"
-      FROM attractions
-      ORDER BY id ASC; -- или другой порядок, например, по названию или категории
-    `;
-    const result = await pool.query(query);
-
-    // Преобразуем результат из БД в формат, ожидаемый frontend'ом
-    // Особенно важно правильно сформировать объект `specs`
-    const attractions = result.rows.map(row => {
-      // Создаем объект аттракциона
-      const attraction = {
-        id: row.id,
-        title: row.title,
-        price: parseFloat(row.price), // Убедимся, что цена - число
-        category: row.category,
-        image: row.image, // URL изображения
-        description: row.description,
-        // Формируем объект specs из отдельных полей
-        specs: {
-          places: row["specs.places"] || "N/A",
-          power: row["specs.power"] || "N/A",
-          games: row["specs.games"] || "N/A",
-          area: row["specs.area"] || "N/A",
-          dimensions: row["specs.dimensions"] || "N/A"
-        }
-      };
-      return attraction;
-    });
-
-    // --- API endpoint для получения аттракционов ---
-app.get('/api/attractions', async (req, res) => {
-  console.log('Получение списка аттракционов из БД...');
-  try {
     const query = `
       SELECT
         id,
@@ -930,6 +883,12 @@ app.get('/api/attractions/:id', async (req, res) => {
   const { id } = req.params;
   console.log(`Получение аттракциона с ID ${id} из БД...`);
   try {
+    // Проверяем, является ли id числом
+    const attractionId = parseInt(id, 10);
+    if (isNaN(attractionId)) {
+      return res.status(400).json({ error: 'Некорректный ID аттракциона' });
+    }
+
     const query = `
       SELECT
         id,
@@ -947,7 +906,7 @@ app.get('/api/attractions/:id', async (req, res) => {
       FROM attractions
       WHERE id = $1;
     `;
-    const result = await pool.query(query, [id]);
+    const result = await pool.query(query, [attractionId]); // Используем число
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Аттракцион не найден' });
@@ -996,7 +955,7 @@ app.post('/api/attractions', async (req, res) => {
       title,
       price,
       category,
-      image,
+      image, // Убедитесь, что это URL, возвращенный из /api/upload
       description,
       stock !== undefined && stock !== null ? stock : null,
       specs?.places || null,
@@ -1009,6 +968,7 @@ app.post('/api/attractions', async (req, res) => {
     const result = await pool.query(query, values);
     const newId = result.rows[0].id;
     console.log(`✅ Аттракцион с ID ${newId} успешно создан в БД`);
+    // Возвращаем созданный объект или хотя бы ID
     res.status(201).json({ id: newId, message: 'Аттракцион создан' });
   } catch (err) {
     console.error('❌ Ошибка при создании аттракциона в БД:', err);
@@ -1021,14 +981,21 @@ app.put('/api/attractions/:id', async (req, res) => {
   const { id } = req.params;
   const { title, price, category, image, description, stock, specs } = req.body;
   console.log(`Обновление аттракциона с ID ${id}:`, req.body);
+  
   try {
+    // Проверяем, является ли id числом
+    const attractionId = parseInt(id, 10);
+    if (isNaN(attractionId)) {
+       return res.status(400).json({ error: 'Некорректный ID аттракциона' });
+    }
+
     const query = `
       UPDATE attractions
       SET
         title = $1,
         price = $2,
         category = $3,
-        image_url = $4,
+        image_url = $4, -- Убедитесь, что это URL, возвращенный из /api/upload
         description = $5,
         stock = $6,
         specs_places = $7,
@@ -1036,7 +1003,8 @@ app.put('/api/attractions/:id', async (req, res) => {
         specs_games = $9,
         specs_area = $10,
         specs_dimensions = $11
-      WHERE id = $12;
+      WHERE id = $12
+      RETURNING id; -- Возвращаем ID, чтобы убедиться, что запись была
     `;
     const values = [
       title,
@@ -1050,10 +1018,16 @@ app.put('/api/attractions/:id', async (req, res) => {
       specs?.games || null,
       specs?.area || null,
       specs?.dimensions || null,
-      id
+      attractionId // Используем число
     ];
 
-    await pool.query(query, values);
+    const result = await pool.query(query, values);
+    
+    if (result.rows.length === 0) {
+       // Если RETURNING не вернул строк, значит запись с таким ID не найдена
+       return res.status(404).json({ error: 'Аттракцион не найден для обновления' });
+    }
+    
     console.log(`✅ Аттракцион с ID ${id} успешно обновлен в БД`);
     res.json({ message: 'Аттракцион обновлен' });
   } catch (err) {
@@ -1066,8 +1040,22 @@ app.put('/api/attractions/:id', async (req, res) => {
 app.delete('/api/attractions/:id', async (req, res) => {
   const { id } = req.params;
   console.log(`Удаление аттракциона с ID ${id} из БД...`);
+  
   try {
-    await pool.query('DELETE FROM attractions WHERE id = $1', [id]);
+    // Проверяем, является ли id числом
+    const attractionId = parseInt(id, 10);
+    if (isNaN(attractionId)) {
+       return res.status(400).json({ error: 'Некорректный ID аттракциона' });
+    }
+
+    // Сначала проверим, существует ли аттракцион
+    const checkResult = await pool.query('SELECT 1 FROM attractions WHERE id = $1', [attractionId]);
+    if (checkResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Аттракцион не найден для удаления' });
+    }
+
+    // Если существует, удаляем
+    await pool.query('DELETE FROM attractions WHERE id = $1', [attractionId]);
     console.log(`✅ Аттракцион с ID ${id} успешно удален из БД`);
     res.json({ message: 'Аттракцион удален' });
   } catch (err) {
@@ -1088,16 +1076,6 @@ app.get('/api/attractions/categories', async (req, res) => {
   } catch (err) {
     console.error('❌ Ошибка при получении категорий аттракционов из БД:', err);
     res.status(500).json({ error: 'Не удалось загрузить категории аттракционов', details: err.message });
-  }
-});
-
-    console.log(`✅ Успешно получено ${attractions.length} аттракционов из БД`);
-    // Отправляем JSON-массив аттракционов клиенту
-    res.json(attractions);
-  } catch (err) {
-    console.error('❌ Ошибка при получении аттракционов из БД:', err);
-    // Отправляем клиенту ошибку
-    res.status(500).json({ error: 'Не удалось загрузить аттракционы', details: err.message });
   }
 });
 
