@@ -70,7 +70,71 @@ app.listen(PORT, async () => {
 process.env.TZ = 'Europe/Moscow';
 
 // --- API: Товары ---
-
+// === API: Получить товары ===
+// Объединенный и исправленный маршрут получения товаров с вариантами
+app.get('/api/products', async (req, res) => {
+  try {
+    // 1. Получаем все товары из таблицы products
+    const productsResult = await pool.query('SELECT * FROM products');
+    const products = productsResult.rows;
+    // 2. Для каждого товара проверяем, есть ли у него варианты
+    const productsWithVariants = await Promise.all(products.map(async (product) => {
+      // --- Варианты ---
+      let formattedVariants = [];
+      const groupResult = await pool.query(
+        `SELECT group_id FROM product_variants_link WHERE product_id = $1`,
+        [product.id]
+      );
+      if (groupResult.rows.length > 0) {
+        const groupId = groupResult.rows[0].group_id;
+        const variantsResult = await pool.query(
+          `SELECT p.*
+           FROM product_variants_link pvl
+           JOIN products p ON pvl.product_id = p.id
+           WHERE pvl.group_id = $1 AND p.id != $2
+           ORDER BY p.id`,
+          [groupId, product.id] // Исключаем сам товар из списка вариантов
+        );
+        formattedVariants = variantsResult.rows.map((variant) => {
+          let images = [];
+          if (variant.images_json != null) {
+            if (Array.isArray(variant.images_json)) {
+              images = variant.images_json;
+            } else if (typeof variant.images_json === 'object') {
+              images = [variant.images_json];
+            } else {
+              images = [variant.images_json];
+            }
+          }
+          return {
+            ...variant,
+            images
+          };
+        });
+      }
+      // --- Основной товар ---
+      let productImages = [];
+      if (product.images_json != null) {
+        if (Array.isArray(product.images_json)) {
+          productImages = product.images_json;
+        } else if (typeof product.images_json === 'object') {
+          productImages = [product.images_json];
+        } else {
+          productImages = [product.images_json];
+        }
+      }
+      return {
+        ...product,
+        images: productImages,
+        variants: formattedVariants
+      };
+    }));
+    res.json(productsWithVariants);
+  } catch (err) {
+    console.error('Ошибка в /api/products:', err);
+    res.status(500).json({ error: 'Ошибка сервера при получении товаров' });
+  }
+});
 // === API: Установить варианты товара ===
 app.put('/api/products/:id/variants', async (req, res) => {
   const client = await pool.connect();
