@@ -206,7 +206,7 @@ main {
 .specs-section {
     display: flex;
     flex-direction: column;
-    gap: 15px; /* Расстояние между элементами */
+
     padding: 15px 0; /* Отступы сверху и снизу секции */
 }
 
@@ -232,6 +232,17 @@ main {
     outline: none;
     border-color: #007bff; /* Цвет границы при фокусе */
     box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25); /* Тень при фокусе */
+}
+
+.drop-hint {
+    text-align: center;
+    color: #666;
+    padding: 20px;
+    display: none;
+}
+
+.drop-hint.show {
+    display: block;
 }
 
 /* Адаптивность для карточек */
