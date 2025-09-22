@@ -452,51 +452,45 @@ body {
 
 .images-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 15px;
     margin-bottom: 15px;
+    min-height: 150px;
 }
 
 .image-item {
     position: relative;
-    width: 120px;
-    height: 120px;
-    border: 1px solid #ddd;
+    border: 2px dashed #ddd;
     border-radius: 8px;
     overflow: hidden;
-    background-color: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    cursor: move;
     transition: all 0.2s ease;
+    cursor: move;
 }
-
-.image-item:hover {
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    transform: translateY(-2px);
+.image-item.drag-over {
+    border-color: #007bff;
+    background-color: rgba(0, 123, 255, 0.1);
 }
 
 .image-item.dragging {
     opacity: 0.5;
-    transform: scale(0.95);
 }
 
-.image-preview {
+.image-item img {
     width: 100%;
-    height: 100%;
+    height: 150px;
     object-fit: cover;
     display: block;
 }
 
-.image-preview-placeholder {
+.image-placeholder {
     width: 100%;
-    height: 100%;
+    height: 150px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #f0f0f0;
-    color: #666;
-    font-size: 12px;
-    text-align: center;
+    background-color: #f8f9fa;
+    color: #6c757d;
+    font-size: 14px;
 }
 
 .delete-image-btn {
@@ -505,18 +499,18 @@ body {
     right: 5px;
     width: 24px;
     height: 24px;
-    background-color: #dc3545;
+    border-radius: 50%;
+    background-color: rgba(255, 0, 0, 0.8);
     color: white;
     border: none;
-    border-radius: 50%;
     cursor: pointer;
     font-size: 16px;
+    font-weight: bold;
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
     transition: opacity 0.2s ease;
-    z-index: 10;
 }
 
 .image-item:hover .delete-image-btn {

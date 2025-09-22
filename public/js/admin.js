@@ -1065,54 +1065,79 @@ class AdminPanel {
     }
 
     // Настройка событий перетаскивания для изображения
-    setupDragEvents(imageItem) {
-        imageItem.addEventListener('dragstart', (e) => {
-            this.draggedImage = imageItem;
-            imageItem.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/html', imageItem.outerHTML);
-        });
+    // Исправленная функция setupDragEvents
+setupDragEvents(imageItem) {
+    imageItem.addEventListener('dragstart', (e) => {
+        this.draggedImage = imageItem;
+        imageItem.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        // Не нужно передавать HTML данные
+    });
 
-        imageItem.addEventListener('dragend', () => {
-            imageItem.classList.remove('dragging');
+    imageItem.addEventListener('dragend', () => {
+        imageItem.classList.remove('dragging');
+        const container = document.getElementById('images-container');
+        if (container) {
+            const draggables = container.querySelectorAll('.image-item.drag-over');
+            draggables.forEach(item => item.classList.remove('drag-over'));
+        }
+        this.draggedImage = null;
+    });
+
+    imageItem.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+
+        if (this.draggedImage !== imageItem) {
+            imageItem.classList.add('drag-over');
+        }
+    });
+
+    imageItem.addEventListener('dragleave', () => {
+        imageItem.classList.remove('drag-over');
+    });
+
+    imageItem.addEventListener('drop', (e) => {
+        e.preventDefault();
+        imageItem.classList.remove('drag-over');
+
+        if (this.draggedImage && this.draggedImage !== imageItem) {
             const container = document.getElementById('images-container');
             if (container) {
-                const draggables = container.querySelectorAll('.image-item.drag-over');
-                draggables.forEach(item => item.classList.remove('drag-over'));
-            }
-            this.draggedImage = null;
-        });
-
-        imageItem.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-
-            if (this.draggedImage !== imageItem) {
-                imageItem.classList.add('drag-over');
-            }
-        });
-
-        imageItem.addEventListener('dragleave', () => {
-            imageItem.classList.remove('drag-over');
-        });
-
-        imageItem.addEventListener('drop', (e) => {
-            e.preventDefault();
-            imageItem.classList.remove('drag-over');
-
-            if (this.draggedImage && this.draggedImage !== imageItem) {
-                const container = document.getElementById('images-container');
-                if (container) {
-                    // Определяем позицию для вставки
-                    const rect = imageItem.getBoundingClientRect();
-                    const nextSibling = e.clientX > rect.left + rect.width / 2 ?
-                        imageItem.nextSibling : imageItem;
-
-                    container.insertBefore(this.draggedImage, nextSibling);
+                // Определяем позицию для вставки
+                const rect = imageItem.getBoundingClientRect();
+                const isAfter = e.clientX > rect.left + rect.width / 2;
+                
+                if (isAfter) {
+                    container.insertBefore(this.draggedImage, imageItem.nextSibling);
+                } else {
+                    container.insertBefore(this.draggedImage, imageItem);
                 }
+                
+                // Обновляем порядок изображений в массиве
+                this.updateImagesOrder();
             }
-        });
-    }
+        }
+    });
+}
+
+// Добавьте этот новый метод для обновления порядка изображений
+updateImagesOrder() {
+    const imageItems = document.querySelectorAll('.image-item');
+    const newImages = [];
+    
+    imageItems.forEach(item => {
+        const id = parseInt(item.dataset.id);
+        const image = this.images.find(img => img.id === id);
+        if (image) {
+            newImages.push(image);
+        }
+    });
+    
+    this.images = newImages;
+}
+
+// Также добавьте CSS для визуальной обратной связи
 
     // Удалить изображение
     deleteImage(imageId) {
