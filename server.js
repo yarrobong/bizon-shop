@@ -88,13 +88,13 @@ app.get('/api/products', async (req, res) => {
       if (groupResult.rows.length > 0) {
         const groupId = groupResult.rows[0].group_id;
         const variantsResult = await pool.query(
-          `SELECT p.*
-           FROM product_variants_link pvl
-           JOIN products p ON pvl.product_id = p.id
-           WHERE pvl.group_id = $1 AND p.id != $2
-           ORDER BY p.id`,
-          [groupId, product.id] // Исключаем сам товар из списка вариантов
-        );
+  `SELECT p.*
+   FROM product_variants_link pvl
+   JOIN products p ON pvl.product_id = p.id
+   WHERE pvl.group_id = $1
+   ORDER BY p.id`, // <-- Здесь раньше было AND p.id != $2, чтобы исключить сам товар
+  [groupId]
+);
         formattedVariants = variantsResult.rows.map((variant) => {
           let images = [];
           if (variant.images_json != null) {
