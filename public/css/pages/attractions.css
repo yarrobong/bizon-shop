@@ -51,7 +51,7 @@ main {
 
 .attraction-image {
   width: 35%; /* Занимает половину ширины */
-  height: 65%;
+  height: 100%;
   position: relative;
   overflow: hidden;
   border-right: 2px solid rgba(0, 123, 255, 0.3); /* Разделительная линия */
@@ -64,7 +64,7 @@ main {
 }
 
 .attraction-info {
-  width: 50%; /* Занимает вторую половину */
+  width: 65%; /* Занимает вторую половину */
   padding: 1.5rem; /* Внутренние отступы */
   display: flex;
   flex-direction: column;
