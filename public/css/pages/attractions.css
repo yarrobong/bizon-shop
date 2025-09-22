@@ -302,3 +302,225 @@ main {
     width: 100%;
   }
 }
+
+/* --- Стили для детального просмотра аттракциона --- */
+
+.attraction-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.attraction-back-btn {
+    align-self: flex-start;
+    background-color: #f0f0f0;
+    color: #333;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.attraction-back-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.attraction-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.attraction-detail-title {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #222;
+}
+
+.attraction-detail-price {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #28a745; /* Зеленый цвет цены */
+    white-space: nowrap;
+}
+
+.attraction-detail-content {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* --- Галерея изображений --- */
+.attraction-gallery {
+    position: relative;
+    width: 100%;
+    max-width: 600px; /* Максимальная ширина главного изображения */
+    margin: 0 auto;
+}
+
+.attraction-main-image-container {
+    position: relative;
+    width: 100%;
+    padding-top: 75%; /* Соотношение сторон 4:3 (можно изменить) */
+    overflow: hidden;
+    border-radius: 8px;
+    background-color: #f8f8f8;
+}
+
+.attraction-main-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Или cover, в зависимости от предпочтений */
+    transition: opacity 0.3s ease;
+}
+
+/* Стрелки навигации */
+.attraction-gallery-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 18px;
+    border-radius: 0 4px 4px 0; /* Для левой стрелки */
+    z-index: 2;
+    transition: background-color 0.3s ease;
+}
+
+.attraction-gallery-nav:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.attraction-gallery-nav.prev {
+    left: 0;
+    border-radius: 0 4px 4px 0;
+}
+
+.attraction-gallery-nav.next {
+    right: 0;
+    border-radius: 4px 0 0 4px;
+}
+
+/* Миниатюры */
+.attraction-thumbnails {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+.attraction-thumbnail {
+    width: 80px;
+    height: 60px;
+    object-fit: cover;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: border-color 0.3s ease, transform 0.2s ease;
+}
+
+.attraction-thumbnail:hover {
+    transform: scale(1.05);
+}
+
+.attraction-thumbnail.active {
+    border-color: #007bff; /* Цвет активной миниатюры */
+}
+
+/* --- Описание и спецификации --- */
+.attraction-detail-description,
+.attraction-detail-specs {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.attraction-detail-description h3,
+.attraction-detail-specs h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+    color: #333;
+}
+
+.attraction-detail-description p {
+    margin: 0;
+    line-height: 1.6;
+    color: #555;
+}
+
+.attraction-specs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.attraction-spec-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.attraction-spec-label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #444;
+}
+
+.attraction-spec-value {
+    color: #666;
+}
+
+/* --- Кнопка "В корзину" --- */
+.attraction-add-to-cart {
+    align-self: flex-start;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.attraction-add-to-cart:hover {
+    background-color: #218838;
+}
+
+/* --- Адаптивность --- */
+@media (min-width: 768px) {
+    .attraction-detail-content {
+        flex-direction: row;
+    }
+
+    .attraction-gallery {
+        flex: 1;
+        max-width: none; /* Убираем ограничение на больших экранах */
+    }
+
+    .attraction-detail-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+}

@@ -100,20 +100,21 @@
 </header>
 
   <main role="main">
-    <!-- Фильтры по категориям аттракционов -->
-    <div class="tags" aria-label="Фильтры по категориям">
-      <button class="tag-btn active" data-category="все">Все</button>
-      <button class="tag-btn" data-category="VR">VR</button>
-      <button class="tag-btn" data-category="Симуляторы">Симуляторы</button>
-      <button class="tag-btn" data-category="Гонки">Гонки</button>
-      <!-- Добавьте другие категории аттракционов -->
-    </div>
+  <!-- Фильтры по категориям аттракционов -->
+  <div class="tags" aria-label="Фильтры по категориям">
+    <button class="tag-btn active" data-category="все">Все</button>
+    <button class="tag-btn" data-category="VR">VR</button>
+    <button class="tag-btn" data-category="Симуляторы">Симуляторы</button>
+    <button class="tag-btn" data-category="Гонки">Гонки</button>
+    <!-- Добавьте другие категории аттракционов -->
+  </div>
 
-    <!-- Список аттракционов -->
-    <div id="attractions-container" class="products-grid">
-      <!-- Заполняется через attractions.js -->
-    </div>
-  </main>
+  <!-- Контейнер для списка аттракционов ИЛИ детального просмотра -->
+  <div id="attractions-container" class="products-grid">
+    <!-- Заполняется через attractions.js -->
+    <!-- ИЛИ заменяется на детальный просмотр -->
+  </div>
+</main>
 
   <!-- Модальное окно: Корзина -->
   <div id="cart-modal" class="modal" role="dialog" aria-labelledby="cart-modal-title" aria-hidden="true">

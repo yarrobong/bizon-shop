@@ -8,8 +8,7 @@
   const searchInput = document.getElementById('search-input');
   const categoryButtons = document.querySelectorAll('.tag-btn');
   const cartBtn = document.getElementById('cart-btn');
-  const cartModal = document.getElementById('cart-modal'); // Оставляем модалку корзины
-  // Убираем productModal, так как модальное окно товара не используется
+  const cartModal = document.getElementById('cart-modal');
   const cartItems = document.getElementById('cart-items');
   const phoneInput = document.getElementById('phone');
   const commentInput = document.getElementById('comment-input');
@@ -44,7 +43,7 @@
 
       if (!response.ok) {
         // Если статус не 2xx, генерируем ошибку
-        const errorData = await response.json().catch(() => ({})); // Пытаемся получить JSON ошибки
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(`HTTP error! status: ${response.status}. ${errorData.error || ''} Details: ${errorData.details || ''}`);
       }
 
@@ -86,57 +85,141 @@
     }
   }
 
-// --- Функция для создания карточки аттракциона ---
-// Эта функция должна быть определена здесь, выше, чем она используется
-function createAttractionCard(attraction) {
-  // Извлекаем спецификации из объекта
-  const specs = attraction.specs || {};
-  const places = specs.places || 'N/A';
-  const power = specs.power || 'N/A';
-  const games = specs.games || 'N/A';
-  const area = specs.area || 'N/A';
-  const dimensions = specs.dimensions || 'N/A';
+  // --- Функция для создания карточки аттракциона с галереей ---
+  function createAttractionCard(attraction) {
+    // Извлекаем спецификации из объекта
+    const specs = attraction.specs || {};
+    const places = specs.places || 'N/A';
+    const power = specs.power || 'N/A';
+    const games = specs.games || 'N/A';
+    const area = specs.area || 'N/A';
+    const dimensions = specs.dimensions || 'N/A';
 
-  // Предположим, у объекта attraction есть поле stock
-  // Если нет, замените attraction.stock на 'N/A' или другую заглушку
+    // Обработка изображений: используем массив images, если он есть и не пуст, иначе fallback на поле image
+    let imagesArray = [];
+    if (attraction.images && Array.isArray(attraction.images) && attraction.images.length > 0) {
+        imagesArray = attraction.images;
+    } else if (attraction.image) {
+        // Для обратной совместимости со старым форматом
+        imagesArray = [{ url: attraction.image, alt: attraction.title || 'Изображение' }];
+    } else {
+        // Заглушка, если изображений нет совсем
+        imagesArray = [{ url: '/assets/placeholder.png', alt: 'Нет изображения' }];
+    }
 
+    const card = document.createElement('div');
+    card.className = 'attraction-card';
+    // Уникальный ID для контейнеров галереи этой карточки
+    const galleryId = `gallery-${attraction.id}`;
+    const mainImageId = `main-image-${attraction.id}`;
+    const thumbnailsId = `thumbnails-${attraction.id}`;
 
-  const card = document.createElement('div');
-  card.className = 'attraction-card';
-  card.innerHTML = `
-    <div class="attraction-image">
-      <img src="${attraction.image}" onerror="this.onerror=null; this.src='/assets/placeholder.png';" alt="${attraction.title}" />
-    </div>
-    <div class="attraction-info">
-      <h3 class="attraction-title">${attraction.title}</h3>
-      <div class="attraction-price">${window.formatPrice ? window.formatPrice(attraction.price) : `${attraction.price}₽`}</div>
-  
-      <div class="attraction-specs">
-        <div class="spec-item">
-          <span class="spec-label">Мест:</span> <span class="spec-value">${places}</span>
+    card.innerHTML = `
+      <div class="attraction-gallery" id="${galleryId}" data-attraction-id="${attraction.id}">
+        <div class="attraction-main-image-container">
+            <img id="${mainImageId}" class="attraction-main-image" src="${imagesArray[0].url}" onerror="this.onerror=null; this.src='/assets/placeholder.png';" alt="${imagesArray[0].alt || attraction.title}" />
+            ${imagesArray.length > 1 ? `
+            <button class="attraction-gallery-nav prev" aria-label="Предыдущее изображение">&#10094;</button>
+            <button class="attraction-gallery-nav next" aria-label="Следующее изображение">&#10095;</button>
+            ` : ''}
         </div>
-        <div class="spec-item">
-          <span class="spec-label">Мощность:</span> <span class="spec-value">${power}</span>
+        ${imagesArray.length > 1 ? `
+        <div class="attraction-thumbnails" id="${thumbnailsId}">
+            ${imagesArray.map((img, index) => `
+                <img class="attraction-thumbnail ${index === 0 ? 'active' : ''}" 
+                     src="${img.url}" 
+                     alt="Миниатюра ${index + 1} для ${attraction.title}" 
+                     data-index="${index}"
+                     onerror="this.onerror=null; this.src='/assets/placeholder.png';"/>
+            `).join('')}
         </div>
-        <div class="spec-item">
-          <span class="spec-label">Игры:</span> <span class="spec-value">${games}</span>
+        ` : ''}
+      </div>
+      <div class="attraction-info">
+        <h3 class="attraction-title">${attraction.title}</h3>
+        <div class="attraction-price">${window.formatPrice ? window.formatPrice(attraction.price) : `${attraction.price}₽`}</div>
+    
+        <div class="attraction-specs">
+          <div class="spec-item">
+            <span class="spec-label">Мест:</span> <span class="spec-value">${places}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Мощность:</span> <span class="spec-value">${power}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Игры:</span> <span class="spec-value">${games}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Площадь:</span> <span class="spec-value">${area}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Размеры:</span> <span class="spec-value">${dimensions}</span>
+          </div>
         </div>
-        <div class="spec-item">
-          <span class="spec-label">Площадь:</span> <span class="spec-value">${area}</span>
-        </div>
-        <div class="spec-item">
-          <span class="spec-label">Размеры:</span> <span class="spec-value">${dimensions}</span>
+        <div class="attraction-description">${attraction.description ? (attraction.description) : ''}</div>
+        <!-- Кнопка перемещена вниз -->
+        <div class="product-actions">
+          <button class="btn-cart" data-id="${attraction.id}">В корзину</button>
         </div>
       </div>
-      <div class="attraction-description">${attraction.description ? (attraction.description) : ''}</div>
-      <!-- Кнопка перемещена вниз -->
-      <div class="product-actions">
-        <button class="btn-cart" data-id="${attraction.id}">В корзину</button>
-      </div>
-    </div>
-  `;
-  return card;
-}
+    `;
+    return card;
+  }
+
+  // --- Функция для настройки галереи конкретной карточки ---
+  function setupGallery(cardElement, imagesArray) {
+    if (imagesArray.length <= 1) return; // Нечего настраивать
+
+    const mainImage = cardElement.querySelector('.attraction-main-image');
+    const prevBtn = cardElement.querySelector('.attraction-gallery-nav.prev');
+    const nextBtn = cardElement.querySelector('.attraction-gallery-nav.next');
+    const thumbnailsContainer = cardElement.querySelector('.attraction-thumbnails');
+    let currentIndex = 0;
+
+    const updateGallery = (newIndex) => {
+        if (newIndex < 0 || newIndex >= imagesArray.length) return;
+        currentIndex = newIndex;
+        const newImage = imagesArray[currentIndex];
+        if (mainImage) {
+            mainImage.src = newImage.url;
+            mainImage.alt = newImage.alt || '';
+            // Обработка ошибки загрузки для главного изображения
+            mainImage.onerror = () => { mainImage.src = '/assets/placeholder.png'; };
+        }
+        // Обновляем активную миниатюру
+        cardElement.querySelectorAll('.attraction-thumbnail').forEach((thumb, i) => {
+            thumb.classList.toggle('active', i === currentIndex);
+        });
+    };
+
+    if (prevBtn) {
+        prevBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Предотвращаем всплытие клика
+            updateGallery((currentIndex - 1 + imagesArray.length) % imagesArray.length);
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Предотвращаем всплытие клика
+            updateGallery((currentIndex + 1) % imagesArray.length);
+        });
+    }
+
+    if (thumbnailsContainer) {
+        thumbnailsContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('attraction-thumbnail')) {
+                e.stopPropagation(); // Предотвращаем всплытие клика
+                const index = parseInt(e.target.dataset.index);
+                if (!isNaN(index)) {
+                    updateGallery(index);
+                }
+            }
+        });
+    }
+
+    // Также можно добавить поддержку свайпов или клавиатуры, если нужно
+  }
 
   // --- Rendering ---
   function renderAttractions() {
@@ -183,36 +266,37 @@ function createAttractionCard(attraction) {
     }
 
     // Рендеринг карточек для отфильтрованных аттракционов
-    // Используем функцию createAttractionCard, которая теперь определена выше
     filtered.forEach(attraction => {
       const card = createAttractionCard(attraction);
       attractionsContainer.appendChild(card);
-    });
-
-    // Навешивание обработчиков событий на вновь созданные элементы
-    document.querySelectorAll('.attraction-card').forEach(card => {
-      // Убираем обработчик клика на всю карточку, так как кнопки "Подробнее" больше нет
-      // card.addEventListener('click', () => openAttractionModal(attraction));
-
-      const cartBtn = card.querySelector('.btn-cart');
-      const attractionId = cartBtn?.dataset.id; // Получаем ID из кнопки
-
+      
       // Находим объект аттракциона по ID
-      const attraction = ATTRACTIONS.find(a => a.id == attractionId);
+      const attractionData = ATTRACTIONS.find(a => a.id == attraction.id);
 
-      if (attraction) { // Убедимся, что аттракцион найден
+      if (attractionData) {
+        // Находим кнопку "В корзину" внутри этой карточки
+        const cartBtn = card.querySelector('.btn-cart');
         if (cartBtn) {
-          // Предотвращаем всплытие клика с кнопки на карточку (на всякий случай, хотя всплытия больше нет)
           cartBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            // Добавление в корзину
-            addToCart(attraction);
-            // Обновление счетчика корзины
+            e.stopPropagation(); // Предотвращаем всплытие клика
+            addToCart(attractionData);
             updateCartCount();
           });
         }
+
+        // Настройка галереи для этой карточки
+        // Получаем массив изображений для этой карточки
+        let imagesForThisCard = [];
+        if (attractionData.images && Array.isArray(attractionData.images) && attractionData.images.length > 0) {
+            imagesForThisCard = attractionData.images;
+        } else if (attractionData.image) {
+            imagesForThisCard = [{ url: attractionData.image, alt: attractionData.title || 'Изображение' }];
+        } else {
+            imagesForThisCard = [{ url: '/assets/placeholder.png', alt: 'Нет изображения' }];
+        }
+        setupGallery(card, imagesForThisCard);
       } else {
-        console.error(`Аттракцион с ID ${attractionId} не найден в данных ATTRACTIONS.`);
+        console.error(`Аттракцион с ID ${attraction.id} не найден в данных ATTRACTIONS при настройке галереи.`);
       }
     });
   }
@@ -231,7 +315,14 @@ function createAttractionCard(attraction) {
     if (existingItem) {
       existingItem.qty += 1;
     } else {
-      cart.push({ product, qty: 1 });
+      // Убедимся, что у продукта есть URL изображения для корзины
+      const productForCart = { ...product };
+      if (!productForCart.image && productForCart.images && productForCart.images.length > 0) {
+          productForCart.image = productForCart.images[0].url;
+      } else if (!productForCart.image) {
+          productForCart.image = '/assets/placeholder.png';
+      }
+      cart.push({ product: productForCart, qty: 1 });
     }
     localStorage.setItem('cart', JSON.stringify(cart));
   }
@@ -312,10 +403,14 @@ function createAttractionCard(attraction) {
         cartItems.innerHTML = '';
         let total = 0;
         cart.forEach(item => {
+          // Обеспечиваем наличие изображения в данных корзины
+          const imageUrl = item.product.image || 
+                           (item.product.images && item.product.images[0] ? item.product.images[0].url : '/assets/placeholder.png') ||
+                           '/assets/placeholder.png';
           const row = document.createElement('div');
           row.className = 'cart-item';
           row.innerHTML = `
-            <img src="${item.product.image || (item.product.images && item.product.images[0] ? item.product.images[0].url : '/assets/placeholder.png')}" alt="" onerror="this.onerror=null; this.src='/assets/placeholder.png';"/>
+            <img src="${imageUrl}" alt="" onerror="this.onerror=null; this.src='/assets/placeholder.png';"/>
             <div class="cart-item-info">
               <div class="cart-item-title">${item.product.title}</div>
               <div class="cart-item-price">${formatPrice(item.product.price)}</div>
