@@ -246,19 +246,20 @@ function renderVariantsOnPage(baseProduct) {
     const variantsList = document.getElementById('product-page-variants');
 
     // Очищаем список
-    if (variantsList) variantsList.innerHTML = '';
+    if (variantsList) {
+        variantsList.innerHTML = '';
+    }
 
     // Проверяем, есть ли данные о вариантах
     if (baseProduct.variants && Array.isArray(baseProduct.variants) && baseProduct.variants.length > 0) {
         console.log("Отображаем варианты на странице товара (полные данные):", baseProduct.variants);
 
         if (variantsContainer) {
-            // Удаляем атрибут style, если он был (на всякий случай)
-            // variantsContainer.style.display = 'block'; // Это может не сработать, если в HTML был style="display: none;"
-            // Лучше удалить атрибут style полностью или установить через CSS-класс
-            variantsContainer.style.removeProperty('display'); // Удаляем inline стиль display
-            // Или можно добавить CSS-класс, если он у вас определяет display: block
-            // variantsContainer.classList.remove('hidden'); // Если у вас есть класс .hidden { display: none; }
+            // Показываем контейнер, если есть варианты
+            // Убираем inline стиль display, который может скрывать элемент
+            variantsContainer.style.removeProperty('display');
+            // Или, если вы используете CSS-класс для скрытия:
+            // variantsContainer.classList.remove('hidden'); // Предполагается, что .hidden { display: none; }
         }
 
         baseProduct.variants.forEach(variant => {
@@ -317,11 +318,9 @@ function renderVariantsOnPage(baseProduct) {
         console.log("У товара нет вариантов или формат данных некорректен (после обработки).");
         // Явно скрываем контейнер, если вариантов нет
         if (variantsContainer) {
-            // variantsContainer.style.display = 'none'; // Это может не сработать, если в HTML был style="display: none;"
-            // variantsContainer.style.setProperty('display', 'none'); // Это может не сработать, если в HTML был style="display: none;"
-            variantsContainer.style.display = 'none'; // Попробуем снова, теперь, когда HTML изменен, это должно работать
-            // Или можно добавить CSS-класс, если он у вас определяет display: none
-            // variantsContainer.classList.add('hidden'); // Если у вас есть класс .hidden { display: none; }
+            variantsContainer.style.display = 'none'; // Устанавливаем display: none; если вариантов нет
+            // Или, если вы используете CSS-класс для скрытия:
+            // variantsContainer.classList.add('hidden'); // Предполагается, что .hidden { display: none; }
         }
     }
 }
