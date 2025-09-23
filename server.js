@@ -1210,9 +1210,7 @@ app.post('/api/products/bulk', async (req, res) => {
     }
 });
 
-// server.js (или в файле маршрутов, например, routes/products.js)
-
-// === API: Получить ОДИН товар по ID ===
+// === API: Получить товар по ID с вариантами ===
 app.get('/api/products/:id', async (req, res) => {
   try {
     const productId = parseInt(req.params.id, 10); // Парсим ID как число
@@ -1320,6 +1318,9 @@ app.get('/api/products/:id', async (req, res) => {
           // Добавьте другие поля, если необходимо
         };
       });
+    } else {
+        // Если товар не имеет группы, он не имеет вариантов
+        // variants останется пустым массивом []
     }
 
     // 4. Добавляем поле variants в объект основного товара

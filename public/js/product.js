@@ -452,12 +452,15 @@ function setupEventListeners(product) {
     if (sendOrderBtn) {
         let isSending = false;
         sendOrderBtn.addEventListener('click', async () => {
+            console.log("Кликнули 'Оформить заказ'. isSending:", isSending);
             if (isSending) {
                 console.log('Заказ уже отправляется...');
                 return;
             }
              const consentCheckbox = document.getElementById('consent-toggle');
+             console.log("Элемент чекбокса найден:", consentCheckbox); // <-- Новый лог
             const isConsentGiven = consentCheckbox ? consentCheckbox.checked : false;
+            console.log("Состояние чекбокса (checked):", isConsentGiven); // <-- Новый лог
             const phoneInput = document.getElementById('phone');
             if (!isConsentGiven) {
                 alert('Необходимо дать согласие на обработку персональных данных');
