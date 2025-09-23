@@ -192,7 +192,7 @@ async function renderProducts() {
         <div class="product-content">
           <h3 class="product-title">${product.title}</h3>
           <div class="product-image">
-            <img src="${product.images[0]?.url?.trim() || '/assets/placeholder.png'}" alt="${product.title}" />
+            <img src="${product.images[0]?.url?.trim() || '/assets/icons/placeholder1.webp'}" alt="${product.title}" />
             ${product.tag ? `<div class="product-badge" data-tag="${product.tag.toLowerCase()}">${product.tag}</div>` : ''}
           </div>
           <div class="product-footer">
@@ -308,7 +308,7 @@ function openProductModal(product) {
     titleElement.textContent = product.title;
     descriptionElement.textContent = product.description || '';
     priceElement.textContent = formatPrice(product.price);
-    mainImageElement.src = product.images && product.images[0] ? product.images[0].url.trim() : '/assets/placeholder.png';
+    mainImageElement.src = product.images && product.images[0] ? product.images[0].url.trim() : '/assets/icons/placeholder1.webp';
     mainImageElement.alt = product.title || 'Изображение товара';
 
     // Обновляем миниатюры (по умолчанию - основной товар)
@@ -349,7 +349,7 @@ if (product.variants && product.variants.length > 0) {
     product.variants.forEach(variant => {
         const variantBtn = document.createElement('button');
         // Получаем URL главного изображения варианта
-        let variantImageUrl = '/assets/placeholder.png'; // По умолчанию
+        let variantImageUrl = '/assets/icons/placeholder1.webp'; // По умолчанию
         if (variant.images && variant.images.length > 0 && variant.images[0].url) {
             variantImageUrl = variant.images[0].url.trim();
         } else if (product.images && product.images.length > 0 && product.images[0].url) {
@@ -444,7 +444,7 @@ function selectVariantInModal(product, selectedVariant) {
             thumbnailsContainer.appendChild(thumb);
         });
     } else {
-         mainImageElement.src = '/assets/placeholder.png';
+         mainImageElement.src = '/assets/icons/placeholder1.webp';
          mainImageElement.alt = selectedVariant.title || 'Изображение товара';
          thumbnailsContainer.innerHTML = '';
     }
