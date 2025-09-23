@@ -332,73 +332,70 @@ function openProductModal(product) {
     buyNowBtn.dataset.id = product.id;
 
     // --- Логика для вариантов ---
-    const variantsContainer = document.getElementById('product-variants-container');
-    const variantsList = document.getElementById('product-variants');
+const variantsContainer = document.getElementById('product-variants-container');
+const variantsList = document.getElementById('product-variants');
 
-    if (product.variants && product.variants.length > 0) {
-        // Если у товара есть варианты
-        variantsContainer.style.display = 'block'; // Показываем контейнер
-        variantsList.innerHTML = ''; // Очищаем список
+// Очищаем список и сбрасываем отображение контейнера
+variantsList.innerHTML = '';
+variantsContainer.style.display = 'none'; // Скрываем по умолчанию
 
-        // Создаем кнопки ТОЛЬКО для каждого варианта
-        product.variants.forEach(variant => {
-            const variantBtn = document.createElement('button');
-
-            // Получаем URL главного изображения варианта
-            let variantImageUrl = '/assets/placeholder.png'; // По умолчанию
-            if (variant.images && variant.images.length > 0 && variant.images[0].url) {
-                variantImageUrl = variant.images[0].url.trim();
-            } else if (product.images && product.images.length > 0 && product.images[0].url) {
-                // Если у варианта нет изображений, используем первое изображение основного товара
-                variantImageUrl = product.images[0].url.trim();
-            }
-
-            // Создаем элемент изображения
-            const imgElement = document.createElement('img');
-            imgElement.src = variantImageUrl;
-            imgElement.alt = `Фото ${variant.title || `Товар ${variant.id}`}`;
-            imgElement.className = 'variant-thumbnail';
-
-            // Создаем текстовый элемент для названия
-            const textElement = document.createElement('span');
-            textElement.textContent = variant.title || `Товар ${variant.id}`;
-
-            // Добавляем изображение и текст в кнопку
-            variantBtn.appendChild(imgElement);
-            variantBtn.appendChild(textElement);
-
-            variantBtn.className = 'product-variant-btn';
-            variantBtn.dataset.variantId = variant.id;
-            
-            // Добавляем обработчик клика
-            variantBtn.addEventListener('click', () => {
-                // Выбираем этот вариант как отображаемый
-                selectVariantInModal(product, variant);
-                // Обновляем подсветку кнопок
-                document.querySelectorAll('.product-variant-btn').forEach(btn => btn.classList.remove('selected'));
-                variantBtn.classList.add('selected');
-            });
-            
-            variantsList.appendChild(variantBtn);
-        });
-
-        // Подсвечиваем первый вариант по умолчанию
-        const firstVariant = product.variants[0];
-        if (firstVariant) {
-            selectVariantInModal(product, firstVariant);
-            const firstVariantBtn = document.querySelector(`.product-variant-btn[data-variant-id="${firstVariant.id}"]`);
-            if (firstVariantBtn) {
-                firstVariantBtn.classList.add('selected');
-            }
+if (product.variants && product.variants.length > 0) {
+    // Если у товара есть варианты
+    variantsContainer.style.display = 'block'; // Показываем контейнер
+    // Создаем кнопки ТОЛЬКО для каждого варианта
+    product.variants.forEach(variant => {
+        const variantBtn = document.createElement('button');
+        // Получаем URL главного изображения варианта
+        let variantImageUrl = '/assets/placeholder.png'; // По умолчанию
+        if (variant.images && variant.images.length > 0 && variant.images[0].url) {
+            variantImageUrl = variant.images[0].url.trim();
+        } else if (product.images && product.images.length > 0 && product.images[0].url) {
+            // Если у варианта нет изображений, используем первое изображение основного товара
+            variantImageUrl = product.images[0].url.trim();
         }
 
-    } else {
-        // Если у товара нет вариантов
-        variantsContainer.style.display = 'none';
-    }
-    
-    // Открываем модальное окно
-    productModal.classList.add('open');
+        // Создаем элемент изображения
+        const imgElement = document.createElement('img');
+        imgElement.src = variantImageUrl;
+        imgElement.alt = `Фото ${variant.title || `Товар ${variant.id}`}`;
+        imgElement.className = 'variant-thumbnail';
+
+        // Создаем текстовый элемент для названия
+        const textElement = document.createElement('span');
+        textElement.textContent = variant.title || `Товар ${variant.id}`;
+
+        // Добавляем изображение и текст в кнопку
+        variantBtn.appendChild(imgElement);
+        variantBtn.appendChild(textElement);
+        variantBtn.className = 'product-variant-btn';
+        variantBtn.dataset.variantId = variant.id;
+
+        // Добавляем обработчик клика
+        variantBtn.addEventListener('click', () => {
+            // Выбираем этот вариант как отображаемый ТОЛЬКО ПРИ КЛИКЕ
+            selectVariantInModal(product, variant); // <-- Выбор происходит здесь
+            // Обновляем подсветку кнопок
+            document.querySelectorAll('.product-variant-btn').forEach(btn => btn.classList.remove('selected'));
+            variantBtn.classList.add('selected');
+        });
+
+        variantsList.appendChild(variantBtn);
+    });
+
+    // ВАЖНО: НЕ ВЫБИРАЕМ вариант автоматически. Окно показывает основной товар.
+    // Подсвечивать первую кнопку можно, но не выбирать сам вариант.
+    // const firstVariantBtn = document.querySelector('.product-variant-btn');
+    // if (firstVariantBtn) {
+    //     firstVariantBtn.classList.add('selected'); // Только подсветка
+    //     // НЕ вызываем selectVariantInModal здесь!
+    // }
+
+} else {
+    // Если у товара нет вариантов, контейнер уже скрыт
+    // variantsContainer.style.display = 'none'; // (уже установлено выше)
+}
+// Открываем модальное окно
+productModal.classList.add('open');
 }
 
 // Новая вспомогательная функция для выбора варианта
