@@ -709,7 +709,7 @@ function setupEventListeners() {
         });
 
         const result = await response.json();
-        console.log('Ответ сервера:', result);
+        
 
         if (result.success) {
           clearCart();

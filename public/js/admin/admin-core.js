@@ -71,7 +71,7 @@ class AdminPanel {
     }
     
     if (typeof window[functionName] === 'function') {
-        console.log(`Вызов функции: ${functionName}`);
+        
         window[functionName]();
     } else {
         console.warn(`Функция ${functionName} не найдена`);

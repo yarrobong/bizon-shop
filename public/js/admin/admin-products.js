@@ -23,7 +23,7 @@ async function loadProducts() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const products = await response.json();
-        console.log('Все товары загружены (включая недоступные):', products);
+        
         renderProducts(products);
     } catch (error) {
         console.error('Ошибка загрузки товаров:', error);
@@ -442,7 +442,7 @@ async function loadAllProductsCache() {
             return;
         }
         allProductsCache = await response.json();
-        console.log('Кэш всех товаров загружен для поиска вариантов:', allProductsCache.length, 'товаров');
+        
     } catch (error) {
         console.error('Ошибка при загрузке кэша товаров:', error);
         allProductsCache = [];

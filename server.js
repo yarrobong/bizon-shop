@@ -1211,6 +1211,51 @@ app.get('/api/attractions/:id', async (req, res) => {
     }
 });
 
+// На сервере (например, в вашем app.js или routes/products.js)
+app.post('/api/products/bulk', async (req, res) => {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ error: 'Неверный формат данных. Ожидается массив ID.' });
+    }
+
+    // Очищаем и фильтруем ID
+    const validIds = ids.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+
+    if (validIds.length === 0) {
+        return res.status(400).json({ error: 'Не переданы валидные ID товаров.' });
+    }
+
+    try {
+        // Используем параметризованный запрос для безопасности и эффективности
+        // Предполагается, что у вас есть pool для подключения к БД (например, pg)
+        const placeholders = validIds.map((_, i) => `$${i + 1}`).join(',');
+        // Можно добавить AND available = true, если хотите фильтровать по доступности
+        const query = `
+            SELECT id, title, description, price, category, available, images_json
+            FROM products
+            WHERE id = ANY($1) -- Используем ANY для массива
+        `;
+        // const query = `SELECT ... WHERE id IN (${placeholders})`; // Альтернатива с IN
+
+        const result = await pool.query(query, [validIds]); // pool - ваш пул соединений к БД
+        const products = result.rows.map(row => ({
+            id: row.id,
+            title: row.title,
+            description: row.description,
+            price: parseFloat(row.price),
+            category: row.category,
+            available: row.available,
+            images: row.images_json ? JSON.parse(row.images_json) : []
+            // Добавьте другие поля, если нужно для отображения вариантов
+        }));
+
+        res.json(products);
+    } catch (err) {
+        console.error('Ошибка при загрузке товаров по ID (bulk):', err);
+        res.status(500).json({ error: 'Ошибка сервера при загрузке товаров.' });
+    }
+});
+
 // --- КАСТОМНЫЕ МАРШРУТЫ ДЛЯ HTML СТРАНИЦ ---
 // Универсальный маршрут для отдачи .html страниц (например, /catalog -> public/catalog.html)
 // Должен идти ПОСЛЕ API, но ДО обработчика 404

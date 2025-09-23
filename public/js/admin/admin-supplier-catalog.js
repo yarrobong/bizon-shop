@@ -12,7 +12,7 @@ async function loadSupplierCatalogTab() {
 }
 
 async function loadSupplierCatalog(searchTerm = '') {
-    console.log("Начало loadSupplierCatalog, searchTerm:", searchTerm);
+    
     const container = document.getElementById('supplier-catalog-grid');
     if (!container) {
         console.warn("Контейнер #supplier-catalog-grid не найден");
@@ -21,9 +21,9 @@ async function loadSupplierCatalog(searchTerm = '') {
 
     try {
         container.innerHTML = '<div class="empty">Загрузка товаров...</div>';
-        console.log("Запрос к /api/products?admin=true");
+        
         const response = await fetch('/api/products?admin=true');
-        console.log("Ответ от /api/products?admin=true, статус:", response.status);
+        
         
         if (!response.ok) {
             const errorText = await response.text();
@@ -32,7 +32,7 @@ async function loadSupplierCatalog(searchTerm = '') {
         }
         
         const products = await response.json();
-        console.log("Полученные товары:", products);
+        
 
         let filteredProducts = products;
         if (searchTerm) {
@@ -53,7 +53,7 @@ async function loadSupplierCatalog(searchTerm = '') {
 }
 
 function renderSupplierCatalog(products) {
-    console.log("Начало renderSupplierCatalog, products:", products);
+    
     const container = document.getElementById('supplier-catalog-grid');
     if (!container) {
         console.warn("Элемент #supplier-catalog-grid не найден в renderSupplierCatalog");

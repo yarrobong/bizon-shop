@@ -8,10 +8,10 @@ async function loadCategories() {
     try {
         console.log('Загрузка категорий...');
         const response = await fetch('/api/categories');
-        console.log('Ответ от /api/categories:', response.status);
+        
         if (response.ok) {
             const categories = await response.json();
-            console.log('Категории загружены:', categories);
+            
             renderCategories(categories);
         } else {
             console.warn(`API категорий вернул ошибку ${response.status}`);
@@ -38,7 +38,7 @@ function renderCategories(categories) {
         return;
     }
 
-    console.log('Отрисовка категорий:', categories);
+    
 
     categories.forEach(category => {
         if (category.hasOwnProperty('id') && category.hasOwnProperty('name')) {

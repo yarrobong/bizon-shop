@@ -48,7 +48,7 @@
       }
 
       const data = await response.json();
-      console.log('Данные аттракционов успешно получены:', data);
+      
       ATTRACTIONS = data; // Сохраняем полученные данные
 
       // Проверка на пустой массив
@@ -605,7 +605,7 @@
             })
           });
           const result = await response.json();
-          console.log('Ответ сервера:', result);
+         
           if (result.success) {
             clearCart();
             phoneInput.value = '';

@@ -15,10 +15,10 @@ async function loadAttractions() {
     try {
         console.log('Загрузка аттракционов...');
         const response = await fetch('/api/attractions/public');
-        console.log('Ответ от /api/attractions:', response.status);
+        
         if (response.ok) {
             const attractions = await response.json();
-            console.log('Аттракционы загружены:', attractions);
+            
             renderAttractions(attractions);
         } else {
             console.error('Ошибка загрузки аттракционов:', response.status);
@@ -503,7 +503,7 @@ const attractionData = {
 
         if (response.ok) {
             const result = await response.json();
-            console.log(`${isEdit ? 'Аттракцион обновлен' : 'Аттракцион создан'}:`, result);
+            
             showMessage(`${isEdit ? 'Аттракцион обновлен' : 'Аттракцион создан'} успешно!`, 'success');
             closeModal('attraction-modal');
             await loadAttractions(); // Перезагружаем список
