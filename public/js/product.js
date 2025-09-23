@@ -244,25 +244,22 @@ function displayProductImages(baseProduct, imagesToDisplay) {
 function renderVariantsOnPage(baseProduct) {
     const variantsContainer = document.getElementById('product-page-variants-container');
     const variantsList = document.getElementById('product-page-variants');
-
-    // Очищаем список и скрываем контейнер по умолчанию
+    // Очищаем список
     if (variantsList) variantsList.innerHTML = '';
-    if (variantsContainer) {
-        variantsContainer.style.display = 'none'; // Всегда скрываем сначала
-    }
 
     // Проверяем, есть ли данные о вариантах
     if (baseProduct.variants && Array.isArray(baseProduct.variants) && baseProduct.variants.length > 0) {
         console.log("Отображаем варианты на странице товара (полные данные):", baseProduct.variants);
-        if (variantsContainer) variantsContainer.style.display = 'block'; // Показываем контейнер
-
+        // Показываем контейнер, если есть варианты
+        if (variantsContainer) {
+            variantsContainer.classList.remove('hidden'); // Показать
+        }
         baseProduct.variants.forEach(variant => {
             // Защита от некорректных данных
             if (!variant || typeof variant !== 'object' || !variant.id) {
                 console.warn("Некорректные данные варианта, пропускаем:", variant);
                 return; // continue в forEach
             }
-
             const variantBtn = document.createElement('button');
             // --- Логика создания кнопки (скопирована из ui.js) ---
             let variantImageUrl = '/assets/placeholder.png'; // Используем тот же путь, что и на странице
@@ -271,55 +268,42 @@ function renderVariantsOnPage(baseProduct) {
             } else if (baseProduct.images && baseProduct.images.length > 0 && baseProduct.images[0].url) {
                 variantImageUrl = baseProduct.images[0].url.trim();
             }
-
             const imgElement = document.createElement('img');
             imgElement.src = variantImageUrl;
             imgElement.alt = `Фото ${variant.title || `Товар ${variant.id}`}`;
-            imgElement.className = 'variant-thumbnail'; // Убедитесь, что стиль .variant-thumbnail определен в product-page.css
-
+            imgElement.className = 'variant-thumbnail';
             const textElement = document.createElement('span');
             textElement.textContent = variant.title || `Товар ${variant.id}`;
-
             variantBtn.appendChild(imgElement);
             variantBtn.appendChild(textElement);
-            variantBtn.className = 'product-variant-btn'; // Используем тот же класс для стилей
+            variantBtn.className = 'product-variant-btn';
             variantBtn.dataset.variantId = variant.id;
             // --- Конец логики создания кнопки ---
-
-            // Добавляем обработчик клика, аналогично модальному окну
+            // Добавляем обработчик клика
             variantBtn.addEventListener('click', (event) => {
-                event.preventDefault(); // На всякий случай
+                event.preventDefault();
                 console.log("Выбран вариант на странице:", variant.id, variant.title);
-                // Выбираем этот вариант как отображаемый ТОЛЬКО ПРИ КЛИКЕ
-                selectVariantOnPage(baseProduct, variant); // Используем существующую функцию
+                selectVariantOnPage(baseProduct, variant);
                 // Обновляем подсветку кнопок
                 document.querySelectorAll('.product-variant-btn').forEach(btn => {
                     btn.classList.remove('selected');
                 });
-                // Добавляем класс 'selected' к кликнутой кнопке
-                // event.currentTarget - это сама кнопка, на которую кликнули
                 event.currentTarget.classList.add('selected');
             });
-
             if (variantsList) {
                 variantsList.appendChild(variantBtn);
             }
         });
-
-        // --- ВАЖНО: НЕ ВЫБИРАЕМ вариант автоматически ---
-        // Страница должна показывать данные основного товара (baseProduct)
-        // Выбор варианта происходит только по клику пользователя.
-        // Поэтому НЕ вызываем selectVariantOnPage здесь.
-
-        // Опционально: можно подсветить первую кнопку, но не выбирать вариант
-        // const firstVariantBtn = document.querySelector('.product-variant-btn');
-        // if (firstVariantBtn) {
-        //     firstVariantBtn.classList.add('selected'); // Только визуальная подсветка
-        // }
-
+        // Контейнер уже показан выше, если варианты есть
     } else {
         console.log("У товара нет вариантов или формат данных некорректен (после обработки).");
-        // Контейнер уже скрыт
+        // Явно скрываем контейнер, если вариантов нет
+        if (variantsContainer) {
+        variantsContainer.classList.add('hidden'); // Скрыть
+            // variantsContainer.style.visibility = 'hidden'; // Если использовали visibility
+            // variantsContainer.style.opacity = '0';       // Если использовали opacity
+            // variantsContainer.classList.add('hidden'); // Если используете CSS класс
+        }
     }
 }
 

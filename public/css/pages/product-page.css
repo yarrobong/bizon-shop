@@ -9,6 +9,10 @@
     margin: 0 auto;
     margin-top: 5rem;
 }
+/* Пример CSS для скрытия/показа через класс */
+.product-variants-container.hidden {
+    display: none;
+}
 
 .product-page-left {
     flex: 1;
