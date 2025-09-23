@@ -25,11 +25,49 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         }
         productData = await response.json();
-        console.log('Данные товара загружены:', productData);
+        console.log('Данные товара загружены (сырые):', productData);
     } catch (error) {
         console.error('Ошибка при загрузке данных товара:', error);
         showProductError(`Ошибка загрузки товара: ${error.message}`);
         return;
+    }
+
+    // --- 2.5. Загрузка полных данных вариантов ---
+    // Проверяем формат productData.variants и загружаем полные данные при необходимости
+    if (productData.variants && Array.isArray(productData.variants) && productData.variants.length > 0) {
+        const firstItem = productData.variants[0];
+        // Если первый элемент - число или объект только с ID, значит нужно загрузить полные данные
+        if (typeof firstItem === 'number' || (typeof firstItem === 'object' && Object.keys(firstItem).length === 1 && firstItem.id)) {
+            console.log("productData.variants содержит ID, загружаем полные данные...");
+            try {
+                // Извлекаем ID, фильтруем и исключаем сам товар
+                const variantIds = productData.variants
+                    .map(v => typeof v === 'object' ? v.id : v)
+                    .map(id => parseInt(id, 10))
+                    .filter(id => !isNaN(id) && id != productData.id); // != для сравнения чисел и строк
+
+                if (variantIds.length > 0) {
+                    const fullVariantsData = await loadFullVariantsData(variantIds);
+                    // Фильтруем по доступности, если нужно, и заменяем в productData
+                    productData.variants = fullVariantsData.filter(v => v.available !== false);
+                    console.log("Полные данные вариантов загружены и установлены:", productData.variants);
+                } else {
+                    productData.variants = [];
+                    console.log("Нет валидных ID вариантов для загрузки (или все совпадают с основным товаром).");
+                }
+            } catch (err) {
+                console.error("Ошибка при загрузке полных данных вариантов:", err);
+                productData.variants = []; // На случай ошибки, показываем без вариантов
+                // Можно отобразить уведомление пользователю
+            }
+        } else {
+             console.log("productData.variants уже содержит полные объекты или неполные объекты.");
+             // Можно дополнительно отфильтровать по available, если сервер не делает этого
+             // productData.variants = productData.variants.filter(v => v.id != productData.id && v.available !== false);
+        }
+    } else {
+         console.log("У товара нет вариантов или формат некорректен.");
+         productData.variants = []; // Убедимся, что это пустой массив
     }
 
     // --- 3. Отображение данных товара ---
@@ -47,6 +85,42 @@ document.addEventListener('DOMContentLoaded', async function () {
         updateCartCountLocal();
     }
 });
+
+// --- Новая функция для загрузки полных данных вариантов ---
+async function loadFullVariantsData(variantIds) {
+    if (!Array.isArray(variantIds) || variantIds.length === 0) {
+        return [];
+    }
+
+    try {
+        // Используем эндпоинт bulk, как предлагалось ранее
+        const response = await fetch(`/api/products/bulk`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids: variantIds })
+        });
+
+        if (!response.ok) {
+            console.error("Ошибка при загрузке полных данных вариантов (bulk):", response.status, await response.text());
+            // Альтернатива: загрузить по одному (менее эффективно)
+            console.log("Пробуем загрузить варианты по одному...");
+            const promises = variantIds.map(id => 
+                fetch(`/api/products/${id}`)
+                    .then(res => res.ok ? res.json() : null)
+                    .catch(err => { console.error(`Ошибка загрузки варианта ${id}:`, err); return null; })
+            );
+            const results = await Promise.all(promises);
+            return results.filter(p => p !== null);
+        }
+
+        const fullVariantsData = await response.json();
+        console.log("Варианты загружены через bulk:", fullVariantsData);
+        return fullVariantsData;
+    } catch (error) {
+        console.error("Ошибка в функции loadFullVariantsData:", error);
+        throw error; // Пробрасываем ошибку выше
+    }
+}
 
 function showProductError(message) {
     const container = document.querySelector('.product-page-container');
@@ -94,7 +168,7 @@ function displayProduct(product) {
         displayProductImages(product, product.images);
 
         // Варианты (логика аналогична модальному окну, но без автоматического выбора)
-        renderVariantsOnPage(product);
+        renderVariantsOnPage(product); // Теперь product.variants должны быть полными объектами
 
         // Инициализируем "текущий отображаемый вариант" как основной товар
         window.currentDisplayedVariant = product;
@@ -173,11 +247,13 @@ function renderVariantsOnPage(baseProduct) {
 
     // Очищаем список и скрываем контейнер по умолчанию
     if (variantsList) variantsList.innerHTML = '';
-    if (variantsContainer) variantsContainer.style.display = 'none';
+    if (variantsContainer) {
+        variantsContainer.style.display = 'none'; // Всегда скрываем сначала
+    }
 
     // Проверяем, есть ли данные о вариантах
     if (baseProduct.variants && Array.isArray(baseProduct.variants) && baseProduct.variants.length > 0) {
-        console.log("Отображаем варианты на странице товара:", baseProduct.variants);
+        console.log("Отображаем варианты на странице товара (полные данные):", baseProduct.variants);
         if (variantsContainer) variantsContainer.style.display = 'block'; // Показываем контейнер
 
         baseProduct.variants.forEach(variant => {
@@ -242,7 +318,7 @@ function renderVariantsOnPage(baseProduct) {
         // }
 
     } else {
-        console.log("У товара нет вариантов или формат данных некорректен.");
+        console.log("У товара нет вариантов или формат данных некорректен (после обработки).");
         // Контейнер уже скрыт
     }
 }
