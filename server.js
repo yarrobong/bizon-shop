@@ -304,53 +304,7 @@ app.put('/api/products/:id', async (req, res) => {
     res.status(500).json({ error: 'Не удалось обновить товар' });
   }
 });
-// === API: Получить товар по ID ===
-app.get('/api/products/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const result = await pool.query(`
-      SELECT
-        id, title, description, price, tag, available, category, brand, compatibility,
-        supplier_link, supplier_notes,
-        images_json -- Поле будет обработано ниже
-      FROM products
-      WHERE id = $1
-    `, [id]);
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Товар не найден' });
-    }
-
-    const product = result.rows[0];
-    // --- Исправленная обработка images_json для товара по ID ---
-    let productImages = [];
-    // Ожидаем, что драйвер pg уже преобразовал JSON из БД в JS объект/массив
-    // Проверяем, является ли результат допустимым массивом или объектом
-    if (Array.isArray(product.images_json)) {
-      productImages = product.images_json;
-    } else if (product.images_json !== null && typeof product.images_json === 'object') {
-      // Если это объект (не null), оборачиваем его в массив
-      productImages = [product.images_json];
-    } else if (product.images_json === null || product.images_json === undefined) {
-      // Если null/undefined, оставляем пустой массив
-      productImages = [];
-    } else {
-      // Если это что-то другое (например, неправильно сохраненная строка),
-      // можно попробовать парсить или залогировать ошибку
-      console.warn(`Неожиданный тип или значение images_json для товара ID ${product.id}:`, typeof product.images_json, product.images_json);
-      productImages = []; // Или попытаться парсить: try { productImages = JSON.parse(product.images_json); } catch(e) { productImages = []; }
-    }
-    // --- Конец исправленной обработки ---
-
-    res.json({
-       ...product,
-       images: productImages // Теперь images - это массив
-    });
-  } catch (err) {
-    console.error('Ошибка загрузки товара по ID:', err);
-    res.status(500).json({ error: 'Не удалось загрузить товар' });
-  }
-});
 
 // === API: Создать товар ===
 app.post('/api/products', async (req, res) => {
