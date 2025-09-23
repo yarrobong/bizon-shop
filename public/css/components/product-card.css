@@ -20,7 +20,7 @@ main {
   padding: 0 1.5rem 5rem;
   position: relative;
   z-index: 10;
-  margin-top: 5rem;
+  
 }
 /* Убираем боковые отступы на маленьких экранах (например, до 480px) */
 @media (max-width: 479px) {
