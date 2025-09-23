@@ -110,9 +110,9 @@ function displayProduct(product) {
                 thumbnailsContainer.appendChild(thumb);
             });
         } else {
-            mainImageElement.src = '/assets/placeholder.png';
+            mainImageElement.src = '/assets/icons/placeholder1.webp';
             mainImageElement.alt = product.title;
-            document.getElementById('product-og-image').setAttribute('content', '/assets/placeholder.png');
+            document.getElementById('product-og-image').setAttribute('content', '/assets/icons/placeholder1.webp');
         }
     }
 
@@ -125,7 +125,7 @@ function displayProduct(product) {
             variantsContainer.style.display = 'block';
             product.variants.forEach(variant => {
                 const variantBtn = document.createElement('button');
-                let variantImageUrl = '/assets/placeholder.png';
+                let variantImageUrl = '/assets/icons/placeholder1.webp';
                 if (variant.images && variant.images.length > 0 && variant.images[0].url) {
                     variantImageUrl = variant.images[0].url.trim();
                 } else if (product.images && product.images.length > 0 && product.images[0].url) {
@@ -215,9 +215,9 @@ function selectVariantOnPage(baseProduct, selectedVariant) {
             thumbnailsContainer.appendChild(thumb);
         });
     } else {
-         mainImageElement.src = '/assets/placeholder.png';
+         mainImageElement.src = '/assets/icons/placeholder1.webp';
          mainImageElement.alt = selectedVariant.title || 'Изображение товара';
-         document.getElementById('product-og-image').setAttribute('content', '/assets/placeholder.png');
+         document.getElementById('product-og-image').setAttribute('content', '/assets/icons/placeholder1.webp');
          thumbnailsContainer.innerHTML = '';
     }
 

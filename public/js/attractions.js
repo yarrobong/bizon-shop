@@ -104,7 +104,7 @@
         imagesArray = [{ url: attraction.image, alt: attraction.title || 'Изображение' }];
     } else {
         // Заглушка, если изображений нет совсем
-        imagesArray = [{ url: '/assets/placeholder.png', alt: 'Нет изображения' }];
+        imagesArray = [{ url: '/assets/icons/placeholder1.webp', alt: 'Нет изображения' }];
     }
 
     const card = document.createElement('div');
@@ -117,7 +117,7 @@
     card.innerHTML = `
       <div class="attraction-gallery" id="${galleryId}" data-attraction-id="${attraction.id}">
         <div class="attraction-main-image-container">
-            <img id="${mainImageId}" class="attraction-main-image" src="${imagesArray[0].url}" onerror="this.onerror=null; this.src='/assets/placeholder.png';" alt="${imagesArray[0].alt || attraction.title}" />
+            <img id="${mainImageId}" class="attraction-main-image" src="${imagesArray[0].url}" onerror="this.onerror=null; this.src='/assets/icons/placeholder1.webp';" alt="${imagesArray[0].alt || attraction.title}" />
             ${imagesArray.length > 1 ? `
             <button class="attraction-gallery-nav prev" aria-label="Предыдущее изображение">&#10094;</button>
             <button class="attraction-gallery-nav next" aria-label="Следующее изображение">&#10095;</button>
@@ -130,7 +130,7 @@
                      src="${img.url}" 
                      alt="Миниатюра ${index + 1} для ${attraction.title}" 
                      data-index="${index}"
-                     onerror="this.onerror=null; this.src='/assets/placeholder.png';"/>
+                     onerror="this.onerror=null; this.src='/assets/icons/placeholder1.webp';"/>
             `).join('')}
         </div>
         ` : ''}
@@ -184,7 +184,7 @@
             mainImage.src = newImage.url;
             mainImage.alt = newImage.alt || '';
             // Обработка ошибки загрузки для главного изображения
-            mainImage.onerror = () => { mainImage.src = '/assets/placeholder.png'; };
+            mainImage.onerror = () => { mainImage.src = '/assets/icons/placeholder1.webp'; };
         }
         // Обновляем активную миниатюру
         cardElement.querySelectorAll('.attraction-thumbnail').forEach((thumb, i) => {
@@ -292,7 +292,7 @@
         } else if (attractionData.image) {
             imagesForThisCard = [{ url: attractionData.image, alt: attractionData.title || 'Изображение' }];
         } else {
-            imagesForThisCard = [{ url: '/assets/placeholder.png', alt: 'Нет изображения' }];
+            imagesForThisCard = [{ url: '/assets/icons/placeholder1.webp', alt: 'Нет изображения' }];
         }
         setupGallery(card, imagesForThisCard);
       } else {
@@ -320,7 +320,7 @@
       if (!productForCart.image && productForCart.images && productForCart.images.length > 0) {
           productForCart.image = productForCart.images[0].url;
       } else if (!productForCart.image) {
-          productForCart.image = '/assets/placeholder.png';
+          productForCart.image = '/assets/icons/placeholder1.webp';
       }
       cart.push({ product: productForCart, qty: 1 });
     }
@@ -405,12 +405,12 @@
         cart.forEach(item => {
           // Обеспечиваем наличие изображения в данных корзины
           const imageUrl = item.product.image || 
-                           (item.product.images && item.product.images[0] ? item.product.images[0].url : '/assets/placeholder.png') ||
-                           '/assets/placeholder.png';
+                           (item.product.images && item.product.images[0] ? item.product.images[0].url : '/assets/icons/placeholder1.webp') ||
+                           '/assets/icons/placeholder1.webp';
           const row = document.createElement('div');
           row.className = 'cart-item';
           row.innerHTML = `
-            <img src="${imageUrl}" alt="" onerror="this.onerror=null; this.src='/assets/placeholder.png';"/>
+            <img src="${imageUrl}" alt="" onerror="this.onerror=null; this.src='/assets/icons/placeholder1.webp';"/>
             <div class="cart-item-info">
               <div class="cart-item-title">${item.product.title}</div>
               <div class="cart-item-price">${formatPrice(item.product.price)}</div>
