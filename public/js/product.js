@@ -256,7 +256,7 @@ function renderVariantsOnPage(baseProduct) {
 
         if (variantsContainer) {
             // Показываем контейнер, если есть варианты
-            // Убираем inline стиль display, который может скрывать элемент
+            // Убираем inline стиль display, который может скрывать элемент (например, из HTML)
             variantsContainer.style.removeProperty('display');
             // Или, если вы используете CSS-класс для скрытия:
             // variantsContainer.classList.remove('hidden'); // Предполагается, что .hidden { display: none; }
@@ -317,10 +317,13 @@ function renderVariantsOnPage(baseProduct) {
     } else {
         console.log("У товара нет вариантов или формат данных некорректен (после обработки).");
         // Явно скрываем контейнер, если вариантов нет
+        // (или оставляем его скрытым, если он изначально скрыт в HTML и не предполагается показывать пустой контейнер)
         if (variantsContainer) {
-            variantsContainer.style.display = 'none'; // Устанавливаем display: none; если вариантов нет
-            // Или, если вы используете CSS-класс для скрытия:
-            // variantsContainer.classList.add('hidden'); // Предполагается, что .hidden { display: none; }
+             // Если контейнер изначально скрыт в HTML (style="display: none;"), и мы не хотим его показывать, когда вариантов нет,
+             // то можно оставить как есть, или убедиться, что он скрыт:
+             variantsContainer.style.display = 'none'; // Устанавливаем display: none; если вариантов нет
+             // Или, если вы используете CSS-класс для скрытия:
+             // variantsContainer.classList.add('hidden'); // Предполагается, что .hidden { display: none; }
         }
     }
 }
