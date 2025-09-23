@@ -208,33 +208,36 @@ async function renderProducts() {
     });
     
     // Обработчики для кликов по всей карточке товара
-    document.querySelectorAll('.product-card').forEach(card => {
-      card.addEventListener('click', (event) => {
-        // Проверяем, что клик был не по кнопке "В корзину", чтобы избежать конфликта
-        if (event.target.classList.contains('btn-cart')) return;
+document.querySelectorAll('.product-card').forEach(card => {
+  card.addEventListener('click', (event) => {
+    // Проверяем, что клик был не по кнопке "В корзину", чтобы избежать конфликта
+    if (event.target.classList.contains('btn-cart')) return;
+    // Проверяем, что клик был не по кнопке "Подробнее"
+    if (event.target.classList.contains('btn-details')) return;
 
-        const buttonDetails = card.querySelector('.btn-details');
-        if (!buttonDetails) return;
+    // Клик по карточке - переходим на страницу товара
+    const buttonDetails = card.querySelector('.btn-details');
+    if (!buttonDetails) return;
+    const productId = parseInt(buttonDetails.dataset.id);
+    if (productId) {
+        // Переход на новую страницу товара
+        window.location.href = `product.html?id=${productId}`;
+    }
+  });
+});
 
-        const productId = parseInt(buttonDetails.dataset.id);
-        const product = PRODUCTS.find(p => p.id === productId);
-
-        if (product) {
-          openProductModal(product);
-        }
-      });
-    });
-
-    // Обработчики для кнопок "Подробнее"
-    document.querySelectorAll('.btn-details').forEach(button => {
-      button.addEventListener('click', (event) => {
-        const productId = parseInt(event.target.dataset.id);
-        const product = PRODUCTS.find(p => p.id === productId);
-        if (product) {
-          openProductModal(product);
-        }
-      });
-    });
+// Обработчики для кнопок "Подробнее"
+// Оставляем модальное окно для кнопки "Подробнее"
+document.querySelectorAll('.btn-details').forEach(button => {
+  button.addEventListener('click', (event) => {
+    event.stopPropagation(); // Предотвращаем всплытие, чтобы не сработал обработчик клика по карточке
+    const productId = parseInt(event.target.dataset.id);
+    const product = PRODUCTS.find(p => p.id === productId);
+    if (product) {
+      openProductModal(product); // Оставляем модальное окно для "Подробнее"
+    }
+  });
+});
 
     // Обработчики для кнопок "В корзину"
     document.querySelectorAll('.btn-cart').forEach(button => {

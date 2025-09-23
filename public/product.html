@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="product-page-title">Товар - BIZON</title> <!-- Будет изменен динамически -->
+  <meta name="description" id="product-page-description" content="Подробная информация о товаре."> <!-- Будет изменен динамически -->
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="product">
+  <meta property="og:title" id="product-og-title" content="Товар - BIZON"> <!-- Будет изменен -->
+  <meta property="og:description" id="product-og-description" content="Подробная информация о товаре."> <!-- Будет изменен -->
+  <meta property="og:image" id="product-og-image" content="/assets/placeholder.png"> <!-- Будет изменен -->
+  <meta property="og:url" content=""> <!-- Будет изменен динамически -->
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+
+  <link rel="icon" type="image/png" href="/assets/icons/favicon/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/favicon/favicon.svg" />
+  <link rel="shortcut icon" href="/assets/icons/favicon/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/favicon/apple-touch-icon.png" />
+  <link rel="manifest" href="/assets/icons/favicon/site.webmanifest" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js" type="text/javascript"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery.maskedinput@1.4.1/src/jquery.maskedinput.js" type="text/javascript"></script>
+
+  <!-- Общие стили -->
+  <link rel="stylesheet" href="css/layout/header.css">
+  <link rel="stylesheet" href="css/components/background.css">
+  <!-- Стили для карточки товара, модальных окон и корзины могут понадобиться, если они используют общие классы -->
+  <link rel="stylesheet" href="css/components/product-card.css">
+  <link rel="stylesheet" href="css/components/modal.css">
+  <link rel="stylesheet" href="css/components/cart.css">
+
+  <!-- Специфичные стили для страницы товара (если потребуются) -->
+  <link rel="stylesheet" href="css/pages/product-page.css"> <!-- Создадим позже -->
+
+  <!-- Yandex.Metrika counter -->
+  <script type="text/javascript">
+    (function(m,e,t,r,i,k,a){
+        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=104163309', 'ym');
+    ym(104163309, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", accurateTrackBounce:true, trackLinks:true});
+  </script>
+  <noscript><div><img src="https://mc.yandex.ru/watch/104163309" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+  <!-- /Yandex.Metrika counter -->
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-8WGSW9TZS2"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-8WGSW9TZS2');
+  </script>
+</head>
+<body>
+
+  <!-- Фоновая анимация -->
+  <div class="bg-overlay" aria-hidden="true">
+    <div class="pulse-1"></div>
+    <div class="pulse-2"></div>
+    <div class="pulse-3"></div>
+    <div class="pulse-4"></div>
+    <div class="pulse-5"></div>
+    <div class="pulse-6"></div>
+  </div>
+
+  <!-- Шапка -->
+  <header class="header" role="banner">
+    <a href="https://bizon-business.ru" class="logo">
+      <div class="logo-icon">
+        <picture>
+          <img src="/assets/logo/logo-Photoroom.webp" alt="BIZON">
+        </picture>
+      </div>
+      <div class="logo-title">BIZON</div>
+    </a>
+
+    <nav class="main-nav" id="mainNav" role="navigation" aria-label="Основная навигация">
+      <ul class="nav-list">
+        <li><a href="https://bizon-business.ru/" data-page="index">Главная</a></li>
+        <li><a href="https://bizon-business.ru/catalog" data-page="catalog">Каталог</a></li>
+        <li><a href="https://bizon-business.ru/attractions" data-page="attractions">VR Аттракционы</a></li>
+        <li><a href="https://bizon-business.ru/contact" data-page="contact">Контакты</a></li>
+      </ul>
+    </nav>
+
+    <div class="header-actions">
+        <!-- Поиск - можно оставить, но он будет вести на каталог -->
+        <div class="search" id="header-search">
+            <svg class="search-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input type="text" id="search-input" placeholder="Поиск по товарам..." />
+        </div>
+        <button id="cart-btn" class="cart-btn" aria-label="Корзина">
+            Корзина
+            <span id="cart-count" class="cart-count">0</span>
+        </button>
+    </div>
+
+    <div class="hamburger" id="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+  </header>
+
+  <main role="main">
+    <!-- Основной контент страницы товара -->
+    <div class="product-page-container">
+        <!-- Секция изображений -->
+        <div class="product-page-left">
+            <div class="product-page-image">
+                <img id="product-page-main-image" src="/assets/placeholder.png" alt="Изображение товара" />
+            </div>
+            <div class="product-page-thumbnails" id="product-page-thumbnails" role="group" aria-label="Миниатюры изображений"></div>
+
+            <!-- Контейнер для вариантов -->
+            <div id="product-page-variants-container" class="product-variants-container" style="display: none;">
+                <h4>Варианты:</h4>
+                <div id="product-page-variants" class="product-variants"></div>
+            </div>
+        </div>
+
+        <!-- Секция информации -->
+        <div class="product-page-right">
+            <div class="product-page-info">
+                <nav aria-label="Навигационная цепочка">
+                    <ol class="breadcrumb">
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/catalog">Каталог</a></li>
+                        <li id="breadcrumb-category"><a href="#">Категория</a></li> <!-- Будет заполнена -->
+                        <li aria-current="page" id="breadcrumb-product-title">Название товара</li> <!-- Будет заполнена -->
+                    </ol>
+                </nav>
+
+                <h1 id="product-page-title-main" class="product-page-title">Название товара</h1> <!-- Будет заполнена -->
+                <p id="product-page-description-main" class="product-page-description">Описание товара</p> <!-- Будет заполнена -->
+                <div id="product-page-price" class="product-page-price">Цена</div> <!-- Будет заполнена -->
+
+                <!-- Информация о наличии -->
+                <div id="product-page-availability" class="product-page-availability">Наличие: <span>Загрузка...</span></div>
+            </div>
+
+            <div class="product-page-actions">
+                <button id="product-page-add-to-cart-btn" class="btn-add full-width" disabled>Добавить в корзину</button>
+                <button id="product-page-buy-now-btn" class="btn-buy full-width" disabled>Купить сейчас</button>
+            </div>
+
+            <!-- Дополнительная информация (характеристики, теги и т.д.) - можно добавить позже -->
+        </div>
+    </div>
+  </main>
+
+  <!-- Модальное окно: Корзина (скопировано из catalog.html) -->
+  <div id="cart-modal" class="modal" role="dialog" aria-labelledby="cart-modal-title" aria-hidden="true">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="cart-modal-title" class="modal-title">Корзина</h3>
+        <button class="modal-close" data-close="cart" aria-label="Закрыть">&times;</button>
+      </div>
+      <div class="modal-body" id="cart-items">
+        <div class="empty">Ваша корзина пуста</div>
+      </div>
+      <div class="modal-footer">
+        <label for="phone">Ваш номер телефона*</label>
+        <input type="text" class="phone_mask" id="phone" placeholder="+7 (___) ___-__-__" required>
+        <div class="error-message" id="phoneError"></div>
+
+        <label for="comment-input" class="visually-hidden">Комментарий к заказу</label>
+        <textarea id="comment-input" placeholder="Комментарий к заказу"></textarea>
+        <div class="consent-container">
+          <div class="consent-toggle">
+            <input type="checkbox" id="consent-toggle" class="consent-checkbox">
+            <label for="consent-toggle" class="consent-slider"></label>
+          </div>
+          <p class="consent-text">
+            Я даю согласие на обработку персональных данных.
+            <a href="/privacy.html">Подробнее</a>
+          </p>
+        </div>
+
+        <button id="send-order">Оформить заказ</button>
+
+        <div id="success-message" class="success-message" role="alert" aria-live="assertive">
+          ✅ Заказ оформлен! С вами свяжутся в ближайшее время.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Подвал -->
+  <footer role="contentinfo">
+    © <span id="year"></span> BIZON — Все права защищены
+  </footer>
+
+  <!-- Скрипты -->
+  <script defer src="js/utils.js"></script>
+  <script defer src="js/state.js"></script>
+  <!-- Скрипт для страницы товара -->
+  <script defer src="js/product.js"></script>
+  <!-- Основной скрипт (может содержать общие функции, например, для корзины) -->
+  <script defer src="js/main.js"></script>
+
+  <script>
+    // Установка года
+    document.getElementById('year').textContent = new Date().getFullYear();
+    // Инициализация страницы товара
+    document.addEventListener('DOMContentLoaded', function() {
+        // product.js сам обработает загрузку данных
+    });
+  </script>
+</body>
+</html>
