@@ -582,8 +582,8 @@ function setupEventListeners(product) {
             } else {
                 updateCartCountLocal();
             }
-            // Открываем модальное окно корзины
-            openCartModal(); // Предполагается, что openCartModal доступна (из ui.js/main.js)
+            // ВАЖНО: Перенаправляем на страницу корзины
+            window.location.href = '/cart.html';
         });
     }
 
@@ -607,13 +607,13 @@ function setupEventListeners(product) {
         btn.addEventListener('click', closeModals); // Предполагается, что closeModals доступна
     });
 
-     // Обработчик изменения согласия на обработку данных в модальном окне корзины
+     // Обработчик изменения согласия на обработку данных в модальном окне корзины (если модальное окно корзины всё ещё используется где-то)
     const consentCheckbox = document.getElementById('consent-toggle');
     if (consentCheckbox) {
         consentCheckbox.addEventListener('change', updateSendOrderButton); // Предполагается, что updateSendOrderButton доступна
     }
 
-    // Обработчик отправки заказа в модальном окне корзины
+    // Обработчик отправки заказа в модальном окне корзины (если модальное окно корзины всё ещё используется где-то)
     const sendOrderBtn = document.getElementById('send-order');
     if (sendOrderBtn) {
         let isSending = false;
@@ -624,9 +624,9 @@ function setupEventListeners(product) {
                 return;
             }
              const consentCheckbox = document.getElementById('consent-toggle');
-             console.log("Элемент чекбокса найден:", consentCheckbox);
+             console.log("Элемент чекбокса найден:", consentCheckbox); // <-- Новый лог
             const isConsentGiven = consentCheckbox ? consentCheckbox.checked : false;
-            console.log("Состояние чекбокса (checked):", isConsentGiven);
+            console.log("Состояние чекбокса (checked):", isConsentGiven); // <-- Новый лог
             const phoneInput = document.getElementById('phone');
             if (!isConsentGiven) {
                 alert('Необходимо дать согласие на обработку персональных данных');
@@ -662,14 +662,13 @@ function setupEventListeners(product) {
                   if (commentInput) commentInput.value = '';
                   const successMessage = document.getElementById('success-message');
                   if (successMessage) successMessage.style.display = 'block';
-                  openCartModal(); // Перерисовываем корзину
+                  // openCartModal(); // Перерисовываем корзину (если модальное окно используется)
                   setTimeout(() => {
                     if (successMessage) successMessage.style.display = 'none';
                     sendOrderBtn.disabled = false;
                     sendOrderBtn.textContent = 'Оформить заказ';
                     isSending = false;
-                    // Закрывает модальное окно после успешной отправки
-                    closeModals();
+                    // closeModals(); // Закрываем модальное окно после успешной отправки (если модальное окно используется)
                   }, 3000);
                 } else {
                   throw new Error(result.error || 'Ошибка сервера');
@@ -684,13 +683,13 @@ function setupEventListeners(product) {
                   if (commentInput) commentInput.value = '';
                   const successMessage = document.getElementById('success-message');
                   if (successMessage) successMessage.style.display = 'block';
-                  openCartModal();
+                  // openCartModal(); // Перерисовываем корзину (если модальное окно используется)
                   setTimeout(() => {
                     if (successMessage) successMessage.style.display = 'none';
                     sendOrderBtn.disabled = false;
                     sendOrderBtn.textContent = 'Оформить заказ';
                     isSending = false;
-                    closeModals();
+                    // closeModals(); // Закрывает модальное окно (если модальное окно используется)
                   }, 3000);
                 } else {
                   alert('Не удалось отправить заказ. Пожалуйста, позвоните нам.');
