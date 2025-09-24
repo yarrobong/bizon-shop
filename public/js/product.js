@@ -602,10 +602,7 @@ function setupEventListeners(product) {
         });
     }
 
-    // Обработчики для закрытия модальных окон (если они используются на этой странице)
-    document.querySelectorAll('[data-close]').forEach(btn => {
-        btn.addEventListener('click', closeModals); // Предполагается, что closeModals доступна
-    });
+   
 
      // Обработчик изменения согласия на обработку данных в модальном окне корзины (если модальное окно корзины всё ещё используется где-то)
     // (Опционально: можно оставить, если чекбокс используется для других целей)
@@ -671,34 +668,7 @@ function updateCartCountLocal() {
     }
 }
 
-// Открытие модального окна корзины (резервный вариант, если не импортирована)
-function openCartModal() {
-    const cartModal = document.getElementById('cart-modal');
-    if (cartModal) {
-        // Простая логика открытия, можно расширить (как в ui.js)
-        cartModal.classList.add('open');
-        document.body.classList.add('modal-open');
-        // Также нужно обновить содержимое корзины
-        renderCartItemsOnPage(); // Нужно реализовать эту функцию или использовать существующую
-    } else {
-         console.warn("Модальное окно корзины не найдено на странице.");
-         // Альтернатива: перенаправить на страницу корзины, если она есть
-         // window.location.href = '/cart.html';
-    }
-}
 
-// Закрытие модалок (резервный вариант, если не импортирована)
-function closeModals() {
-  const modal = document.querySelector('.modal.open');
-  if (modal) modal.classList.remove('open');
-  document.body.classList.remove('modal-open');
-  // Восстанавливаем позицию прокрутки если нужно (логика из ui.js)
-  const scrollY = document.body.getAttribute('data-scroll-position');
-  if (scrollY) {
-    window.scrollTo(0, parseInt(scrollY));
-    document.body.removeAttribute('data-scroll-position');
-  }
-}
 
 // Обновление состояния кнопки "Оформить заказ" (резервный вариант)
 function updateSendOrderButton() {

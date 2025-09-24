@@ -202,14 +202,12 @@
     © <span id="year"></span> BIZON — Все права защищены
   </footer>
 
-  <!-- Скрипты -->
   <script defer src="js/utils.js"></script>
-  <script defer src="js/state.js"></script>
-  <!-- Скрипт для страницы товара -->
-  <script defer src="js/product.js"></script>
-  <!-- Основной скрипт (может содержать общие функции, например, для корзины) -->
-  <script defer src="js/main.js"></script>
-
+<script defer src="js/state.js"></script> <!-- Должен быть до product.js -->
+<!-- Скрипт для страницы товара -->
+<script defer src="js/product.js"></script>
+<!-- Основной скрипт (может содержать общие функции, например, для корзины) -->
+<script defer src="js/main.js"></script> <!-- Или ui.js, если там openCartModal/closeModals -->
   <script>
     // Установка года
     document.getElementById('year').textContent = new Date().getFullYear();
