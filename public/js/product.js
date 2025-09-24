@@ -559,13 +559,11 @@ function setupEventListeners(product) {
         addToCartBtn.addEventListener('click', () => {
             // Используем текущий отображаемый вариант, а не основной товар
             let itemToAdd = window.currentDisplayedVariant || product;
-            console.log("Добавление в корзину:", itemToAdd.id, itemToAdd.title);
-            addToCart(itemToAdd);
-            if (typeof updateCartCount === 'function') {
-                updateCartCount();
-            } else {
-                updateCartCountLocal();
-            }
+            console.log("Добавление в корзину (из state.js):", itemToAdd.id, itemToAdd.title);
+            // Вызываем функцию из state.js
+            window.addToCart(itemToAdd);
+            // Вызываем обновление счётчика из state.js
+            window.updateCartCount();
             // Можно показать уведомление
             alert(`${itemToAdd.title} добавлен в корзину!`);
         });
@@ -575,13 +573,11 @@ function setupEventListeners(product) {
         buyNowBtn.addEventListener('click', () => {
              // Используем текущий отображаемый вариант, а не основной товар
             let itemToAdd = window.currentDisplayedVariant || product;
-            console.log("Покупка в 1 клик:", itemToAdd.id, itemToAdd.title);
-            addToCart(itemToAdd);
-            if (typeof updateCartCount === 'function') {
-                updateCartCount();
-            } else {
-                updateCartCountLocal();
-            }
+            console.log("Покупка в 1 клик (из state.js):", itemToAdd.id, itemToAdd.title);
+            // Вызываем функцию из state.js
+            window.addToCart(itemToAdd);
+            // Вызываем обновление счётчика из state.js
+            window.updateCartCount();
             // ВАЖНО: Перенаправляем на страницу корзины
             window.location.href = '/cart.html';
         });
@@ -602,16 +598,109 @@ function setupEventListeners(product) {
         });
     }
 
-   
+    // Обработчики для закрытия модальных окон (если они используются на этой странице)
+    // (Это не относится к странице корзины, но может быть полезно для других модальных окон на product.html)
+    document.querySelectorAll('[data-close]').forEach(btn => {
+        btn.addEventListener('click', window.closeModals); // Предполагается, что closeModals доступна из main.js или другого файла
+    });
 
      // Обработчик изменения согласия на обработку данных в модальном окне корзины (если модальное окно корзины всё ещё используется где-то)
-    // (Опционально: можно оставить, если чекбокс используется для других целей)
+     // (Это не относится к product.html, но может быть оставлено для совместимости с main.js/ui.js)
     const consentCheckbox = document.getElementById('consent-toggle');
     if (consentCheckbox) {
-        consentCheckbox.addEventListener('change', updateSendOrderButton); // Предполагается, что updateSendOrderButton доступна
+        consentCheckbox.addEventListener('change', window.updateSendOrderButton); // Предполагается, что updateSendOrderButton доступна из ui.js или main.js
     }
 
-    
+    // Обработчик отправки заказа в модальном окне корзины (изменён: убрана проверка consent)
+    // (Это не относится к product.html, но может быть оставлено для совместимости с main.js/ui.js)
+    const sendOrderBtn = document.getElementById('send-order');
+    if (sendOrderBtn) {
+        let isSending = false;
+        sendOrderBtn.addEventListener('click', async () => {
+            console.log("Кликнули 'Оформить заказ'. isSending:", isSending);
+            if (isSending) {
+                console.log('Заказ уже отправляется...');
+                return;
+            }
+            // const consentCheckbox = document.getElementById('consent-toggle'); // <-- Закомментировано/удалено
+            // const isConsentGiven = consentCheckbox ? consentCheckbox.checked : false; // <-- Закомментировано/удалено
+            const phoneInput = document.getElementById('phone');
+            // if (!isConsentGiven) { // <-- Условие полностью удалено
+            //     alert('Необходимо дать согласие на обработку персональных данных'); // <-- Удалено
+            //     return; // <-- Удалено
+            // }
+            if (!phoneInput || !phoneInput.value.trim()) {
+                alert('Укажите телефон');
+                return;
+            }
+            // Используем функцию из state.js
+            if (window.getCart().length === 0) {
+                alert('Корзина пуста');
+                return;
+            }
+            try {
+                isSending = true;
+                sendOrderBtn.disabled = true;
+                sendOrderBtn.textContent = 'Отправка...';
+                const response = await fetch('/api/order', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    phone: phoneInput.value,
+                    comment: document.getElementById('comment-input')?.value || '',
+                    // Используем функцию из state.js
+                    cart: window.getCart()
+                  })
+                });
+                const result = await response.json();
+                console.log('Ответ сервера:', result);
+                if (result.success) {
+                  // Используем функцию из state.js
+                  window.clearCart();
+                  if (phoneInput) phoneInput.value = '';
+                  const commentInput = document.getElementById('comment-input');
+                  if (commentInput) commentInput.value = '';
+                  const successMessage = document.getElementById('success-message');
+                  if (successMessage) successMessage.style.display = 'block';
+                  // window.openCartModal(); // Перерисовываем корзину (если модальное окно используется) - вызывается ниже
+                  setTimeout(() => {
+                    if (successMessage) successMessage.style.display = 'none';
+                    sendOrderBtn.disabled = false;
+                    sendOrderBtn.textContent = 'Оформить заказ';
+                    isSending = false;
+                    // window.closeModals(); // Закрываем модальное окно после успешной отправки (если модальное окно используется)
+                  }, 3000);
+                } else {
+                  throw new Error(result.error || 'Ошибка сервера');
+                }
+            } catch (error) {
+                console.error('Ошибка отправки заказа:', error);
+                if (error.message && error.message.includes('Заказ уже обрабатывается')) {
+                  // Используем функцию из state.js
+                  window.clearCart();
+                  const phoneInput = document.getElementById('phone');
+                  if (phoneInput) phoneInput.value = '';
+                  const commentInput = document.getElementById('comment-input');
+                  if (commentInput) commentInput.value = '';
+                  const successMessage = document.getElementById('success-message');
+                  if (successMessage) successMessage.style.display = 'block';
+                  // window.openCartModal(); // Перерисовываем корзину (если модальное окно используется) - вызывается ниже
+                  setTimeout(() => {
+                    if (successMessage) successMessage.style.display = 'none';
+                    sendOrderBtn.disabled = false;
+                    sendOrderBtn.textContent = 'Оформить заказ';
+                    isSending = false;
+                    // window.closeModals(); // Закрывает модальное окно (если модальное окно используется)
+                  }, 3000);
+                } else {
+                  alert('Не удалось отправить заказ. Пожалуйста, позвоните нам.');
+                  sendOrderBtn.disabled = false;
+                  sendOrderBtn.textContent = 'Оформить заказ';
+                  isSending = false;
+                }
+            }
+        });
+    }
 }
 
 
