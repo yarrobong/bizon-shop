@@ -608,12 +608,13 @@ function setupEventListeners(product) {
     });
 
      // Обработчик изменения согласия на обработку данных в модальном окне корзины (если модальное окно корзины всё ещё используется где-то)
+    // (Опционально: можно оставить, если чекбокс используется для других целей)
     const consentCheckbox = document.getElementById('consent-toggle');
     if (consentCheckbox) {
         consentCheckbox.addEventListener('change', updateSendOrderButton); // Предполагается, что updateSendOrderButton доступна
     }
 
-    // Обработчик отправки заказа в модальном окне корзины (если модальное окно корзины всё ещё используется где-то)
+    // Обработчик отправки заказа в модальном окне корзины (изменён: убрана проверка consent)
     const sendOrderBtn = document.getElementById('send-order');
     if (sendOrderBtn) {
         let isSending = false;
@@ -623,15 +624,13 @@ function setupEventListeners(product) {
                 console.log('Заказ уже отправляется...');
                 return;
             }
-             const consentCheckbox = document.getElementById('consent-toggle');
-             console.log("Элемент чекбокса найден:", consentCheckbox); // <-- Новый лог
-            const isConsentGiven = consentCheckbox ? consentCheckbox.checked : false;
-            console.log("Состояние чекбокса (checked):", isConsentGiven); // <-- Новый лог
+            // const consentCheckbox = document.getElementById('consent-toggle'); // <-- Закомментировано/удалено
+            // const isConsentGiven = consentCheckbox ? consentCheckbox.checked : false; // <-- Закомментировано/удалено
             const phoneInput = document.getElementById('phone');
-            if (!isConsentGiven) {
-                alert('Необходимо дать согласие на обработку персональных данных');
-                return;
-            }
+            // if (!isConsentGiven) { // <-- Условие полностью удалено
+            //     alert('Необходимо дать согласие на обработку персональных данных'); // <-- Удалено
+            //     return; // <-- Удалено
+            // }
             if (!phoneInput || !phoneInput.value.trim()) {
                 alert('Укажите телефон');
                 return;
@@ -648,7 +647,7 @@ function setupEventListeners(product) {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    phone: phoneInput.value,
+                    phone: phoneInput.value, // Телефон теперь обязателен
                     comment: document.getElementById('comment-input')?.value || '',
                     cart: getCart()
                   })
