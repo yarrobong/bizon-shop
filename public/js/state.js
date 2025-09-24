@@ -81,7 +81,11 @@ function getCurrentTag() {
 
 // === Инициализация при загрузке ===
 
-
+// === Инициализация при загрузке ===
+// Логируем, что state.js завершил выполнение
+console.log("state.js: Скрипт полностью выполнен, функции экспортированы в window.");
+// Проверим, доступна ли функция getCart в window
+console.log("state.js: window.getCart =", typeof window.getCart, window.getCart);
 // === Экспорт для использования в других файлах ===
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
