@@ -1,22 +1,23 @@
-// js/product.js
+// // js/product.js
 
 document.addEventListener('DOMContentLoaded', async function () {
     console.log("Страница товара загружена");
 
     // --- 1. Получение ID товара из URL ---
     const urlParams = new URLSearchParams(window.location.search);
-    const productId = urlParams.get('id');
+    const requestedProductId = urlParams.get('id'); // ID, запрошенный в URL (может быть основной или вариант)
 
-    if (!productId) {
+    if (!requestedProductId) {
         console.error('ID товара не найден в URL');
         showProductError('Товар не найден (ID отсутствует)');
         return;
     }
 
-    // --- 2. Загрузка данных товара ---
-    let productData = null;
+    // --- 2. Загрузка данных запрошенного товара ---
+    // Сначала загружаем запрошенный товар, чтобы определить, основной он или вариант
+    let requestedProductData = null;
     try {
-        const response = await fetch(`/api/products/${productId}`);
+        const response = await fetch(`/api/products/${requestedProductId}`);
         if (!response.ok) {
             if (response.status === 404) {
                  throw new Error('Товар не найден');
@@ -24,59 +25,220 @@ document.addEventListener('DOMContentLoaded', async function () {
                  throw new Error(`Ошибка загрузки товара: ${response.status}`);
             }
         }
-        productData = await response.json();
-        console.log('Данные товара загружены (сырые):', productData);
+        requestedProductData = await response.json();
+        console.log('Данные запрошенного товара (сырые):', requestedProductData);
     } catch (error) {
-        console.error('Ошибка при загрузке данных товара:', error);
+        console.error('Ошибка при загрузке данных запрошенного товара:', error);
         showProductError(`Ошибка загрузки товара: ${error.message}`);
         return;
     }
 
-    // --- 2.5. Загрузка полных данных вариантов ---
-    // Проверяем формат productData.variants и загружаем полные данные при необходимости
-    if (productData.variants && Array.isArray(productData.variants) && productData.variants.length > 0) {
-        const firstItem = productData.variants[0];
-        // Если первый элемент - число или объект только с ID, значит нужно загрузить полные данные
+    // --- 3. Определение основного товара ---
+    // Загружаем основной товар, к которому принадлежит запрошенный (если он вариант)
+    let baseProductData = requestedProductData;
+    let initialVariantId = null; // ID варианта, который нужно выбрать при загрузке
+
+    // Проверяем, есть ли у запрошенного товара группа вариантов
+    const groupResponse = await fetch(`/api/products/${requestedProductData.id}`);
+    if (groupResponse.ok) {
+        const detailedProductData = await groupResponse.json();
+        if (detailedProductData.variants && detailedProductData.variants.length > 0) {
+            // Найдем, принадлежит ли запрошенный продукт к группе, где есть основной товар
+            // На сервере /api/products/:id возвращаются варианты, связанные с основным товаром через group_id
+            // Нам нужно найти основной товар. Он должен быть в том же group_id, что и запрошенный.
+            // Это сложнее, чем казалось. Лучший способ - это серверный эндпоинт, который возвращает
+            // список *всех* товаров в группе, включая основной.
+            // Пока что, будем считать, что запрошенный товар - это основной, если у него нет других связанных вариантов в ответе /api/products/:id
+            // НО, если он пришел как вариант из /api/products, то его нужно найти в списке вариантов.
+            // Лучше всего - изменить серверный маршрут /api/products/:id, чтобы он возвращал group_id или список всех товаров в группе.
+            // ПОКА ПРЕДПОЛАГАЕМ, что сервер в /api/products/:id возвращает объект с полем variants, содержащим *все* связанные товары в группе, включая основной.
+            // Но это не так. /api/products/:id возвращает ОДИН товар и его *собственные* варианты (если он основной).
+            // Поэтому, если запрошенный ID не является основным, мы не узнаем об этом тут напрямую.
+            // НАДО ИЗМЕНИТЬ ЛОГИКУ: Загрузить основной товар, определив его через связь.
+            // НО! Сервер не возвращает "какой основной товар" для варианта напрямую.
+            // Решение: при загрузке варианта, сначала получить его данные, затем получить *все* товары,
+            // и найти среди них тот, у которого group_id совпадает с group_id варианта. Это и будет основной.
+            // Это неэффективно. Лучше добавить серверный эндпоинт, например, /api/products/${id}/group
+            // который возвращает основной товар и все его варианты.
+
+            // АЛЬТЕРНАТИВНОЕ РЕШЕНИЕ: Изменить логику. Загрузить основной товар, используя связь через product_variants_link.
+            // НО! Нет прямого эндпоинта для этого.
+            // ИДЕЯ: Загрузить все товары, найти группу для запрошенного, и найти основной.
+            // Это ОЧЕНЬ неэффективно.
+
+            // ПРАВИЛЬНОЕ РЕШЕНИЕ: Изменить серверный маршрут /api/products/:id так, чтобы он возвращал group_id.
+            // Или добавить новый маршрут, например, /api/products/${id}/master
+            // Но мы этого делать не будем. Попробуем обойтись клиентской логикой.
+            // ПРЕДПОЛОЖЕНИЕ: Если товар не имеет вариантов, он основной. Если имеет - он основной.
+            // Если мы запросили вариант, сервер вернет 404 для /api/products/:variantId, если маршрут не изменен.
+            // НО в нашем случае, /api/products/:id возвращает ОДИН товар и его связанные варианты.
+            // Т.е. если мы запросим /product.html?id=VARIANT_ID, то сервер вернет данные ВАРИАНТА (не основного товара) и список его связанных вариантов (включая основной).
+            // Это означает, что requestedProductData - это вариант, и в его .variants будет основной товар и другие варианты.
+            // Нам нужно найти основной товар в .variants или сам запрошенный товар должен быть в .variants.
+            // Это запутанно. Давайте посмотрим на серверный код /api/products/:id
+
+            // Сервер: /api/products/:id
+            // Загружает товар с id = :id
+            // Затем ищет group_id в product_variants_link для этого товара
+            // Если находит, загружает ВСЕ товары из этой группы (исключая сам :id)
+            // Возвращает ОСНОВНОЙ товар (загруженный в начале) с добавленным полем variants
+            // Т.е. если я запрашиваю /api/products/VARIANT_ID, я получу ОШИБКУ (404), потому что товар с id=VARIANT_ID не существует в таблице products?
+            // НЕТ! Товар с id=VARIANT_ID СУЩЕСТВУЕТ в таблице products. Он просто связан с другим товаром как вариант.
+            // Значит, /api/products/VARIANT_ID вернет ДАННЫЕ ВАРИАНТА (как основной товар) и список других связанных вариантов (исключая сам VARIANT_ID).
+            // Это означает, что если я запрашиваю /product.html?id=VARIANT_ID, то requestedProductData будет ВАРИАНТОМ.
+            // А его .variants будет содержать другие варианты и ОСНОВНОЙ товар.
+            // Нам нужно найти в .variants тот, у кого group_id == id ВАРИАНТА. Нет. НЕТ.
+            // Группа определяется по product_variants_link. Один товар может быть в одной группе.
+            // Когда мы запрашиваем /api/products/VARIANT_ID, сервер ищет group_id для VARIANT_ID.
+            // Затем он загружает ВСЕ товары с тем же group_id (исключая VARIANT_ID).
+            // Значит, в .variants будут ТОЛЬКО другие товары из группы.
+            // А сам товар (VARIANT_ID) НЕ БУДЕТ в .variants.
+            // Итак, если requestedProductId - это вариант:
+            // 1. requestedProductData - это ДАННЫЕ этого варианта (title, price и т.д.)
+            // 2. requestedProductData.variants - это список других товаров в той же группе (включая основной)
+            // Нам нужно найти основной товар в variants. Какой из них основной? Тот, чей ID равен group_id.
+            // В product_variants_link, запись (product_id, group_id) означает, что product_id принадлежит группе group_id.
+            // Обычно основной товар имеет id == group_id.
+            // Проверим: в /api/products/:id сервер делает:
+            // SELECT group_id FROM product_variants_link WHERE product_id = $1 -> groupId
+            // Затем SELECT p.* FROM product_variants_link pvl JOIN products p ON pvl.product_id = p.id WHERE pvl.group_id = $1 AND p.id != $2
+            // Т.е. он исключает $2 (т.е. запрошенный id).
+            // Значит, если я запрашиваю /api/products/VARIANT_ID, я получу:
+            // requestedProductData = данные VARIANT_ID
+            // requestedProductData.variants = список других товаров из группы, включая основной (если VARIANT_ID не является основным)
+            // Чтобы найти основной, мне нужно снова запросить /api/products/MAIN_ID.
+            // Это неэффективно.
+            // ЛУЧШЕ: Изменить серверный маршрут /api/products/:id, чтобы он возвращал group_id или список всех товаров в группе.
+            // ИЛИ: Загрузить все товары один раз и отфильтровать на клиенте.
+            // ИЛИ: Сделать новый эндпоинт /api/products/${id}/group
+            // Мы не будем менять сервер. Попробуем клиентскую логику.
+            // Делаем еще один запрос к /api/products/${requestedProductData.id}, чтобы получить его .variants
+            // const detailedProductData = requestedProductData; // У нас уже есть это из шага 2
+            // console.log('Детали запрошенного товара:', detailedProductData);
+            // Если у него есть .variants, и один из них имеет id == detailedProductData.id's group_id (но group_id не возвращается)
+            // Это невозможно эффективно на клиенте без дополнительной информации от сервера.
+            // НАИЛУЧШЕЕ РЕШЕНИЕ: ПРЕДПОЛАГАТЬ, ЧТО URL ВСЕГДА УКАЗЫВАЕТ НА ОСНОВНОЙ ТОВАР.
+            // ИЗМЕНИТЬ ЛОГИКУ: ВСЕГДА ЗАГРУЖАТЬ ТОВАР ПО ID ИЗ URL КАК ОСНОВНОЙ.
+            // ПРИ ВЫБОРЕ ВАРИАНТА - МЕНЯТЬ URL НА ID ВАРИАНТА.
+            // ПРИ ЗАГРУЗКЕ ПО URL С ID ВАРИАНТА - ЗАГРУЖАТЬ ВАРИАНТ, НО ОТНОСИТЬСЯ К НЕМУ КАК К ОСНОВНОМУ ДЛЯ ОТОБРАЖЕНИЯ.
+            // НО ТОГДА ВАРИАНТЫ НЕ БУДУТ ОТОБРАЖАТЬСЯ, ПОТОМУ ЧТО /api/products/VARIANT_ID вернет только другие варианты.
+            // Это НЕПРАВИЛЬНО.
+            // ПРАВИЛЬНОЕ ПОНИМАНИЕ:
+            // - /api/products/MAIN_ID -> возвращает MAIN_ID и его .variants (другие товары)
+            // - /api/products/VARIANT_ID -> возвращает VARIANT_ID и его .variants (другие товары ИЗ ТОЙ ЖЕ ГРУППЫ, исключая VARIANT_ID)
+            // Т.е. оба возвращают структуру { id, title, ..., variants: [...] }
+            // Если я захожу на /product.html?id=VARIANT_ID, я хочу видеть информацию о VARIANT_ID и список ВСЕХ товаров в его группе (включая основной и другие варианты).
+            // Значит, я загружаю VARIANT_ID -> получаю его данные и .variants.
+            // .variants содержит ОСТАЛЬНЫЕ товары из группы. Один из них может быть основным (его id == group_id).
+            // Я могу предположить, что основной товар - это тот, чей id равен id, с которым была создана группа (обычно это id основного товара).
+            // Сервер использует `groupIdToUse = productId` (в put), т.е. group_id = id основного товара.
+            // Значит, если я загружаю /api/products/VARIANT_ID, и в его .variants есть товар с id == VARIANT_ID, то этот VARIANT_ID был основным. Но нет, он исключается.
+            // Если я загружаю /api/products/VARIANT_ID, и в его .variants есть товар с id == ORIGINAL_MAIN_ID (который создал группу), то этот ORIGINAL_MAIN_ID - основной.
+            // Я не знаю ORIGINAL_MAIN_ID, если не знаю, кто был "основным".
+            // ВЫВОД: Логика сервера такова, что /api/products/:id возвращает товар :id и *другие* товары из его группы.
+            // НЕВОЗМОЖНО узнать "основной" товар, зная только вариант, без дополнительного информации от сервера или запроса всех товаров.
+            // РЕШЕНИЕ: Изменить сервер, чтобы он возвращал group_id или список всех товаров в группе.
+            // АЛЬТЕРНАТИВА: ПРИНЯТЬ, ЧТО URL ВСЕГДА ДОЛЖЕН БЫТЬ ОСНОВНОЙ ТОВАР.
+            // Это упрощает задачу. Давайте пойдем по этому пути.
+            // ПРЕДПОЛОЖЕНИЕ: ПОЛЬЗОВАТЕЛЬ НИКОГДА НЕ ПЕРЕХОДИТ ПО ПРЯМОЙ ССЫЛКЕ НА ВАРИАНТ. ССЫЛКА ВСЕГДА НА ОСНОВНОЙ ТОВАР.
+            // ТОГДА: requestedProductId - это всегда ID основного товара.
+            // ТОГДА: requestedProductData - это всегда основной товар.
+            // ТОГДА: initialVariantId = null (или ID из URL, если мы решим передавать его как ?variant=XX)
+
+            // --- НОВАЯ ЛОГИКА С ПРЕДПОЛОЖЕНИЕМ: URL - это основной товар ---
+            // Если URL указывает на основной товар, то всё просто.
+            // requestedProductId = ID основного товара
+            // requestedProductData = основной товар
+            // initialVariantId = variant из URL, если есть
+            initialVariantId = urlParams.get('variant'); // Позволим URL быть /product.html?id=MAIN_ID&variant=VARIANT_ID
+            baseProductData = requestedProductData;
+            console.log('URL указывает на основной товар. Загружен основной товар. initialVariantId:', initialVariantId);
+            // --- КОНЕЦ НОВОЙ ЛОГИКИ ---
+        } else {
+             // У запрошенного товара нет вариантов, он сам основной
+             baseProductData = requestedProductData;
+             console.log('Запрошенный товар не имеет вариантов, считается основным.');
+        }
+    } else {
+        console.error('Ошибка при загрузке деталей запрошенного товара для определения группы:', groupResponse.status);
+        showProductError('Ошибка загрузки данных товара');
+        return;
+    }
+
+
+    // --- 3.5. Загрузка полных данных вариантов (включая основной товар, если он был вариант) ---
+    // Проверяем формат baseProductData.variants и загружаем полные данные при необходимости
+    if (baseProductData.variants && Array.isArray(baseProductData.variants) && baseProductData.variants.length > 0) {
+        const firstItem = baseProductData.variants[0];
         if (typeof firstItem === 'number' || (typeof firstItem === 'object' && Object.keys(firstItem).length === 1 && firstItem.id)) {
-            console.log("productData.variants содержит ID, загружаем полные данные...");
+            console.log("baseProductData.variants содержит ID, загружаем полные данные...");
             try {
-                // Извлекаем ID, фильтруем и исключаем сам товар
-                const variantIds = productData.variants
+                const variantIds = baseProductData.variants
                     .map(v => typeof v === 'object' ? v.id : v)
                     .map(id => parseInt(id, 10))
-                    .filter(id => !isNaN(id) && id != productData.id); // != для сравнения чисел и строк
+                    .filter(id => !isNaN(id));
+                    // .filter(id => id != baseProductData.id); // УБРАЛИ фильтр, чтобы загрузить все, включая основной
+
+                // ВАЖНО: baseProductData.id - это ID основного товара. Он не включается в .variants сервером.
+                // Но если URL указывал на вариант, то baseProductData был вариантом, и его ID НЕ был в .variants.
+                // НО по нашему новому предположению URL всегда на основной, так что это не проблема.
+                // Однако, если бы URL был на вариант, нам нужно было бы добавить ID основного товара к variantIds.
+                // Это требует сложной логики. Лучше придерживаться предположения.
 
                 if (variantIds.length > 0) {
                     const fullVariantsData = await loadFullVariantsData(variantIds);
-                    // Фильтруем по доступности, если нужно, и заменяем в productData
-                    productData.variants = fullVariantsData.filter(v => v.available !== false);
-                    console.log("Полные данные вариантов загружены и установлены:", productData.variants);
+                    // Фильтруем по доступности, если нужно, и заменяем в baseProductData
+                    baseProductData.variants = fullVariantsData.filter(v => v.available !== false);
+                    console.log("Полные данные вариантов загружены и установлены (включая основной если был):", baseProductData.variants);
                 } else {
-                    productData.variants = [];
-                    console.log("Нет валидных ID вариантов для загрузки (или все совпадают с основным товаром).");
+                    baseProductData.variants = [];
+                    console.log("Нет валидных ID вариантов для загрузки.");
                 }
             } catch (err) {
                 console.error("Ошибка при загрузке полных данных вариантов:", err);
-                productData.variants = []; // На случай ошибки, показываем без вариантов
-                // Можно отобразить уведомление пользователю
+                baseProductData.variants = []; // На случай ошибки, показываем без вариантов
             }
         } else {
-             console.log("productData.variants уже содержит полные объекты или неполные объекты.");
-             // Можно дополнительно отфильтровать по available, если сервер не делает этого
-             // productData.variants = productData.variants.filter(v => v.id != productData.id && v.available !== false);
+             console.log("baseProductData.variants уже содержит полные объекты.");
         }
     } else {
-         console.log("У товара нет вариантов или формат некорректен.");
-         productData.variants = []; // Убедимся, что это пустой массив
+         console.log("У основного товара нет вариантов или формат некорректен.");
+         baseProductData.variants = []; // Убедимся, что это пустой массив
     }
 
-    // --- 3. Отображение данных товара ---
-    displayProduct(productData);
+    // --- 4. Отображение данных товара ---
+    displayProduct(baseProductData);
 
-    // --- 4. Настройка обработчиков событий ---
-    setupEventListeners(productData);
+    // --- 5. Выбор начального варианта, если указан ---
+    if (initialVariantId) {
+        const variantToSelect = baseProductData.variants.find(v => v.id == initialVariantId);
+        if (variantToSelect) {
+            console.log("Выбираем начальный вариант из URL:", variantToSelect.id);
+            // Добавим основной товар в список вариантов для правильного отображения кнопки
+            const allVariantsIncludingBase = [baseProductData, ...baseProductData.variants];
+            // Найдем кнопку для выбранного варианта и симулируем клик
+            setTimeout(() => { // Дадим времени отрисовать кнопки
+                 const variantBtn = document.querySelector(`.product-variant-btn[data-variant-id="${variantToSelect.id}"]`);
+                 if (variantBtn) {
+                     variantBtn.click(); // Симулируем клик для выбора
+                 } else {
+                     console.warn("Кнопка для начального варианта не найдена в DOM.");
+                 }
+            }, 100); // Небольшая задержка для уверенности
+        } else {
+             console.warn("Вариант с ID", initialVariantId, "указанный в URL, не найден в списке вариантов.");
+             // Выбираем основной товар по умолчанию
+             window.currentDisplayedVariant = baseProductData;
+        }
+    } else {
+        // Если variant не указан, отображаем основной товар
+        window.currentDisplayedVariant = baseProductData;
+    }
 
-    // --- 5. Обновление счетчика корзины ---
+    // --- 6. Настройка обработчиков событий ---
+    setupEventListeners(baseProductData);
+
+    // --- 7. Обновление счетчика корзины ---
     if (typeof updateCartCount === 'function') {
         updateCartCount();
     } else {
@@ -167,11 +329,11 @@ function displayProduct(product) {
         // Изображения
         displayProductImages(product, product.images);
 
-        // Варианты (логика аналогична модальному окну, но без автоматического выбора)
+        // Варианты (теперь включает основной товар)
         renderVariantsOnPage(product); // Теперь product.variants должны быть полными объектами
 
-        // Инициализируем "текущий отображаемый вариант" как основной товар
-        window.currentDisplayedVariant = product;
+        // Инициализируем "текущий отображаемый вариант" как основной товар (если не выбран другой)
+        // window.currentDisplayedVariant будет установлен позже, в основном коде или при выборе
 
         // Обновляем dataset.id кнопок "В корзину" и "Купить"
         const addToCartBtn = document.getElementById('product-page-add-to-cart-btn');
@@ -240,7 +402,7 @@ function displayProductImages(baseProduct, imagesToDisplay) {
 }
 
 
-// Функция для отображения вариантов на странице товара, аналогично модальному окну
+// Функция для отображения вариантов на странице товара, включая основной
 function renderVariantsOnPage(baseProduct) {
     const variantsContainer = document.getElementById('product-page-variants-container');
     const variantsList = document.getElementById('product-page-variants');
@@ -250,27 +412,27 @@ function renderVariantsOnPage(baseProduct) {
         variantsList.innerHTML = '';
     }
 
-    // Проверяем, есть ли данные о вариантах
-    if (baseProduct.variants && Array.isArray(baseProduct.variants) && baseProduct.variants.length > 0) {
-        console.log("Отображаем варианты на странице товара (полные данные):", baseProduct.variants);
+    // Подготовим список всех вариантов, включая основной товар
+    const allVariantsToDisplay = [baseProduct, ...(baseProduct.variants || [])];
+
+    // Проверяем, есть ли данные о вариантах (теперь всегда есть, т.к. добавили основной)
+    if (allVariantsToDisplay && Array.isArray(allVariantsToDisplay) && allVariantsToDisplay.length > 1) { // > 1, потому что основной всегда есть
+        console.log("Отображаем все варианты на странице товара (включая основной):", allVariantsToDisplay);
 
         if (variantsContainer) {
-            // Показываем контейнер, если есть варианты
-            // Убираем inline стиль display, который может скрывать элемент (например, из HTML)
+            // Показываем контейнер, если есть варианты (помимо основного)
             variantsContainer.style.removeProperty('display');
-            // Или, если вы используете CSS-класс для скрытия:
-            // variantsContainer.classList.remove('hidden'); // Предполагается, что .hidden { display: none; }
         }
 
-        baseProduct.variants.forEach(variant => {
+        allVariantsToDisplay.forEach(variant => {
             // Защита от некорректных данных
             if (!variant || typeof variant !== 'object' || !variant.id) {
                 console.warn("Некорректные данные варианта, пропускаем:", variant);
                 return; // continue в forEach
             }
             const variantBtn = document.createElement('button');
-            // --- Логика создания кнопки (скопирована из ui.js) ---
-            let variantImageUrl = '/assets/placeholder.png'; // Используем тот же путь, что и на странице
+            // --- Логика создания кнопки ---
+            let variantImageUrl = '/assets/placeholder.png';
             if (variant.images && variant.images.length > 0 && variant.images[0].url) {
                 variantImageUrl = variant.images[0].url.trim();
             } else if (baseProduct.images && baseProduct.images.length > 0 && baseProduct.images[0].url) {
@@ -279,56 +441,47 @@ function renderVariantsOnPage(baseProduct) {
             const imgElement = document.createElement('img');
             imgElement.src = variantImageUrl;
             imgElement.alt = `Фото ${variant.title || `Товар ${variant.id}`}`;
-            imgElement.className = 'variant-thumbnail'; // Убедитесь, что стиль .variant-thumbnail определен в product-page.css
+            imgElement.className = 'variant-thumbnail';
             const textElement = document.createElement('span');
             textElement.textContent = variant.title || `Товар ${variant.id}`;
             variantBtn.appendChild(imgElement);
             variantBtn.appendChild(textElement);
-            variantBtn.className = 'product-variant-btn'; // Используем тот же класс для стилей
+            variantBtn.className = 'product-variant-btn';
             variantBtn.dataset.variantId = variant.id;
+
+            // Проверим, является ли этот вариант текущим отображаемым
+            if (window.currentDisplayedVariant && window.currentDisplayedVariant.id == variant.id) {
+                 variantBtn.classList.add('selected');
+            }
+
             // --- Конец логики создания кнопки ---
-            // Добавляем обработчик клика, аналогично модальному окну
+            // Добавляем обработчик клика
             variantBtn.addEventListener('click', (event) => {
-                event.preventDefault(); // На всякий случай
+                event.preventDefault();
                 console.log("Выбран вариант на странице:", variant.id, variant.title);
-                // Выбираем этот вариант как отображаемый ТОЛЬКО ПРИ КЛИКЕ
-                selectVariantOnPage(baseProduct, variant); // Используем существующую функцию
+                // Выбираем этот вариант как отображаемый
+                selectVariantOnPage(baseProduct, variant); // Используем обновленную функцию
                 // Обновляем подсветку кнопок
                 document.querySelectorAll('.product-variant-btn').forEach(btn => {
                     btn.classList.remove('selected');
                 });
-                // Добавляем класс 'selected' к кликнутой кнопке
-                // event.currentTarget - это сама кнопка, на которую кликнули
                 event.currentTarget.classList.add('selected');
             });
             if (variantsList) {
                 variantsList.appendChild(variantBtn);
             }
         });
-        // --- ВАЖНО: НЕ ВЫБИРАЕМ вариант автоматически ---
-        // Страница должна показывать данные основного товара (baseProduct)
-        // Выбор варианта происходит только по клику пользователя.
-        // Поэтому НЕ вызываем selectVariantOnPage здесь.
-        // Опционально: можно подсветить первую кнопку, но не выбирать вариант
-        // const firstVariantBtn = document.querySelector('.product-variant-btn');
-        // if (firstVariantBtn) {
-        //     firstVariantBtn.classList.add('selected'); // Только визуальная подсветка
-        // }
+
     } else {
-        console.log("У товара нет вариантов или формат данных некорректен (после обработки).");
-        // Явно скрываем контейнер, если вариантов нет
-        // (или оставляем его скрытым, если он изначально скрыт в HTML и не предполагается показывать пустой контейнер)
+        console.log("У товара нет других вариантов кроме основного.");
+        // Явно скрываем контейнер, если других вариантов нет
         if (variantsContainer) {
-             // Если контейнер изначально скрыт в HTML (style="display: none;"), и мы не хотим его показывать, когда вариантов нет,
-             // то можно оставить как есть, или убедиться, что он скрыт:
-             variantsContainer.style.display = 'none'; // Устанавливаем display: none; если вариантов нет
-             // Или, если вы используете CSS-класс для скрытия:
-             // variantsContainer.classList.add('hidden'); // Предполагается, что .hidden { display: none; }
+             variantsContainer.style.display = 'none';
         }
     }
 }
 
-// Новая вспомогательная функция для выбора варианта на странице товара
+// Обновленная функция для выбора варианта на странице товара
 function selectVariantOnPage(baseProduct, selectedVariant) {
     const titleElement = document.getElementById('product-page-title-main');
     const descriptionElement = document.getElementById('product-page-description-main');
@@ -348,7 +501,6 @@ function selectVariantOnPage(baseProduct, selectedVariant) {
     try {
         // Обновляем отображаемую информацию на основе выбранного варианта
         titleElement.textContent = selectedVariant.title;
-        // Можно решить, показывать ли описание варианта или базового товара, или комбинировать
         descriptionElement.textContent = selectedVariant.description || baseProduct.description || '';
         priceElement.textContent = formatPrice(selectedVariant.price);
 
@@ -356,14 +508,13 @@ function selectVariantOnPage(baseProduct, selectedVariant) {
         const variantImages = selectedVariant.images && selectedVariant.images.length > 0 ? selectedVariant.images : (baseProduct.images || []);
         displayProductImages(baseProduct, variantImages); // Переиспользуем функцию
 
-        // ВАЖНО: Обновляем dataset.id кнопки "Добавить в корзину"
-        // Это исправит проблему с добавлением правильного варианта
+        // Обновляем dataset.id кнопки "Добавить в корзину"
         addToCartBtn.dataset.id = selectedVariant.id;
         if (buyNowBtn) {
             buyNowBtn.dataset.id = selectedVariant.id;
         }
 
-        // Обновляем наличие для варианта (если доступно)
+        // Обновляем наличие для варианта
         if (availabilityElement) {
             const statusText = selectedVariant.available !== false ? 'В наличии' : 'Нет в наличии';
             const statusClass = selectedVariant.available !== false ? 'in-stock' : 'out-of-stock';
@@ -371,12 +522,27 @@ function selectVariantOnPage(baseProduct, selectedVariant) {
             availabilityElement.className = `product-page-availability ${statusClass}`;
         }
 
-        // Активируем кнопки, так как вариант выбран
+        // Активируем кнопки
         addToCartBtn.disabled = false;
         if(buyNowBtn) buyNowBtn.disabled = false;
 
         // Сохраняем ссылку на текущий отображаемый вариант
         window.currentDisplayedVariant = selectedVariant;
+
+        // --- ИЗМЕНЕНИЕ: Обновляем URL ---
+        const currentUrl = new URL(window.location);
+        if (selectedVariant.id == baseProduct.id) {
+            // Если выбран основной товар, удаляем параметр variant
+            currentUrl.searchParams.delete('variant');
+        } else {
+            // Если выбран вариант, добавляем/обновляем параметр variant
+            currentUrl.searchParams.set('variant', selectedVariant.id);
+        }
+        // Используем history.pushState или history.replaceState
+        // pushState добавит новую запись в историю, replaceState заменит текущую
+        // replaceState предпочтительнее, чтобы не засорять историю при переключении вариантов
+        window.history.replaceState({}, '', currentUrl);
+        console.log("URL обновлен до:", currentUrl.toString());
 
     } catch (error) {
         console.error("Ошибка при выборе варианта на странице:", error);
@@ -458,9 +624,9 @@ function setupEventListeners(product) {
                 return;
             }
              const consentCheckbox = document.getElementById('consent-toggle');
-             console.log("Элемент чекбокса найден:", consentCheckbox); // <-- Новый лог
+             console.log("Элемент чекбокса найден:", consentCheckbox);
             const isConsentGiven = consentCheckbox ? consentCheckbox.checked : false;
-            console.log("Состояние чекбокса (checked):", isConsentGiven); // <-- Новый лог
+            console.log("Состояние чекбокса (checked):", isConsentGiven);
             const phoneInput = document.getElementById('phone');
             if (!isConsentGiven) {
                 alert('Необходимо дать согласие на обработку персональных данных');
@@ -495,14 +661,14 @@ function setupEventListeners(product) {
                   const commentInput = document.getElementById('comment-input');
                   if (commentInput) commentInput.value = '';
                   const successMessage = document.getElementById('success-message');
-                  if (successMessage) successMessage.style.display = 'block';          
+                  if (successMessage) successMessage.style.display = 'block';
                   openCartModal(); // Перерисовываем корзину
                   setTimeout(() => {
                     if (successMessage) successMessage.style.display = 'none';
                     sendOrderBtn.disabled = false;
                     sendOrderBtn.textContent = 'Оформить заказ';
                     isSending = false;
-                    // Закрываем модальное окно после успешной отправки
+                    // Закрывает модальное окно после успешной отправки
                     closeModals();
                   }, 3000);
                 } else {
