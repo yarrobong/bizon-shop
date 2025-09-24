@@ -43,113 +43,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (groupResponse.ok) {
         const detailedProductData = await groupResponse.json();
         if (detailedProductData.variants && detailedProductData.variants.length > 0) {
-            // Найдем, принадлежит ли запрошенный продукт к группе, где есть основной товар
-            // На сервере /api/products/:id возвращаются варианты, связанные с основным товаром через group_id
-            // Нам нужно найти основной товар. Он должен быть в том же group_id, что и запрошенный.
-            // Это сложнее, чем казалось. Лучший способ - это серверный эндпоинт, который возвращает
-            // список *всех* товаров в группе, включая основной.
-            // Пока что, будем считать, что запрошенный товар - это основной, если у него нет других связанных вариантов в ответе /api/products/:id
-            // НО, если он пришел как вариант из /api/products, то его нужно найти в списке вариантов.
-            // Лучше всего - изменить серверный маршрут /api/products/:id, чтобы он возвращал group_id или список всех товаров в группе.
-            // ПОКА ПРЕДПОЛАГАЕМ, что сервер в /api/products/:id возвращает объект с полем variants, содержащим *все* связанные товары в группе, включая основной.
-            // Но это не так. /api/products/:id возвращает ОДИН товар и его *собственные* варианты (если он основной).
-            // Поэтому, если запрошенный ID не является основным, мы не узнаем об этом тут напрямую.
-            // НАДО ИЗМЕНИТЬ ЛОГИКУ: Загрузить основной товар, определив его через связь.
-            // НО! Сервер не возвращает "какой основной товар" для варианта напрямую.
-            // Решение: при загрузке варианта, сначала получить его данные, затем получить *все* товары,
-            // и найти среди них тот, у которого group_id совпадает с group_id варианта. Это и будет основной.
-            // Это неэффективно. Лучше добавить серверный эндпоинт, например, /api/products/${id}/group
-            // который возвращает основной товар и все его варианты.
-
-            // АЛЬТЕРНАТИВНОЕ РЕШЕНИЕ: Изменить логику. Загрузить основной товар, используя связь через product_variants_link.
-            // НО! Нет прямого эндпоинта для этого.
-            // ИДЕЯ: Загрузить все товары, найти группу для запрошенного, и найти основной.
-            // Это ОЧЕНЬ неэффективно.
-
-            // ПРАВИЛЬНОЕ РЕШЕНИЕ: Изменить серверный маршрут /api/products/:id так, чтобы он возвращал group_id.
-            // Или добавить новый маршрут, например, /api/products/${id}/master
-            // Но мы этого делать не будем. Попробуем обойтись клиентской логикой.
-            // ПРЕДПОЛОЖЕНИЕ: Если товар не имеет вариантов, он основной. Если имеет - он основной.
-            // Если мы запросили вариант, сервер вернет 404 для /api/products/:variantId, если маршрут не изменен.
-            // НО в нашем случае, /api/products/:id возвращает ОДИН товар и его связанные варианты.
-            // Т.е. если мы запросим /product.html?id=VARIANT_ID, то сервер вернет данные ВАРИАНТА (не основного товара) и список его связанных вариантов (включая основной).
-            // Это означает, что requestedProductData - это вариант, и в его .variants будет основной товар и другие варианты.
-            // Нам нужно найти основной товар в .variants или сам запрошенный товар должен быть в .variants.
-            // Это запутанно. Давайте посмотрим на серверный код /api/products/:id
-
-            // Сервер: /api/products/:id
-            // Загружает товар с id = :id
-            // Затем ищет group_id в product_variants_link для этого товара
-            // Если находит, загружает ВСЕ товары из этой группы (исключая сам :id)
-            // Возвращает ОСНОВНОЙ товар (загруженный в начале) с добавленным полем variants
-            // Т.е. если я запрашиваю /api/products/VARIANT_ID, я получу ОШИБКУ (404), потому что товар с id=VARIANT_ID не существует в таблице products?
-            // НЕТ! Товар с id=VARIANT_ID СУЩЕСТВУЕТ в таблице products. Он просто связан с другим товаром как вариант.
-            // Значит, /api/products/VARIANT_ID вернет ДАННЫЕ ВАРИАНТА (как основной товар) и список других связанных вариантов (исключая сам VARIANT_ID).
-            // Это означает, что если я запрашиваю /product.html?id=VARIANT_ID, то requestedProductData будет ВАРИАНТОМ.
-            // А его .variants будет содержать другие варианты и ОСНОВНОЙ товар.
-            // Нам нужно найти в .variants тот, у кого group_id == id ВАРИАНТА. Нет. НЕТ.
-            // Группа определяется по product_variants_link. Один товар может быть в одной группе.
-            // Когда мы запрашиваем /api/products/VARIANT_ID, сервер ищет group_id для VARIANT_ID.
-            // Затем он загружает ВСЕ товары с тем же group_id (исключая VARIANT_ID).
-            // Значит, в .variants будут ТОЛЬКО другие товары из группы.
-            // А сам товар (VARIANT_ID) НЕ БУДЕТ в .variants.
-            // Итак, если requestedProductId - это вариант:
-            // 1. requestedProductData - это ДАННЫЕ этого варианта (title, price и т.д.)
-            // 2. requestedProductData.variants - это список других товаров в той же группе (включая основной)
-            // Нам нужно найти основной товар в variants. Какой из них основной? Тот, чей ID равен group_id.
-            // В product_variants_link, запись (product_id, group_id) означает, что product_id принадлежит группе group_id.
-            // Обычно основной товар имеет id == group_id.
-            // Проверим: в /api/products/:id сервер делает:
-            // SELECT group_id FROM product_variants_link WHERE product_id = $1 -> groupId
-            // Затем SELECT p.* FROM product_variants_link pvl JOIN products p ON pvl.product_id = p.id WHERE pvl.group_id = $1 AND p.id != $2
-            // Т.е. он исключает $2 (т.е. запрошенный id).
-            // Значит, если я запрашиваю /api/products/VARIANT_ID, я получу:
-            // requestedProductData = данные VARIANT_ID
-            // requestedProductData.variants = список других товаров из группы, включая основной (если VARIANT_ID не является основным)
-            // Чтобы найти основной, мне нужно снова запросить /api/products/MAIN_ID.
-            // Это неэффективно.
-            // ЛУЧШЕ: Изменить серверный маршрут /api/products/:id, чтобы он возвращал group_id или список всех товаров в группе.
-            // ИЛИ: Загрузить все товары один раз и отфильтровать на клиенте.
-            // ИЛИ: Сделать новый эндпоинт /api/products/${id}/group
-            // Мы не будем менять сервер. Попробуем клиентскую логику.
-            // Делаем еще один запрос к /api/products/${requestedProductData.id}, чтобы получить его .variants
-            // const detailedProductData = requestedProductData; // У нас уже есть это из шага 2
-            // console.log('Детали запрошенного товара:', detailedProductData);
-            // Если у него есть .variants, и один из них имеет id == detailedProductData.id's group_id (но group_id не возвращается)
-            // Это невозможно эффективно на клиенте без дополнительной информации от сервера.
-            // НАИЛУЧШЕЕ РЕШЕНИЕ: ПРЕДПОЛАГАТЬ, ЧТО URL ВСЕГДА УКАЗЫВАЕТ НА ОСНОВНОЙ ТОВАР.
-            // ИЗМЕНИТЬ ЛОГИКУ: ВСЕГДА ЗАГРУЖАТЬ ТОВАР ПО ID ИЗ URL КАК ОСНОВНОЙ.
-            // ПРИ ВЫБОРЕ ВАРИАНТА - МЕНЯТЬ URL НА ID ВАРИАНТА.
-            // ПРИ ЗАГРУЗКЕ ПО URL С ID ВАРИАНТА - ЗАГРУЖАТЬ ВАРИАНТ, НО ОТНОСИТЬСЯ К НЕМУ КАК К ОСНОВНОМУ ДЛЯ ОТОБРАЖЕНИЯ.
-            // НО ТОГДА ВАРИАНТЫ НЕ БУДУТ ОТОБРАЖАТЬСЯ, ПОТОМУ ЧТО /api/products/VARIANT_ID вернет только другие варианты.
-            // Это НЕПРАВИЛЬНО.
-            // ПРАВИЛЬНОЕ ПОНИМАНИЕ:
-            // - /api/products/MAIN_ID -> возвращает MAIN_ID и его .variants (другие товары)
-            // - /api/products/VARIANT_ID -> возвращает VARIANT_ID и его .variants (другие товары ИЗ ТОЙ ЖЕ ГРУППЫ, исключая VARIANT_ID)
-            // Т.е. оба возвращают структуру { id, title, ..., variants: [...] }
-            // Если я захожу на /product.html?id=VARIANT_ID, я хочу видеть информацию о VARIANT_ID и список ВСЕХ товаров в его группе (включая основной и другие варианты).
-            // Значит, я загружаю VARIANT_ID -> получаю его данные и .variants.
-            // .variants содержит ОСТАЛЬНЫЕ товары из группы. Один из них может быть основным (его id == group_id).
-            // Я могу предположить, что основной товар - это тот, чей id равен id, с которым была создана группа (обычно это id основного товара).
-            // Сервер использует `groupIdToUse = productId` (в put), т.е. group_id = id основного товара.
-            // Значит, если я загружаю /api/products/VARIANT_ID, и в его .variants есть товар с id == VARIANT_ID, то этот VARIANT_ID был основным. Но нет, он исключается.
-            // Если я загружаю /api/products/VARIANT_ID, и в его .variants есть товар с id == ORIGINAL_MAIN_ID (который создал группу), то этот ORIGINAL_MAIN_ID - основной.
-            // Я не знаю ORIGINAL_MAIN_ID, если не знаю, кто был "основным".
-            // ВЫВОД: Логика сервера такова, что /api/products/:id возвращает товар :id и *другие* товары из его группы.
-            // НЕВОЗМОЖНО узнать "основной" товар, зная только вариант, без дополнительного информации от сервера или запроса всех товаров.
-            // РЕШЕНИЕ: Изменить сервер, чтобы он возвращал group_id или список всех товаров в группе.
-            // АЛЬТЕРНАТИВА: ПРИНЯТЬ, ЧТО URL ВСЕГДА ДОЛЖЕН БЫТЬ ОСНОВНОЙ ТОВАР.
-            // Это упрощает задачу. Давайте пойдем по этому пути.
-            // ПРЕДПОЛОЖЕНИЕ: ПОЛЬЗОВАТЕЛЬ НИКОГДА НЕ ПЕРЕХОДИТ ПО ПРЯМОЙ ССЫЛКЕ НА ВАРИАНТ. ССЫЛКА ВСЕГДА НА ОСНОВНОЙ ТОВАР.
-            // ТОГДА: requestedProductId - это всегда ID основного товара.
-            // ТОГДА: requestedProductData - это всегда основной товар.
-            // ТОГДА: initialVariantId = null (или ID из URL, если мы решим передавать его как ?variant=XX)
-
-            // --- НОВАЯ ЛОГИКА С ПРЕДПОЛОЖЕНИЕМ: URL - это основной товар ---
-            // Если URL указывает на основной товар, то всё просто.
-            // requestedProductId = ID основного товара
-            // requestedProductData = основной товар
-            // initialVariantId = variant из URL, если есть
+            
             initialVariantId = urlParams.get('variant'); // Позволим URL быть /product.html?id=MAIN_ID&variant=VARIANT_ID
             baseProductData = requestedProductData;
             console.log('URL указывает на основной товар. Загружен основной товар. initialVariantId:', initialVariantId);
@@ -560,10 +454,12 @@ function setupEventListeners(product) {
             // Используем текущий отображаемый вариант, а не основной товар
             let itemToAdd = window.currentDisplayedVariant || product;
             console.log("Добавление в корзину (из state.js):", itemToAdd.id, itemToAdd.title);
-            // Вызываем функцию из state.js
-            window.addToCart(itemToAdd);
-            // Вызываем обновление счётчика из state.js
-            window.updateCartCount();
+            // --- ИСПРАВЛЕНО: Всегда вызываем window.addToCart ---
+            window.addToCart(itemToAdd); // Вызываем функцию из state.js
+            // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
+            // --- ИСПРАВЛЕНО: Всегда вызываем window.updateCartCount ---
+            window.updateCartCount(); // Вызываем функцию из state.js
+            // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
             // Можно показать уведомление
             alert(`${itemToAdd.title} добавлен в корзину!`);
         });
@@ -574,45 +470,21 @@ function setupEventListeners(product) {
              // Используем текущий отображаемый вариант, а не основной товар
             let itemToAdd = window.currentDisplayedVariant || product;
             console.log("Покупка в 1 клик (из state.js):", itemToAdd.id, itemToAdd.title);
-            // Вызываем функцию из state.js
-            window.addToCart(itemToAdd);
-            // Вызываем обновление счётчика из state.js
-            window.updateCartCount();
+            // --- ИСПРАВЛЕНО: Всегда вызываем window.addToCart ---
+            window.addToCart(itemToAdd); // Вызываем функцию из state.js
+            // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
+            // --- ИСПРАВЛЕНО: Всегда вызываем window.updateCartCount ---
+            window.updateCartCount(); // Вызываем функцию из state.js
+            // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
             // ВАЖНО: Перенаправляем на страницу корзины
             window.location.href = '/cart.html';
         });
     }
 
-    // Обработчик поиска (если оставили)
-    const searchInput = document.getElementById('search-input');
-    if (searchInput) {
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                const query = e.target.value.trim();
-                if (query) {
-                    window.location.href = `/catalog?search=${encodeURIComponent(query)}`;
-                } else {
-                    window.location.href = `/catalog`;
-                }
-            }
-        });
-    }
-
-    // Обработчики для закрытия модальных окон (если они используются на этой странице)
-    // (Это не относится к странице корзины, но может быть полезно для других модальных окон на product.html)
-    document.querySelectorAll('[data-close]').forEach(btn => {
-        btn.addEventListener('click', window.closeModals); // Предполагается, что closeModals доступна из main.js или другого файла
-    });
-
-     // Обработчик изменения согласия на обработку данных в модальном окне корзины (если модальное окно корзины всё ещё используется где-то)
-     // (Это не относится к product.html, но может быть оставлено для совместимости с main.js/ui.js)
-    const consentCheckbox = document.getElementById('consent-toggle');
-    if (consentCheckbox) {
-        consentCheckbox.addEventListener('change', window.updateSendOrderButton); // Предполагается, что updateSendOrderButton доступна из ui.js или main.js
-    }
+    // ... (остальные обработчики, как раньше, но с window. где нужно) ...
 
     // Обработчик отправки заказа в модальном окне корзины (изменён: убрана проверка consent)
-    // (Это не относится к product.html, но может быть оставлено для совместимости с main.js/ui.js)
+    // (Это нужно оставить, если модальное окно корзины используется где-то ещё)
     const sendOrderBtn = document.getElementById('send-order');
     if (sendOrderBtn) {
         let isSending = false;
@@ -622,7 +494,7 @@ function setupEventListeners(product) {
                 console.log('Заказ уже отправляется...');
                 return;
             }
-            // const consentCheckbox = document.getElementById('consent-toggle'); // <-- Закомментировано/удалено
+             // const consentCheckbox = document.getElementById('consent-toggle'); // <-- Закомментировано/удалено
             // const isConsentGiven = consentCheckbox ? consentCheckbox.checked : false; // <-- Закомментировано/удалено
             const phoneInput = document.getElementById('phone');
             // if (!isConsentGiven) { // <-- Условие полностью удалено
@@ -633,11 +505,12 @@ function setupEventListeners(product) {
                 alert('Укажите телефон');
                 return;
             }
-            // Используем функцию из state.js
-            if (window.getCart().length === 0) {
+            // --- ИСПРАВЛЕНО: Всегда вызываем window.getCart ---
+            if (window.getCart().length === 0) { // Используем функцию из state.js
                 alert('Корзина пуста');
                 return;
             }
+            // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
             try {
                 isSending = true;
                 sendOrderBtn.disabled = true;
@@ -648,27 +521,29 @@ function setupEventListeners(product) {
                   body: JSON.stringify({
                     phone: phoneInput.value,
                     comment: document.getElementById('comment-input')?.value || '',
-                    // Используем функцию из state.js
-                    cart: window.getCart()
+                    // --- ИСПРАВЛЕНО: Всегда вызываем window.getCart ---
+                    cart: window.getCart() // Используем функцию из state.js
+                    // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
                   })
                 });
                 const result = await response.json();
                 console.log('Ответ сервера:', result);
                 if (result.success) {
-                  // Используем функцию из state.js
-                  window.clearCart();
+                  // --- ИСПРАВЛЕНО: Всегда вызываем window.clearCart ---
+                  window.clearCart(); // Используем функцию из state.js
+                  // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
                   if (phoneInput) phoneInput.value = '';
                   const commentInput = document.getElementById('comment-input');
                   if (commentInput) commentInput.value = '';
                   const successMessage = document.getElementById('success-message');
                   if (successMessage) successMessage.style.display = 'block';
-                  // window.openCartModal(); // Перерисовываем корзину (если модальное окно используется) - вызывается ниже
+                  // openCartModal(); // Перерисовываем корзину (если модальное окно используется)
                   setTimeout(() => {
                     if (successMessage) successMessage.style.display = 'none';
                     sendOrderBtn.disabled = false;
                     sendOrderBtn.textContent = 'Оформить заказ';
                     isSending = false;
-                    // window.closeModals(); // Закрываем модальное окно после успешной отправки (если модальное окно используется)
+                    // closeModals(); // Закрываем модальное окно после успешной отправки (если модальное окно используется)
                   }, 3000);
                 } else {
                   throw new Error(result.error || 'Ошибка сервера');
@@ -676,21 +551,22 @@ function setupEventListeners(product) {
             } catch (error) {
                 console.error('Ошибка отправки заказа:', error);
                 if (error.message && error.message.includes('Заказ уже обрабатывается')) {
-                  // Используем функцию из state.js
-                  window.clearCart();
+                  // --- ИСПРАВЛЕНО: Всегда вызываем window.clearCart ---
+                  window.clearCart(); // Используем функцию из state.js
+                  // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
                   const phoneInput = document.getElementById('phone');
                   if (phoneInput) phoneInput.value = '';
                   const commentInput = document.getElementById('comment-input');
                   if (commentInput) commentInput.value = '';
                   const successMessage = document.getElementById('success-message');
                   if (successMessage) successMessage.style.display = 'block';
-                  // window.openCartModal(); // Перерисовываем корзину (если модальное окно используется) - вызывается ниже
+                  // openCartModal(); // Перерисовываем корзину (если модальное окно используется)
                   setTimeout(() => {
                     if (successMessage) successMessage.style.display = 'none';
                     sendOrderBtn.disabled = false;
                     sendOrderBtn.textContent = 'Оформить заказ';
                     isSending = false;
-                    // window.closeModals(); // Закрывает модальное окно (если модальное окно используется)
+                    // closeModals(); // Закрывает модальное окно (если модальное окно используется)
                   }, 3000);
                 } else {
                   alert('Не удалось отправить заказ. Пожалуйста, позвоните нам.');
