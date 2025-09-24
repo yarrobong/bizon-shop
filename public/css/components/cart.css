@@ -68,57 +68,79 @@ body.modal-open {
   width: 100%;
   height: 100%;
 }
+
+/* === ИЗМЕНЕННЫЙ МАКЕТ ДЛЯ СТРАНИЦЫ КОРЗИНЫ === */
 .modal-content {
-  /* Уже есть overflow: hidden, но добавим явно */
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 200px); /* Учитываем высоту header и footer */
+  padding: 2rem 1.5rem; /* Внутренние отступы */
+  gap: 2rem; /* Отступ между заголовком и основным контентом */
+}
+
+.modal-header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.modal-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* Контейнер для двух колонок */
+.cart-main-layout {
+  display: flex;
+  gap: 2rem; /* Отступ между колонками */
+  flex: 1; /* Занимает оставшееся место */
+  min-height: 0; /* Позволяет дочерним элементам с overflow сжиматься */
+}
+
+/* Левая колонка - товары */
+.cart-items-column {
+  flex: 2; /* Занимает 2/3 ширины (или другое соотношение по желанию) */
   display: flex;
   flex-direction: column;
 }
-/* === CART MODAL CONTENT === */
+
 #cart-items {
   padding: 0;
   margin: 0;
   list-style: none;
-  overflow-y: auto;
-  max-height: 400px;
-  scrollbar-width: thin;
+  overflow-y: auto; /* Прокрутка, если товаров много */
+  flex: 1; /* Растягивается на доступное место */
+  min-height: 0; /* Позволяет сжиматься при прокрутке */
+  background: rgba(255, 255, 255, 0.05); /* Лёгкий фон */
+  border-radius: var(--radius-md);
+  padding: 1rem;
 }
 
 #cart-items .cart-item {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1rem 0;
 }
 
 #cart-items .cart-item:last-child {
   border-bottom: none;
 }
 
-/* Разрешаем скролл для контента модального окна */
-#cart-items,
-.product-modal-body {
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch; /* Для плавной прокрутки на iOS */
-}
-/* Скрываем полосу прокрутки для основного body */
-body.modal-open::-webkit-scrollbar {
-  display: none;
+/* Правая колонка - оформление заказа */
+.checkout-column {
+  flex: 1; /* Занимает 1/3 ширины (или другое соотношение по желанию) */
+  display: flex;
+  flex-direction: column;
 }
 
-body.modal-open {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-body {
-  scroll-snap-type: y mandatory;
-}
-
-
+/* === СТИЛИ ДЛЯ ЭЛЕМЕНТОВ ТОВАРА === */
 .cart-item {
   display: flex;
   gap: 1rem;
   padding: 1rem;
   background: rgba(255, 255, 255, 0.08);
   border-radius: 0.75rem;
-  margin: 0.75rem;
+  margin: 0.75rem 0; /* Отступы сверху и снизу */
   align-items: center;
   transition: background 0.2s ease;
 }
@@ -166,6 +188,7 @@ body {
   border-radius: 9999px;
   padding: 0.125rem 0.5rem;
   width: fit-content;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .cart-quantity button {
@@ -204,7 +227,7 @@ body {
 
 .total-row {
   padding: 1.25rem 1rem;
-  margin: 0;
+  margin: 1rem 0 0 0; /* Отступ сверху */
   border-top: 1px solid rgba(255, 255, 255, 0.15);
   display: flex;
   justify-content: space-between;
@@ -212,16 +235,27 @@ body {
   font-weight: 600;
   color: white;
   background: rgba(255, 255, 255, 0.05);
-  
+  border-radius: 0.75rem;
+  align-self: stretch; /* Растягивается на ширину контейнера */
 }
 
-/* === MODAL FOOTER (for checkout) === */
+/* === СТИЛИ ДЛЯ ФОРМЫ ОФОРМЛЕНИЯ (ранее .modal-footer) === */
 .modal-footer {
-  padding: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
-  gap: 1rem; /* Добавляем вертикальные отступы между элементами */
+  gap: 1rem; /* Отступы между элементами */
+  background: rgba(255, 255, 255, 0.05); /* Лёгкий фон */
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  /* Убираем border-top, так как теперь это отдельная колонка */
+}
+
+.modal-footer h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .modal-footer input,
@@ -236,7 +270,7 @@ body {
 }
 
 .modal-footer textarea {
-  resize: none;
+  resize: vertical; /* Только вертикальное изменение размера */
   min-height: 80px;
 }
 
@@ -250,6 +284,7 @@ body {
   border-radius: 0.75rem;
   cursor: pointer;
   transition: all 0.2s ease;
+  margin-top: 1rem; /* Отступ сверху перед кнопкой */
 }
 
 /* Ховер эффект */
@@ -276,7 +311,7 @@ body {
   display: flex;
   align-items: center;
   gap: 15px;
-  margin: 20px 0;
+  margin: 1rem 0; /* Отступы сверху и снизу */
   padding: 15px;
   background: rgba(15, 23, 42, 0.5);
   border-radius: 12px;
@@ -352,35 +387,27 @@ body {
   border-bottom: 1px solid #59DEFA;
 }
 
-/* Адаптивность */
-@media (max-width: 768px) {
-  .consent-container {
-    flex-direction: row;
-    gap: 12px;
-    padding: 12px;
-  }
-  
-  .consent-text {
-    font-size: 0.9rem;
-  }
-  
-  .consent-toggle {
-    width: 45px;
-    height: 22px;
-  }
-  
-  .consent-slider:before {
-    height: 16px;
-    width: 16px;
-    left: 3px;
-    bottom: 3px;
-  }
-  
-  .consent-checkbox:checked + .consent-slider:before {
-    transform: translate(28px, -50%);
-  }
+/* === РАЗРЕШАЕМ СКРОЛЛ ДЛЯ КОЛОНКИ С ТОВАРАМИ === */
+.cart-items-column {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* Для плавной прокрутки на iOS */
 }
 
+/* Скрываем полосу прокрутки для основного body */
+body.modal-open::-webkit-scrollbar {
+  display: none;
+}
+
+body.modal-open {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+body {
+  scroll-snap-type: y mandatory;
+}
+
+/* :root и .tags - оставляем без изменений, они могут быть использованы глобально */
 :root {
     /* Цвета фона */
     --bg-start: #e7ebf4ff;
@@ -480,5 +507,53 @@ body {
   .tags {
     /* Если нужны специфические стили для планшетов, добавьте их здесь */
     /* В противном случае, используются стили по умолчанию */
+  }
+}
+
+/* === АДАПТИВНОСТЬ ДЛЯ НОВОГО МАКЕТА КОРЗИНЫ === */
+@media (max-width: 768px) {
+  .cart-main-layout {
+    flex-direction: column; /* На мобильных устройствах колонки становятся рядами */
+  }
+
+  .cart-items-column,
+  .checkout-column {
+    flex: none; /* Сбрасываем flex-grow */
+    width: 100%; /* Занимают всю ширину */
+  }
+
+  .modal-content {
+    padding: 1rem; /* Уменьшаем отступы на мобильных */
+    gap: 1rem; /* Уменьшаем отступ между заголовком и контентом */
+  }
+
+  .modal-footer {
+    padding: 1rem; /* Уменьшаем отступы внутри формы */
+  }
+
+  .consent-container {
+    flex-direction: row;
+    gap: 12px;
+    padding: 12px;
+  }
+  
+  .consent-text {
+    font-size: 0.9rem;
+  }
+  
+  .consent-toggle {
+    width: 45px;
+    height: 22px;
+  }
+  
+  .consent-slider:before {
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+  }
+  
+  .consent-checkbox:checked + .consent-slider:before {
+    transform: translate(28px, -50%);
   }
 }
