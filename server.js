@@ -1462,7 +1462,7 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
       slug: productRow.slug
     };
 
-    // --- ЗАГРУЗКА ВАРИАНТОВ ---
+    // Загрузка вариантов
     let variants = [];
     const groupResult = await pool.query(
       'SELECT group_id FROM product_variants_link WHERE product_id = $1',
@@ -1497,11 +1497,19 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
       variants = variantsResult.rows.map(row => {
         let variantImages = [];
         if (row.images_json) {
-          try {
-            const parsed = JSON.parse(row.images_json);
-            variantImages = Array.isArray(parsed) ? parsed : [];
-          } catch (e) {
-            console.error(`Ошибка парсинга images_json для варианта ${row.id}:`, e);
+          if (typeof row.images_json === 'string') {
+            try {
+              const parsed = JSON.parse(row.images_json);
+              variantImages = Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+              console.error(`Ошибка парсинга images_json для варианта ${row.id}:`, e);
+              variantImages = [];
+            }
+          } else if (Array.isArray(row.images_json)) {
+            variantImages = row.images_json;
+          } else if (typeof row.images_json === 'object') {
+            variantImages = [row.images_json];
+          } else {
             variantImages = [];
           }
         }
@@ -1523,7 +1531,6 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
         };
       });
     }
-    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
     product.variants = variants;
 
