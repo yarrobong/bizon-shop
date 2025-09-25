@@ -194,13 +194,11 @@ function displayProduct(product) {
 
         // Обновление навигационной цепочки
         const breadcrumbCategory = document.getElementById('breadcrumb-category');
-        const breadcrumbProductTitle = document.getElementById('breadcrumb-product-title');
+        
         if (breadcrumbCategory) {
             breadcrumbCategory.innerHTML = `<a href="/catalog?category=${encodeURIComponent(product.category || '')}">${product.category || 'Категория'}</a>`;
         }
-        if (breadcrumbProductTitle) {
-            breadcrumbProductTitle.textContent = product.title;
-        }
+        
 
         // Основная информация
         const titleElement = document.getElementById('product-page-title-main');
