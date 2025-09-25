@@ -85,6 +85,8 @@
     }
   }
 
+  
+
   // --- Функция для создания карточки аттракциона с галереей ---
   function createAttractionCard(attraction) {
     // Извлекаем спецификации из объекта
@@ -275,14 +277,13 @@
 
       if (attractionData) {
         // Находим кнопку "В корзину" внутри этой карточки
-        const cartBtn = card.querySelector('.btn-cart');
-        if (cartBtn) {
-          cartBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Предотвращаем всплытие клика
-            addToCart(attractionData);
-            updateCartCount();
-          });
-        }
+        // Добавляем обработчик для кнопки корзины, если она есть (альтернативный способ, если не в main.js)
+  const cartBtn = document.getElementById('cart-btn'); // <-- Опционально, если нужно здесь
+  if (cartBtn) {
+  cartBtn.addEventListener('click', () => {
+       window.location.href = '/cart.html'; // <-- Перенаправление
+     });
+   }
 
         // Настройка галереи для этой карточки
         // Получаем массив изображений для этой карточки

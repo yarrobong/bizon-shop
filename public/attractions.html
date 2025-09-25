@@ -117,34 +117,6 @@
   </div>
 </main>
 
-  <!-- Модальное окно: Корзина -->
-  <div id="cart-modal" class="modal" role="dialog" aria-labelledby="cart-modal-title" aria-hidden="true">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="cart-modal-title" class="modal-title">Корзина</h3>
-        <button class="modal-close" data-close="cart" aria-label="Закрыть">&times;</button>
-      </div>
-      <div class="modal-body" id="cart-items">
-        <div class="empty">Ваша корзина пуста</div>
-      </div>
-      <div class="modal-footer">
-        <label for="phone">Ваш номер телефона*</label>
-            <input type="text" class="phone_mask" id="phone" placeholder="+7 (___) ___-__-__" required>
-            <div class="error-message" id="phoneError"></div>
-
-        <label for="comment-input" class="visually-hidden">Комментарий к заказу</label>
-        <textarea id="comment-input" placeholder="Комментарий к заказу"></textarea>
-        <div class="consent-container">
-  <div class="consent-toggle">
-    <input type="checkbox" id="consent-toggle" class="consent-checkbox">
-    <label for="consent-toggle" class="consent-slider"></label>
-  </div>
-  <p class="consent-text">
-    Я даю согласие на обработку персональных данных.
-    <a href="/privacy.html">Подробнее</a>
-  </p>
-</div>
-
         <button id="send-order">Оформить заказ</button>
 
         <div id="success-message" class="success-message" role="alert" aria-live="assertive">
