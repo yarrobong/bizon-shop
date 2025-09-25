@@ -1397,7 +1397,7 @@ app.post('/api/products/bulk', async (req, res) => {
   }
 });
 
-// === API: Получить товар по slug (все поля) ===
+// === API: Получить товар по slug (только публичные поля) ===
 app.get('/api/product-by-slug/:slug', async (req, res) => {
   try {
     const slug = req.params.slug;
@@ -1429,19 +1429,11 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
     // Обработка изображений
     let productImages = [];
     if (productRow.images_json) {
-      if (typeof productRow.images_json === 'string') {
-        try {
-          const parsed = JSON.parse(productRow.images_json);
-          productImages = Array.isArray(parsed) ? parsed : [];
-        } catch (e) {
-          console.error(`Ошибка парсинга images_json для товара ${productRow.id}:`, e);
-          productImages = [];
-        }
-      } else if (Array.isArray(productRow.images_json)) {
-        productImages = productRow.images_json;
-      } else if (typeof productRow.images_json === 'object') {
-        productImages = [productRow.images_json];
-      } else {
+      try {
+        const parsed = JSON.parse(productRow.images_json);
+        productImages = Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        console.error(`Ошибка парсинга images_json для товара ${productRow.id}:`, e);
         productImages = [];
       }
     }
@@ -1462,7 +1454,7 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
       slug: productRow.slug
     };
 
-    // Загрузка вариантов
+    // --- ЗАГРУЗКА ВАРИАНТОВ ---
     let variants = [];
     const groupResult = await pool.query(
       'SELECT group_id FROM product_variants_link WHERE product_id = $1',
@@ -1471,6 +1463,7 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
 
     if (groupResult.rows.length > 0) {
       const groupId = groupResult.rows[0].group_id;
+      // --- ИЗМЕНЕНИЕ: УБРАЛИ "AND p.id != $2", чтобы текущий товар тоже был в вариантах ---
       const variantsResult = await pool.query(`
         SELECT
           p.id,
@@ -1488,27 +1481,19 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
           p.slug
         FROM product_variants_link pvl
         JOIN products p ON pvl.product_id = p.id
-        WHERE pvl.group_id = $1 AND p.id != $2
-        ORDER BY p.id`,
-        [groupId, product.id]
+        WHERE pvl.group_id = $1
+        ORDER BY p.id`, // Сортировка по ID (можно изменить)
+        [groupId] // Передаем ID группы
       );
 
       variants = variantsResult.rows.map(row => {
         let variantImages = [];
         if (row.images_json) {
-          if (typeof row.images_json === 'string') {
-            try {
-              const parsed = JSON.parse(row.images_json);
-              variantImages = Array.isArray(parsed) ? parsed : [];
-            } catch (e) {
-              console.error(`Ошибка парсинга images_json для варианта ${row.id}:`, e);
-              variantImages = [];
-            }
-          } else if (Array.isArray(row.images_json)) {
-            variantImages = row.images_json;
-          } else if (typeof row.images_json === 'object') {
-            variantImages = [row.images_json];
-          } else {
+          try {
+            const parsed = JSON.parse(row.images_json);
+            variantImages = Array.isArray(parsed) ? parsed : [];
+          } catch (e) {
+            console.error(`Ошибка парсинга images_json для варианта ${row.id}:`, e);
             variantImages = [];
           }
         }
@@ -1530,6 +1515,7 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
         };
       });
     }
+    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
     product.variants = variants;
 
