@@ -174,15 +174,17 @@ function renderVariantsOnPage(baseProduct) {
     }
 
     // Проверяем, есть ли данные о вариантах
-    if (baseProduct.variants && Array.isArray(baseProduct.variants) && baseProduct.variants.length > 0) {
-        console.log("Отображаем варианты на странице товара:", baseProduct.variants);
+    const variants = baseProduct.variants || []; // Если variants undefined, используем пустой массив
+
+    if (variants && Array.isArray(variants) && variants.length > 0) {
+        console.log("Отображаем варианты на странице товара:", variants);
 
         if (variantsContainer) {
             // Показываем контейнер, если есть варианты
             variantsContainer.style.removeProperty('display');
         }
 
-        baseProduct.variants.forEach(variant => {
+        variants.forEach(variant => {
             // Защита от некорректных данных
             if (!variant || typeof variant !== 'object' || !variant.id) {
                 console.warn("Некорректные данные варианта, пропускаем:", variant);
