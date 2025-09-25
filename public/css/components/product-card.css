@@ -154,7 +154,7 @@ main {
   overflow: hidden;
   text-align: center;
   margin-bottom: 0.25rem;
-  -webkit-line-clamp: 2; /* Ограничиваем до 2 строк */
+ 
   height: calc(1.3em * 2); /* Занимает высоту ровно 2 строк */
 }
 
