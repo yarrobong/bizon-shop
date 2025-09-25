@@ -7,20 +7,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   let pageKey = 'index'; // <-- По умолчанию 'index' (Главная)
 
   if (url.includes('/catalog')) pageKey = 'catalog';
-  else if (url.includes('/attractions')) pageKey = 'attractions'; // Добавлено
+  else if (url.includes('/attractions')) pageKey = 'attractions';
   else if (url.includes('/contact')) pageKey = 'contact';
-  else if (url.includes('/product.html')) pageKey = 'product'; // <-- Добавлено
+  // else if (url.includes('/product.html')) pageKey = 'product'; // <-- Не нужно
 
   // Удаляем активный класс со всех ссылок
   document.querySelectorAll('.nav-list a').forEach(link => {
     link.classList.remove('active');
   });
 
-  // Добавляем активный класс нужной ссылке
+  // Добавляем активный класс нужной ссылке, ТОЛЬКО ЕСЛИ pageKey - одна из известных страниц меню
+  // Это предотвратит подсветку "Главная" на странице товара
   const activeLink = document.querySelector(`.nav-list a[data-page="${pageKey}"]`);
-  if (activeLink) {
+  if (activeLink && pageKey !== 'index') { // <-- Добавлено условие && pageKey !== 'index'
     activeLink.classList.add('active');
   }
+  // Если pageKey === 'index', но URL не '/', активная ссылка не будет установлена.
 });
 
 // Аккордеон для FAQ
