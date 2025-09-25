@@ -1,14 +1,15 @@
 document.addEventListener('DOMContentLoaded', async () => {
   // Инициализируем начальное состояние
   window.currentCategory = 'все'; // Устанавливаем начальную категорию
-  
+
   // Определяем текущую страницу и устанавливаем активный пункт меню
   const url = window.location.href;
-  let pageKey = 'index';
+  let pageKey = 'index'; // <-- По умолчанию 'index' (Главная)
 
   if (url.includes('/catalog')) pageKey = 'catalog';
   else if (url.includes('/attractions')) pageKey = 'attractions'; // Добавлено
   else if (url.includes('/contact')) pageKey = 'contact';
+  else if (url.includes('/product.html')) pageKey = 'product'; // <-- Добавлено
 
   // Удаляем активный класс со всех ссылок
   document.querySelectorAll('.nav-list a').forEach(link => {
