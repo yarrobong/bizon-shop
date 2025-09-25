@@ -179,7 +179,7 @@ body.modal-open {
 }
 
 .cart-item-price {
-  color: #3b82f6;
+  color: #ffffffff;
   font-weight: 600;
   font-size: 0.9rem;
   margin-top: 0.25rem;
@@ -225,7 +225,7 @@ body.modal-open {
 
 .cart-item-total {
   font-weight: 600;
-  color: #3b82f6;
+  color: #ffffffff;
   white-space: nowrap;
   font-size: 1.1rem;
 }
