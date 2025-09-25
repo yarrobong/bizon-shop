@@ -245,6 +245,11 @@ function renderCartItems() {
         cartItemsContainer.innerHTML = '<div class="empty">Ваша корзина пуста</div>';
         // Обновляем кнопку "Оформить заказ"
         updateSendOrderButton();
+        // --- Добавлено: Обновляем счётчик в хедере ---
+        if (typeof window.updateCartCount === 'function') {
+            window.updateCartCount();
+        }
+        // ---
         return;
     }
 
@@ -327,6 +332,11 @@ function renderCartItems() {
 
     // Обновляем кнопку "Оформить заказ"
     updateSendOrderButton();
+    // --- Добавлено: Обновляем счётчик в хедере ---
+    if (typeof window.updateCartCount === 'function') {
+        window.updateCartCount();
+    }
+    // ---
 }
 
 // --- Функция обновления состояния кнопки "Оформить заказ" ---
