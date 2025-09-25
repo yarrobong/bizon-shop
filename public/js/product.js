@@ -442,6 +442,13 @@ function selectVariantOnPage(baseProduct, selectedVariant) {
         console.error("Ошибка при выборе варианта на странице:", error);
     }
 }
+// Добавляем обработчик для кнопки корзины, если она есть (альтернативный способ, если не в main.js)
+  const cartBtn = document.getElementById('cart-btn'); // <-- Опционально, если нужно здесь
+  if (cartBtn) {
+  cartBtn.addEventListener('click', () => {
+       window.location.href = '/cart.html'; // <-- Перенаправление
+     });
+   }
 
 
 function setupEventListeners(product) {
