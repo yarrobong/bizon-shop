@@ -358,7 +358,6 @@
     const cartCount = document.getElementById('cart-count');
     if (cartCount) {
       cartCount.textContent = count;
-      cartCount.style.display = count > 0 ? 'block' : 'none';
     }
   }
 
