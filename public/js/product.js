@@ -457,8 +457,8 @@ function setupEventListeners(product) {
             // --- ИСПРАВЛЕНО: Всегда вызываем window.addToCart ---
             window.addToCart(itemToAdd); // Вызываем функцию из state.js
             // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
-            // --- ИСПРАВЛЕНО: Всегда вызываем window.updateCartCount ---
-            window.updateCartCount(); // Вызываем функцию из state.js
+            
+            window.updateCartCountLocal(); // Вызываем функцию из state.js
             // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
             // Можно показать уведомление
             alert(`${itemToAdd.title} добавлен в корзину!`);

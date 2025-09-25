@@ -81,7 +81,6 @@ function updateQuantity(productId, change) {
     }
     localStorage.setItem('cart', JSON.stringify(cart)); // <-- Используем ключ 'cart'
     updateCartCount();
-    // УБРАНО: openCartModal(); // Не перерисовываем модальное окно
   }
 }
 
@@ -213,7 +212,7 @@ async function renderProducts() {
     });
 
     // Обработчики для кнопок "Подробнее"
-    // УБРАНО: Открытие модального окна. Теперь "Подробнее" ведёт на product.html.
+
     document.querySelectorAll('.btn-details').forEach(button => {
       button.addEventListener('click', (event) => {
         event.stopPropagation(); // Предотвращаем всплытие, чтобы не сработал обработчик клика по карточке
@@ -265,13 +264,6 @@ async function renderProducts() {
   }, 300);
 }
 
-// УБРАНО: Функция openProductModal и selectVariantInModal
-
-// УБРАНО: Функция openCartModal (теперь в main.js)
-// УБРАНО: Функция sanitizePhoneInput (теперь в main.js)
-// УБРАНО: Функция closeModals (теперь в main.js)
-// УБРАНО: Функция updateSendOrderButton (теперь в main.js)
-
 // Привязка событий (только для главной/каталога)
 function setupEventListeners() {
   const searchInput = document.getElementById('search-input');
@@ -290,23 +282,6 @@ function setupEventListeners() {
   categoryButtons.forEach(btn => {
     btn.addEventListener('click', handleCategoryClick);
   });
-
-  // УБРАНО: Обработчик для cartBtn (теперь в main.js)
-  // if (cartBtn) {
-  //   cartBtn.removeEventListener('click', openCartModal); // <-- Убрано
-  //   cartBtn.addEventListener('click', openCartModal); // <-- Убрано
-  // }
-
-  // УБРАНО: Обработчики для кнопок "Добавить в корзину" и "Купить" (модальное окно) - они теперь в product.js
-  // document.getElementById('add-to-cart-btn')?.addEventListener('click', () => { ... });
-  // document.getElementById('buy-now-btn')?.addEventListener('click', () => { ... });
-
-  // УБРАНО: Обработчики для элементов модального окна
-  // phoneInput?.addEventListener('input', () => { ... });
-  // const consentCheckbox = document.getElementById('consent-toggle');
-  // if (consentCheckbox) { consentCheckbox.addEventListener('change', updateSendOrderButton); }
-  // if (sendOrderBtn) { sendOrderBtn.addEventListener('click', async () => { ... }); }
-  // document.querySelectorAll('[data-close]').forEach(btn => { btn.addEventListener('click', closeModals); });
 
   // Добавляем обработчик для кнопки корзины, если она есть (альтернативный способ, если не в main.js)
   const cartBtn = document.getElementById('cart-btn'); // <-- Опционально, если нужно здесь
@@ -335,12 +310,8 @@ function handleCategoryClick(event) {
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', async () => {
   window.currentCategory = 'все';
-
   setupEventListeners();
-
   await renderProducts();
-
-  // УБРАНО: updateSendOrderButton(); // Больше не нужно на главной/каталоге
   updateCartCount();
 });
 
@@ -350,10 +321,6 @@ if (typeof module !== 'undefined' && module.exports) {
 } else {
   window.renderProducts = renderProducts;
   window.setupEventListeners = setupEventListeners;
-  // window.openProductModal = openProductModal; // <-- Убрано
-  // window.openCartModal = openCartModal; // <-- Убрано
-  // window.closeModals = closeModals; // <-- Убрано
-  // window.updateSendOrderButton = updateSendOrderButton; // <-- Убрано
 
   // Экспортируем функции корзины
   window.getCart = getCart;
