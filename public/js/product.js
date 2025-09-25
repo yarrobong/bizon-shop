@@ -272,7 +272,13 @@ function selectVariantOnPage(baseProduct, selectedVariant) {
             buyNowBtn.dataset.id = selectedVariant.id;
         }
 
-        
+        // Обновляем наличие для варианта
+        if (availabilityElement) {
+            const statusText = selectedVariant.available !== false ? 'В наличии' : 'Нет в наличии';
+            const statusClass = selectedVariant.available !== false ? 'in-stock' : 'out-of-stock';
+            availabilityElement.querySelector('span').textContent = statusText;
+            availabilityElement.className = `product-page-availability ${statusClass}`;
+        }
 
         // Активируем кнопки
         addToCartBtn.disabled = false;
@@ -280,6 +286,13 @@ function selectVariantOnPage(baseProduct, selectedVariant) {
 
         // Сохраняем ссылку на текущий отображаемый вариант
         window.currentDisplayedVariant = selectedVariant;
+
+        // --- НОВОЕ: Обновляем URL ---
+        // Используем slug выбранного варианта, если он есть
+        const newSlug = selectedVariant.slug || baseProduct.slug;
+        const newUrl = `/product/${newSlug}`;
+        window.history.replaceState({}, '', newUrl);
+        console.log("URL обновлен до:", newUrl);
 
     } catch (error) {
         console.error("Ошибка при выборе варианта на странице:", error);
