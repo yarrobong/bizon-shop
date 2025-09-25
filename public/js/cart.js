@@ -9,22 +9,8 @@ const sendOrderBtn = document.getElementById('send-order');
 const successMessage = document.getElementById('success-message');
 const consentCheckbox = document.getElementById('consent-toggle');
 const clearCartBtn = document.getElementById('clear-cart-btn');
-const cartBtn = document.getElementById('cart-btn'); // Для обновления счетчика
 
-// Форматирование цены (предполагается, что функция есть в utils.js или определена глобально)
-// function formatPrice(price) { ... }
 
-// Получение корзины (предполагается, что функция есть в utils.js или определена глобально)
-// function getCart() { ... }
-
-// Обновление количества в корзине (предполагается, что функция есть в utils.js или определена глобально)
-// function updateQuantity(productId, change) { ... }
-
-// Очистка корзины (предполагается, что функция есть в utils.js или определена глобально)
-// function clearCart() { ... }
-
-// Обновление счетчика корзины (предполагается, что функция есть в utils.js или определена глобально)
-// function updateCartCount() { ... }
 
 // Рендеринг элементов корзины
 function renderCartItems() {
