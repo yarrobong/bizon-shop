@@ -201,6 +201,27 @@ main {
   }
 }
 
+/* Отключаем hover-эффекты на мобильных устройствах */
+@media (hover: hover) and (pointer: fine) {
+  /* Применяем hover-эффекты только на устройствах с мышью */
+  .product-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(59, 130, 246, 0.9);
+    box-shadow: 
+      0 0 15px rgba(59, 130, 246, 1),
+      0 0 35px rgba(59, 130, 246, 0.8),
+      0 0 70px rgba(59, 130, 246, 0.6);
+  }
+
+  .btn-details:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .btn-cart:hover {
+    transform: scale(1.05);
+  }
+}
+
 
 
 .tag-new { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
