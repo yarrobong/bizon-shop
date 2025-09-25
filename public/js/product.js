@@ -455,15 +455,19 @@ function clearCart() {
   updateCartCountLocal(); // Обновляем локальный счетчик
 }
 
-// Обновление счетчика корзины (резервный вариант)
-function updateCartCountLocal() {
-    const cart = getCart();
-    const count = cart.reduce((sum, item) => sum + item.qty, 0);
-    const cartCountElement = document.getElementById('cart-count');
-    if (cartCountElement) {
-        cartCountElement.textContent = count;
-        
+// Обновление количества в корзине (использует ключ 'cart')
+function updateQuantity(productId, change) {
+  const cart = getCart();
+  const item = cart.find(item => item.product.id === productId);
+  if (item) {
+    item.qty += change;
+    if (item.qty <= 0) {
+      const index = cart.indexOf(item);
+      cart.splice(index, 1);
     }
+    localStorage.setItem('cart', JSON.stringify(cart)); // <-- Используем ключ 'cart'
+    updateCartCount();
+  }
 }
 
 // Обновление состояния кнопки "Оформить заказ" (резервный вариант)
