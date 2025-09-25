@@ -12,6 +12,7 @@ body {
   overflow-x: hidden;
   position: relative;
 }
+
 /* === HEADER === */
 /* Основная структура: логотип слева, навигация тянется справа от него */
 header {
@@ -160,38 +161,33 @@ header.scrolled {
   border: 1px solid rgba(59, 130, 246, 0.5);
 }
 
-
-
 /* === МОБИЛЬНОЕ МЕНЮ === */
 @media (max-width: 768px) {
   /* Мобильная навигация */
-.main-nav {
-  position: fixed;
-  top: 0;
-  left: -350px;
-  width: 260px;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.90);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-right: 1px solid rgba(59, 130, 246, 0.3);
-  z-index: 999;
-  transition: left 0.3s ease;
-  flex-direction: column;
-  padding: 80px 20px 20px;
-}
-
-.main-nav.active {
-  left: 0;
-}
-  .hamburger {
-    display: flex;
+  .main-nav {
+    position: fixed;
+    top: 0;
+    left: -300px; /* Уменьшена ширина меню */
+    width: 260px; /* Теперь ширина 260px, чтобы не перекрывала корзину */
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.90);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-right: 1px solid rgba(59, 130, 246, 0.3);
+    z-index: 999;
+    transition: left 0.3s ease;
+    flex-direction: column;
+    padding: 80px 20px 20px;
   }
 
-  .main-nav {
-    display: none;
+  .main-nav.active {
+    left: 0;
+  }
+
+  .hamburger {
+    display: flex;
   }
 
   .main-nav {
@@ -224,6 +220,8 @@ header.scrolled {
   gap: 1rem;
   margin-left: auto;
   flex-shrink: 0;
+  position: relative;
+  z-index: 10; /* Повышаем z-index, чтобы кнопка была поверх меню */
 }
 
 /* === SEARCH INPUT === */
@@ -280,7 +278,7 @@ header.scrolled {
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
-  z-index: 2;
+  z-index: 20; /* Повышен z-index, чтобы кнопка была поверх меню */
   flex-shrink: 0;
 }
 
@@ -468,7 +466,7 @@ header.scrolled {
   }
   
   .main-nav {
-    width: 50%;
+    width: 220px; /* Ещё меньше ширина для очень маленьких экранов */
   }
   
   .nav-list a {
@@ -495,7 +493,6 @@ header.scrolled {
   }
 
   .cart-btn {
-    
     font-size: 0.8rem;
     border-radius: 0.7rem;
     gap: 0.3rem;
@@ -549,7 +546,6 @@ header.scrolled {
   }
 
   .cart-btn {
-   
     font-size: 1.05rem;
     border-radius: 1.1rem;
   }
