@@ -88,6 +88,7 @@ main {
   position: relative;
   overflow: hidden;
   height: 100%; /* сохранил, как было */
+  display: flex;
 }
 
 /* Подсветка при ховере — точно так же, как в feature-card */
@@ -123,6 +124,7 @@ main {
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-height: 0; /* предотвращает растягивание */
 }
 
 /* Адаптация: меньше отступы на малых экранах */
@@ -153,6 +155,7 @@ main {
   text-align: center;
   margin-bottom: 0.25rem;
   -webkit-line-clamp: 2; /* Ограничиваем до 2 строк */
+  height: calc(1.3em * 2); /* Занимает высоту ровно 2 строк */
 }
 
 /* На 480px+ — увеличиваем */
@@ -199,8 +202,6 @@ main {
     font-size: 0.8rem;
   }
 }
-
-
 
 .tag-new { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
 .tag-hit { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
