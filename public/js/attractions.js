@@ -309,57 +309,63 @@
     return cart ? JSON.parse(cart) : [];
   }
 
-  // Добавление в корзину
-  function addToCart(product) {
-    const cart = getCart();
-    const existingItem = cart.find(item => item.product.id === product.id);
-    if (existingItem) {
-      existingItem.qty += 1;
-    } else {
-      // Убедимся, что у продукта есть URL изображения для корзины
-      const productForCart = { ...product };
-      if (!productForCart.image && productForCart.images && productForCart.images.length > 0) {
-          productForCart.image = productForCart.images[0].url;
-      } else if (!productForCart.image) {
-          productForCart.image = '/assets/icons/placeholder1.webp';
-      }
-      cart.push({ product: productForCart, qty: 1 });
-    }
-    localStorage.setItem('cart', JSON.stringify(cart));
+  // Получение корзины из localStorage (использует ключ 'cart')
+function getCart() {
+  const cart = localStorage.getItem('cart'); // <-- Используем ключ 'cart'
+  return cart ? JSON.parse(cart) : [];
+}
+
+// Добавление в корзину (использует ключ 'cart')
+function addToCart(product) {
+  console.log("attractions.js: Добавляем в корзину:", attractions.id, attractions.title); // <-- Новый лог
+  const cart = getCart();
+  const existingItem = cart.find(item => item.attractions.id === attractions.id);
+
+  if (existingItem) {
+    existingItem.qty += 1;
+  } else {
+    cart.push({ product, qty: 1 });
   }
 
-  // Обновление количества в корзине
-  function updateQuantity(productId, change) {
-    const cart = getCart();
-    const item = cart.find(item => item.product.id === productId);
-    if (item) {
-      item.qty += change;
-      if (item.qty <= 0) {
-        const index = cart.indexOf(item);
-        cart.splice(index, 1);
-      }
-      localStorage.setItem('cart', JSON.stringify(cart));
-      updateCartCount();
-      // Также перерисовываем модальное окно корзины, чтобы отразить изменения
-      openCartModal(); // или можно вызвать renderCartItems() если такая функция есть
-    }
-  }
+  localStorage.setItem('cart', JSON.stringify(cart)); // <-- Используем ключ 'cart'
+  updateCartCount(); // Обновляем счётчик
+}
 
-  // Очистка корзины
-  function clearCart() {
-    localStorage.removeItem('cart');
-     updateCartCount();
-  }
+// Обновление количества в корзине (использует ключ 'cart')
+function updateQuantity(attractionsId, change) {
+  const cart = getCart();
+  const item = cart.find(item => item.attractions.id === attractionsId);
 
-  // Обновление счетчика корзины
-  function updateCartCount() {
-    const cart = getCart();
-    const count = cart.reduce((sum, item) => sum + item.qty, 0);
-    const cartCount = document.getElementById('cart-count');
-    if (cartCount) {
-      cartCount.textContent = count;
+  if (item) {
+    item.qty += change;
+    if (item.qty <= 0) {
+      const index = cart.indexOf(item);
+      cart.splice(index, 1);
     }
+    localStorage.setItem('cart', JSON.stringify(cart)); // <-- Используем ключ 'cart'
+    updateCartCount();
   }
+}
+
+// Очистка корзины (использует ключ 'cart')
+function clearCart() {
+  localStorage.removeItem('cart'); // <-- Используем ключ 'cart'
+  updateCartCount();
+}
+
+// Обновление счетчика корзины
+function updateCartCount() {
+  const cart = getCart();
+  const count = cart.reduce((sum, item) => sum + item.qty, 0);
+  const cartCountEls = document.querySelectorAll('#cart-count, #cart-count-header'); // Используем селекторы из state.js/main.js
+
+  cartCountEls.forEach(el => {
+    if (el) {
+      el.textContent = count;
+      el.style.display = count > 0 ? 'flex' : 'none'; // Используем display: flex; как в state.js
+    }
+  });
+}
 
   // --- Utility Functions (перенесены из utils.js) ---
   // Форматирование цены
