@@ -308,13 +308,7 @@ function setupEventListeners() {
   // if (sendOrderBtn) { sendOrderBtn.addEventListener('click', async () => { ... }); }
   // document.querySelectorAll('[data-close]').forEach(btn => { btn.addEventListener('click', closeModals); });
 
-  // Добавляем обработчик для кнопки корзины, если она есть (альтернативный способ, если не в main.js)
-  const cartBtn = document.getElementById('cart-btn'); // <-- Опционально, если нужно здесь
-  if (cartBtn) {
-  cartBtn.addEventListener('click', () => {
-       window.location.href = '/cart.html'; // <-- Перенаправление
-     });
-   }
+  
 }
 
 function handleCategoryClick(event) {
