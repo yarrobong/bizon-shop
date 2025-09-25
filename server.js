@@ -66,6 +66,18 @@ app.listen(PORT, async () => {
   }
 });
 
+// Генерация slug из названия
+function generateSlug(title) {
+  return encodeURIComponent(
+    title
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+  );
+}
+
 // Установка часового пояса (лучше делать на уровне ОС или БД, но можно и так)
 process.env.TZ = 'Europe/Moscow';
 
@@ -456,35 +468,36 @@ app.get('/api/products/:id', async (req, res) => {
   }
 });
 
-// === API: Создать товар ===
+// === API: Создать товар (с уникальным slug) ===
 app.post('/api/products', async (req, res) => {
   try {
-    // Добавлены новые поля supplier_link, supplier_notes
-    const { title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images } = req.body;
+    const { title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json } = req.body;
 
-    const images_json = images ? JSON.stringify(images) : null;
+    // Генерация начального slug
+    let slug = generateSlug(title);
 
-    // Возвращаем все поля, кроме images_json. images будет обработано отдельно.
-    const result = await pool.query(`
-      INSERT INTO products (title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-      RETURNING id, title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes -- images_json исключен
-    `, [title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json]);
-
-    // Обрабатываем images_json для ответа, как в GET
-    const insertedProduct = result.rows[0];
-    let processedImages = [];
-    if (Array.isArray(images)) {
-      processedImages = images; // Возвращаем то, что клиент отправил
-    } else if (images !== null && typeof images === 'object') {
-      processedImages = [images];
+    // Проверка на уникальность
+    let counter = 1;
+    let uniqueSlug = slug;
+    while (true) {
+      const existing = await pool.query('SELECT id FROM products WHERE slug = $1', [uniqueSlug]);
+      if (existing.rows.length === 0) {
+        break; // slug уникален
+      }
+      uniqueSlug = `${slug}-${counter}`;
+      counter++;
     }
-    // Если images было null/undefined/строкой, processedImages останется []
 
-    res.status(201).json({
-      ...insertedProduct,
-      images: processedImages // Добавляем корректно обработанное поле images
-    });
+    const result = await pool.query(
+      `INSERT INTO products (
+        title, description, price, tag, available, category, brand, compatibility,
+        supplier_link, supplier_notes, images_json, slug
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      RETURNING id`,
+      [title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json, uniqueSlug]
+    );
+
+    res.status(201).json({ id: result.rows[0].id, message: 'Товар создан', slug: uniqueSlug });
   } catch (err) {
     console.error('Ошибка создания товара:', err);
     res.status(500).json({ error: 'Не удалось создать товар' });
