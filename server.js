@@ -95,11 +95,22 @@ app.get('/api/products', async (req, res) => {
     const products = result.rows.map(row => {
       let images = [];
       if (row.images_json) {
-        try {
-          const parsed = JSON.parse(row.images_json);
-          images = Array.isArray(parsed) ? parsed : [];
-        } catch (e) {
-          console.error(`Ошибка парсинга images_json для товара ${row.id}:`, e);
+        // Проверяем, строка ли это
+        if (typeof row.images_json === 'string') {
+          try {
+            const parsed = JSON.parse(row.images_json);
+            images = Array.isArray(parsed) ? parsed : [];
+          } catch (e) {
+            console.error(`Ошибка парсинга images_json для товара ${row.id}:`, e);
+            images = [];
+          }
+        } else if (Array.isArray(row.images_json)) {
+          // Если это массив
+          images = row.images_json;
+        } else if (typeof row.images_json === 'object') {
+          // Если это один объект, оборачиваем в массив
+          images = [row.images_json];
+        } else {
           images = [];
         }
       }
@@ -127,6 +138,8 @@ app.get('/api/products', async (req, res) => {
     res.status(500).json({ error: 'Ошибка сервера при загрузке товаров.' });
   }
 });
+
+
 // === API: Установить варианты товара ===
 app.put('/api/products/:id/variants', async (req, res) => {
   const client = await pool.connect();
@@ -296,7 +309,152 @@ app.put('/api/products/:id', async (req, res) => {
     res.status(500).json({ error: 'Не удалось обновить товар' });
   }
 });
+// === API: Получить товар по ID с вариантами (все поля) ===
+app.get('/api/products/:id', async (req, res) => {
+  try {
+    const productId = parseInt(req.params.id, 10);
+    if (isNaN(productId)) {
+      return res.status(400).json({ error: 'Некорректный ID товара' });
+    }
 
+    // 1. Загружаем основной товар
+    const productResult = await pool.query(`
+      SELECT
+        id,
+        title,
+        description,
+        price,
+        tag,
+        available,
+        category,
+        brand,
+        compatibility,
+        images_json,
+        supplier_link,
+        supplier_notes,
+        slug
+      FROM products
+      WHERE id = $1`, [productId]);
+
+    if (productResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Товар не найден' });
+    }
+    const productRow = productResult.rows[0];
+
+    // 2. Обработка изображений
+    let productImages = [];
+    if (productRow.images_json) {
+      if (typeof productRow.images_json === 'string') {
+        try {
+          const parsed = JSON.parse(productRow.images_json);
+          productImages = Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+          console.error(`Ошибка парсинга images_json для товара ${productId}:`, e);
+          productImages = [];
+        }
+      } else if (Array.isArray(productRow.images_json)) {
+        productImages = productRow.images_json;
+      } else if (typeof productRow.images_json === 'object') {
+        productImages = [productRow.images_json];
+      } else {
+        productImages = [];
+      }
+    }
+
+    const product = {
+      id: productRow.id,
+      title: productRow.title,
+      description: productRow.description,
+      price: parseFloat(productRow.price),
+      tag: productRow.tag,
+      available: productRow.available !== false,
+      category: productRow.category,
+      brand: productRow.brand,
+      compatibility: productRow.compatibility,
+      images: productImages,
+      supplier_link: productRow.supplier_link,
+      supplier_notes: productRow.supplier_notes,
+      slug: productRow.slug
+    };
+
+    // 3. Загружаем связанные варианты
+    let variants = [];
+    const groupResult = await pool.query(
+      'SELECT group_id FROM product_variants_link WHERE product_id = $1',
+      [product.id]
+    );
+
+    if (groupResult.rows.length > 0) {
+      const groupId = groupResult.rows[0].group_id;
+      const variantsResult = await pool.query(`
+        SELECT
+          p.id,
+          p.title,
+          p.description,
+          p.price,
+          p.tag,
+          p.available,
+          p.category,
+          p.brand,
+          p.compatibility,
+          p.images_json,
+          p.supplier_link,
+          p.supplier_notes,
+          p.slug
+        FROM product_variants_link pvl
+        JOIN products p ON pvl.product_id = p.id
+        WHERE pvl.group_id = $1 AND p.id != $2
+        ORDER BY p.id`,
+        [groupId, product.id]
+      );
+
+      variants = variantsResult.rows.map(row => {
+        let variantImages = [];
+        if (row.images_json) {
+          if (typeof row.images_json === 'string') {
+            try {
+              const parsed = JSON.parse(row.images_json);
+              variantImages = Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+              console.error(`Ошибка парсинга images_json для варианта ${row.id}:`, e);
+              variantImages = [];
+            }
+          } else if (Array.isArray(row.images_json)) {
+            variantImages = row.images_json;
+          } else if (typeof row.images_json === 'object') {
+            variantImages = [row.images_json];
+          } else {
+            variantImages = [];
+          }
+        }
+
+        return {
+          id: row.id,
+          title: row.title,
+          description: row.description,
+          price: parseFloat(row.price),
+          tag: row.tag,
+          available: row.available !== false,
+          category: row.category,
+          brand: row.brand,
+          compatibility: row.compatibility,
+          images: variantImages,
+          supplier_link: row.supplier_link,
+          supplier_notes: row.supplier_notes,
+          slug: row.slug
+        };
+      });
+    }
+
+    product.variants = variants;
+
+    res.json(product);
+
+  } catch (err) {
+    console.error(`❌ Ошибка при получении товара с ID ${req.params.id} из БД:`, err);
+    res.status(500).json({ error: 'Не удалось загрузить товар', details: err.message });
+  }
+});
 
 // === API: Создать товар ===
 app.post('/api/products', async (req, res) => {
@@ -1157,63 +1315,21 @@ app.get('/api/attractions/:id', async (req, res) => {
     }
 });
 
-// На сервере (например, в вашем app.js или routes/products.js)
+// === API: Получить товары по массиву ID (все поля) ===
 app.post('/api/products/bulk', async (req, res) => {
-    const { ids } = req.body;
-    if (!Array.isArray(ids) || ids.length === 0) {
-        return res.status(400).json({ error: 'Неверный формат данных. Ожидается массив ID.' });
-    }
+  const { ids } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ error: 'Неверный формат данных. Ожидается массив ID.' });
+  }
 
-    // Очищаем и фильтруем ID
-    const validIds = ids.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+  const validIds = ids.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+  if (validIds.length === 0) {
+    return res.status(400).json({ error: 'Не переданы валидные ID товаров.' });
+  }
 
-    if (validIds.length === 0) {
-        return res.status(400).json({ error: 'Не переданы валидные ID товаров.' });
-    }
-
-    try {
-        // Используем параметризованный запрос для безопасности и эффективности
-        // Предполагается, что у вас есть pool для подключения к БД (например, pg)
-        const placeholders = validIds.map((_, i) => `$${i + 1}`).join(',');
-        // Можно добавить AND available = true, если хотите фильтровать по доступности
-        const query = `
-            SELECT id, title, description, price, category, available, images_json
-            FROM products
-            WHERE id = ANY($1) -- Используем ANY для массива
-        `;
-        // const query = `SELECT ... WHERE id IN (${placeholders})`; // Альтернатива с IN
-
-        const result = await pool.query(query, [validIds]); // pool - ваш пул соединений к БД
-        const products = result.rows.map(row => ({
-            id: row.id,
-            title: row.title,
-            description: row.description,
-            price: parseFloat(row.price),
-            category: row.category,
-            available: row.available,
-            images: row.images_json ? JSON.parse(row.images_json) : []
-            // Добавьте другие поля, если нужно для отображения вариантов
-        }));
-
-        res.json(products);
-    } catch (err) {
-        console.error('Ошибка при загрузке товаров по ID (bulk):', err);
-        res.status(500).json({ error: 'Ошибка сервера при загрузке товаров.' });
-    }
-});
-
-// server.js (или в файле маршрутов, например, routes/products.js)
-
-// === API: Получить товар по ID с вариантами (все поля) ===
-app.get('/api/products/:id', async (req, res) => {
   try {
-    const productId = parseInt(req.params.id, 10);
-    if (isNaN(productId)) {
-      return res.status(400).json({ error: 'Некорректный ID товара' });
-    }
-
-    // 1. Загружаем основной товар
-    const productResult = await pool.query(`
+    const placeholders = validIds.map((_, i) => `$${i + 1}`).join(',');
+    const query = `
       SELECT
         id,
         title,
@@ -1229,109 +1345,51 @@ app.get('/api/products/:id', async (req, res) => {
         supplier_notes,
         slug
       FROM products
-      WHERE id = $1`, [productId]);
+      WHERE id = ANY($1)
+    `;
 
-    if (productResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Товар не найден' });
-    }
-    const productRow = productResult.rows[0];
-
-    // 2. Обработка изображений
-    let productImages = [];
-    if (productRow.images_json) {
-      try {
-        const parsed = JSON.parse(productRow.images_json);
-        productImages = Array.isArray(parsed) ? parsed : [];
-      } catch (e) {
-        console.error(`Ошибка парсинга images_json для товара ${productId}:`, e);
-        productImages = [];
-      }
-    }
-
-    const product = {
-      id: productRow.id,
-      title: productRow.title,
-      description: productRow.description,
-      price: parseFloat(productRow.price),
-      tag: productRow.tag,
-      available: productRow.available !== false,
-      category: productRow.category,
-      brand: productRow.brand,
-      compatibility: productRow.compatibility,
-      images: productImages,
-      supplier_link: productRow.supplier_link,
-      supplier_notes: productRow.supplier_notes,
-      slug: productRow.slug
-    };
-
-    // 3. Загружаем связанные варианты
-    let variants = [];
-    const groupResult = await pool.query(
-      'SELECT group_id FROM product_variants_link WHERE product_id = $1',
-      [product.id]
-    );
-
-    if (groupResult.rows.length > 0) {
-      const groupId = groupResult.rows[0].group_id;
-      const variantsResult = await pool.query(`
-        SELECT
-          p.id,
-          p.title,
-          p.description,
-          p.price,
-          p.tag,
-          p.available,
-          p.category,
-          p.brand,
-          p.compatibility,
-          p.images_json,
-          p.supplier_link,
-          p.supplier_notes,
-          p.slug
-        FROM product_variants_link pvl
-        JOIN products p ON pvl.product_id = p.id
-        WHERE pvl.group_id = $1 AND p.id != $2
-        ORDER BY p.id`,
-        [groupId, product.id]
-      );
-
-      variants = variantsResult.rows.map(row => {
-        let variantImages = [];
-        if (row.images_json) {
+    const result = await pool.query(query, [validIds]);
+    const products = result.rows.map(row => {
+      let images = [];
+      if (row.images_json) {
+        if (typeof row.images_json === 'string') {
           try {
             const parsed = JSON.parse(row.images_json);
-            variantImages = Array.isArray(parsed) ? parsed : [];
+            images = Array.isArray(parsed) ? parsed : [];
           } catch (e) {
-            console.error(`Ошибка парсинга images_json для варианта ${row.id}:`, e);
-            variantImages = [];
+            console.error(`Ошибка парсинга images_json для товара ${row.id}:`, e);
+            images = [];
           }
+        } else if (Array.isArray(row.images_json)) {
+          images = row.images_json;
+        } else if (typeof row.images_json === 'object') {
+          images = [row.images_json];
+        } else {
+          images = [];
         }
+      }
 
-        return {
-          id: row.id,
-          title: row.title,
-          description: row.description,
-          price: parseFloat(row.price),
-          tag: row.tag,
-          available: row.available !== false,
-          category: row.category,
-          brand: row.brand,
-          compatibility: row.compatibility,
-          images: variantImages,
-          supplier_link: row.supplier_link,
-          supplier_notes: row.supplier_notes,
-          slug: row.slug
-        };
-      });
-    }
+      return {
+        id: row.id,
+        title: row.title,
+        description: row.description,
+        price: parseFloat(row.price),
+        tag: row.tag,
+        available: row.available !== false,
+        category: row.category,
+        brand: row.brand,
+        compatibility: row.compatibility,
+        images: images,
+        supplier_link: row.supplier_link,
+        supplier_notes: row.supplier_notes,
+        slug: row.slug
+      };
+    });
 
-    product.variants = variants;
-
-    res.json(product);
-
+    res.json(products);
   } catch (err) {
-    console.error(`❌ Ошибка при получении товара с ID ${req.params.id} из БД:`, err);
-    res.status(500).json({ error: 'Не удалось загрузить товар', details: err.message });
+    console.error('Ошибка при загрузке товаров по ID (bulk):', err);
+    res.status(500).json({ error: 'Ошибка сервера при загрузке товаров.' });
   }
 });
 
@@ -1367,11 +1425,19 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
     // Обработка изображений
     let productImages = [];
     if (productRow.images_json) {
-      try {
-        const parsed = JSON.parse(productRow.images_json);
-        productImages = Array.isArray(parsed) ? parsed : [];
-      } catch (e) {
-        console.error(`Ошибка парсинга images_json для товара ${productRow.id}:`, e);
+      if (typeof productRow.images_json === 'string') {
+        try {
+          const parsed = JSON.parse(productRow.images_json);
+          productImages = Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+          console.error(`Ошибка парсинга images_json для товара ${productRow.id}:`, e);
+          productImages = [];
+        }
+      } else if (Array.isArray(productRow.images_json)) {
+        productImages = productRow.images_json;
+      } else if (typeof productRow.images_json === 'object') {
+        productImages = [productRow.images_json];
+      } else {
         productImages = [];
       }
     }
@@ -1426,11 +1492,19 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
       variants = variantsResult.rows.map(row => {
         let variantImages = [];
         if (row.images_json) {
-          try {
-            const parsed = JSON.parse(row.images_json);
-            variantImages = Array.isArray(parsed) ? parsed : [];
-          } catch (e) {
-            console.error(`Ошибка парсинга images_json для варианта ${row.id}:`, e);
+          if (typeof row.images_json === 'string') {
+            try {
+              const parsed = JSON.parse(row.images_json);
+              variantImages = Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+              console.error(`Ошибка парсинга images_json для варианта ${row.id}:`, e);
+              variantImages = [];
+            }
+          } else if (Array.isArray(row.images_json)) {
+            variantImages = row.images_json;
+          } else if (typeof row.images_json === 'object') {
+            variantImages = [row.images_json];
+          } else {
             variantImages = [];
           }
         }
@@ -1463,75 +1537,6 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
   }
 });
 
-// === API: Получить товары по массиву ID (все поля) ===
-app.post('/api/products/bulk', async (req, res) => {
-  const { ids } = req.body;
-  if (!Array.isArray(ids) || ids.length === 0) {
-    return res.status(400).json({ error: 'Неверный формат данных. Ожидается массив ID.' });
-  }
-
-  const validIds = ids.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
-  if (validIds.length === 0) {
-    return res.status(400).json({ error: 'Не переданы валидные ID товаров.' });
-  }
-
-  try {
-    const placeholders = validIds.map((_, i) => `$${i + 1}`).join(',');
-    const query = `
-      SELECT
-        id,
-        title,
-        description,
-        price,
-        tag,
-        available,
-        category,
-        brand,
-        compatibility,
-        images_json,
-        supplier_link,
-        supplier_notes,
-        slug
-      FROM products
-      WHERE id = ANY($1)
-    `;
-
-    const result = await pool.query(query, [validIds]);
-    const products = result.rows.map(row => {
-      let images = [];
-      if (row.images_json) {
-        try {
-          const parsed = JSON.parse(row.images_json);
-          images = Array.isArray(parsed) ? parsed : [];
-        } catch (e) {
-          console.error(`Ошибка парсинга images_json для товара ${row.id}:`, e);
-          images = [];
-        }
-      }
-
-      return {
-        id: row.id,
-        title: row.title,
-        description: row.description,
-        price: parseFloat(row.price),
-        tag: row.tag,
-        available: row.available !== false,
-        category: row.category,
-        brand: row.brand,
-        compatibility: row.compatibility,
-        images: images,
-        supplier_link: row.supplier_link,
-        supplier_notes: row.supplier_notes,
-        slug: row.slug
-      };
-    });
-
-    res.json(products);
-  } catch (err) {
-    console.error('Ошибка при загрузке товаров по ID (bulk):', err);
-    res.status(500).json({ error: 'Ошибка сервера при загрузке товаров.' });
-  }
-});
 
 // --- КАСТОМНЫЕ МАРШРУТЫ ДЛЯ HTML СТРАНИЦ ---
 // Универсальный маршрут для отдачи .html страниц (например, /catalog -> public/catalog.html)
