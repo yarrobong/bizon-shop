@@ -454,14 +454,8 @@ function setupEventListeners(product) {
             // Используем текущий отображаемый вариант, а не основной товар
             let itemToAdd = window.currentDisplayedVariant || product;
             console.log("Добавление в корзину (из state.js):", itemToAdd.id, itemToAdd.title);
-            // --- ИСПРАВЛЕНО: Всегда вызываем window.addToCart ---
             window.addToCart(itemToAdd); // Вызываем функцию из state.js
-            // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
-            
             window.updateCartCountLocal(); // Вызываем функцию из state.js
-            // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
-            // Можно показать уведомление
-            alert(`${itemToAdd.title} добавлен в корзину!`);
         });
     }
 

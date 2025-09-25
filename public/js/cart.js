@@ -187,7 +187,7 @@ function sanitizePhoneInput(event) {
 
 document.addEventListener('DOMContentLoaded', function () {
     console.log("Страница корзины загружена.");
-
+    window.updateCartCountLocal();
     // Проверяем, доступна ли функция getCart из state.js
     if (typeof window.getCart === 'function') {
         console.log("Функция getCart из state.js найдена.");
