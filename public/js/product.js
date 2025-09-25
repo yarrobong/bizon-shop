@@ -317,7 +317,7 @@ function setupEventListeners(product) {
             window.addToCart(itemToAdd); // Вызываем функцию из state.js
             window.updateCartCount(); // Вызываем функцию из state.js
             // ВАЖНО: Перенаправляем на страницу корзины
-            window.location.href = '/cart/';
+            window.location.href = '/cart';
         });
     }
 
