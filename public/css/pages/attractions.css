@@ -290,7 +290,7 @@ main {
 }
 
 .specs-section label {
-    display: block;
+    
     margin-bottom: 5px; /* Небольшой отступ между лейблом и инпутом */
     font-weight: bold; /* Сделать лейблы более заметными */
 }
@@ -316,9 +316,7 @@ main {
     display: none;
 }
 
-.drop-hint.show {
-    display: block;
-}
+
 
 /* Адаптивность для карточек */
 @media (max-width: 768px) {
