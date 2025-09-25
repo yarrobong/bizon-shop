@@ -293,7 +293,7 @@ function renderCartItems() {
             renderCartItems(); // Перерисовываем
             // Обновляем счётчик в хедере
             if (typeof window.updateCartCount === 'function') {
-                window.updateCartCount();
+                window.updateCartCountLocal();
             }
             // Обновляем кнопку "Оформить заказ"
             updateSendOrderButton();
