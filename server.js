@@ -69,60 +69,72 @@ app.listen(PORT, async () => {
 // Установка часового пояса (лучше делать на уровне ОС или БД, но можно и так)
 process.env.TZ = 'Europe/Moscow';
 
-// === API: Получить товары (только публичные поля) ===
+// --- API: Товары ---
+// === API: Получить товары ===
+// Объединенный и исправленный маршрут получения товаров с вариантами
 app.get('/api/products', async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT
-        id,
-        title,
-        description,
-        price,
-        tag,
-        available,
-        category,
-        brand,
-        compatibility,
-        images_json
-      FROM products
-      WHERE available = true
-      ORDER BY id
-    `);
-
-    const products = result.rows.map(row => {
-      let images = [];
-      if (row.images_json) {
-        try {
-          const parsed = JSON.parse(row.images_json);
-          images = Array.isArray(parsed) ? parsed : [];
-        } catch (e) {
-          console.error(`Ошибка парсинга images_json для товара ${row.id}:`, e);
-          images = [];
+    // 1. Получаем все товары из таблицы products
+    const productsResult = await pool.query('SELECT * FROM products');
+    const products = productsResult.rows;
+    // 2. Для каждого товара проверяем, есть ли у него варианты
+    const productsWithVariants = await Promise.all(products.map(async (product) => {
+      // --- Варианты ---
+      let formattedVariants = [];
+      const groupResult = await pool.query(
+        `SELECT group_id FROM product_variants_link WHERE product_id = $1`,
+        [product.id]
+      );
+      if (groupResult.rows.length > 0) {
+        const groupId = groupResult.rows[0].group_id;
+        const variantsResult = await pool.query(
+  `SELECT p.*
+   FROM product_variants_link pvl
+   JOIN products p ON pvl.product_id = p.id
+   WHERE pvl.group_id = $1
+   ORDER BY p.id`, // <-- Здесь раньше было AND p.id != $2, чтобы исключить сам товар
+  [groupId]
+);
+        formattedVariants = variantsResult.rows.map((variant) => {
+          let images = [];
+          if (variant.images_json != null) {
+            if (Array.isArray(variant.images_json)) {
+              images = variant.images_json;
+            } else if (typeof variant.images_json === 'object') {
+              images = [variant.images_json];
+            } else {
+              images = [variant.images_json];
+            }
+          }
+          return {
+            ...variant,
+            images
+          };
+        });
+      }
+      // --- Основной товар ---
+      let productImages = [];
+      if (product.images_json != null) {
+        if (Array.isArray(product.images_json)) {
+          productImages = product.images_json;
+        } else if (typeof product.images_json === 'object') {
+          productImages = [product.images_json];
+        } else {
+          productImages = [product.images_json];
         }
       }
-
       return {
-        id: row.id,
-        title: row.title,
-        description: row.description,
-        price: parseFloat(row.price),
-        tag: row.tag,
-        available: row.available !== false,
-        category: row.category,
-        brand: row.brand,
-        compatibility: row.compatibility,
-        images: images
-        // Не включаем: supplier_link, supplier_notes, images_json, slug
+        ...product,
+        images: productImages,
+        variants: formattedVariants
       };
-    });
-
-    res.json(products);
+    }));
+    res.json(productsWithVariants);
   } catch (err) {
-    console.error('Ошибка загрузки товаров:', err);
-    res.status(500).json({ error: 'Ошибка сервера при загрузке товаров.' });
+    console.error('Ошибка в /api/products:', err);
+    res.status(500).json({ error: 'Ошибка сервера при получении товаров' });
   }
 });
-
 // === API: Установить варианты товара ===
 app.put('/api/products/:id/variants', async (req, res) => {
   const client = await pool.connect();
@@ -149,8 +161,8 @@ app.put('/api/products/:id/variants', async (req, res) => {
     // Проверяем и нормализуем массив variantIds
     let validatedVariantIds = [];
     if (Array.isArray(variantIds)) {
-      // Фильтруем, оставляя только уникальные числовые ID, отличные от productId
-      validatedVariantIds = [...new Set(variantIds.map(vId => parseInt(vId, 10)).filter(vId => !isNaN(vId) && vId !== productId))];
+        // Фильтруем, оставляя только уникальные числовые ID, отличные от productId
+        validatedVariantIds = [...new Set(variantIds.map(vId => parseInt(vId, 10)).filter(vId => !isNaN(vId) && vId !== productId))];
     }
     console.log(`Установка вариантов для товара ID ${productId}. Валидные варианты:`, validatedVariantIds);
 
@@ -164,63 +176,63 @@ app.put('/api/products/:id/variants', async (req, res) => {
     let groupIdToUse = null;
 
     if (validatedVariantIds.length > 0) {
-      // --- Сценарий: Нужно создать или обновить группу ---
-      if (existingGroupRes.rows.length > 0) {
-        // Товар уже в группе, используем её ID
-        groupIdToUse = existingGroupRes.rows[0].group_id;
-        console.log(`Товар ID ${productId} уже в группе ${groupIdToUse}. Обновляем состав.`);
-      } else {
-        // Товар не в группе, создаем новую, используя ID основного товара как group_id
-        groupIdToUse = productId;
-        console.log(`Товар ID ${productId} не в группе. Создаем новую группу ${groupIdToUse}.`);
-      }
-
-      // 2. Удаляем все связи *для этой группы* (это очистит старые связи и подготовит к новым)
-      await client.query('DELETE FROM product_variants_link WHERE group_id = $1', [groupIdToUse]);
-      console.log(`Удалены все старые связи для группы ID ${groupIdToUse}.`);
-
-      // 3. Создаем новые связи для обновленной конфигурации группы
-      // Связываем основной товар с группой
-      await client.query(
-        'INSERT INTO product_variants_link (product_id, group_id) VALUES ($1, $2)',
-        [productId, groupIdToUse]
-      );
-      console.log(`Связь основного товара ID ${productId} с группой ID ${groupIdToUse} создана.`);
-
-      // Связываем варианты с группой
-      // Сначала проверим, существуют ли все указанные варианты
-      if (validatedVariantIds.length > 0) {
-        const placeholders = validatedVariantIds.map((_, i) => `$${i + 1}`).join(', ');
-        const checkVariantsQuery = `SELECT id FROM products WHERE id IN (${placeholders})`;
-        const checkResult = await client.query(checkVariantsQuery, validatedVariantIds);
-        const existingVariantIds = checkResult.rows.map(r => r.id);
-        const notFoundIds = validatedVariantIds.filter(id => !existingVariantIds.includes(id));
-
-        if (notFoundIds.length > 0) {
-          console.warn(`Некоторые варианты не найдены и будут проигнорированы:`, notFoundIds);
+        // --- Сценарий: Нужно создать или обновить группу ---
+        if (existingGroupRes.rows.length > 0) {
+            // Товар уже в группе, используем её ID
+            groupIdToUse = existingGroupRes.rows[0].group_id;
+            console.log(`Товар ID ${productId} уже в группе ${groupIdToUse}. Обновляем состав.`);
+        } else {
+            // Товар не в группе, создаем новую, используя ID основного товара как group_id
+            groupIdToUse = productId;
+            console.log(`Товар ID ${productId} не в группе. Создаем новую группу ${groupIdToUse}.`);
         }
 
-        // Вставляем связи только для существующих вариантов
-        for (const variantId of existingVariantIds) {
-          await client.query(
+        // 2. Удаляем все связи *для этой группы* (это очистит старые связи и подготовит к новым)
+        await client.query('DELETE FROM product_variants_link WHERE group_id = $1', [groupIdToUse]);
+        console.log(`Удалены все старые связи для группы ID ${groupIdToUse}.`);
+
+        // 3. Создаем новые связи для обновленной конфигурации группы
+        // Связываем основной товар с группой
+        await client.query(
             'INSERT INTO product_variants_link (product_id, group_id) VALUES ($1, $2)',
-            [variantId, groupIdToUse]
-          );
-          console.log(`Связь варианта ID ${variantId} с группой ID ${groupIdToUse} создана.`);
+            [productId, groupIdToUse]
+        );
+        console.log(`Связь основного товара ID ${productId} с группой ID ${groupIdToUse} создана.`);
+
+        // Связываем варианты с группой
+        // Сначала проверим, существуют ли все указанные варианты
+        if (validatedVariantIds.length > 0) {
+            const placeholders = validatedVariantIds.map((_, i) => `$${i + 1}`).join(', ');
+            const checkVariantsQuery = `SELECT id FROM products WHERE id IN (${placeholders})`;
+            const checkResult = await client.query(checkVariantsQuery, validatedVariantIds);
+            const existingVariantIds = checkResult.rows.map(r => r.id);
+            const notFoundIds = validatedVariantIds.filter(id => !existingVariantIds.includes(id));
+            
+            if (notFoundIds.length > 0) {
+                console.warn(`Некоторые варианты не найдены и будут проигнорированы:`, notFoundIds);
+            }
+
+            // Вставляем связи только для существующих вариантов
+            for (const variantId of existingVariantIds) {
+                await client.query(
+                    'INSERT INTO product_variants_link (product_id, group_id) VALUES ($1, $2)',
+                    [variantId, groupIdToUse]
+                );
+                console.log(`Связь варианта ID ${variantId} с группой ID ${groupIdToUse} создана.`);
+            }
         }
-      }
 
     } else {
-      // --- Сценарий: Нужно удалить все варианты (очистить группу) ---
-      if (existingGroupRes.rows.length > 0) {
-        const oldGroupId = existingGroupRes.rows[0].group_id;
-        // Удаляем все связи *для этой группы*
-        await client.query('DELETE FROM product_variants_link WHERE group_id = $1', [oldGroupId]);
-        console.log(`Группа ID ${oldGroupId} (содержавшая товар ID ${productId}) была очищена и удалена.`);
-      } else {
-        console.log(`У товара ID ${productId} нет группы для очистки.`);
-      }
-      // Если validatedVariantIds пуст, то на этом шаге все старые связи уже удалены или их не было.
+        // --- Сценарий: Нужно удалить все варианты (очистить группу) ---
+        if (existingGroupRes.rows.length > 0) {
+            const oldGroupId = existingGroupRes.rows[0].group_id;
+            // Удаляем все связи *для этой группы*
+            await client.query('DELETE FROM product_variants_link WHERE group_id = $1', [oldGroupId]);
+            console.log(`Группа ID ${oldGroupId} (содержавшая товар ID ${productId}) была очищена и удалена.`);
+        } else {
+            console.log(`У товара ID ${productId} нет группы для очистки.`);
+        }
+        // Если validatedVariantIds пуст, то на этом шаге все старые связи уже удалены или их не было.
     }
 
     await client.query('COMMIT');
@@ -231,9 +243,9 @@ app.put('/api/products/:id/variants', async (req, res) => {
     console.error('Ошибка установки вариантов товара:', err);
     // Возвращаем более конкретную ошибку, если это ошибка клиента
     if (err.code === '23503' || err.code === '23505') { //_foreign_key_violation или unique_violation
-      res.status(400).json({ error: 'Ошибка данных при обновлении вариантов' });
+         res.status(400).json({ error: 'Ошибка данных при обновлении вариантов' });
     } else {
-      res.status(500).json({ error: 'Не удалось обновить варианты товара' });
+         res.status(500).json({ error: 'Не удалось обновить варианты товара' });
     }
   } finally {
     client.release();
@@ -263,9 +275,9 @@ app.put('/api/products/:id', async (req, res) => {
     // 2. Обрабатываем images_json для ответа, как в GET /api/products/:id
     const updatedProductFromDB = result.rows[0]; // <-- Используем корректное имя переменной
     let processedImages = [];
-
+    
     // Проверяем и обрабатываем images_json из результата БД
-    if (updatedProductFromDB.images_json != null) {
+    if (updatedProductFromDB.images_json != null) { 
       if (Array.isArray(updatedProductFromDB.images_json)) {
         processedImages = updatedProductFromDB.images_json;
       } else if (typeof updatedProductFromDB.images_json === 'object') {
@@ -273,26 +285,72 @@ app.put('/api/products/:id', async (req, res) => {
       } else {
         // Если это строка или другой тип, можно попробовать парсить или оставить пустой массив
         // processedImages = []; // или попытка JSON.parse, если ожидается строка JSON
-        console.warn(`Неожиданный тип images_json для обновленного товара ID ${id}:`, typeof updatedProductFromDB.images_json);
-        processedImages = [];
+         console.warn(`Неожиданный тип images_json для обновленного товара ID ${id}:`, typeof updatedProductFromDB.images_json);
+         processedImages = [];
       }
     }
     // Если images_json null или undefined, processedImages остается []
 
     // 3. Формируем финальный объект товара для ответа
     const { images_json: _, ...productWithoutImagesJson } = updatedProductFromDB; // Убираем images_json из результата БД
-
+    
     res.json({
       ...productWithoutImagesJson, // Все поля, кроме images_json
       images: processedImages       // Добавляем обработанное поле images
     });
-
+    
   } catch (err) {
     console.error('Ошибка обновления товара:', err);
     res.status(500).json({ error: 'Не удалось обновить товар' });
   }
 });
+// === API: Получить товар по ID ===
+app.get('/api/products/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(`
+      SELECT
+        id, title, description, price, tag, available, category, brand, compatibility,
+        supplier_link, supplier_notes,
+        images_json -- Поле будет обработано ниже
+      FROM products
+      WHERE id = $1
+    `, [id]);
 
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Товар не найден' });
+    }
+
+    const product = result.rows[0];
+    // --- Исправленная обработка images_json для товара по ID ---
+    let productImages = [];
+    // Ожидаем, что драйвер pg уже преобразовал JSON из БД в JS объект/массив
+    // Проверяем, является ли результат допустимым массивом или объектом
+    if (Array.isArray(product.images_json)) {
+      productImages = product.images_json;
+    } else if (product.images_json !== null && typeof product.images_json === 'object') {
+      // Если это объект (не null), оборачиваем его в массив
+      productImages = [product.images_json];
+    } else if (product.images_json === null || product.images_json === undefined) {
+      // Если null/undefined, оставляем пустой массив
+      productImages = [];
+    } else {
+      // Если это что-то другое (например, неправильно сохраненная строка),
+      // можно попробовать парсить или залогировать ошибку
+      console.warn(`Неожиданный тип или значение images_json для товара ID ${product.id}:`, typeof product.images_json, product.images_json);
+      productImages = []; // Или попытаться парсить: try { productImages = JSON.parse(product.images_json); } catch(e) { productImages = []; }
+    }
+    // --- Конец исправленной обработки ---
+
+    res.json({
+       ...product,
+       images: productImages // Теперь images - это массив
+    });
+  } catch (err) {
+    console.error('Ошибка загрузки товара по ID:', err);
+    res.status(500).json({ error: 'Не удалось загрузить товар' });
+  }
+});
 
 // === API: Создать товар ===
 app.post('/api/products', async (req, res) => {
@@ -772,10 +830,10 @@ app.post('/api/contact', async (req, res) => {
 
 // --- API endpoint для получения аттракционов из БД (для админки - все аттракционы) ---
 app.get('/api/attractions/public', async (req, res) => {
-  console.log('Получение списка аттракционов из БД (для админки)...');
-  try {
-    // Получаем основные данные аттракционов
-    const attractionsQuery = `
+    console.log('Получение списка аттракционов из БД (для админки)...');
+    try {
+        // Получаем основные данные аттракционов
+        const attractionsQuery = `
             SELECT
                 id, title, price, category, image_url AS image, description, available, -- <-- Добавлен available
                 specs_places AS "specs.places", specs_power AS "specs.power",
@@ -784,71 +842,71 @@ app.get('/api/attractions/public', async (req, res) => {
             FROM attractions
             ORDER BY id ASC;
         `;
-    const attractionsResult = await pool.query(attractionsQuery);
-
-    // Получаем все изображения для всех аттракционов за один запрос
-    const imagesQuery = `
+        const attractionsResult = await pool.query(attractionsQuery);
+        
+        // Получаем все изображения для всех аттракционов за один запрос
+        const imagesQuery = `
             SELECT attraction_id, url, alt, sort_order
             FROM attraction_images
             ORDER BY attraction_id, sort_order ASC;
         `;
-    const imagesResult = await pool.query(imagesQuery);
+        const imagesResult = await pool.query(imagesQuery);
 
-    // Преобразуем массив изображений в Map для быстрого поиска
-    const imagesMap = {};
-    imagesResult.rows.forEach(img => {
-      if (!imagesMap[img.attraction_id]) {
-        imagesMap[img.attraction_id] = [];
-      }
-      imagesMap[img.attraction_id].push({
-        url: img.url,
-        alt: img.alt || ''
-      });
-    });
+        // Преобразуем массив изображений в Map для быстрого поиска
+        const imagesMap = {};
+        imagesResult.rows.forEach(img => {
+            if (!imagesMap[img.attraction_id]) {
+                imagesMap[img.attraction_id] = [];
+            }
+            imagesMap[img.attraction_id].push({
+                url: img.url,
+                alt: img.alt || ''
+            });
+        });
 
-    // Формируем финальный массив аттракционов с изображениями
-    const attractions = attractionsResult.rows.map(row => {
-      // Получаем изображения для текущего аттракциона или пустой массив
-      const imagesForAttraction = imagesMap[row.id] || [];
+        // Формируем финальный массив аттракционов с изображениями
+        const attractions = attractionsResult.rows.map(row => {
+            // Получаем изображения для текущего аттракциона или пустой массив
+            const imagesForAttraction = imagesMap[row.id] || [];
+            
+            // Для обратной совместимости: если массив пуст, используем старое поле image
+            if (imagesForAttraction.length === 0 && row.image) {
+                 imagesForAttraction.push({ url: row.image, alt: row.title || 'Изображение' });
+            }
 
-      // Для обратной совместимости: если массив пуст, используем старое поле image
-      if (imagesForAttraction.length === 0 && row.image) {
-        imagesForAttraction.push({ url: row.image, alt: row.title || 'Изображение' });
-      }
+            return {
+                id: row.id,
+                title: row.title,
+                price: parseFloat(row.price),
+                category: row.category,
+                available: row.available, // <-- Добавлен available
+                // image: row.image, // Можно убрать, если фронтенд полностью перешел на images
+                images: imagesForAttraction, // Массив изображений
+                description: row.description,
+                specs: {
+                    places: row["specs.places"] || null,
+                    power: row["specs.power"] || null,
+                    games: row["specs.games"] || null,
+                    area: row["specs.area"] || null,
+                    dimensions: row["specs.dimensions"] || null
+                }
+            };
+        });
 
-      return {
-        id: row.id,
-        title: row.title,
-        price: parseFloat(row.price),
-        category: row.category,
-        available: row.available, // <-- Добавлен available
-        // image: row.image, // Можно убрать, если фронтенд полностью перешел на images
-        images: imagesForAttraction, // Массив изображений
-        description: row.description,
-        specs: {
-          places: row["specs.places"] || null,
-          power: row["specs.power"] || null,
-          games: row["specs.games"] || null,
-          area: row["specs.area"] || null,
-          dimensions: row["specs.dimensions"] || null
-        }
-      };
-    });
-
-    console.log(`✅ Успешно получено ${attractions.length} аттракционов из БД (для админки)`);
-    res.json(attractions);
-  } catch (err) {
-    console.error('❌ Ошибка при получении аттракционов из БД (для админки):', err);
-    res.status(500).json({ error: 'Не удалось загрузить аттракционы', details: err.message });
-  }
+        console.log(`✅ Успешно получено ${attractions.length} аттракционов из БД (для админки)`);
+        res.json(attractions);
+    } catch (err) {
+        console.error('❌ Ошибка при получении аттракционов из БД (для админки):', err);
+        res.status(500).json({ error: 'Не удалось загрузить аттракционы', details: err.message });
+    }
 });
 
 // --- API endpoint для получения ДОСТУПНЫХ аттракционов из БД (для пользовательской части) ---
 app.get('/api/attractions', async (req, res) => {
-  console.log('Получение списка ДОСТУПНЫХ аттракционов из БД (для пользовательской части)...');
-  try {
-    // Получаем только доступные аттракционы
-    const attractionsQuery = `
+    console.log('Получение списка ДОСТУПНЫХ аттракционов из БД (для пользовательской части)...');
+    try {
+        // Получаем только доступные аттракционы
+        const attractionsQuery = `
             SELECT
                 id, title, price, category, image_url AS image, description, -- available не нужен для публичного API
                 specs_places AS "specs.places", specs_power AS "specs.power",
@@ -858,90 +916,90 @@ app.get('/api/attractions', async (req, res) => {
             WHERE available = true -- <-- Фильтр по доступности
             ORDER BY id ASC;
         `;
-    const attractionsResult = await pool.query(attractionsQuery);
-
-    // Получаем все изображения для доступных аттракционов за один запрос
-    // Сначала получим ID доступных аттракционов
-    const availableAttractionIds = attractionsResult.rows.map(r => r.id);
-    let imagesQuery, imagesResult;
-    if (availableAttractionIds.length > 0) {
-      const placeholders = availableAttractionIds.map((_, i) => `$${i + 1}`).join(', ');
-      imagesQuery = `
+        const attractionsResult = await pool.query(attractionsQuery);
+        
+        // Получаем все изображения для доступных аттракционов за один запрос
+        // Сначала получим ID доступных аттракционов
+        const availableAttractionIds = attractionsResult.rows.map(r => r.id);
+        let imagesQuery, imagesResult;
+        if (availableAttractionIds.length > 0) {
+            const placeholders = availableAttractionIds.map((_, i) => `$${i + 1}`).join(', ');
+            imagesQuery = `
                 SELECT attraction_id, url, alt, sort_order
                 FROM attraction_images
                 WHERE attraction_id IN (${placeholders})
                 ORDER BY attraction_id, sort_order ASC;
             `;
-      imagesResult = await pool.query(imagesQuery, availableAttractionIds);
-    } else {
-      imagesResult = { rows: [] }; // Пустой результат, если нет доступных аттракционов
-    }
-
-    // Преобразуем массив изображений в Map для быстрого поиска
-    const imagesMap = {};
-    imagesResult.rows.forEach(img => {
-      if (!imagesMap[img.attraction_id]) {
-        imagesMap[img.attraction_id] = [];
-      }
-      imagesMap[img.attraction_id].push({
-        url: img.url,
-        alt: img.alt || ''
-      });
-    });
-
-    // Формируем финальный массив доступных аттракционов с изображениями
-    const attractions = attractionsResult.rows.map(row => {
-      // Получаем изображения для текущего аттракциона или пустой массив
-      const imagesForAttraction = imagesMap[row.id] || [];
-
-      // Для обратной совместимости: если массив пуст, используем старое поле image
-      if (imagesForAttraction.length === 0 && row.image) {
-        imagesForAttraction.push({ url: row.image, alt: row.title || 'Изображение' });
-      }
-
-      return {
-        id: row.id,
-        title: row.title,
-        price: parseFloat(row.price),
-        category: row.category,
-        // available: row.available, // Убираем из публичного API
-        // image: row.image, // Можно убрать, если фронтенд полностью перешел на images
-        images: imagesForAttraction, // Массив изображений
-        description: row.description,
-        specs: {
-          places: row["specs.places"] || null,
-          power: row["specs.power"] || null,
-          games: row["specs.games"] || null,
-          area: row["specs.area"] || null,
-          dimensions: row["specs.dimensions"] || null
+            imagesResult = await pool.query(imagesQuery, availableAttractionIds);
+        } else {
+            imagesResult = { rows: [] }; // Пустой результат, если нет доступных аттракционов
         }
-      };
-    });
 
-    console.log(`✅ Успешно получено ${attractions.length} ДОСТУПНЫХ аттракционов из БД (для пользовательской части)`);
-    res.json(attractions);
-  } catch (err) {
-    console.error('❌ Ошибка при получении ДОСТУПНЫХ аттракционов из БД (для пользовательской части):', err);
-    res.status(500).json({ error: 'Не удалось загрузить аттракционы', details: err.message });
-  }
+        // Преобразуем массив изображений в Map для быстрого поиска
+        const imagesMap = {};
+        imagesResult.rows.forEach(img => {
+            if (!imagesMap[img.attraction_id]) {
+                imagesMap[img.attraction_id] = [];
+            }
+            imagesMap[img.attraction_id].push({
+                url: img.url,
+                alt: img.alt || ''
+            });
+        });
+
+        // Формируем финальный массив доступных аттракционов с изображениями
+        const attractions = attractionsResult.rows.map(row => {
+            // Получаем изображения для текущего аттракциона или пустой массив
+            const imagesForAttraction = imagesMap[row.id] || [];
+            
+            // Для обратной совместимости: если массив пуст, используем старое поле image
+            if (imagesForAttraction.length === 0 && row.image) {
+                 imagesForAttraction.push({ url: row.image, alt: row.title || 'Изображение' });
+            }
+
+            return {
+                id: row.id,
+                title: row.title,
+                price: parseFloat(row.price),
+                category: row.category,
+                // available: row.available, // Убираем из публичного API
+                // image: row.image, // Можно убрать, если фронтенд полностью перешел на images
+                images: imagesForAttraction, // Массив изображений
+                description: row.description,
+                specs: {
+                    places: row["specs.places"] || null,
+                    power: row["specs.power"] || null,
+                    games: row["specs.games"] || null,
+                    area: row["specs.area"] || null,
+                    dimensions: row["specs.dimensions"] || null
+                }
+            };
+        });
+
+        console.log(`✅ Успешно получено ${attractions.length} ДОСТУПНЫХ аттракционов из БД (для пользовательской части)`);
+        res.json(attractions);
+    } catch (err) {
+        console.error('❌ Ошибка при получении ДОСТУПНЫХ аттракционов из БД (для пользовательской части):', err);
+        res.status(500).json({ error: 'Не удалось загрузить аттракционы', details: err.message });
+    }
 });
 
 // --- API endpoint для создания аттракциона ---
 app.post('/api/attractions', async (req, res) => {
-  const { title, price, category, description, specs, images, available } = req.body; // <-- Добавлен available
-  console.log('Создание нового аттракциона:', req.body);
+    const { title, price, category, description, specs, images, available } = req.body; // <-- Добавлен available
+    console.log('Создание нового аттракциона:', req.body);
 
-  // URL первого изображения для поля image_url (для обратной совместимости)
-  let primaryImageUrl = null;
-  if (images && Array.isArray(images) && images.length > 0 && images[0].url) {
-    primaryImageUrl = images[0].url;
-  }
+    // URL первого изображения для поля image_url (для обратной совместимости)
+    let primaryImageUrl = null;
+    if (images && Array.isArray(images) && images.length > 0 && images[0].url) {
+        primaryImageUrl = images[0].url;
+    }
 
-  // Значение по умолчанию для available - true
-  const isAvailable = available !== false; // Если available undefined или true, будет true. Если false, будет false.
+    // Значение по умолчанию для available - true
+    const isAvailable = available !== false; // Если available undefined или true, будет true. Если false, будет false.
 
-  try {
-    const query = `
+    try {
+        const query = `
       INSERT INTO attractions (
         title, price, category, image_url, description, available, -- <-- Добавлен available
         specs_places, specs_power, specs_games, specs_area, specs_dimensions
@@ -949,151 +1007,151 @@ app.post('/api/attractions', async (req, res) => {
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) -- <-- Добавлен $6
       RETURNING id;
     `;
-    const values = [
-      title,
-      price,
-      category,
-      primaryImageUrl,
-      description,
-      isAvailable, // <-- Используем isAvailable
-      specs?.places || null,
-      specs?.power || null,
-      specs?.games || null,
-      specs?.area || null,
-      specs?.dimensions || null
-    ];
-    const result = await pool.query(query, values);
-    const newId = result.rows[0].id;
-    console.log(`✅ Аттракцион с ID ${newId} успешно создан в БД`);
-    res.status(201).json({ id: newId, message: 'Аттракцион создан' });
-  } catch (err) {
-    console.error('❌ Ошибка при создании аттракциона в БД:', err);
-    res.status(500).json({ error: 'Не удалось создать аттракцион', details: err.message });
-  }
+        const values = [
+            title,
+            price,
+            category,
+            primaryImageUrl,
+            description,
+            isAvailable, // <-- Используем isAvailable
+            specs?.places || null,
+            specs?.power || null,
+            specs?.games || null,
+            specs?.area || null,
+            specs?.dimensions || null
+        ];
+        const result = await pool.query(query, values);
+        const newId = result.rows[0].id;
+        console.log(`✅ Аттракцион с ID ${newId} успешно создан в БД`);
+        res.status(201).json({ id: newId, message: 'Аттракцион создан' });
+    } catch (err) {
+        console.error('❌ Ошибка при создании аттракциона в БД:', err);
+        res.status(500).json({ error: 'Не удалось создать аттракцион', details: err.message });
+    }
 });
 
 // --- API endpoint для обновления аттракциона ---
 app.put('/api/attractions/:id', async (req, res) => {
-  const { id } = req.params;
-  const { title, price, category, description, specs, images, available } = req.body; // <-- Добавлен available
-  console.log(`Обновление аттракциона с ID ${id}:`, req.body);
+    const { id } = req.params;
+    const { title, price, category, description, specs, images, available } = req.body; // <-- Добавлен available
+    console.log(`Обновление аттракциона с ID ${id}:`, req.body);
 
-  // URL первого изображения для поля image_url (для обратной совместимости)
-  let primaryImageUrl = null;
-  if (images && Array.isArray(images) && images.length > 0 && images[0].url) {
-    primaryImageUrl = images[0].url;
-  }
-
-  // Значение по умолчанию для available - true (если не передано, считаем, что не меняется или true)
-  // Лучше явно проверить, было ли поле передано
-  const isAvailableProvided = 'available' in req.body;
-  const isAvailable = isAvailableProvided ? available === true : undefined; // undefined означает "не обновлять"
-
-  try {
-    const attractionId = parseInt(id, 10);
-    if (isNaN(attractionId)) {
-      return res.status(400).json({ error: 'Некорректный ID аттракциона' });
+    // URL первого изображения для поля image_url (для обратной совместимости)
+    let primaryImageUrl = null;
+    if (images && Array.isArray(images) && images.length > 0 && images[0].url) {
+        primaryImageUrl = images[0].url;
     }
 
-    // Динамически строим запрос UPDATE
-    let query = `UPDATE attractions SET `;
-    const values = [];
-    let paramCounter = 1;
+    // Значение по умолчанию для available - true (если не передано, считаем, что не меняется или true)
+    // Лучше явно проверить, было ли поле передано
+    const isAvailableProvided = 'available' in req.body;
+    const isAvailable = isAvailableProvided ? available === true : undefined; // undefined означает "не обновлять"
 
-    const fieldsToUpdate = [
-      { field: 'title', value: title },
-      { field: 'price', value: price },
-      { field: 'category', value: category },
-      { field: 'image_url', value: primaryImageUrl },
-      { field: 'description', value: description },
-      { field: 'specs_places', value: specs?.places || null },
-      { field: 'specs_power', value: specs?.power || null },
-      { field: 'specs_games', value: specs?.games || null },
-      { field: 'specs_area', value: specs?.area || null },
-      { field: 'specs_dimensions', value: specs?.dimensions || null }
-    ];
+    try {
+        const attractionId = parseInt(id, 10);
+        if (isNaN(attractionId)) {
+            return res.status(400).json({ error: 'Некорректный ID аттракциона' });
+        }
+        
+        // Динамически строим запрос UPDATE
+        let query = `UPDATE attractions SET `;
+        const values = [];
+        let paramCounter = 1;
 
-    // Добавляем available только если оно было передано
-    if (isAvailableProvided) {
-      fieldsToUpdate.push({ field: 'available', value: isAvailable });
+        const fieldsToUpdate = [
+            { field: 'title', value: title },
+            { field: 'price', value: price },
+            { field: 'category', value: category },
+            { field: 'image_url', value: primaryImageUrl },
+            { field: 'description', value: description },
+            { field: 'specs_places', value: specs?.places || null },
+            { field: 'specs_power', value: specs?.power || null },
+            { field: 'specs_games', value: specs?.games || null },
+            { field: 'specs_area', value: specs?.area || null },
+            { field: 'specs_dimensions', value: specs?.dimensions || null }
+        ];
+        
+        // Добавляем available только если оно было передано
+        if (isAvailableProvided) {
+             fieldsToUpdate.push({ field: 'available', value: isAvailable });
+        }
+
+        query += fieldsToUpdate.map(f => `${f.field} = $${paramCounter++}`).join(', ');
+        values.push(...fieldsToUpdate.map(f => f.value));
+        query += ` WHERE id = $${paramCounter} RETURNING id;`;
+        values.push(attractionId);
+
+        const result = await pool.query(query, values);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Аттракцион не найден для обновления' });
+        }
+        console.log(`✅ Аттракцион с ID ${id} успешно обновлен в БД`);
+        res.json({ message: 'Аттракцион обновлен' });
+    } catch (err) {
+        console.error(`❌ Ошибка при обновлении аттракциона с ID ${id} в БД:`, err);
+        res.status(500).json({ error: 'Не удалось обновить аттракцион', details: err.message });
     }
-
-    query += fieldsToUpdate.map(f => `${f.field} = $${paramCounter++}`).join(', ');
-    values.push(...fieldsToUpdate.map(f => f.value));
-    query += ` WHERE id = $${paramCounter} RETURNING id;`;
-    values.push(attractionId);
-
-    const result = await pool.query(query, values);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Аттракцион не найден для обновления' });
-    }
-    console.log(`✅ Аттракцион с ID ${id} успешно обновлен в БД`);
-    res.json({ message: 'Аттракцион обновлен' });
-  } catch (err) {
-    console.error(`❌ Ошибка при обновлении аттракциона с ID ${id} в БД:`, err);
-    res.status(500).json({ error: 'Не удалось обновить аттракцион', details: err.message });
-  }
 });
 
 // --- API endpoint для удаления аттракциона ---
 // Удаление уже работает корректно благодаря CASCADE, но оставим для полноты
 app.delete('/api/attractions/:id', async (req, res) => {
-  const { id } = req.params;
-  console.log(`Удаление аттракциона с ID ${id} из БД...`);
+    const { id } = req.params;
+    console.log(`Удаление аттракциона с ID ${id} из БД...`);
+    
+    try {
+        const attractionId = parseInt(id, 10);
+        if (isNaN(attractionId)) {
+            return res.status(400).json({ error: 'Некорректный ID аттракциона' });
+        }
 
-  try {
-    const attractionId = parseInt(id, 10);
-    if (isNaN(attractionId)) {
-      return res.status(400).json({ error: 'Некорректный ID аттракциона' });
+        // Проверим, существует ли аттракцион
+        const checkResult = await pool.query('SELECT 1 FROM attractions WHERE id = $1', [attractionId]);
+        if (checkResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Аттракцион не найден для удаления' });
+        }
+
+        // Удаляем аттракцион. CASCADE автоматически удалит связанные изображения.
+        await pool.query('DELETE FROM attractions WHERE id = $1', [attractionId]);
+        
+        console.log(`✅ Аттракцион с ID ${id} успешно удален из БД (включая изображения)`);
+        res.json({ message: 'Аттракцион удален' });
+    } catch (err) {
+        console.error(`❌ Ошибка при удалении аттракциона с ID ${id} из БД:`, err);
+        res.status(500).json({ error: 'Не удалось удалить аттракцион', details: err.message });
     }
-
-    // Проверим, существует ли аттракцион
-    const checkResult = await pool.query('SELECT 1 FROM attractions WHERE id = $1', [attractionId]);
-    if (checkResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Аттракцион не найден для удаления' });
-    }
-
-    // Удаляем аттракцион. CASCADE автоматически удалит связанные изображения.
-    await pool.query('DELETE FROM attractions WHERE id = $1', [attractionId]);
-
-    console.log(`✅ Аттракцион с ID ${id} успешно удален из БД (включая изображения)`);
-    res.json({ message: 'Аттракцион удален' });
-  } catch (err) {
-    console.error(`❌ Ошибка при удалении аттракциона с ID ${id} из БД:`, err);
-    res.status(500).json({ error: 'Не удалось удалить аттракцион', details: err.message });
-  }
 });
 
 // --- API endpoint для получения уникальных категорий аттракционов ---
 // Этот обработчик не требует изменений
 app.get('/api/attractions/categories', async (req, res) => {
-  console.log('Получение уникальных категорий аттракционов из БД...');
-  try {
-    const query = 'SELECT DISTINCT category FROM attractions WHERE category IS NOT NULL ORDER BY category;';
-    const result = await pool.query(query);
-    const categories = result.rows.map(row => row.category);
-    console.log(`✅ Успешно получено ${categories.length} уникальных категорий аттракционов из БД`);
-    res.json(categories);
-  } catch (err) {
-    console.error('❌ Ошибка при получении категорий аттракционов из БД:', err);
-    res.status(500).json({ error: 'Не удалось загрузить категории аттракционов', details: err.message });
-  }
+    console.log('Получение уникальных категорий аттракционов из БД...');
+    try {
+        const query = 'SELECT DISTINCT category FROM attractions WHERE category IS NOT NULL ORDER BY category;';
+        const result = await pool.query(query);
+        const categories = result.rows.map(row => row.category);
+        console.log(`✅ Успешно получено ${categories.length} уникальных категорий аттракционов из БД`);
+        res.json(categories);
+    } catch (err) {
+        console.error('❌ Ошибка при получении категорий аттракционов из БД:', err);
+        res.status(500).json({ error: 'Не удалось загрузить категории аттракционов', details: err.message });
+    }
 });
 
 // --- API endpoint для получения аттракциона по ID ---
 // Обновлен для загрузки массива изображений
 app.get('/api/attractions/:id', async (req, res) => {
-  const { id } = req.params;
-  console.log(`Получение аттракциона с ID ${id} из БД...`);
+    const { id } = req.params;
+    console.log(`Получение аттракциона с ID ${id} из БД...`);
+    
+    try {
+        const attractionId = parseInt(id, 10);
+        if (isNaN(attractionId)) {
+            return res.status(400).json({ error: 'Некорректный ID аттракциона' });
+        }
 
-  try {
-    const attractionId = parseInt(id, 10);
-    if (isNaN(attractionId)) {
-      return res.status(400).json({ error: 'Некорректный ID аттракциона' });
-    }
-
-    // Получаем основные данные аттракциона
-    const attractionQuery = `
+        // Получаем основные данные аттракциона
+        const attractionQuery = `
             SELECT
                 id, title, price, category, image_url AS image, description,
                 specs_places AS "specs.places", specs_power AS "specs.power",
@@ -1102,364 +1160,103 @@ app.get('/api/attractions/:id', async (req, res) => {
             FROM attractions
             WHERE id = $1;
         `;
-    const attractionResult = await pool.query(attractionQuery, [attractionId]);
+        const attractionResult = await pool.query(attractionQuery, [attractionId]);
 
-    if (attractionResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Аттракцион не найден' });
-    }
+        if (attractionResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Аттракцион не найден' });
+        }
 
-    const row = attractionResult.rows[0];
+        const row = attractionResult.rows[0];
 
-    // Получаем изображения для этого аттракциона
-    const imagesQuery = `
+        // Получаем изображения для этого аттракциона
+        const imagesQuery = `
             SELECT url, alt
             FROM attraction_images
             WHERE attraction_id = $1
             ORDER BY sort_order ASC;
         `;
-    const imagesResult = await pool.query(imagesQuery, [attractionId]);
-    let imagesArray = imagesResult.rows.map(img => ({
-      url: img.url,
-      alt: img.alt || ''
-    }));
+        const imagesResult = await pool.query(imagesQuery, [attractionId]);
+        let imagesArray = imagesResult.rows.map(img => ({
+            url: img.url,
+            alt: img.alt || ''
+        }));
 
-    // Для обратной совместимости: если массив пуст, используем старое поле image
-    if (imagesArray.length === 0 && row.image) {
-      imagesArray.push({ url: row.image, alt: row.title || 'Изображение' });
+        // Для обратной совместимости: если массив пуст, используем старое поле image
+        if (imagesArray.length === 0 && row.image) {
+             imagesArray.push({ url: row.image, alt: row.title || 'Изображение' });
+        }
+
+        const attraction = {
+            id: row.id,
+            title: row.title,
+            price: parseFloat(row.price),
+            category: row.category,
+            // image: row.image, // Можно убрать, если фронтенд полностью перешел на images
+            images: imagesArray, // Массив изображений
+            description: row.description,
+            specs: {
+                places: row["specs.places"] || null,
+                power: row["specs.power"] || null,
+                games: row["specs.games"] || null,
+                area: row["specs.area"] || null,
+                dimensions: row["specs.dimensions"] || null
+            }
+        };
+
+        console.log(`✅ Успешно получен аттракцион с ID ${id} из БД`);
+        res.json(attraction);
+    } catch (err) {
+        console.error(`❌ Ошибка при получении аттракциона с ID ${id} из БД:`, err);
+        res.status(500).json({ error: 'Не удалось загрузить аттракцион', details: err.message });
     }
-
-    const attraction = {
-      id: row.id,
-      title: row.title,
-      price: parseFloat(row.price),
-      category: row.category,
-      // image: row.image, // Можно убрать, если фронтенд полностью перешел на images
-      images: imagesArray, // Массив изображений
-      description: row.description,
-      specs: {
-        places: row["specs.places"] || null,
-        power: row["specs.power"] || null,
-        games: row["specs.games"] || null,
-        area: row["specs.area"] || null,
-        dimensions: row["specs.dimensions"] || null
-      }
-    };
-
-    console.log(`✅ Успешно получен аттракцион с ID ${id} из БД`);
-    res.json(attraction);
-  } catch (err) {
-    console.error(`❌ Ошибка при получении аттракциона с ID ${id} из БД:`, err);
-    res.status(500).json({ error: 'Не удалось загрузить аттракцион', details: err.message });
-  }
 });
 
-// === API: Получить товары по массиву ID (только публичные поля) ===
+// На сервере (например, в вашем app.js или routes/products.js)
 app.post('/api/products/bulk', async (req, res) => {
-  const { ids } = req.body;
-  if (!Array.isArray(ids) || ids.length === 0) {
-    return res.status(400).json({ error: 'Неверный формат данных. Ожидается массив ID.' });
-  }
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ error: 'Неверный формат данных. Ожидается массив ID.' });
+    }
 
-  const validIds = ids.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
-  if (validIds.length === 0) {
-    return res.status(400).json({ error: 'Не переданы валидные ID товаров.' });
-  }
+    // Очищаем и фильтруем ID
+    const validIds = ids.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
 
-  try {
-    const placeholders = validIds.map((_, i) => `$${i + 1}`).join(',');
-    const query = `
-      SELECT
-        id,
-        title,
-        description,
-        price,
-        tag,
-        available,
-        category,
-        brand,
-        compatibility,
-        images_json
-      FROM products
-      WHERE id = ANY($1)
-    `;
+    if (validIds.length === 0) {
+        return res.status(400).json({ error: 'Не переданы валидные ID товаров.' });
+    }
 
-    const result = await pool.query(query, [validIds]);
-    const products = result.rows.map(row => {
-      let images = [];
-      if (row.images_json) {
-        try {
-          const parsed = JSON.parse(row.images_json);
-          images = Array.isArray(parsed) ? parsed : [];
-        } catch (e) {
-          console.error(`Ошибка парсинга images_json для товара ${row.id}:`, e);
-          images = [];
-        }
-      }
+    try {
+        // Используем параметризованный запрос для безопасности и эффективности
+        // Предполагается, что у вас есть pool для подключения к БД (например, pg)
+        const placeholders = validIds.map((_, i) => `$${i + 1}`).join(',');
+        // Можно добавить AND available = true, если хотите фильтровать по доступности
+        const query = `
+            SELECT id, title, description, price, category, available, images_json
+            FROM products
+            WHERE id = ANY($1) -- Используем ANY для массива
+        `;
+        // const query = `SELECT ... WHERE id IN (${placeholders})`; // Альтернатива с IN
 
-      return {
-        id: row.id,
-        title: row.title,
-        description: row.description,
-        price: parseFloat(row.price),
-        tag: row.tag,
-        available: row.available !== false,
-        category: row.category,
-        brand: row.brand,
-        compatibility: row.compatibility,
-        images: images
-        // Не включаем: supplier_link, supplier_notes, slug
-      };
-    });
+        const result = await pool.query(query, [validIds]); // pool - ваш пул соединений к БД
+        const products = result.rows.map(row => ({
+            id: row.id,
+            title: row.title,
+            description: row.description,
+            price: parseFloat(row.price),
+            category: row.category,
+            available: row.available,
+            images: row.images_json ? JSON.parse(row.images_json) : []
+            // Добавьте другие поля, если нужно для отображения вариантов
+        }));
 
-    res.json(products);
-  } catch (err) {
-    console.error('Ошибка при загрузке товаров по ID (bulk):', err);
-    res.status(500).json({ error: 'Ошибка сервера при загрузке товаров.' });
-  }
+        res.json(products);
+    } catch (err) {
+        console.error('Ошибка при загрузке товаров по ID (bulk):', err);
+        res.status(500).json({ error: 'Ошибка сервера при загрузке товаров.' });
+    }
 });
 
-// === API: Получить товар по ID с вариантами (только публичные поля) ===
-app.get('/api/products/:id', async (req, res) => {
-  try {
-    const productId = parseInt(req.params.id, 10);
-    if (isNaN(productId)) {
-      return res.status(400).json({ error: 'Некорректный ID товара' });
-    }
 
-    // 1. Загружаем основной товар
-    const productResult = await pool.query(`
-      SELECT
-        id,
-        title,
-        description,
-        price,
-        tag,
-        available,
-        category,
-        brand,
-        compatibility,
-        images_json
-      FROM products
-      WHERE id = $1`, [productId]);
-
-    if (productResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Товар не найден' });
-    }
-    const productRow = productResult.rows[0];
-
-    // 2. Обработка изображений
-    let productImages = [];
-    if (productRow.images_json) {
-      try {
-        const parsed = JSON.parse(productRow.images_json);
-        productImages = Array.isArray(parsed) ? parsed : [];
-      } catch (e) {
-        console.error(`Ошибка парсинга images_json для товара ${productId}:`, e);
-        productImages = [];
-      }
-    }
-
-    const product = {
-      id: productRow.id,
-      title: productRow.title,
-      description: productRow.description,
-      price: parseFloat(productRow.price),
-      tag: productRow.tag,
-      available: productRow.available !== false,
-      category: productRow.category,
-      brand: productRow.brand,
-      compatibility: productRow.compatibility,
-      images: productImages
-      // Не включаем: supplier_link, supplier_notes, slug
-    };
-
-    // 3. Загружаем связанные варианты
-    let variants = [];
-    const groupResult = await pool.query(
-      'SELECT group_id FROM product_variants_link WHERE product_id = $1',
-      [product.id]
-    );
-
-    if (groupResult.rows.length > 0) {
-      const groupId = groupResult.rows[0].group_id;
-      const variantsResult = await pool.query(`
-        SELECT
-          id,
-          title,
-          description,
-          price,
-          tag,
-          available,
-          category,
-          brand,
-          compatibility,
-          images_json
-        FROM product_variants_link pvl
-        JOIN products p ON pvl.product_id = p.id
-        WHERE pvl.group_id = $1 AND p.id != $2
-        ORDER BY p.id`,
-        [groupId, product.id]
-      );
-
-      variants = variantsResult.rows.map(row => {
-        let variantImages = [];
-        if (row.images_json) {
-          try {
-            const parsed = JSON.parse(row.images_json);
-            variantImages = Array.isArray(parsed) ? parsed : [];
-          } catch (e) {
-            console.error(`Ошибка парсинга images_json для варианта ${row.id}:`, e);
-            variantImages = [];
-          }
-        }
-
-        return {
-          id: row.id,
-          title: row.title,
-          description: row.description,
-          price: parseFloat(row.price),
-          tag: row.tag,
-          available: row.available !== false,
-          category: row.category,
-          brand: row.brand,
-          compatibility: row.compatibility,
-          images: variantImages
-          // Не включаем: supplier_link, supplier_notes, slug
-        };
-      });
-    }
-
-    product.variants = variants;
-
-    res.json(product);
-
-  } catch (err) {
-    console.error(`❌ Ошибка при получении товара с ID ${req.params.id} из БД:`, err);
-    res.status(500).json({ error: 'Не удалось загрузить товар', details: err.message });
-  }
-});
-// === МАРШРУТ ДЛЯ СТРАНИЦЫ ТОВАРА (важно: до универсального) ===
-app.get('/product/:slug', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'product.html'));
-});
-// === API: Получить товар по slug (только публичные поля) ===
-app.get('/api/product-by-slug/:slug', async (req, res) => {
-  try {
-    const slug = req.params.slug;
-
-    const productResult = await pool.query(`
-      SELECT
-        id,
-        title,
-        description,
-        price,
-        tag,
-        available,
-        category,
-        brand,
-        compatibility,
-        images_json
-      FROM products
-      WHERE slug = $1`, [slug]);
-
-    if (productResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Товар не найден' });
-    }
-
-    const productRow = productResult.rows[0];
-
-    // Обработка изображений
-    let productImages = [];
-    if (productRow.images_json) {
-      try {
-        const parsed = JSON.parse(productRow.images_json);
-        productImages = Array.isArray(parsed) ? parsed : [];
-      } catch (e) {
-        console.error(`Ошибка парсинга images_json для товара ${productRow.id}:`, e);
-        productImages = [];
-      }
-    }
-
-    const product = {
-      id: productRow.id,
-      title: productRow.title,
-      description: productRow.description,
-      price: parseFloat(productRow.price),
-      tag: productRow.tag,
-      available: productRow.available !== false,
-      category: productRow.category,
-      brand: productRow.brand,
-      compatibility: productRow.compatibility,
-      images: productImages,
-      slug: productRow.slug
-      // Не включаем: supplier_link, supplier_notes
-    };
-
-    // Загрузка вариантов
-    let variants = [];
-    const groupResult = await pool.query(
-      'SELECT group_id FROM product_variants_link WHERE product_id = $1',
-      [product.id]
-    );
-
-    if (groupResult.rows.length > 0) {
-      const groupId = groupResult.rows[0].group_id;
-      const variantsResult = await pool.query(`
-        SELECT
-          id,
-          title,
-          description,
-          price,
-          tag,
-          available,
-          category,
-          brand,
-          compatibility,
-          images_json
-        FROM product_variants_link pvl
-        JOIN products p ON pvl.product_id = p.id
-        WHERE pvl.group_id = $1 AND p.id != $2
-        ORDER BY p.id`,
-        [groupId, product.id]
-      );
-
-      variants = variantsResult.rows.map(row => {
-        let variantImages = [];
-        if (row.images_json) {
-          try {
-            const parsed = JSON.parse(row.images_json);
-            variantImages = Array.isArray(parsed) ? parsed : [];
-          } catch (e) {
-            console.error(`Ошибка парсинга images_json для варианта ${row.id}:`, e);
-            variantImages = [];
-          }
-        }
-
-        return {
-          id: row.id,
-          title: row.title,
-          description: row.description,
-          price: parseFloat(row.price),
-          tag: row.tag,
-          available: row.available !== false,
-          category: row.category,
-          brand: row.brand,
-          compatibility: row.compatibility,
-          images: variantImages
-          // Не включаем: supplier_link, supplier_notes, slug
-        };
-      });
-    }
-
-    product.variants = variants;
-
-    res.json(product);
-
-  } catch (err) {
-    console.error(`❌ Ошибка при получении товара по slug ${req.params.slug} из БД:`, err);
-    res.status(500).json({ error: 'Не удалось загрузить товар', details: err.message });
-  }
-});
 
 // --- КАСТОМНЫЕ МАРШРУТЫ ДЛЯ HTML СТРАНИЦ ---
 // Универсальный маршрут для отдачи .html страниц (например, /catalog -> public/catalog.html)
