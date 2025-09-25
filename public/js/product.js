@@ -462,7 +462,7 @@ function updateCartCountLocal() {
     const cartCountElement = document.getElementById('cart-count');
     if (cartCountElement) {
         cartCountElement.textContent = count;
-        cartCountElement.style.display = count > 0 ? 'block' : 'none';
+        
     }
 }
 
