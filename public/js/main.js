@@ -4,25 +4,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Определяем текущую страницу и устанавливаем активный пункт меню
   const url = window.location.href;
-  let pageKey = 'index'; // <-- По умолчанию 'index' (Главная)
+  let pageKey = null; // <-- Теперь по умолчанию null
 
+  // Проверяем конкретные страницы
   if (url.includes('/catalog')) pageKey = 'catalog';
   else if (url.includes('/attractions')) pageKey = 'attractions';
   else if (url.includes('/contact')) pageKey = 'contact';
   // else if (url.includes('/product.html')) pageKey = 'product'; // <-- Не нужно
+
+  // Проверяем, находимся ли мы на главной странице
+  // window.location.pathname возвращает путь, например, '/' или '/catalog'
+  if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+    // Если URL указывает на главную, устанавливаем pageKey в 'index', независимо от других условий
+    pageKey = 'index';
+  }
 
   // Удаляем активный класс со всех ссылок
   document.querySelectorAll('.nav-list a').forEach(link => {
     link.classList.remove('active');
   });
 
-  // Добавляем активный класс нужной ссылке, ТОЛЬКО ЕСЛИ pageKey - одна из известных страниц меню
-  // Это предотвратит подсветку "Главная" на странице товара
+  // Добавляем активный класс нужной ссылке, ТОЛЬКО ЕСЛИ pageKey - одна из известных страниц меню ИЛИ это главная
   const activeLink = document.querySelector(`.nav-list a[data-page="${pageKey}"]`);
-  if (activeLink && pageKey !== 'index') { // <-- Добавлено условие && pageKey !== 'index'
+  if (activeLink && pageKey !== null) { // <-- Проверяем, что pageKey не null
     activeLink.classList.add('active');
   }
-  // Если pageKey === 'index', но URL не '/', активная ссылка не будет установлена.
 });
 
 // Аккордеон для FAQ
