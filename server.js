@@ -1397,7 +1397,7 @@ app.post('/api/products/bulk', async (req, res) => {
   }
 });
 
-// === API: Получить товар по slug (только публичные поля) ===
+// === API: Получить товар по slug (все поля) ===
 app.get('/api/product-by-slug/:slug', async (req, res) => {
   try {
     const slug = req.params.slug;
@@ -1429,11 +1429,19 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
     // Обработка изображений
     let productImages = [];
     if (productRow.images_json) {
-      try {
-        const parsed = JSON.parse(productRow.images_json);
-        productImages = Array.isArray(parsed) ? parsed : [];
-      } catch (e) {
-        console.error(`Ошибка парсинга images_json для товара ${productRow.id}:`, e);
+      if (typeof productRow.images_json === 'string') {
+        try {
+          const parsed = JSON.parse(productRow.images_json);
+          productImages = Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+          console.error(`Ошибка парсинга images_json для товара ${productRow.id}:`, e);
+          productImages = [];
+        }
+      } else if (Array.isArray(productRow.images_json)) {
+        productImages = productRow.images_json;
+      } else if (typeof productRow.images_json === 'object') {
+        productImages = [productRow.images_json];
+      } else {
         productImages = [];
       }
     }
