@@ -142,7 +142,10 @@
 
 .product-page-actions {
     margin-top: 2rem;
-    gap: 10px;
+}
+
+#product-page-buy-now-btn {
+    margin-top: 10px;
 }
 
 .breadcrumb {
