@@ -28,15 +28,14 @@
   <script src="https://cdn.jsdelivr.net/npm/jquery.maskedinput@1.4.1/src/jquery.maskedinput.js" type="text/javascript"></script>
 
   <!-- Общие стили -->
-  <link rel="stylesheet" href="css/layout/header.css">
-  <link rel="stylesheet" href="css/components/background.css">
+  <link rel="stylesheet" href="/css/layout/header.css">
+  <link rel="stylesheet" href="/css/components/background.css">
   <!-- Стили для карточки товара, модальных окон и корзины могут понадобиться, если они используют общие классы -->
-  <link rel="stylesheet" href="css/components/product-card.css">
-  <link rel="stylesheet" href="css/components/modal.css">
-
+  <link rel="stylesheet" href="/css/components/product-card.css">
+  <link rel="stylesheet" href="/css/components/modal.css">
 
   <!-- Специфичные стили для страницы товара (если потребуются) -->
-  <link rel="stylesheet" href="css/pages/product-page.css"> <!-- Создадим позже -->
+  <link rel="stylesheet" href="/css/pages/product-page.css"> <!-- Создадим позже -->
 
   <!-- Yandex.Metrika counter -->
   <script type="text/javascript">
@@ -74,7 +73,7 @@
 
   <!-- Шапка -->
   <header class="header" role="banner">
-    <a href="https://bizon-business.ru" class="logo">
+    <a href="/" class="logo">
       <div class="logo-icon">
         <picture>
           <img src="/assets/logo/logo-Photoroom.webp" alt="BIZON">
@@ -85,16 +84,14 @@
 
     <nav class="main-nav" id="mainNav" role="navigation" aria-label="Основная навигация">
       <ul class="nav-list">
-        <li><a href="https://bizon-business.ru/" data-page="index">Главная</a></li>
-        <li><a href="https://bizon-business.ru/catalog" data-page="catalog">Каталог</a></li>
-        <li><a href="https://bizon-business.ru/attractions" data-page="attractions">VR Аттракционы</a></li>
-        <li><a href="https://bizon-business.ru/contact" data-page="contact">Контакты</a></li>
+        <li><a href="/" data-page="index">Главная</a></li>
+        <li><a href="/catalog" data-page="catalog">Каталог</a></li>
+        <li><a href="/attractions" data-page="attractions">VR Аттракционы</a></li>
+        <li><a href="/contact" data-page="contact">Контакты</a></li>
       </ul>
     </nav>
 
     <div class="header-actions">
-        
-        
         <button id="cart-btn" class="cart-btn" aria-label="Корзина">
             Корзина
             <span id="cart-count" class="cart-count">0</span>
@@ -132,8 +129,7 @@
                     <ol class="breadcrumb">
                         <li><a href="/">Главная</a></li>
                         <li><a href="/catalog">Каталог</a></li>
-                        <li id="breadcrumb-category"><a href="#">Категория</a></li> <!-- Будет заполнена -->
-                       
+                        <li id="breadcrumb-category"><a href="#">Категория</a></li>
                     </ol>
                 </nav>
 
@@ -155,19 +151,17 @@
     </div>
   </main>
 
-  
-
   <!-- Подвал -->
   <footer role="contentinfo">
     © <span id="year"></span> BIZON — Все права защищены
   </footer>
 
-  <script defer src="js/utils.js"></script>
-<script defer src="js/state.js"></script> <!-- Должен быть до product.js -->
-<!-- Скрипт для страницы товара -->
-<script defer src="js/product.js"></script>
-<!-- Основной скрипт (может содержать общие функции, например, для корзины) -->
-<script defer src="js/main.js"></script> <!-- Или ui.js, если там openCartModal/closeModals -->
+  <script defer src="/js/utils.js"></script>
+  <script defer src="/js/state.js"></script> <!-- Должен быть до product.js -->
+  <!-- Скрипт для страницы товара -->
+  <script defer src="/js/product.js"></script>
+  <!-- Основной скрипт (может содержать общие функции, например, для корзины) -->
+  <script defer src="/js/main.js"></script>
   <script>
     // Установка года
     document.getElementById('year').textContent = new Date().getFullYear();
