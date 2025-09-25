@@ -187,7 +187,7 @@ async function renderProducts() {
           <div class="product-footer">
             <div class="product-price">${formatPrice(product.price)}</div>
             <div class="product-actions">
-             button class="btn-details" data-id="${product.id}" data-slug="${product.slug}">Подробнее</button>
+             <button class="btn-details" data-id="${product.id}" data-slug="${product.slug}">Подробнее</button>
               <button class="btn-cart" data-id="${product.id}">В корзину</button>
             </div>
           </div>
