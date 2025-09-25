@@ -1426,14 +1426,22 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
 
     const productRow = productResult.rows[0];
 
-    // Обработка изображений
+    // --- НОВОЕ: Безопасная обработка images_json ---
     let productImages = [];
     if (productRow.images_json) {
-      try {
-        const parsed = JSON.parse(productRow.images_json);
-        productImages = Array.isArray(parsed) ? parsed : [];
-      } catch (e) {
-        console.error(`Ошибка парсинга images_json для товара ${productRow.id}:`, e);
+      if (typeof productRow.images_json === 'string') {
+        try {
+          const parsed = JSON.parse(productRow.images_json);
+          productImages = Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+          console.error(`Ошибка парсинга images_json для товара ${productRow.id}:`, e);
+          productImages = [];
+        }
+      } else if (Array.isArray(productRow.images_json)) {
+        productImages = productRow.images_json;
+      } else if (typeof productRow.images_json === 'object') {
+        productImages = [productRow.images_json];
+      } else {
         productImages = [];
       }
     }
@@ -1487,13 +1495,22 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
       );
 
       variants = variantsResult.rows.map(row => {
+        // --- НОВОЕ: Безопасная обработка images_json для варианта ---
         let variantImages = [];
         if (row.images_json) {
-          try {
-            const parsed = JSON.parse(row.images_json);
-            variantImages = Array.isArray(parsed) ? parsed : [];
-          } catch (e) {
-            console.error(`Ошибка парсинга images_json для варианта ${row.id}:`, e);
+          if (typeof row.images_json === 'string') {
+            try {
+              const parsed = JSON.parse(row.images_json);
+              variantImages = Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+              console.error(`Ошибка парсинга images_json для варианта ${row.id}:`, e);
+              variantImages = [];
+            }
+          } else if (Array.isArray(row.images_json)) {
+            variantImages = row.images_json;
+          } else if (typeof row.images_json === 'object') {
+            variantImages = [row.images_json];
+          } else {
             variantImages = [];
           }
         }
