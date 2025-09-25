@@ -1335,7 +1335,10 @@ app.get('/api/products/:id', async (req, res) => {
     res.status(500).json({ error: 'Не удалось загрузить товар', details: err.message });
   }
 });
-
+// === МАРШРУТ ДЛЯ СТРАНИЦЫ ТОВАРА (важно: до универсального) ===
+app.get('/product/:slug', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'product.html'));
+});
 // === API: Получить товар по slug (для URL вида /product/nazvanietovara) ===
 app.get('/api/product-by-slug/:slug', async (req, res) => {
   try {
