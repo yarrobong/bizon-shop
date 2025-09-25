@@ -1537,6 +1537,12 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
   }
 });
 
+// === СПЕЦИФИЧНЫЕ HTML маршруты ===
+// Отдаём product.html для маршрутов вида /product/:slug
+app.get('/product/:slug', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'product.html'));
+});
+
 
 // --- КАСТОМНЫЕ МАРШРУТЫ ДЛЯ HTML СТРАНИЦ ---
 // Универсальный маршрут для отдачи .html страниц (например, /catalog -> public/catalog.html)
