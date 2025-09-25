@@ -187,7 +187,7 @@ async function renderProducts() {
           <div class="product-footer">
             <div class="product-price">${formatPrice(product.price)}</div>
             <div class="product-actions">
-              <button class="btn-details" data-id="${product.id}" data-slug="${generateSlug(product.title)}">Подробнее</button>
+             button class="btn-details" data-id="${product.id}" data-slug="${product.slug}">Подробнее</button>
               <button class="btn-cart" data-id="${product.id}">В корзину</button>
             </div>
           </div>
@@ -197,33 +197,28 @@ async function renderProducts() {
     });
 
     // Обработчики для кликов по всей карточке товара
-    document.querySelectorAll('.product-card').forEach(card => {
-      card.addEventListener('click', (event) => {
-        // Проверяем, что клик был не по кнопке "В корзину", чтобы избежать конфликта
-        if (event.target.classList.contains('btn-cart')) return;
-        // Проверяем, что клик был не по кнопке "Подробнее"
-        if (event.target.classList.contains('btn-details')) return;
+document.querySelectorAll('.product-card').forEach(card => {
+  card.addEventListener('click', (event) => {
+    if (event.target.classList.contains('btn-cart')) return;
+    if (event.target.classList.contains('btn-details')) return;
 
-        // Клик по карточке - переходим на страницу товара
-        const buttonDetails = card.querySelector('.btn-details');
-        if (!buttonDetails) return;
-        const slug = buttonDetails.dataset.slug;
-        if (slug) {
-            // Переход на новую страницу товара
-            window.location.href = `/product/${slug}`;
-        }
-      });
-    });
+    const buttonDetails = card.querySelector('.btn-details');
+    if (!buttonDetails) return;
+    const slug = buttonDetails.dataset.slug; // ✅ Берём slug из кнопки
+    if (slug) {
+      window.location.href = `/product/${slug}`;
+    }
+  });
+});
 
     // Обработчики для кнопок "Подробнее"
-    document.querySelectorAll('.btn-details').forEach(button => {
-      button.addEventListener('click', (event) => {
-        event.stopPropagation(); // Предотвращаем всплытие, чтобы не сработал обработчик клика по карточке
-        const slug = event.target.dataset.slug;
-        // Переход на страницу товара
-        window.location.href = `/product/${slug}`;
-      });
-    });
+document.querySelectorAll('.btn-details').forEach(button => {
+  button.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const slug = button.dataset.slug; // ✅ Правильно: button.dataset.slug
+    window.location.href = `/product/${slug}`;
+  });
+});
 
     // Обработчики для кнопок "В корзину"
     document.querySelectorAll('.btn-cart').forEach(button => {
