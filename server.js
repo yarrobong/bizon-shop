@@ -151,7 +151,6 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
-
 // === API: Установить варианты товара ===
 app.put('/api/products/:id/variants', async (req, res) => {
   const client = await pool.connect();
@@ -504,7 +503,6 @@ app.post('/api/products', async (req, res) => {
   }
 });
 
-
 // === API: Удалить товар ===
 app.delete('/api/products/:id', async (req, res) => {
   try {
@@ -520,7 +518,6 @@ app.delete('/api/products/:id', async (req, res) => {
   }
 });
 
-// --- API: Категории ---
 // === API: Получить категории ===
 app.get('/api/categories', async (req, res) => {
   try {
@@ -566,7 +563,6 @@ app.delete('/api/categories/:id', async (req, res) => {
   }
 });
 
-// --- API: Заказы ---
 // === API: Оформить заказ ===
 app.post('/api/order', async (req, res) => {
   console.log('=== НАЧАЛО ОБРАБОТКИ ЗАКАЗА ===');
@@ -809,7 +805,6 @@ app.delete('/api/orders/:id', async (req, res) => {
   }
 });
 
-// --- API: Аутентификация ---
 // === API: Логин администратора ===
 app.post('/api/login', async (req, res) => {
   try {
@@ -849,7 +844,6 @@ app.post('/api/login', async (req, res) => {
 });
 
 // --- API: Обратная связь ---
-// === API: Обратный звонок (Контактная форма) ===
 app.post('/api/contact', async (req, res) => {
   console.log('=== НАЧАЛО ОБРАБОТКИ ЗАЯВКИ НА ОБРАТНЫЙ ЗВОНОК ===');
   console.log('Полученные данные:', req.body);
@@ -1211,7 +1205,6 @@ app.put('/api/attractions/:id', async (req, res) => {
 });
 
 // --- API endpoint для удаления аттракциона ---
-// Удаление уже работает корректно благодаря CASCADE, но оставим для полноты
 app.delete('/api/attractions/:id', async (req, res) => {
     const { id } = req.params;
     console.log(`Удаление аттракциона с ID ${id} из БД...`);
@@ -1240,7 +1233,6 @@ app.delete('/api/attractions/:id', async (req, res) => {
 });
 
 // --- API endpoint для получения уникальных категорий аттракционов ---
-// Этот обработчик не требует изменений
 app.get('/api/attractions/categories', async (req, res) => {
     console.log('Получение уникальных категорий аттракционов из БД...');
     try {
@@ -1256,7 +1248,6 @@ app.get('/api/attractions/categories', async (req, res) => {
 });
 
 // --- API endpoint для получения аттракциона по ID ---
-// Обновлен для загрузки массива изображений
 app.get('/api/attractions/:id', async (req, res) => {
     const { id } = req.params;
     console.log(`Получение аттракциона с ID ${id} из БД...`);
@@ -1406,7 +1397,7 @@ app.post('/api/products/bulk', async (req, res) => {
   }
 });
 
-// === API: Получить товар по slug (все поля) ===
+// === API: Получить товар по slug (только публичные поля) ===
 app.get('/api/product-by-slug/:slug', async (req, res) => {
   try {
     const slug = req.params.slug;
@@ -1438,19 +1429,11 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
     // Обработка изображений
     let productImages = [];
     if (productRow.images_json) {
-      if (typeof productRow.images_json === 'string') {
-        try {
-          const parsed = JSON.parse(productRow.images_json);
-          productImages = Array.isArray(parsed) ? parsed : [];
-        } catch (e) {
-          console.error(`Ошибка парсинга images_json для товара ${productRow.id}:`, e);
-          productImages = [];
-        }
-      } else if (Array.isArray(productRow.images_json)) {
-        productImages = productRow.images_json;
-      } else if (typeof productRow.images_json === 'object') {
-        productImages = [productRow.images_json];
-      } else {
+      try {
+        const parsed = JSON.parse(productRow.images_json);
+        productImages = Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        console.error(`Ошибка парсинга images_json для товара ${productRow.id}:`, e);
         productImages = [];
       }
     }
@@ -1471,7 +1454,7 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
       slug: productRow.slug
     };
 
-    // Загрузка вариантов
+    // --- ЗАГРУЗКА ВАРИАНТОВ ---
     let variants = [];
     const groupResult = await pool.query(
       'SELECT group_id FROM product_variants_link WHERE product_id = $1',
@@ -1480,6 +1463,7 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
 
     if (groupResult.rows.length > 0) {
       const groupId = groupResult.rows[0].group_id;
+      // --- ИЗМЕНЕНИЕ: УБРАЛИ "AND p.id != $2", чтобы текущий товар тоже был в вариантах ---
       const variantsResult = await pool.query(`
         SELECT
           p.id,
@@ -1497,27 +1481,19 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
           p.slug
         FROM product_variants_link pvl
         JOIN products p ON pvl.product_id = p.id
-        WHERE pvl.group_id = $1 AND p.id != $2
-        ORDER BY p.id`,
-        [groupId, product.id]
+        WHERE pvl.group_id = $1
+        ORDER BY p.id`, // Сортировка по ID (можно изменить)
+        [groupId] // Передаем ID группы
       );
 
       variants = variantsResult.rows.map(row => {
         let variantImages = [];
         if (row.images_json) {
-          if (typeof row.images_json === 'string') {
-            try {
-              const parsed = JSON.parse(row.images_json);
-              variantImages = Array.isArray(parsed) ? parsed : [];
-            } catch (e) {
-              console.error(`Ошибка парсинга images_json для варианта ${row.id}:`, e);
-              variantImages = [];
-            }
-          } else if (Array.isArray(row.images_json)) {
-            variantImages = row.images_json;
-          } else if (typeof row.images_json === 'object') {
-            variantImages = [row.images_json];
-          } else {
+          try {
+            const parsed = JSON.parse(row.images_json);
+            variantImages = Array.isArray(parsed) ? parsed : [];
+          } catch (e) {
+            console.error(`Ошибка парсинга images_json для варианта ${row.id}:`, e);
             variantImages = [];
           }
         }
@@ -1539,6 +1515,7 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
         };
       });
     }
+    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
     product.variants = variants;
 
