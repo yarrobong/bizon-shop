@@ -76,7 +76,6 @@ function addToCart(product) {
 function updateQuantity(productId, change) {
   const cart = getCart();
   const item = cart.find(item => item.product.id === productId);
-
   if (item) {
     item.qty += change;
     if (item.qty <= 0) {
