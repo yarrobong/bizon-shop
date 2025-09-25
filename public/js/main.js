@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (url.includes('/catalog')) pageKey = 'catalog';
   else if (url.includes('/attractions')) pageKey = 'attractions';
   else if (url.includes('/contact')) pageKey = 'contact';
-  // else if (url.includes('/product.html')) pageKey = 'product'; // <-- Не нужно
+  
 
   // Проверяем, находимся ли мы на главной странице
   // window.location.pathname возвращает путь, например, '/' или '/catalog'
