@@ -548,20 +548,13 @@
       });
     }
 
-    // Кнопка корзины
-    if (cartBtn) {
-        cartBtn.addEventListener('click', () => {
-             const scrollY = window.scrollY || window.pageYOffset;
-             document.body.setAttribute('data-scroll-position', scrollY);
-             document.body.classList.add('modal-open');
-             const scrollbarWidth = getScrollbarWidth();
-             document.body.style.setProperty('--scrollbar-width', scrollbarWidth + 'px');
-             document.body.style.top = `-${scrollY}px`;
-
-             // Открываем модалку корзины
-             openCartModal();
-        });
-    }
+    // Добавляем обработчик для кнопки корзины, если она есть (альтернативный способ, если не в main.js)
+  const cartBtn = document.getElementById('cart-btn'); // <-- Опционально, если нужно здесь
+  if (cartBtn) {
+  cartBtn.addEventListener('click', () => {
+       window.location.href = '/cart'; // <-- Перенаправление
+     });
+   }
 
     // Обработчики для формы заказа
     phoneInput?.addEventListener('input', () => {
