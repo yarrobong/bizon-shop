@@ -285,7 +285,7 @@ function setupEventListeners() {
   const cartBtn = document.getElementById('cart-btn'); // <-- Опционально, если нужно здесь
   if (cartBtn) {
   cartBtn.addEventListener('click', () => {
-       window.location.href = '/cart.html'; // <-- Перенаправление
+       window.location.href = '/cart'; // <-- Перенаправление
      });
    }
 }
