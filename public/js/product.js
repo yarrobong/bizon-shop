@@ -443,7 +443,11 @@ function addToCart(product) {
     console.log(`Товар ${product.title} (ID: ${product.id}) добавлен в корзину.`);
 }
 
-
+// Получение корзины (резервный вариант)
+function getCart() {
+    const cart = localStorage.getItem('cart');
+    return cart ? JSON.parse(cart) : [];
+}
 
 // Очистка корзины (резервный вариант)
 function clearCart() {
