@@ -265,6 +265,8 @@ body.modal-open {
   /* Отступы */
   margin-left: 0.5rem; /* Отступ слева от .cart-item-total */
   /* Убираем стандартные стили браузера */
+  margin-right: 1rem; /* Отступ слева от .cart-item-total */
+  /* Убираем стандартные стили браузера */
   outline: none;
 }
 
