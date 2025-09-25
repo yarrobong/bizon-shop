@@ -1,23 +1,23 @@
-// // js/product.js
+// js/product.js
 
 document.addEventListener('DOMContentLoaded', async function () {
     console.log("Страница товара загружена");
 
-    // --- 1. Получение ID товара из URL ---
-    const urlParams = new URLSearchParams(window.location.search);
-    const requestedProductId = urlParams.get('id'); // ID, запрошенный в URL (может быть основной или вариант)
+    // --- 1. Получение slug товара из URL ---
+    // URL теперь вида: /product/nazvanietovara
+    const pathSegments = window.location.pathname.split('/');
+    const slug = pathSegments[pathSegments.length - 1]; // Последний сегмент — slug
 
-    if (!requestedProductId) {
-        console.error('ID товара не найден в URL');
-        showProductError('Товар не найден (ID отсутствует)');
+    if (!slug) {
+        console.error('Slug товара не найден в URL');
+        showProductError('Товар не найден (slug отсутствует)');
         return;
     }
 
-    // --- 2. Загрузка данных запрошенного товара ---
-    // Сначала загружаем запрошенный товар, чтобы определить, основной он или вариант
+    // --- 2. Загрузка данных товара по slug ---
     let requestedProductData = null;
     try {
-        const response = await fetch(`/api/products/${requestedProductId}`);
+        const response = await fetch(`/api/product-by-slug/${slug}`);
         if (!response.ok) {
             if (response.status === 404) {
                  throw new Error('Товар не найден');
@@ -26,113 +26,20 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         }
         requestedProductData = await response.json();
-        console.log('Данные запрошенного товара (сырые):', requestedProductData);
+        console.log('Данные товара (по slug):', requestedProductData);
     } catch (error) {
-        console.error('Ошибка при загрузке данных запрошенного товара:', error);
+        console.error('Ошибка при загрузке данных товара по slug:', error);
         showProductError(`Ошибка загрузки товара: ${error.message}`);
         return;
     }
 
-    // --- 3. Определение основного товара ---
-    // Загружаем основной товар, к которому принадлежит запрошенный (если он вариант)
-    let baseProductData = requestedProductData;
-    let initialVariantId = null; // ID варианта, который нужно выбрать при загрузке
+    // --- 3. Отображение данных товара ---
+    displayProduct(requestedProductData);
 
-    // Проверяем, есть ли у запрошенного товара группа вариантов
-    const groupResponse = await fetch(`/api/products/${requestedProductData.id}`);
-    if (groupResponse.ok) {
-        const detailedProductData = await groupResponse.json();
-        if (detailedProductData.variants && detailedProductData.variants.length > 0) {
-            
-            initialVariantId = urlParams.get('variant'); // Позволим URL быть /product.html?id=MAIN_ID&variant=VARIANT_ID
-            baseProductData = requestedProductData;
-            console.log('URL указывает на основной товар. Загружен основной товар. initialVariantId:', initialVariantId);
-            // --- КОНЕЦ НОВОЙ ЛОГИКИ ---
-        } else {
-             // У запрошенного товара нет вариантов, он сам основной
-             baseProductData = requestedProductData;
-             console.log('Запрошенный товар не имеет вариантов, считается основным.');
-        }
-    } else {
-        console.error('Ошибка при загрузке деталей запрошенного товара для определения группы:', groupResponse.status);
-        showProductError('Ошибка загрузки данных товара');
-        return;
-    }
+    // --- 4. Настройка обработчиков событий ---
+    setupEventListeners(requestedProductData);
 
-
-    // --- 3.5. Загрузка полных данных вариантов (включая основной товар, если он был вариант) ---
-    // Проверяем формат baseProductData.variants и загружаем полные данные при необходимости
-    if (baseProductData.variants && Array.isArray(baseProductData.variants) && baseProductData.variants.length > 0) {
-        const firstItem = baseProductData.variants[0];
-        if (typeof firstItem === 'number' || (typeof firstItem === 'object' && Object.keys(firstItem).length === 1 && firstItem.id)) {
-            console.log("baseProductData.variants содержит ID, загружаем полные данные...");
-            try {
-                const variantIds = baseProductData.variants
-                    .map(v => typeof v === 'object' ? v.id : v)
-                    .map(id => parseInt(id, 10))
-                    .filter(id => !isNaN(id));
-                    // .filter(id => id != baseProductData.id); // УБРАЛИ фильтр, чтобы загрузить все, включая основной
-
-                // ВАЖНО: baseProductData.id - это ID основного товара. Он не включается в .variants сервером.
-                // Но если URL указывал на вариант, то baseProductData был вариантом, и его ID НЕ был в .variants.
-                // НО по нашему новому предположению URL всегда на основной, так что это не проблема.
-                // Однако, если бы URL был на вариант, нам нужно было бы добавить ID основного товара к variantIds.
-                // Это требует сложной логики. Лучше придерживаться предположения.
-
-                if (variantIds.length > 0) {
-                    const fullVariantsData = await loadFullVariantsData(variantIds);
-                    // Фильтруем по доступности, если нужно, и заменяем в baseProductData
-                    baseProductData.variants = fullVariantsData.filter(v => v.available !== false);
-                    console.log("Полные данные вариантов загружены и установлены (включая основной если был):", baseProductData.variants);
-                } else {
-                    baseProductData.variants = [];
-                    console.log("Нет валидных ID вариантов для загрузки.");
-                }
-            } catch (err) {
-                console.error("Ошибка при загрузке полных данных вариантов:", err);
-                baseProductData.variants = []; // На случай ошибки, показываем без вариантов
-            }
-        } else {
-             console.log("baseProductData.variants уже содержит полные объекты.");
-        }
-    } else {
-         console.log("У основного товара нет вариантов или формат некорректен.");
-         baseProductData.variants = []; // Убедимся, что это пустой массив
-    }
-
-    // --- 4. Отображение данных товара ---
-    displayProduct(baseProductData);
-
-    // --- 5. Выбор начального варианта, если указан ---
-    if (initialVariantId) {
-        const variantToSelect = baseProductData.variants.find(v => v.id == initialVariantId);
-        if (variantToSelect) {
-            console.log("Выбираем начальный вариант из URL:", variantToSelect.id);
-            // Добавим основной товар в список вариантов для правильного отображения кнопки
-            const allVariantsIncludingBase = [baseProductData, ...baseProductData.variants];
-            // Найдем кнопку для выбранного варианта и симулируем клик
-            setTimeout(() => { // Дадим времени отрисовать кнопки
-                 const variantBtn = document.querySelector(`.product-variant-btn[data-variant-id="${variantToSelect.id}"]`);
-                 if (variantBtn) {
-                     variantBtn.click(); // Симулируем клик для выбора
-                 } else {
-                     console.warn("Кнопка для начального варианта не найдена в DOM.");
-                 }
-            }, 100); // Небольшая задержка для уверенности
-        } else {
-             console.warn("Вариант с ID", initialVariantId, "указанный в URL, не найден в списке вариантов.");
-             // Выбираем основной товар по умолчанию
-             window.currentDisplayedVariant = baseProductData;
-        }
-    } else {
-        // Если variant не указан, отображаем основной товар
-        window.currentDisplayedVariant = baseProductData;
-    }
-
-    // --- 6. Настройка обработчиков событий ---
-    setupEventListeners(baseProductData);
-
-    // --- 7. Обновление счетчика корзины ---
+    // --- 5. Обновление счетчика корзины ---
     if (typeof updateCartCount === 'function') {
         updateCartCount();
     } else {
@@ -141,42 +48,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         updateCartCountLocal();
     }
 });
-
-// --- Новая функция для загрузки полных данных вариантов ---
-async function loadFullVariantsData(variantIds) {
-    if (!Array.isArray(variantIds) || variantIds.length === 0) {
-        return [];
-    }
-
-    try {
-        // Используем эндпоинт bulk, как предлагалось ранее
-        const response = await fetch(`/api/products/bulk`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ids: variantIds })
-        });
-
-        if (!response.ok) {
-            console.error("Ошибка при загрузке полных данных вариантов (bulk):", response.status, await response.text());
-            // Альтернатива: загрузить по одному (менее эффективно)
-            console.log("Пробуем загрузить варианты по одному...");
-            const promises = variantIds.map(id => 
-                fetch(`/api/products/${id}`)
-                    .then(res => res.ok ? res.json() : null)
-                    .catch(err => { console.error(`Ошибка загрузки варианта ${id}:`, err); return null; })
-            );
-            const results = await Promise.all(promises);
-            return results.filter(p => p !== null);
-        }
-
-        const fullVariantsData = await response.json();
-        console.log("Варианты загружены через bulk:", fullVariantsData);
-        return fullVariantsData;
-    } catch (error) {
-        console.error("Ошибка в функции loadFullVariantsData:", error);
-        throw error; // Пробрасываем ошибку выше
-    }
-}
 
 function showProductError(message) {
     const container = document.querySelector('.product-page-container');
@@ -221,11 +92,11 @@ function displayProduct(product) {
         // Изображения
         displayProductImages(product, product.images);
 
-        // Варианты (теперь включает основной товар)
-        renderVariantsOnPage(product); // Теперь product.variants должны быть полными объектами
+        // Варианты
+        renderVariantsOnPage(product);
 
-        // Инициализируем "текущий отображаемый вариант" как основной товар (если не выбран другой)
-        // window.currentDisplayedVariant будет установлен позже, в основном коде или при выборе
+        // Инициализируем "текущий отображаемый вариант" как основной товар
+        window.currentDisplayedVariant = product;
 
         // Обновляем dataset.id кнопок "В корзину" и "Купить"
         const addToCartBtn = document.getElementById('product-page-add-to-cart-btn');
@@ -251,7 +122,6 @@ function updateMetaTags(product) {
     
     const mainImageUrl = product.images && product.images.length > 0 ? product.images[0].url : '/assets/placeholder.png';
     document.querySelector('meta[property="og:image"]')?.setAttribute('content', mainImageUrl);
-    // document.querySelector('meta[property="og:url"]')?.setAttribute('content', window.location.href); // Опционально
 }
 
 function displayProductImages(baseProduct, imagesToDisplay) {
@@ -293,8 +163,7 @@ function displayProductImages(baseProduct, imagesToDisplay) {
     }
 }
 
-
-// Функция для отображения вариантов на странице товара, включая основной
+// Функция для отображения вариантов на странице товара
 function renderVariantsOnPage(baseProduct) {
     const variantsContainer = document.getElementById('product-page-variants-container');
     const variantsList = document.getElementById('product-page-variants');
@@ -304,19 +173,16 @@ function renderVariantsOnPage(baseProduct) {
         variantsList.innerHTML = '';
     }
 
-    // Подготовим список всех вариантов, включая основной товар
-    const allVariantsToDisplay = [baseProduct, ...(baseProduct.variants || [])];
-
-    // Проверяем, есть ли данные о вариантах (теперь всегда есть, т.к. добавили основной)
-    if (allVariantsToDisplay && Array.isArray(allVariantsToDisplay) && allVariantsToDisplay.length > 1) { // > 1, потому что основной всегда есть
-        console.log("Отображаем все варианты на странице товара (включая основной):", allVariantsToDisplay);
+    // Проверяем, есть ли данные о вариантах
+    if (baseProduct.variants && Array.isArray(baseProduct.variants) && baseProduct.variants.length > 0) {
+        console.log("Отображаем варианты на странице товара:", baseProduct.variants);
 
         if (variantsContainer) {
-            // Показываем контейнер, если есть варианты (помимо основного)
+            // Показываем контейнер, если есть варианты
             variantsContainer.style.removeProperty('display');
         }
 
-        allVariantsToDisplay.forEach(variant => {
+        baseProduct.variants.forEach(variant => {
             // Защита от некорректных данных
             if (!variant || typeof variant !== 'object' || !variant.id) {
                 console.warn("Некорректные данные варианта, пропускаем:", variant);
@@ -352,7 +218,7 @@ function renderVariantsOnPage(baseProduct) {
                 event.preventDefault();
                 console.log("Выбран вариант на странице:", variant.id, variant.title);
                 // Выбираем этот вариант как отображаемый
-                selectVariantOnPage(baseProduct, variant); // Используем обновленную функцию
+                selectVariantOnPage(baseProduct, variant);
                 // Обновляем подсветку кнопок
                 document.querySelectorAll('.product-variant-btn').forEach(btn => {
                     btn.classList.remove('selected');
@@ -365,8 +231,8 @@ function renderVariantsOnPage(baseProduct) {
         });
 
     } else {
-        console.log("У товара нет других вариантов кроме основного.");
-        // Явно скрываем контейнер, если других вариантов нет
+        console.log("У товара нет вариантов.");
+        // Явно скрываем контейнер, если нет вариантов
         if (variantsContainer) {
              variantsContainer.style.display = 'none';
         }
@@ -421,33 +287,18 @@ function selectVariantOnPage(baseProduct, selectedVariant) {
         // Сохраняем ссылку на текущий отображаемый вариант
         window.currentDisplayedVariant = selectedVariant;
 
-        // --- ИЗМЕНЕНИЕ: Обновляем URL ---
-        const currentUrl = new URL(window.location);
-        if (selectedVariant.id == baseProduct.id) {
-            // Если выбран основной товар, удаляем параметр variant
-            currentUrl.searchParams.delete('variant');
-        } else {
-            // Если выбран вариант, добавляем/обновляем параметр variant
-            currentUrl.searchParams.set('variant', selectedVariant.id);
-        }
-        // Используем history.pushState или history.replaceState
-        // pushState добавит новую запись в историю, replaceState заменит текущую
-        // replaceState предпочтительнее, чтобы не засорять историю при переключении вариантов
-        window.history.replaceState({}, '', currentUrl);
-        console.log("URL обновлен до:", currentUrl.toString());
-
     } catch (error) {
         console.error("Ошибка при выборе варианта на странице:", error);
     }
 }
-// Добавляем обработчик для кнопки корзины, если она есть (альтернативный способ, если не в main.js)
-  const cartBtn = document.getElementById('cart-btn'); // <-- Опционально, если нужно здесь
-  if (cartBtn) {
-  cartBtn.addEventListener('click', () => {
-       window.location.href = '/cart.html'; // <-- Перенаправление
-     });
-   }
 
+// Добавляем обработчик для кнопки корзины, если она есть (альтернативный способ, если не в main.js)
+const cartBtn = document.getElementById('cart-btn');
+if (cartBtn) {
+    cartBtn.addEventListener('click', () => {
+         window.location.href = '/cart.html';
+    });
+}
 
 function setupEventListeners(product) {
     // Обработчики для кнопок "Добавить в корзину" и "Купить сейчас"
@@ -469,21 +320,14 @@ function setupEventListeners(product) {
              // Используем текущий отображаемый вариант, а не основной товар
             let itemToAdd = window.currentDisplayedVariant || product;
             console.log("Покупка в 1 клик (из state.js):", itemToAdd.id, itemToAdd.title);
-            // --- ИСПРАВЛЕНО: Всегда вызываем window.addToCart ---
             window.addToCart(itemToAdd); // Вызываем функцию из state.js
-            // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
-            // --- ИСПРАВЛЕНО: Всегда вызываем window.updateCartCount ---
             window.updateCartCount(); // Вызываем функцию из state.js
-            // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
             // ВАЖНО: Перенаправляем на страницу корзины
             window.location.href = '/cart.html';
         });
     }
 
-    // ... (остальные обработчики, как раньше, но с window. где нужно) ...
-
     // Обработчик отправки заказа в модальном окне корзины (изменён: убрана проверка consent)
-    // (Это нужно оставить, если модальное окно корзины используется где-то ещё)
     const sendOrderBtn = document.getElementById('send-order');
     if (sendOrderBtn) {
         let isSending = false;
@@ -493,23 +337,15 @@ function setupEventListeners(product) {
                 console.log('Заказ уже отправляется...');
                 return;
             }
-             // const consentCheckbox = document.getElementById('consent-toggle'); // <-- Закомментировано/удалено
-            // const isConsentGiven = consentCheckbox ? consentCheckbox.checked : false; // <-- Закомментировано/удалено
             const phoneInput = document.getElementById('phone');
-            // if (!isConsentGiven) { // <-- Условие полностью удалено
-            //     alert('Необходимо дать согласие на обработку персональных данных'); // <-- Удалено
-            //     return; // <-- Удалено
-            // }
             if (!phoneInput || !phoneInput.value.trim()) {
                 alert('Укажите телефон');
                 return;
             }
-            // --- ИСПРАВЛЕНО: Всегда вызываем window.getCart ---
             if (window.getCart().length === 0) { // Используем функцию из state.js
                 alert('Корзина пуста');
                 return;
             }
-            // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
             try {
                 isSending = true;
                 sendOrderBtn.disabled = true;
@@ -520,29 +356,23 @@ function setupEventListeners(product) {
                   body: JSON.stringify({
                     phone: phoneInput.value,
                     comment: document.getElementById('comment-input')?.value || '',
-                    // --- ИСПРАВЛЕНО: Всегда вызываем window.getCart ---
                     cart: window.getCart() // Используем функцию из state.js
-                    // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
                   })
                 });
                 const result = await response.json();
                 console.log('Ответ сервера:', result);
                 if (result.success) {
-                  // --- ИСПРАВЛЕНО: Всегда вызываем window.clearCart ---
                   window.clearCart(); // Используем функцию из state.js
-                  // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
                   if (phoneInput) phoneInput.value = '';
                   const commentInput = document.getElementById('comment-input');
                   if (commentInput) commentInput.value = '';
                   const successMessage = document.getElementById('success-message');
                   if (successMessage) successMessage.style.display = 'block';
-                  // openCartModal(); // Перерисовываем корзину (если модальное окно используется)
                   setTimeout(() => {
                     if (successMessage) successMessage.style.display = 'none';
                     sendOrderBtn.disabled = false;
                     sendOrderBtn.textContent = 'Оформить заказ';
                     isSending = false;
-                    // closeModals(); // Закрываем модальное окно после успешной отправки (если модальное окно используется)
                   }, 3000);
                 } else {
                   throw new Error(result.error || 'Ошибка сервера');
@@ -550,22 +380,18 @@ function setupEventListeners(product) {
             } catch (error) {
                 console.error('Ошибка отправки заказа:', error);
                 if (error.message && error.message.includes('Заказ уже обрабатывается')) {
-                  // --- ИСПРАВЛЕНО: Всегда вызываем window.clearCart ---
                   window.clearCart(); // Используем функцию из state.js
-                  // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
                   const phoneInput = document.getElementById('phone');
                   if (phoneInput) phoneInput.value = '';
                   const commentInput = document.getElementById('comment-input');
                   if (commentInput) commentInput.value = '';
                   const successMessage = document.getElementById('success-message');
                   if (successMessage) successMessage.style.display = 'block';
-                  // openCartModal(); // Перерисовываем корзину (если модальное окно используется)
                   setTimeout(() => {
                     if (successMessage) successMessage.style.display = 'none';
                     sendOrderBtn.disabled = false;
                     sendOrderBtn.textContent = 'Оформить заказ';
                     isSending = false;
-                    // closeModals(); // Закрывает модальное окно (если модальное окно используется)
                   }, 3000);
                 } else {
                   alert('Не удалось отправить заказ. Пожалуйста, позвоните нам.');
@@ -577,7 +403,6 @@ function setupEventListeners(product) {
         });
     }
 }
-
 
 // --- Функции, которые должны быть доступны (предполагаются определенными в других файлах) ---
 // Если они не будут найдены, используются резервные варианты ниже
@@ -632,8 +457,6 @@ function updateCartCountLocal() {
     }
 }
 
-
-
 // Обновление состояния кнопки "Оформить заказ" (резервный вариант)
 function updateSendOrderButton() {
   const sendOrderBtn = document.getElementById('send-order');
@@ -654,7 +477,6 @@ function updateSendOrderButton() {
 }
 
 // Функция для рендеринга корзины в модальном окне этой страницы (если нужно)
-// Можно скопировать renderCartItems из ui.js и адаптировать под ID элементов этой страницы
 function renderCartItemsOnPage() {
     const cartItemsContainer = document.getElementById('cart-items');
     if (!cartItemsContainer) {
@@ -671,7 +493,6 @@ function renderCartItemsOnPage() {
         cart.forEach(item => {
             const row = document.createElement('div');
             row.className = 'cart-item';
-            // Упрощенный рендеринг, адаптируйте под вашу разметку корзины
             row.innerHTML = `
                 <img src="${item.product.images && item.product.images[0] ? item.product.images[0].url.trim() : '/assets/placeholder.png'}" alt="${item.product.title}" />
                 <div class="cart-item-info">
@@ -733,6 +554,5 @@ function updateQuantityLocal(productId, change) {
       cart.splice(index, 1);
     }
     localStorage.setItem('cart', JSON.stringify(cart));
-    // updateCartCount(); // Вызывается извне
   }
 }
