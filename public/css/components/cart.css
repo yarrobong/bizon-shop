@@ -192,7 +192,6 @@ body.modal-open {
   margin-top: 0.5rem;
   
   border-radius: 9999px;
-  padding: 0.125rem 0.5rem;
   width: fit-content;
   background: rgba(255, 255, 255, 0.1);
 }
