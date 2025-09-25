@@ -239,6 +239,49 @@ body.modal-open {
   align-self: stretch; /* Растягивается на ширину контейнера */
 }
 
+/* === СТИЛИ ДЛЯ КНОПКИ УДАЛЕНИЯ ТОВАРА === */
+.remove-item {
+  /* Позиционирование и размер */
+  width: 2rem; /* Примерно как кнопки +/- */
+  height: 2rem;
+  /* Стиль */
+  background: rgba(255, 0, 0, 0.2); /* Красный с низкой непрозрачностью */
+  border: 1px solid rgba(255, 0, 0, 0.3); /* Красная обводка */
+  color: #ef4444; /* Красный цвет текста/иконки */
+  font-weight: bold; /* Жирный шрифт для крестика */
+  font-size: 1.25rem; /* Размер крестика */
+  cursor: pointer;
+  border-radius: 50%; /* Круглая кнопка */
+  transition: all 0.2s ease; /* Плавный переход для hover */
+  display: flex; /* Центрирование содержимого */
+  align-items: center;
+  justify-content: center;
+  /* Отступы */
+  margin-left: 0.5rem; /* Отступ слева от .cart-item-total */
+  /* Убираем стандартные стили браузера */
+  outline: none;
+}
+
+.remove-item:hover {
+  background: rgba(239, 68, 68, 0.3); /* Более насыщенный красный при наведении */
+  border-color: #ef4444; /* Более насыщенная обводка */
+  color: white; /* Цвет крестика при наведении */
+  transform: scale(1.1); /* Лёгкое увеличение при наведении */
+}
+
+.remove-item:active {
+  transform: scale(0.95); /* Лёгкое уменьшение при клике */
+}
+
+/* Опционально: Стиль для мобильных (если нужно увеличить кнопку для лучшей тапаемости) */
+@media (max-width: 768px) {
+  .remove-item {
+    width: 2.2rem;
+    height: 2.2rem;
+    font-size: 1.4rem;
+  }
+}
+
 /* === СТИЛИ ДЛЯ ФОРМЫ ОФОРМЛЕНИЯ (ранее .modal-footer) === */
 .modal-footer {
   display: flex;
