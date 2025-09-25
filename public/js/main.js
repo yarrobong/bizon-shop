@@ -45,26 +45,9 @@ document.querySelectorAll('.accordion-header').forEach(button => {
   });
 });
 
-// Добавьте этот скрипт в ваш HTML или JS файл
-document.addEventListener('DOMContentLoaded', function() {
-  const header = document.querySelector('header');
-  
-  window.addEventListener('scroll', function() {
-    if (window.scrollY > 50) {
-      header.classList.add('scrolled');
-    } else {
-      header.classList.remove('scrolled');
-    }
-  });
-});
 
-// Добавляем обработчик для кнопки корзины, если она есть (альтернативный способ, если не в main.js)
-  const cartBtn = document.getElementById('cart-btn'); // <-- Опционально, если нужно здесь
-  if (cartBtn) {
-  cartBtn.addEventListener('click', () => {
-       window.location.href = '/cart.html'; // <-- Перенаправление
-     });
-   }
+
+
 
 // Мобильное меню
 const hamburger = document.getElementById('hamburger');
