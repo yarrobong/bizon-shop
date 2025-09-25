@@ -290,7 +290,7 @@ function selectVariantOnPage(baseProduct, selectedVariant) {
 const cartBtn = document.getElementById('cart-btn');
 if (cartBtn) {
     cartBtn.addEventListener('click', () => {
-         window.location.href = '/cart/';
+         window.location.href = '/cart';
     });
 }
 
@@ -317,7 +317,7 @@ function setupEventListeners(product) {
             window.addToCart(itemToAdd); // Вызываем функцию из state.js
             window.updateCartCount(); // Вызываем функцию из state.js
             // ВАЖНО: Перенаправляем на страницу корзины
-            window.location.href = '/cart.html';
+            window.location.href = '/cart/';
         });
     }
 
