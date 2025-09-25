@@ -247,8 +247,8 @@ body.modal-open {
 
 /* === СТИЛИ ДЛЯ КНОПКИ УДАЛЕНИЯ ТОВАРА === */
 .remove-item {
-  /* Позиционирование и размер */
-  width: 2rem; /* Примерно как кнопки +/- */
+
+  width: 2rem; 
   height: 2rem;
   /* Стиль */
   background: rgba(255, 0, 0, 0.2); /* Красный с низкой непрозрачностью */
@@ -268,12 +268,7 @@ body.modal-open {
   outline: none;
 }
 
-.remove-item:hover {
-  background: rgba(239, 68, 68, 0.3); /* Более насыщенный красный при наведении */
-  border-color: #ef4444; /* Более насыщенная обводка */
-  color: white; /* Цвет крестика при наведении */
-  transform: scale(1.1); /* Лёгкое увеличение при наведении */
-}
+
 
 .remove-item:active {
   transform: scale(0.95); /* Лёгкое уменьшение при клике */
