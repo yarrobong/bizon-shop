@@ -1,16 +1,16 @@
 // ui.js
-// DOM-элементы
+// DOM-элементы (только для главной/каталога)
 const productsContainer = document.getElementById('products');
 const searchInput = document.getElementById('search-input');
 const categoryButtons = document.querySelectorAll('.tag-btn');
-const cartBtn = document.getElementById('cart-btn');
-const cartModal = document.getElementById('cart-modal');
-const productModal = document.getElementById('product-modal');
-const cartItems = document.getElementById('cart-items');
-const phoneInput = document.getElementById('phone');
-const commentInput = document.getElementById('comment-input');
-const sendOrderBtn = document.getElementById('send-order');
-const successMessage = document.getElementById('success-message');
+// const cartBtn = document.getElementById('cart-btn'); // <-- Убрано, так как обработчик теперь в main.js
+// const cartModal = document.getElementById('cart-modal'); // <-- Убрано, модальное окно больше не используется
+// const productModal = document.getElementById('product-modal'); // <-- Убрано, модальное окно больше не используется
+// const cartItems = document.getElementById('cart-items'); // <-- Убрано, относится к модальному окну
+// const phoneInput = document.getElementById('phone'); // <-- Убрано, относится к модальному окну
+// const commentInput = document.getElementById('comment-input'); // <-- Убрано, относится к модальному окну
+// const sendOrderBtn = document.getElementById('send-order'); // <-- Убрано, относится к модальному окну
+// const successMessage = document.getElementById('success-message'); // <-- Убрано, относится к модальному окну
 const yearSpan = document.getElementById('year');
 let renderProductsTimeout;
 
@@ -36,23 +36,6 @@ if (yearSpan) {
   yearSpan.textContent = new Date().getFullYear();
 }
 
-function getScrollbarWidth() {
-  const outer = document.createElement('div');
-  outer.style.visibility = 'hidden';
-  outer.style.overflow = 'scroll';
-  outer.style.msOverflowStyle = 'scrollbar';
-  document.body.appendChild(outer);
-  
-  const inner = document.createElement('div');
-  outer.appendChild(inner);
-  
-  const scrollbarWidth = outer.offsetWidth - inner.offsetWidth;
-  
-  outer.parentNode.removeChild(outer);
-  
-  return scrollbarWidth;
-}
-
 // Форматирование цены
 function formatPrice(price) {
   return new Intl.NumberFormat('ru-RU', {
@@ -63,60 +46,63 @@ function formatPrice(price) {
   }).format(price);
 }
 
-// Получение корзины из localStorage
+// Получение корзины из localStorage (использует ключ 'cart')
 function getCart() {
-  const cart = localStorage.getItem('cart');
+  const cart = localStorage.getItem('cart'); // <-- Используем ключ 'cart'
   return cart ? JSON.parse(cart) : [];
 }
 
-// Добавление в корзину
+// Добавление в корзину (использует ключ 'cart')
 function addToCart(product) {
+  console.log("ui.js: Добавляем в корзину:", product.id, product.title); // <-- Новый лог
   const cart = getCart();
   const existingItem = cart.find(item => item.product.id === product.id);
-  
+
   if (existingItem) {
     existingItem.qty += 1;
   } else {
     cart.push({ product, qty: 1 });
   }
-  
-  localStorage.setItem('cart', JSON.stringify(cart));
+
+  localStorage.setItem('cart', JSON.stringify(cart)); // <-- Используем ключ 'cart'
+  updateCartCount(); // Обновляем счётчик
 }
 
-// Обновление количества в корзине
+// Обновление количества в корзине (использует ключ 'cart')
 function updateQuantity(productId, change) {
   const cart = getCart();
   const item = cart.find(item => item.product.id === productId);
-  
+
   if (item) {
     item.qty += change;
     if (item.qty <= 0) {
       const index = cart.indexOf(item);
       cart.splice(index, 1);
     }
-    localStorage.setItem('cart', JSON.stringify(cart));
+    localStorage.setItem('cart', JSON.stringify(cart)); // <-- Используем ключ 'cart'
     updateCartCount();
-    // Также перерисовываем модальное окно корзины, чтобы отразить изменения
-    openCartModal(); // или можно вызвать renderCartItems() если такая функция есть
-
+    // УБРАНО: openCartModal(); // Не перерисовываем модальное окно
   }
 }
 
-// Очистка корзины
+// Очистка корзины (использует ключ 'cart')
 function clearCart() {
-  localStorage.removeItem('cart');
-   updateCartCount();
+  localStorage.removeItem('cart'); // <-- Используем ключ 'cart'
+  updateCartCount();
 }
 
 // Обновление счетчика корзины
 function updateCartCount() {
   const cart = getCart();
   const count = cart.reduce((sum, item) => sum + item.qty, 0);
-  const cartCount = document.getElementById('cart-count');
-  if (cartCount) {
-    cartCount.textContent = count;
-    cartCount.style.display = count > 0 ? 'block' : 'none';
-  }
+  const cartCountEls = document.querySelectorAll('#cart-count, #cart-count-header'); // Используем селекторы из state.js/main.js
+
+  cartCountEls.forEach(el => {
+    if (el) {
+      el.textContent = count;
+      el.style.display = count > 0 ? 'flex' : 'none'; // Используем display: flex; как в state.js
+    }
+  });
 }
 
 // Асинхронная загрузка и рендеринг товаров
@@ -124,35 +110,35 @@ async function renderProducts() {
   if (renderProductsTimeout) {
     clearTimeout(renderProductsTimeout);
   }
-  
+
   renderProductsTimeout = setTimeout(async () => {
     let PRODUCTS = [];
     let useLocalData = false;
-    
+
     try {
       // Пытаемся загрузить с сервера
       const res = await fetch('/api/products');
-      
+
       if (!res.ok) {
         throw new Error('Не удалось загрузить товары');
       }
-      
+
       PRODUCTS = await res.json();
-      
+
       // Если сервер вернул пустой массив, используем локальные данные
       if (!PRODUCTS || PRODUCTS.length === 0) {
         console.warn('Сервер вернул пустой массив товаров, используем локальные данные');
         PRODUCTS = LOCAL_PRODUCTS;
         useLocalData = true;
       }
-      
+
     } catch (err) {
       console.error('Ошибка загрузки товаров с сервера:', err);
       console.warn('Используем локальные данные как резервный вариант');
       PRODUCTS = LOCAL_PRODUCTS;
       useLocalData = true;
     }
-    
+
     // Остальной код фильтрации и отображения...
     const query = (searchInput?.value || '').toLowerCase();
     const currentCategory = window.currentCategory || 'все';
@@ -163,7 +149,7 @@ async function renderProducts() {
       const searchMatch = query === '' ||
         p.title.toLowerCase().includes(query) ||
         (p.description && p.description.toLowerCase().includes(query));
-      
+
       return available && categoryMatch && searchMatch;
     });
 
@@ -206,42 +192,41 @@ async function renderProducts() {
       `;
       productsContainer.appendChild(card);
     });
-    
+
     // Обработчики для кликов по всей карточке товара
-document.querySelectorAll('.product-card').forEach(card => {
-  card.addEventListener('click', (event) => {
-    // Проверяем, что клик был не по кнопке "В корзину", чтобы избежать конфликта
-    if (event.target.classList.contains('btn-cart')) return;
-    // Проверяем, что клик был не по кнопке "Подробнее"
-    if (event.target.classList.contains('btn-details')) return;
+    document.querySelectorAll('.product-card').forEach(card => {
+      card.addEventListener('click', (event) => {
+        // Проверяем, что клик был не по кнопке "В корзину", чтобы избежать конфликта
+        if (event.target.classList.contains('btn-cart')) return;
+        // Проверяем, что клик был не по кнопке "Подробнее"
+        if (event.target.classList.contains('btn-details')) return;
 
-    // Клик по карточке - переходим на страницу товара
-    const buttonDetails = card.querySelector('.btn-details');
-    if (!buttonDetails) return;
-    const productId = parseInt(buttonDetails.dataset.id);
-    if (productId) {
-        // Переход на новую страницу товара
+        // Клик по карточке - переходим на страницу товара
+        const buttonDetails = card.querySelector('.btn-details');
+        if (!buttonDetails) return;
+        const productId = parseInt(buttonDetails.dataset.id);
+        if (productId) {
+            // Переход на новую страницу товара
+            window.location.href = `product.html?id=${productId}`;
+        }
+      });
+    });
+
+    // Обработчики для кнопок "Подробнее"
+    // УБРАНО: Открытие модального окна. Теперь "Подробнее" ведёт на product.html.
+    document.querySelectorAll('.btn-details').forEach(button => {
+      button.addEventListener('click', (event) => {
+        event.stopPropagation(); // Предотвращаем всплытие, чтобы не сработал обработчик клика по карточке
+        const productId = parseInt(event.target.dataset.id);
+        // Переход на страницу товара
         window.location.href = `product.html?id=${productId}`;
-    }
-  });
-});
-
-// Обработчики для кнопок "Подробнее"
-// Оставляем модальное окно для кнопки "Подробнее"
-document.querySelectorAll('.btn-details').forEach(button => {
-  button.addEventListener('click', (event) => {
-    event.stopPropagation(); // Предотвращаем всплытие, чтобы не сработал обработчик клика по карточке
-    const productId = parseInt(event.target.dataset.id);
-    const product = PRODUCTS.find(p => p.id === productId);
-    if (product) {
-      openProductModal(product); // Оставляем модальное окно для "Подробнее"
-    }
-  });
-});
+      });
+    });
 
     // Обработчики для кнопок "В корзину"
     document.querySelectorAll('.btn-cart').forEach(button => {
       button.addEventListener('click', (event) => {
+        event.stopPropagation(); // Останавливаем всплытие, чтобы не сработал обработчик клика по карточке
         const productId = parseInt(event.target.dataset.id);
         const product = PRODUCTS.find(p => p.id === productId);
         if (product) {
@@ -250,7 +235,7 @@ document.querySelectorAll('.btn-details').forEach(button => {
         }
       });
     });
-    
+
     // Добавляем визуальный индикатор, если используются локальные данные
     if (useLocalData) {
       const indicator = document.createElement('div');
@@ -268,7 +253,7 @@ document.querySelectorAll('.btn-details').forEach(button => {
         z-index: 10000;
       `;
       document.body.appendChild(indicator);
-      
+
       // Удаляем индикатор через 5 секунд
       setTimeout(() => {
         if (indicator.parentNode) {
@@ -276,341 +261,18 @@ document.querySelectorAll('.btn-details').forEach(button => {
         }
       }, 5000);
     }
-    
+
   }, 300);
 }
 
-// Открытие модального окна товара
-function openProductModal(product) {
-    // Сохраняем текущую позицию прокрутки
-    const scrollY = window.scrollY || window.pageYOffset;
-    document.body.setAttribute('data-scroll-position', scrollY);
-    // Блокируем скролл, но сохраняем позицию
-    document.body.classList.add('modal-open');
-    document.body.style.setProperty('--scrollbar-width', getScrollbarWidth() + 'px');
-    document.body.style.top = `-${scrollY}px`;
+// УБРАНО: Функция openProductModal и selectVariantInModal
 
-    // --- Основная логика обновления модального окна ---
-    const titleElement = document.getElementById('product-title');
-    const descriptionElement = document.getElementById('product-description');
-    const priceElement = document.getElementById('product-price');
-    const mainImageElement = document.getElementById('product-main-image');
-    const thumbnailsContainer = document.getElementById('thumbnails');
-    const addToCartBtn = document.getElementById('add-to-cart-btn');
-    const buyNowBtn = document.getElementById('buy-now-btn');
+// УБРАНО: Функция openCartModal (теперь в main.js)
+// УБРАНО: Функция sanitizePhoneInput (теперь в main.js)
+// УБРАНО: Функция closeModals (теперь в main.js)
+// УБРАНО: Функция updateSendOrderButton (теперь в main.js)
 
-    // Сохраняем ссылку на "основной" товар
-    window.currentProduct = product;
-    // Инициализируем "текущий отображаемый вариант" как основной товар
-    window.currentDisplayedVariant = product;
-
-    // Обновляем основную информацию (по умолчанию - основной товар)
-    titleElement.textContent = product.title;
-    descriptionElement.textContent = product.description || '';
-    priceElement.textContent = formatPrice(product.price);
-    mainImageElement.src = product.images && product.images[0] ? product.images[0].url.trim() : '/assets/icons/placeholder1.webp';
-    mainImageElement.alt = product.title || 'Изображение товара';
-
-    // Обновляем миниатюры (по умолчанию - основной товар)
-    thumbnailsContainer.innerHTML = '';
-    if (product.images && product.images.length > 0) {
-        product.images.forEach(img => {
-            const thumb = document.createElement('img');
-            thumb.src = img.url.trim();
-            thumb.alt = img.alt || `Миниатюра ${product.title}`;
-            thumb.className = 'thumbnail';
-            if (img.url === product.images[0].url) thumb.classList.add('active');
-            thumb.addEventListener('click', () => {
-                mainImageElement.src = img.url.trim();
-                document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
-                thumb.classList.add('active');
-            });
-            thumbnailsContainer.appendChild(thumb);
-        });
-    }
-
-    // Обновляем атрибуты кнопок "В корзину" и "Купить"
-    // По умолчанию добавляем основной товар
-    addToCartBtn.dataset.id = product.id;
-    buyNowBtn.dataset.id = product.id;
-
-    // --- Логика для вариантов ---
-const variantsContainer = document.getElementById('product-variants-container');
-const variantsList = document.getElementById('product-variants');
-
-// Очищаем список и сбрасываем отображение контейнера
-variantsList.innerHTML = '';
-variantsContainer.style.display = 'none'; // Скрываем по умолчанию
-
-if (product.variants && product.variants.length > 0) {
-    // Если у товара есть варианты
-    variantsContainer.style.display = 'block'; // Показываем контейнер
-    // Создаем кнопки ТОЛЬКО для каждого варианта
-    product.variants.forEach(variant => {
-        const variantBtn = document.createElement('button');
-        // Получаем URL главного изображения варианта
-        let variantImageUrl = '/assets/icons/placeholder1.webp'; // По умолчанию
-        if (variant.images && variant.images.length > 0 && variant.images[0].url) {
-            variantImageUrl = variant.images[0].url.trim();
-        } else if (product.images && product.images.length > 0 && product.images[0].url) {
-            // Если у варианта нет изображений, используем первое изображение основного товара
-            variantImageUrl = product.images[0].url.trim();
-        }
-
-        // Создаем элемент изображения
-        const imgElement = document.createElement('img');
-        imgElement.src = variantImageUrl;
-        imgElement.alt = `Фото ${variant.title || `Товар ${variant.id}`}`;
-        imgElement.className = 'variant-thumbnail';
-
-        // Создаем текстовый элемент для названия
-        const textElement = document.createElement('span');
-        textElement.textContent = variant.title || `Товар ${variant.id}`;
-
-        // Добавляем изображение и текст в кнопку
-        variantBtn.appendChild(imgElement);
-        variantBtn.appendChild(textElement);
-        variantBtn.className = 'product-variant-btn';
-        variantBtn.dataset.variantId = variant.id;
-
-        // Добавляем обработчик клика
-        variantBtn.addEventListener('click', () => {
-            // Выбираем этот вариант как отображаемый ТОЛЬКО ПРИ КЛИКЕ
-            selectVariantInModal(product, variant); // <-- Выбор происходит здесь
-            // Обновляем подсветку кнопок
-            document.querySelectorAll('.product-variant-btn').forEach(btn => btn.classList.remove('selected'));
-            variantBtn.classList.add('selected');
-        });
-
-        variantsList.appendChild(variantBtn);
-    });
-
-    // ВАЖНО: НЕ ВЫБИРАЕМ вариант автоматически. Окно показывает основной товар.
-    // Подсвечивать первую кнопку можно, но не выбирать сам вариант.
-    // const firstVariantBtn = document.querySelector('.product-variant-btn');
-    // if (firstVariantBtn) {
-    //     firstVariantBtn.classList.add('selected'); // Только подсветка
-    //     // НЕ вызываем selectVariantInModal здесь!
-    // }
-
-} else {
-    // Если у товара нет вариантов, контейнер уже скрыт
-    // variantsContainer.style.display = 'none'; // (уже установлено выше)
-}
-// Открываем модальное окно
-productModal.classList.add('open');
-}
-
-// Новая вспомогательная функция для выбора варианта
-function selectVariantInModal(product, selectedVariant) {
-    const titleElement = document.getElementById('product-title');
-    const descriptionElement = document.getElementById('product-description');
-    const priceElement = document.getElementById('product-price');
-    const mainImageElement = document.getElementById('product-main-image');
-    const thumbnailsContainer = document.getElementById('thumbnails');
-    const addToCartBtn = document.getElementById('add-to-cart-btn');
-    const buyNowBtn = document.getElementById('buy-now-btn');
-
-    // Проверки на существование элементов
-    if (!titleElement || !descriptionElement || !priceElement || !mainImageElement || !thumbnailsContainer || !addToCartBtn) {
-        console.error('Один или несколько элементов модального окна не найдены.');
-        return;
-    }
-
-    // Обновляем отображаемую информацию на основе выбранного варианта
-    titleElement.textContent = selectedVariant.title;
-    descriptionElement.textContent = selectedVariant.description || product.description || '';
-    priceElement.textContent = formatPrice(selectedVariant.price);
-
-    // Обновляем изображения
-    const variantImages = selectedVariant.images && selectedVariant.images.length > 0 ? selectedVariant.images : (product.images || []);
-    if (variantImages && variantImages.length > 0) {
-        mainImageElement.src = variantImages[0].url.trim();
-        mainImageElement.alt = selectedVariant.title || 'Изображение товара';
-
-        // Обновляем миниатюры
-        thumbnailsContainer.innerHTML = '';
-        variantImages.forEach(img => {
-            const thumb = document.createElement('img');
-            thumb.src = img.url.trim();
-            thumb.alt = img.alt || `Миниатюра ${selectedVariant.title}`;
-            thumb.className = 'thumbnail';
-            if (img.url === variantImages[0].url) thumb.classList.add('active');
-            thumb.addEventListener('click', () => {
-                mainImageElement.src = img.url.trim();
-                document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
-                thumb.classList.add('active');
-            });
-            thumbnailsContainer.appendChild(thumb);
-        });
-    } else {
-         mainImageElement.src = '/assets/icons/placeholder1.webp';
-         mainImageElement.alt = selectedVariant.title || 'Изображение товара';
-         thumbnailsContainer.innerHTML = '';
-    }
-
-    // ВАЖНО: Обновляем dataset.id кнопки "Добавить в корзину"
-    // Это исправит проблему с добавлением правильного варианта
-    addToCartBtn.dataset.id = selectedVariant.id;
-    if (buyNowBtn) {
-        buyNowBtn.dataset.id = selectedVariant.id;
-    }
-    
-    // Сохраняем ссылку на текущий отображаемый вариант
-    window.currentDisplayedVariant = selectedVariant;
-}
-
-// Открытие модального окна корзины
-function openCartModal() {
-  // Сохраняем текущую позицию прокрутки
-  const scrollY = window.scrollY || window.pageYOffset;
-  document.body.setAttribute('data-scroll-position', scrollY);
-  
-  // Блокируем скролл, но сохраняем позицию
-  document.body.classList.add('modal-open');
-  document.body.style.setProperty('--scrollbar-width', getScrollbarWidth() + 'px');
-  document.body.style.top = `-${scrollY}px`;
-  
-  if (cartItems) {
-    const cart = getCart();
-    if (cart.length === 0) {
-      cartItems.innerHTML = '<div class="empty">Ваша корзина пуста</div>';
-    } else {
-      cartItems.innerHTML = '';
-      let total = 0;
-      cart.forEach(item => {
-        const row = document.createElement('div');
-        row.className = 'cart-item';
-        row.innerHTML = `
-          <img src="${item.product.images[0].url.trim()}" alt="" />
-          <div class="cart-item-info">
-            <div class="cart-item-title">${item.product.title}</div>
-            <div class="cart-item-price">${formatPrice(item.product.price)}</div>
-            <div class="cart-quantity">
-              <button class="qty-minus" data-id="${item.product.id}">−</button>
-              <span>${item.qty}</span>
-              <button class="qty-plus" data-id="${item.product.id}">+</button>
-            </div>
-          </div>
-          <div class="cart-item-total">${formatPrice(item.product.price * item.qty)}</div>
-        `;
-        cartItems.appendChild(row);
-        total += item.product.price * item.qty;
-      });
-
-      const totalRow = document.createElement('div');
-      totalRow.className = 'total-row';
-      totalRow.innerHTML = `<span>Итого:</span><span>${formatPrice(total)}</span>`;
-      cartItems.appendChild(totalRow);
-
-      // Обработчики изменения количества
-      document.querySelectorAll('.qty-minus').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const id = parseInt(btn.dataset.id);
-          updateQuantity(id, -1);
-          openCartModal();
-        });
-      });
-
-      document.querySelectorAll('.qty-plus').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const id = parseInt(btn.dataset.id);
-          updateQuantity(id, 1);
-          openCartModal();
-        });
-      });
-    }
-  }
-  
-  // Проверяем, что jQuery и maskedinput доступны, и элемент существует
-  if (typeof $ !== 'undefined' && $.fn.mask && phoneInput) {
-    // Сначала удаляем любую существующую маску, чтобы избежать конфликтов
-    $(phoneInput).unmask();
-    // Применяем маску
-    $(phoneInput).mask("+7 (999) 999-99-99", { placeholder: "+7 (___) ___-__-__" });
-  } else {
-    console.warn("jQuery, maskedinput или элемент #phone не найдены. Маска не применена.");
-    if (phoneInput) {
-       phoneInput.removeEventListener('input', sanitizePhoneInput);
-       phoneInput.addEventListener('input', sanitizePhoneInput);
-    }
-  }
-
-  updateSendOrderButton();
-  
-  cartModal.setAttribute('aria-hidden', 'false');
-  cartModal.setAttribute('tabindex', '-1');
-  
-  cartModal.classList.add('open');
-  setTimeout(() => {
-    const phoneInputToFocus = document.getElementById('phone');
-    if (phoneInputToFocus && typeof phoneInputToFocus.focus === 'function') {
-      phoneInputToFocus.focus();
-    } else {
-      const closeButton = cartModal.querySelector('.modal-close');
-      if (closeButton && typeof closeButton.focus === 'function') {
-        closeButton.focus();
-      } else {
-        cartModal.setAttribute('tabindex', '-1');
-        cartModal.focus();
-      }
-    }
-  }, 0);
-
-  if (typeof $ !== 'undefined' && $.fn.mask && phoneInput) {
-    $(phoneInput).unmask();
-    $(phoneInput).mask("+7 (999) 999-99-99", { placeholder: "+7 (___) ___-__-__" });
-  } else {
-    console.warn("jQuery, maskedinput или элемент #phone не найдены. Маска не применена.");
-    if (phoneInput) {
-       phoneInput.removeEventListener('input', sanitizePhoneInput);
-       phoneInput.addEventListener('input', sanitizePhoneInput);
-    }
-  }
-}
-
-function sanitizePhoneInput(event) {
-  event.target.value = event.target.value.replace(/[^0-9+]/g, '');
-}
-
-// Закрытие модалок
-function closeModals() {
-  const modal = document.querySelector('.modal.open');
-  if (modal) modal.classList.remove('open');
-
-  // Восстанавливаем позицию прокрутки
-  const scrollY = document.body.getAttribute('data-scroll-position');
-  document.body.classList.remove('modal-open');
-  document.body.style.removeProperty('--scrollbar-width');
-  document.body.style.removeProperty('top');
-  
-  if (scrollY) {
-    window.scrollTo(0, parseInt(scrollY));
-    document.body.removeAttribute('data-scroll-position');
-  }
-}
-
-// Обновление состояния кнопки "Оформить заказ"
-function updateSendOrderButton() {
-  if (!sendOrderBtn) return;
-  
-  const cart = getCart();
-  const consentCheckbox = document.getElementById('consent-toggle');
-  const isConsentGiven = consentCheckbox ? consentCheckbox.checked : false;
-  
-  if (cart.length === 0) {
-    sendOrderBtn.disabled = true;
-    sendOrderBtn.title = 'Нельзя оформить заказ — корзина пуста';
-  } else if (!isConsentGiven) {
-    sendOrderBtn.disabled = true;
-    sendOrderBtn.title = 'Необходимо дать согласие на обработку персональных данных';
-  } else {
-    sendOrderBtn.disabled = false;
-    sendOrderBtn.title = '';
-  }
-}
-
-// Привязка событий
+// Привязка событий (только для главной/каталога)
 function setupEventListeners() {
   const searchInput = document.getElementById('search-input');
 
@@ -620,179 +282,84 @@ function setupEventListeners() {
   }
 
   const categoryButtons = document.querySelectorAll('.tag-btn');
-  
+
   categoryButtons.forEach(btn => {
     btn.removeEventListener('click', handleCategoryClick);
   });
-  
+
   categoryButtons.forEach(btn => {
     btn.addEventListener('click', handleCategoryClick);
   });
 
-  if (cartBtn) {
-    cartBtn.removeEventListener('click', openCartModal);
-    cartBtn.addEventListener('click', openCartModal);
-  }
+  // УБРАНО: Обработчик для cartBtn (теперь в main.js)
+  // if (cartBtn) {
+  //   cartBtn.removeEventListener('click', openCartModal); // <-- Убрано
+  //   cartBtn.addEventListener('click', openCartModal); // <-- Убрано
+  // }
 
-  // Исправленный обработчик для кнопки "Добавить в корзину"
-  document.getElementById('add-to-cart-btn')?.addEventListener('click', () => {
-    // Используем текущий отображаемый вариант, а не основной товар
-    if (window.currentDisplayedVariant) {
-      addToCart(window.currentDisplayedVariant);
-    } else if (window.currentProduct) {
-      addToCart(window.currentProduct);
-    }
-    updateCartCount();
-  });
+  // УБРАНО: Обработчики для кнопок "Добавить в корзину" и "Купить" (модальное окно) - они теперь в product.js
+  // document.getElementById('add-to-cart-btn')?.addEventListener('click', () => { ... });
+  // document.getElementById('buy-now-btn')?.addEventListener('click', () => { ... });
 
-  document.getElementById('buy-now-btn')?.addEventListener('click', () => {
-    // Используем текущий отображаемый вариант, а не основной товар
-    if (window.currentDisplayedVariant) {
-      addToCart(window.currentDisplayedVariant);
-    } else if (window.currentProduct) {
-      addToCart(window.currentProduct);
-    }
-    closeModals();
-    openCartModal();
-    updateCartCount();
-  });
+  // УБРАНО: Обработчики для элементов модального окна
+  // phoneInput?.addEventListener('input', () => { ... });
+  // const consentCheckbox = document.getElementById('consent-toggle');
+  // if (consentCheckbox) { consentCheckbox.addEventListener('change', updateSendOrderButton); }
+  // if (sendOrderBtn) { sendOrderBtn.addEventListener('click', async () => { ... }); }
+  // document.querySelectorAll('[data-close]').forEach(btn => { btn.addEventListener('click', closeModals); });
 
-  phoneInput?.addEventListener('input', () => {
-    phoneInput.value = phoneInput.value.replace(/[^0-9+]/g, '');
-  });
-
-  const consentCheckbox = document.getElementById('consent-toggle');
-  if (consentCheckbox) {
-    consentCheckbox.addEventListener('change', updateSendOrderButton);
-  }
-
-  if (sendOrderBtn) {
-    let isSending = false;
-    
-    sendOrderBtn.addEventListener('click', async () => {
-      if (isSending) {
-        console.log('Заказ уже отправляется...');
-        return;
-      }
-      
-      const consentCheckbox = document.getElementById('consent-toggle');
-      const isConsentGiven = consentCheckbox ? consentCheckbox.checked : false;
-      
-      if (!isConsentGiven) {
-        alert('Необходимо дать согласие на обработку персональных данных');
-        return;
-      }
-      
-      if (!phoneInput.value.trim()) {
-        alert('Укажите телефон');
-        return;
-      }
-      
-      if (getCart().length === 0) {
-        alert('Корзина пуста');
-        return;
-      }
-
-      try {
-        isSending = true;
-        sendOrderBtn.disabled = true;
-        sendOrderBtn.textContent = 'Отправка...';
-
-        const response = await fetch('/api/order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            phone: phoneInput.value,
-            comment: commentInput.value,
-            cart: getCart()
-          })
-        });
-
-        const result = await response.json();
-        
-
-        if (result.success) {
-          clearCart();
-          phoneInput.value = '';
-          commentInput.value = '';
-          successMessage.style.display = 'block';          
-          openCartModal();
-
-          setTimeout(() => {
-            successMessage.style.display = 'none';
-            sendOrderBtn.disabled = false;
-            sendOrderBtn.textContent = 'Оформить заказ';
-            isSending = false;
-          }, 3000);
-        } else {
-          throw new Error(result.error || 'Ошибка сервера');
-        }
-      } catch (error) {
-        console.error('Ошибка отправки заказа:', error);
-        
-        if (error.message && error.message.includes('Заказ уже обрабатывается')) {
-          clearCart();
-          phoneInput.value = '';
-          commentInput.value = '';
-          successMessage.style.display = 'block';
-          
-          openCartModal();
-
-          setTimeout(() => {
-            successMessage.style.display = 'none';
-            sendOrderBtn.disabled = false;
-            sendOrderBtn.textContent = 'Оформить заказ';
-            isSending = false;
-          }, 3000);
-        } else {
-          alert('Не удалось отправить заказ. Пожалуйста, позвоните нам.');
-          sendOrderBtn.disabled = false;
-          sendOrderBtn.textContent = 'Оформить заказ';
-          isSending = false;
-        }
-      }
-    });
-  }
-
-  document.querySelectorAll('[data-close]').forEach(btn => {
-    btn.addEventListener('click', closeModals);
-  });
+  // Добавляем обработчик для кнопки корзины, если она есть (альтернативный способ, если не в main.js)
+  // const cartBtn = document.getElementById('cart-btn'); // <-- Опционально, если нужно здесь
+  // if (cartBtn) {
+  //   cartBtn.addEventListener('click', () => {
+  //     window.location.href = '/cart.html'; // <-- Перенаправление
+  //   });
+  // }
 }
 
 function handleCategoryClick(event) {
   const categoryButtons = document.querySelectorAll('.tag-btn');
   const clickedBtn = event.target;
-  
+
   categoryButtons.forEach(btn => {
     btn.classList.remove('active');
   });
-  
+
   clickedBtn.classList.add('active');
-  
+
   window.currentCategory = clickedBtn.dataset.category || 'все';
-  
+
   renderProducts();
 }
 
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', async () => {
   window.currentCategory = 'все';
-  
+
   setupEventListeners();
-  
+
   await renderProducts();
-  
-  updateSendOrderButton();
+
+  // УБРАНО: updateSendOrderButton(); // Больше не нужно на главной/каталоге
   updateCartCount();
 });
 
-// Экспорт
+// Экспорт (только функции, не связанные с модальными окнами)
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { renderProducts, openProductModal, openCartModal, closeModals, setupEventListeners };
+  module.exports = { renderProducts, setupEventListeners, getCart, addToCart, updateQuantity, clearCart, updateCartCount, formatPrice };
 } else {
   window.renderProducts = renderProducts;
-  window.openProductModal = openProductModal;
-  window.openCartModal = openCartModal;
-  window.closeModals = closeModals;
   window.setupEventListeners = setupEventListeners;
+  // window.openProductModal = openProductModal; // <-- Убрано
+  // window.openCartModal = openCartModal; // <-- Убрано
+  // window.closeModals = closeModals; // <-- Убрано
+  // window.updateSendOrderButton = updateSendOrderButton; // <-- Убрано
+
+  // Экспортируем функции корзины
+  window.getCart = getCart;
+  window.addToCart = addToCart;
+  window.updateQuantity = updateQuantity;
+  window.clearCart = clearCart;
+  window.updateCartCount = updateCartCount;
+  window.formatPrice = formatPrice; // Если нужно глобально
 }
