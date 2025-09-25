@@ -1471,7 +1471,6 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
 
     if (groupResult.rows.length > 0) {
       const groupId = groupResult.rows[0].group_id;
-      // --- ИЗМЕНЕНИЕ: УБРАЛИ "AND p.id != $2", чтобы текущий товар тоже был в вариантах ---
       const variantsResult = await pool.query(`
         SELECT
           p.id,
@@ -1489,9 +1488,9 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
           p.slug
         FROM product_variants_link pvl
         JOIN products p ON pvl.product_id = p.id
-        WHERE pvl.group_id = $1
-        ORDER BY p.id`, // Сортировка по ID (можно изменить)
-        [groupId] // Передаем ID группы
+        WHERE pvl.group_id = $1 AND p.id != $2
+        ORDER BY p.id`,
+        [groupId, product.id]
       );
 
       variants = variantsResult.rows.map(row => {
