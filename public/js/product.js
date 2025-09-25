@@ -290,7 +290,7 @@ function selectVariantOnPage(baseProduct, selectedVariant) {
 const cartBtn = document.getElementById('cart-btn');
 if (cartBtn) {
     cartBtn.addEventListener('click', () => {
-         window.location.href = '/cart.html';
+         window.location.href = '/cart/';
     });
 }
 
