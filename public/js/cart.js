@@ -290,10 +290,10 @@ function renderCartItems() {
             const id = parseInt(btn.dataset.id, 10);
             // Используем updateQuantity из state.js
             window.updateQuantity(id, -1);
-            
+            renderCartItems(); // Перерисовываем
             // Обновляем счётчик в хедере
             if (typeof window.updateCartCount === 'function') {
-                window.updateCartCount();
+                window.updateCartCountLocal();
             }
             // Обновляем кнопку "Оформить заказ"
             updateSendOrderButton();
