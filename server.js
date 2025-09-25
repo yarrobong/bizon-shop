@@ -1336,6 +1336,122 @@ app.get('/api/products/:id', async (req, res) => {
   }
 });
 
+// === API: Получить товар по slug (для URL вида /product/nazvanietovara) ===
+app.get('/api/product-by-slug/:slug', async (req, res) => {
+  try {
+    const slug = req.params.slug;
+
+    // Ищем товар по slug
+    const productResult = await pool.query('SELECT * FROM products WHERE slug = $1', [slug]);
+
+    if (productResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Товар не найден' });
+    }
+
+    const productRow = productResult.rows[0];
+
+    // --- Обработка изображений ---
+    let productImages = [];
+    if (Array.isArray(productRow.images_json)) {
+        productImages = productRow.images_json;
+    } else if (productRow.images_json !== null && typeof productRow.images_json === 'object') {
+        productImages = [productRow.images_json];
+    } else if (productRow.images_json === null || productRow.images_json === undefined) {
+        productImages = [];
+    } else {
+        try {
+            productImages = JSON.parse(productRow.images_json);
+            if (!Array.isArray(productImages)) {
+                productImages = [];
+            }
+        } catch (e) {
+            console.error(`Ошибка парсинга images_json для товара ${productRow.id}:`, e);
+            productImages = [];
+        }
+    }
+
+    const product = {
+      id: productRow.id,
+      title: productRow.title,
+      description: productRow.description,
+      price: parseFloat(productRow.price),
+      tag: productRow.tag,
+      available: productRow.available !== false,
+      category: productRow.category,
+      brand: productRow.brand,
+      compatibility: productRow.compatibility,
+      images: productImages,
+      supplier_link: productRow.supplier_link,
+      supplier_notes: productRow.supplier_notes,
+      slug: productRow.slug, // Важно: передаём slug
+    };
+
+    // --- Загрузка вариантов ---
+    let variants = [];
+    const groupResult = await pool.query(
+      'SELECT group_id FROM product_variants_link WHERE product_id = $1',
+      [product.id]
+    );
+
+    if (groupResult.rows.length > 0) {
+      const groupId = groupResult.rows[0].group_id;
+      const variantsResult = await pool.query(`
+        SELECT p.*
+        FROM product_variants_link pvl
+        JOIN products p ON pvl.product_id = p.id
+        WHERE pvl.group_id = $1 AND p.id != $2
+        ORDER BY p.id`,
+        [groupId, product.id]
+      );
+
+      variants = variantsResult.rows.map(row => {
+        let variantImages = [];
+        if (Array.isArray(row.images_json)) {
+            variantImages = row.images_json;
+        } else if (row.images_json !== null && typeof row.images_json === 'object') {
+            variantImages = [row.images_json];
+        } else if (row.images_json === null || row.images_json === undefined) {
+            variantImages = [];
+        } else {
+            try {
+                variantImages = JSON.parse(row.images_json);
+                if (!Array.isArray(variantImages)) {
+                    variantImages = [];
+                }
+            } catch (e) {
+                console.error(`Ошибка парсинга images_json для варианта ${row.id}:`, e);
+                variantImages = [];
+            }
+        }
+
+        return {
+          id: row.id,
+          title: row.title,
+          description: row.description,
+          price: parseFloat(row.price),
+          tag: row.tag,
+          available: row.available !== false,
+          category: row.category,
+          brand: row.brand,
+          compatibility: row.compatibility,
+          images: variantImages,
+          supplier_link: row.supplier_link,
+          supplier_notes: row.supplier_notes,
+          slug: row.slug, // Если у варианта тоже есть slug
+        };
+      });
+    }
+
+    product.variants = variants;
+
+    res.json(product);
+
+  } catch (err) {
+    console.error(`❌ Ошибка при получении товара по slug ${req.params.slug} из БД:`, err);
+    res.status(500).json({ error: 'Не удалось загрузить товар', details: err.message });
+  }
+});
+
 // --- КАСТОМНЫЕ МАРШРУТЫ ДЛЯ HTML СТРАНИЦ ---
 // Универсальный маршрут для отдачи .html страниц (например, /catalog -> public/catalog.html)
 // Должен идти ПОСЛЕ API, но ДО обработчика 404

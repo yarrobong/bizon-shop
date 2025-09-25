@@ -3,14 +3,6 @@
 const productsContainer = document.getElementById('products');
 const searchInput = document.getElementById('search-input');
 const categoryButtons = document.querySelectorAll('.tag-btn');
-// const cartBtn = document.getElementById('cart-btn'); // <-- Убрано, так как обработчик теперь в main.js
-// const cartModal = document.getElementById('cart-modal'); // <-- Убрано, модальное окно больше не используется
-// const productModal = document.getElementById('product-modal'); // <-- Убрано, модальное окно больше не используется
-// const cartItems = document.getElementById('cart-items'); // <-- Убрано, относится к модальному окну
-// const phoneInput = document.getElementById('phone'); // <-- Убрано, относится к модальному окну
-// const commentInput = document.getElementById('comment-input'); // <-- Убрано, относится к модальному окну
-// const sendOrderBtn = document.getElementById('send-order'); // <-- Убрано, относится к модальному окну
-// const successMessage = document.getElementById('success-message'); // <-- Убрано, относится к модальному окну
 const yearSpan = document.getElementById('year');
 let renderProductsTimeout;
 
@@ -44,6 +36,18 @@ function formatPrice(price) {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
   }).format(price);
+}
+
+// Функция генерации slug из названия товара
+function generateSlug(title) {
+  return encodeURIComponent(
+    title
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+  );
 }
 
 // Получение корзины из localStorage (использует ключ 'cart')
@@ -183,7 +187,7 @@ async function renderProducts() {
           <div class="product-footer">
             <div class="product-price">${formatPrice(product.price)}</div>
             <div class="product-actions">
-              <button class="btn-details" data-id="${product.id}">Подробнее</button>
+              <button class="btn-details" data-id="${product.id}" data-slug="${generateSlug(product.title)}">Подробнее</button>
               <button class="btn-cart" data-id="${product.id}">В корзину</button>
             </div>
           </div>
@@ -203,22 +207,21 @@ async function renderProducts() {
         // Клик по карточке - переходим на страницу товара
         const buttonDetails = card.querySelector('.btn-details');
         if (!buttonDetails) return;
-        const productId = parseInt(buttonDetails.dataset.id);
-        if (productId) {
+        const slug = buttonDetails.dataset.slug;
+        if (slug) {
             // Переход на новую страницу товара
-            window.location.href = `product.html?id=${productId}`;
+            window.location.href = `/product/${slug}`;
         }
       });
     });
 
     // Обработчики для кнопок "Подробнее"
-
     document.querySelectorAll('.btn-details').forEach(button => {
       button.addEventListener('click', (event) => {
         event.stopPropagation(); // Предотвращаем всплытие, чтобы не сработал обработчик клика по карточке
-        const productId = parseInt(event.target.dataset.id);
+        const slug = event.target.dataset.slug;
         // Переход на страницу товара
-        window.location.href = `product.html?id=${productId}`;
+        window.location.href = `/product/${slug}`;
       });
     });
 
@@ -317,7 +320,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Экспорт (только функции, не связанные с модальными окнами)
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { renderProducts, setupEventListeners, getCart, addToCart, updateQuantity, clearCart, updateCartCount, formatPrice };
+  module.exports = { renderProducts, setupEventListeners, getCart, addToCart, updateQuantity, clearCart, updateCartCount, formatPrice, generateSlug };
 } else {
   window.renderProducts = renderProducts;
   window.setupEventListeners = setupEventListeners;
@@ -329,4 +332,5 @@ if (typeof module !== 'undefined' && module.exports) {
   window.clearCart = clearCart;
   window.updateCartCount = updateCartCount;
   window.formatPrice = formatPrice; // Если нужно глобально
+  window.generateSlug = generateSlug;
 }
