@@ -75,7 +75,7 @@ function displayProduct(product) {
         const titleElement = document.getElementById('product-page-title-main');
         const descriptionElement = document.getElementById('product-page-description-main');
         const priceElement = document.getElementById('product-page-price');
-        const availabilityElement = document.getElementById('product-page-availability');
+       
 
         if (titleElement) titleElement.textContent = product.title;
         if (descriptionElement) descriptionElement.textContent = product.description || 'Описание отсутствует';
@@ -86,7 +86,7 @@ function displayProduct(product) {
             const statusText = product.available !== false ? 'В наличии' : 'Нет в наличии';
             const statusClass = product.available !== false ? 'in-stock' : 'out-of-stock';
             availabilityElement.querySelector('span').textContent = statusText;
-            availabilityElement.className = `product-page-availability ${statusClass}`;
+           
         }
 
         // Изображения
@@ -248,7 +248,6 @@ function selectVariantOnPage(baseProduct, selectedVariant) {
     const thumbnailsContainer = document.getElementById('product-page-thumbnails');
     const addToCartBtn = document.getElementById('product-page-add-to-cart-btn');
     const buyNowBtn = document.getElementById('product-page-buy-now-btn');
-    const availabilityElement = document.getElementById('product-page-availability');
 
     // Проверки на существование элементов
     if (!titleElement || !descriptionElement || !priceElement || !mainImageElement || !thumbnailsContainer || !addToCartBtn) {
@@ -272,13 +271,7 @@ function selectVariantOnPage(baseProduct, selectedVariant) {
             buyNowBtn.dataset.id = selectedVariant.id;
         }
 
-        // Обновляем наличие для варианта
-        if (availabilityElement) {
-            const statusText = selectedVariant.available !== false ? 'В наличии' : 'Нет в наличии';
-            const statusClass = selectedVariant.available !== false ? 'in-stock' : 'out-of-stock';
-            availabilityElement.querySelector('span').textContent = statusText;
-            availabilityElement.className = `product-page-availability ${statusClass}`;
-        }
+        
 
         // Активируем кнопки
         addToCartBtn.disabled = false;
