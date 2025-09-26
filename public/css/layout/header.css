@@ -290,6 +290,15 @@ header.scrolled {
 .cart-btn:active {
   transform: scale(0.98);
 }
+.cart-icon-mobile {
+  width: 1.5rem; /* Размер иконки */
+  height: 1.5rem;
+  display: none; /* Скрыта по умолчанию */
+}
+
+.cart-text-desktop {
+  display: inline; /* Виден по умолчанию */
+}
 
 /* === CART COUNT (индикатор количества товаров) */
 .cart-count {
@@ -364,6 +373,13 @@ header.scrolled {
   header.scrolled {
     margin: 0.25rem 0.5rem;
     padding: 0.375rem 1rem;
+  }
+  .cart-icon-mobile {
+    display: block; /* Показать иконку */
+  }
+
+  .cart-text-desktop {
+    display: none; /* Скрыть текст */
   }
   
   .logo {
