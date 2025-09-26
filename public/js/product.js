@@ -1,9 +1,19 @@
 // js/product.js
 
+
 document.addEventListener('DOMContentLoaded', async function () {
     console.log("Страница товара загружена");
 
-    // --- 1. Получение slug товара из URL ---
+    // --- 1. Показываем сплеш-экран ---
+    const loadingScreen = document.getElementById('loading-screen');
+    const mainContent = document.getElementById('main-content');
+
+    if (loadingScreen) {
+        loadingScreen.classList.remove('hidden'); // Убираем класс hidden, если он был
+        loadingScreen.style.display = 'flex'; // Показываем сплеш
+    }
+
+    // --- 2. Получение slug товара из URL ---
     // URL теперь вида: /product/nazvanietovara
     const pathSegments = window.location.pathname.split('/');
     const slug = pathSegments[pathSegments.length - 1]; // Последний сегмент — slug
@@ -11,10 +21,17 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (!slug) {
         console.error('Slug товара не найден в URL');
         showProductError('Товар не найден (slug отсутствует)');
+        // Скрываем сплеш, если ошибка
+        if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 500);
+        }
         return;
     }
 
-    // --- 2. Загрузка данных товара по slug ---
+    // --- 3. Загрузка данных товара по slug ---
     let requestedProductData = null;
     try {
         const response = await fetch(`/api/product-by-slug/${slug}`);
@@ -30,22 +47,40 @@ document.addEventListener('DOMContentLoaded', async function () {
     } catch (error) {
         console.error('Ошибка при загрузке данных товара по slug:', error);
         showProductError(`Ошибка загрузки товара: ${error.message}`);
+        // Скрываем сплеш, если ошибка
+        if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 500);
+        }
         return;
     }
 
-    // --- 3. Отображение данных товара ---
+    // --- 4. Отображение данных товара ---
     displayProduct(requestedProductData);
 
-    // --- 4. Настройка обработчиков событий ---
+    // --- 5. Настройка обработчиков событий ---
     setupEventListeners(requestedProductData);
 
-    // --- 5. Обновление счетчика корзины ---
+    // --- 6. Обновление счетчика корзины ---
     if (typeof updateCartCount === 'function') {
         updateCartCount();
     } else {
         // Резервный вариант, если функция не импортирована
         console.warn("Функция updateCartCount не найдена, используем локальную.");
         updateCartCountLocal();
+    }
+
+    // --- 7. Скрываем сплеш-экран и показываем контент ---
+    if (loadingScreen) {
+        loadingScreen.classList.add('hidden');
+        setTimeout(() => {
+            loadingScreen.style.display = 'none';
+            if (mainContent) {
+                mainContent.style.display = 'block'; // или 'flex', в зависимости от твоего CSS
+            }
+        }, 500); // 500ms — длительность transition в CSS
     }
 });
 
