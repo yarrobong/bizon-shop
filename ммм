@@ -308,19 +308,18 @@ app.delete('/api/categories/:id', async (req, res) => {
 // --- API: Заказы ---
 // === API: Оформить заказ ===
 app.post('/api/order', async (req, res) => {
-  console.log('=== НАЧАЛО ОБРАБОТКИ ЗАКАЗА ===');
-  console.log('Полученные данные:', req.body);
+  
 
   const { phone, comment, cart } = req.body;
 
   if (!phone || !cart || cart.length === 0) {
-    console.log('ОШИБКА: Недостаточно данных');
+    
     return res.status(400).json({ success: false, error: 'Недостаточно данных' });
   }
 
   const requestHash = JSON.stringify({ phone, comment, cart });
   if (req.app.locals.lastOrderRequest === requestHash) {
-    console.log('ПРЕДУПРЕЖДЕНИЕ: Повторный запрос с теми же данными обнаружен');
+    
     return res.status(200).json({
       success: true,
       message: 'Заказ уже обрабатывается',
@@ -373,7 +372,7 @@ app.post('/api/order', async (req, res) => {
     }
 
     if (pool && orderId) {
-      console.log('Сохранение позиций заказа в БД...');
+      
       const itemInserts = cart.map(item => [
         orderId,
         item.product?.id,
