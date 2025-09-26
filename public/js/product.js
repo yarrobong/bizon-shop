@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (mainContent) {
                 mainContent.style.display = 'block'; // или 'flex', в зависимости от твоего CSS
             }
-        }, 500); // 500ms — длительность transition в CSS
+        }, 100); // 500ms — длительность transition в CSS
     }
 });
 
