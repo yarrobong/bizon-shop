@@ -112,59 +112,63 @@
   </header>
   
   <main role="main">
+    <!-- === СПЛЕШ-ЭКРАН (ЗАГРУЗКА) === -->
+  <div id="loading-screen" class="loading-screen">
+     <!-- Фоновая анимация -->
+  <div class="bg-overlay" aria-hidden="true">
+    <div class="pulse-1"></div>
+    <div class="pulse-2"></div>
+    <div class="pulse-3"></div>
+    <div class="pulse-4"></div>
+    <div class="pulse-5"></div>
+    <div class="pulse-6"></div>
+  </div>
+    <div class="loading-spinner"></div>
+    <p>Загрузка...</p>
+  </div>
     <!-- Основной контент страницы товара -->
     <div class="product-page-container">
-        <!-- === СПЛЕШ-ЭКРАН (ЗАГРУЗКА ТОВАРА) === -->
-        <div id="product-loading-overlay" class="product-loading-overlay">
-          <div class="product-loading-spinner"></div>
-          <p>Загрузка товара...</p>
+        <!-- Секция изображений -->
+        <div class="product-page-left">
+            <div class="product-page-image">
+                <img id="product-page-main-image" src="/assets/icons/placeholder1.webp" alt="Изображение товара" />
+            </div>
+            <div class="product-page-thumbnails" id="product-page-thumbnails" role="group" aria-label="Миниатюры изображений"></div>
+
+            <!-- Контейнер для вариантов -->
+            <div id="product-page-variants-container" class="product-variants-container">
+                <h4>Варианты:</h4>
+                <div id="product-page-variants" class="product-variants"></div>
+            </div>
         </div>
 
-        <!-- === ОБЁРТКА КОНТЕНТА ТОВАРА === -->
-        <div id="product-content-wrapper" class="product-content-wrapper">
-            <!-- Секция изображений -->
-            <div class="product-page-left">
-                <div class="product-page-image">
-                    <img id="product-page-main-image" src="/assets/icons/placeholder1.webp" alt="Изображение товара" />
-                </div>
-                <div class="product-page-thumbnails" id="product-page-thumbnails" role="group" aria-label="Миниатюры изображений"></div>
+        <!-- Секция информации -->
+        <div class="product-page-right">
+            <div class="product-page-info">
+                <nav aria-label="Навигационная цепочка">
+                    <ol class="breadcrumb">
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/catalog">Каталог</a></li>
+                        <li id="breadcrumb-category"><a href="#">Категория</a></li>
+                    </ol>
+                </nav>
 
-                <!-- Контейнер для вариантов -->
-                <div id="product-page-variants-container" class="product-variants-container">
-                    <h4>Варианты:</h4>
-                    <div id="product-page-variants" class="product-variants"></div>
-                </div>
+                <h1 id="product-page-title-main" class="product-page-title">Название товара</h1> <!-- Будет заполнена -->
+                <p id="product-page-description-main" class="product-page-description">Описание товара</p> <!-- Будет заполнена -->
+                <div id="product-page-price" class="product-page-price">Цена</div> <!-- Будет заполнена -->
+
+                
             </div>
 
-            <!-- Секция информации -->
-            <div class="product-page-right">
-                <div class="product-page-info">
-                    <nav aria-label="Навигационная цепочка">
-                        <ol class="breadcrumb">
-                            <li><a href="/">Главная</a></li>
-                            <li><a href="/catalog">Каталог</a></li>
-                            <li id="breadcrumb-category"><a href="#">Категория</a></li>
-                        </ol>
-                    </nav>
-
-                    <h1 id="product-page-title-main" class="product-page-title">Название товара</h1> <!-- Будет заполнена -->
-                    <p id="product-page-description-main" class="product-page-description">Описание товара</p> <!-- Будет заполнена -->
-                    <div id="product-page-price" class="product-page-price">Цена</div> <!-- Будет заполнена -->
-
-                    <!-- Информация о наличии -->
-                    <div id="product-page-availability" class="product-page-availability">Наличие: <span>Загрузка...</span></div>
-                </div>
-
-                <div class="product-page-actions">
-                    <button id="product-page-add-to-cart-btn" class="btn-add full-width" disabled>Добавить в корзину</button>
-                    <button id="product-page-buy-now-btn" class="btn-buy full-width" disabled>Купить сейчас</button>
-                </div>
-
-                <!-- Дополнительная информация (характеристики, теги и т.д.) - можно добавить позже -->
+            <div class="product-page-actions">
+                <button id="product-page-add-to-cart-btn" class="btn-add full-width" disabled>Добавить в корзину</button>
+                <button id="product-page-buy-now-btn" class="btn-buy full-width" disabled>Купить сейчас</button>
             </div>
+
+            <!-- Дополнительная информация (характеристики, теги и т.д.) - можно добавить позже -->
         </div>
     </div>
-</main>
+  </main>
 
   <!-- Подвал -->
   <footer role="contentinfo">

@@ -1,14 +1,13 @@
 /* css/pages/product-page.css */
-
-/* ==================== ПУЛЬСЫ (всегда видны) ==================== */
+/* ==================== ПУЛЬСЫ ==================== */
 .bg-overlay {
-  position: fixed; /* Всегда на весь экран */
+  position: absolute; /* Изменил с fixed на absolute */
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: -2; /* Позади всего */
+  z-index: -2; /* Поверх точек, позади контента */
   overflow: hidden;
 }
 
@@ -65,82 +64,52 @@
   background: rgba(0, 4, 172, 0.7);
 }
 
-/* === АНИМАЦИЯ ЗАГРУЗКИ ТОВАРА (появляется поверх контента товара) === */
-.product-loading-overlay {
-  position: absolute; /* Позиционируем относительно .product-page-container */
+/* === СПЛЕШ-ЭКРАН === */
+.loading-screen {
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(12, 16, 22, 0.9); /* Полупрозрачный фон */
+  background-color: #0C1016; /* Цвет фона, как у body */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  z-index: 100; /* Поверх контента товара, но ниже шапки */
+  z-index: 9999; /* Поверх всего */
   transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
 }
 
-.product-loading-overlay.hidden {
+.loading-screen.hidden {
   opacity: 0;
   visibility: hidden;
 }
 
-/* === СТИЛЬЗОВАННЫЙ СПИННЕР ЗАГРУЗКИ === */
-.product-loading-spinner {
-  width: 48px; /* Твой размер */
-  height: 48px;
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid rgba(255, 255, 255, 0.2);
+  border-top: 5px solid #3b82f6; /* Цвет как у кнопки */
   border-radius: 50%;
-  display: inline-block;
-  border-top: 4px solid #3b82f6; /* Твой цвет, как у кнопки */
-  border-right: 4px solid transparent;
-  box-sizing: border-box;
-  animation: rotation 1s linear infinite;
+  animation: spin 1s linear infinite;
 }
 
-/* Анимация вращения */
-@keyframes rotation {
+@keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
-/* Внутренний круг для более плавного вида (опционально) */
-.product-loading-spinner::after {
-  content: '';
-  width: 32px; /* Меньше основного */
-  height: 32px;
-  border-radius: 50%;
-  position: absolute;
-  top: 4px; /* (48 - 32) / 2 */
-  left: 4px;
-  border-top: 3px solid rgba(255, 255, 255, 0.3);
-  border-right: 3px solid transparent;
-  box-sizing: border-box;
-  animation: rotation 0.8s linear infinite reverse; /* Вращение в обратную сторону */
-}
-
-.product-loading-overlay p {
+.loading-screen p {
   margin-top: 1rem;
   color: #fff;
   font-size: 1rem;
-  text-align: center;
 }
 
-/* === ОБЁРТКА КОНТЕНТА ТОВАРА === */
-.product-content-wrapper {
-  /* Пока контент не готов, он полупрозрачный */
-  opacity: 0.2;
-  transition: opacity 0.5s ease-out;
-  width: 100%; /* Занимает всю ширину родителя */
-  height: 100%; /* Занимает всю высоту родителя */
+/* === ОСНОВНОЙ КОНТЕНТ === */
+/* Изначально скрыт */
+.main-content {
+  /* display: none; — задано в HTML */
 }
-
-.product-content-wrapper.loaded {
-  /* Когда загрузка завершена, контент становится полностью видимым */
-  opacity: 1;
-}
-
-/* === КОНТЕНТ СТРАНИЦЫ ТОВАРА === */
 .product-page-container {
     display: flex;
     flex-wrap: wrap;
@@ -148,11 +117,8 @@
     padding: 2rem;
     max-width: 1200px;
     margin: 0 auto;
-    margin-top: 5rem; /* Компенсация высоты шапки */
-    position: relative; /* Важно для позиционирования оверлея */
-    min-height: calc(100vh - 6rem); /* Вычесть высоту шапки и футера примерно */
+    margin-top: 5rem;
 }
-
 /* Пример CSS для скрытия/показа через класс */
 .product-variants-container.hidden {
     display: none;
@@ -259,7 +225,6 @@
     text-align: center;
     padding: 2rem;
 }
-
 /* Адаптивность */
 @media (max-width: 768px) {
     .product-page-container {
