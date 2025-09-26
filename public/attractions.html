@@ -87,9 +87,13 @@
         </div>
 
         <button id="cart-btn" class="cart-btn" aria-label="Корзина">
-            Корзина
-            <span id="cart-count" class="cart-count">0</span>
-        </button>
+    <!-- Иконка корзины (только на мобильных) -->
+    <img src="/assets/icons/cart-icon-mobile.svg" alt="Корзина" class="cart-icon-mobile" />
+    <!-- Текст кнопки (только на десктопе) -->
+    <span class="cart-text-desktop">Корзина</span>
+    <!-- Счетчик (всегда виден) -->
+    <span id="cart-count" class="cart-count">0</span>
+</button>
     </div>
 
     <!-- Гамбургер меню - теперь самое крайнее справа -->
