@@ -1,26 +1,32 @@
 // js/product.js
 
+
 document.addEventListener('DOMContentLoaded', async function () {
     console.log("Страница товара загружена");
 
-    // --- 1. Показываем оверлей загрузки ---
-    const loadingOverlay = document.getElementById('product-loading-overlay');
-    const contentWrapper = document.getElementById('product-content-wrapper');
+    // --- 1. Показываем сплеш-экран ---
+    const loadingScreen = document.getElementById('loading-screen');
+    const mainContent = document.getElementById('main-content');
 
-    if (loadingOverlay) {
-        loadingOverlay.classList.remove('hidden'); // Показываем оверлей
+    if (loadingScreen) {
+        loadingScreen.classList.remove('hidden'); // Убираем класс hidden, если он был
+        loadingScreen.style.display = 'flex'; // Показываем сплеш
     }
 
     // --- 2. Получение slug товара из URL ---
+    // URL теперь вида: /product/nazvanietovara
     const pathSegments = window.location.pathname.split('/');
-    const slug = pathSegments[pathSegments.length - 1];
+    const slug = pathSegments[pathSegments.length - 1]; // Последний сегмент — slug
 
     if (!slug) {
         console.error('Slug товара не найден в URL');
         showProductError('Товар не найден (slug отсутствует)');
-        // Даже при ошибке, скрываем оверлей
-        if (loadingOverlay) {
-            loadingOverlay.classList.add('hidden');
+        // Скрываем сплеш, если ошибка
+        if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 500);
         }
         return;
     }
@@ -41,8 +47,12 @@ document.addEventListener('DOMContentLoaded', async function () {
     } catch (error) {
         console.error('Ошибка при загрузке данных товара по slug:', error);
         showProductError(`Ошибка загрузки товара: ${error.message}`);
-        if (loadingOverlay) {
-            loadingOverlay.classList.add('hidden');
+        // Скрываем сплеш, если ошибка
+        if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 500);
         }
         return;
     }
@@ -57,16 +67,20 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (typeof updateCartCount === 'function') {
         updateCartCount();
     } else {
+        // Резервный вариант, если функция не импортирована
         console.warn("Функция updateCartCount не найдена, используем локальную.");
         updateCartCountLocal();
     }
 
-    // --- 7. Скрываем оверлей и показываем контент ---
-    if (loadingOverlay) {
-        loadingOverlay.classList.add('hidden');
-    }
-    if (contentWrapper) {
-        contentWrapper.classList.add('loaded'); // Убираем прозрачность
+    // --- 7. Скрываем сплеш-экран и показываем контент ---
+    if (loadingScreen) {
+        loadingScreen.classList.add('hidden');
+        setTimeout(() => {
+            loadingScreen.style.display = 'none';
+            if (mainContent) {
+                mainContent.style.display = 'block'; // или 'flex', в зависимости от твоего CSS
+            }
+        }, 500); // 500ms — длительность transition в CSS
     }
 });
 
