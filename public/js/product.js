@@ -462,7 +462,12 @@ function updateCartCountLocal() {
     const cartCountElement = document.getElementById('cart-count');
     if (cartCountElement) {
         cartCountElement.textContent = count;
-        cartCountElement.style.display = count > 0;
+        // Показываем элемент, только если count > 0
+        if (count > 0) {
+            cartCountElement.style.display = 'flex'; // или 'block', в зависимости от твоего CSS
+        } else {
+            cartCountElement.style.display = 'none';
+        }
     }
 }
 
