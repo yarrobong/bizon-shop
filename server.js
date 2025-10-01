@@ -1544,6 +1544,27 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
   }
 });
 
+// Пример для Node.js/Express
+app.post('/api/purchase-orders', (req, res) => {
+    const { OurOrderNumber, BuyerOrderNumber, ClientID, BuyerID, OrderDate, Description, Status, Comments } = req.body;
+    
+    const query = `
+        INSERT INTO PurchaseOrders (OurOrderNumber, BuyerOrderNumber, ClientID, BuyerID, OrderDate, Description, Status, Comments)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING OrderID
+    `;
+    
+    db.query(query, [OurOrderNumber, BuyerOrderNumber, ClientID, BuyerID, OrderDate, Description, Status, Comments], (err, result) => {
+        if (err) {
+            console.error('Ошибка при добавлении заказа:', err);
+            return res.status(500).json({ success: false, message: 'Ошибка базы данных' });
+        }
+        
+        // Убедиться, что транзакция зафиксирована
+        res.json({ success: true, OrderID: result.rows[0].OrderID });
+    });
+});
+
 // === СПЕЦИФИЧНЫЕ HTML маршруты ===
 // Отдаём product.html для маршрутов вида /product/:slug
 app.get('/product/:slug', (req, res) => {

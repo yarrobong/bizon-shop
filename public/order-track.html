@@ -885,6 +885,73 @@
                 // Перезагрузить данные
                 loadOrders();
             });
+            // Пример для формы заказа
+document.getElementById('order-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    // Отправка данных на сервер
+    fetch('/api/purchase-orders', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            showMessage('Заказ сохранен успешно!', 'success');
+            
+            // Закрыть модальное окно
+            document.getElementById('order-modal').style.display = 'none';
+            
+            // Сбросить форму
+            this.reset();
+            
+            // Обновить список заказов
+            loadPurchaseOrders(); // Используйте правильное имя функции
+        } else {
+            showMessage('Ошибка: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        showMessage('Ошибка при сохранении заказа', 'error');
+    });
+});
+function loadPurchaseOrders() {
+    fetch('/api/purchase-orders')
+        .then(response => response.json())
+        .then(orders => {
+            const ordersGrid = document.getElementById('orders-grid');
+            ordersGrid.innerHTML = ''; // Очистить перед добавлением новых
+            
+            if(orders.length === 0) {
+                ordersGrid.innerHTML = '<div class="empty">Нет заказов</div>';
+                return;
+            }
+            
+            orders.forEach(order => {
+                const orderCard = document.createElement('div');
+                orderCard.className = 'logistics-card';
+                orderCard.innerHTML = `
+                    <h3>Заказ #${order.OurOrderNumber}</h3>
+                    <p><strong>Клиент:</strong> ${order.ClientName || 'Не указан'}</p>
+                    <p><strong>Баер:</strong> ${order.BuyerName || 'Не указан'}</p>
+                    <p><strong>Дата:</strong> ${order.OrderDate || 'Не указана'}</p>
+                    <p><strong>Статус:</strong> <span class="status-badge status-${order.Status || 'оформлен'}">${order.Status || 'оформлен'}</span></p>
+                    <div class="logistics-actions">
+                        <button class="btn-primary" onclick="editOrder(${order.OrderID})">Редактировать</button>
+                        <button class="btn-danger" onclick="deleteOrder(${order.OrderID})">Удалить</button>
+                    </div>
+                `;
+                ordersGrid.appendChild(orderCard);
+            });
+        })
+        .catch(error => {
+            console.error('Ошибка загрузки заказов:', error);
+            showMessage('Ошибка загрузки заказов', 'error');
+        });
+}
             
             // Логика для формы клиента
             document.getElementById('client-form').addEventListener('submit', function(e) {
