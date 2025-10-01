@@ -1899,16 +1899,16 @@ app.get('/api/clients/search', async (req, res) => {
 app.get('/api/buyers', async (req, res) => {
   try {
     const buyersResult = await pool.query(`
-      SELECT "BuyerID", "Name", "Contact", "Notes"
-      FROM "Buyers"
-      ORDER BY "Name"
+      SELECT buyerid, name, contact, notes
+      FROM buyers
+      ORDER BY name
     `);
 
     const buyers = buyersResult.rows.map(row => ({
-      BuyerID: row.BuyerID,
-      Name: row.Name,
-      Contact: row.Contact,
-      Notes: row.Notes
+      BuyerID: row.buyerid,
+      Name: row.name,
+      Contact: row.contact,
+      Notes: row.notes
     }));
 
     res.json(buyers);
