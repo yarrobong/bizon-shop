@@ -1565,8 +1565,6 @@ app.post('/api/purchase-orders', (req, res) => {
     });
 });
 
-// server.js
-
 // ======================= ЗАКАЗЫ =======================
 
 // Получить все заказы
@@ -1684,168 +1682,808 @@ app.get('/api/purchase-orders/search', async (req, res) => {
   }
 });
 
-// ======================= КЛИЕНТЫ =======================
-
-// Получить всех клиентов
+// --- API: Получить всех клиентов ---
 app.get('/api/clients', async (req, res) => {
   try {
-    const { rows } = await pool.query('SELECT * FROM clients ORDER BY Name');
-    res.json(rows);
+    // Запрос с маленькими буквами, как в таблице
+    const { rows } = await pool.query(`
+      SELECT clientid, name, contact, address, notes
+      FROM clients
+      ORDER BY name
+    `);
+
+    // Преобразуем поля в CamelCase для фронта
+    const clients = rows.map(r => ({
+      ClientID: r.clientid,
+      Name: r.name,
+      Contact: r.contact,
+      Address: r.address,
+      Notes: r.notes
+    }));
+
+    res.json(clients); // возвращаем массив объектов
   } catch (err) {
-    console.error(err);
+    console.error('❌ Ошибка при получении клиентов из БД:', err);
     res.status(500).json({ success: false, message: 'Не удалось загрузить клиентов', details: err.message });
   }
 });
 
-// Создать клиента
+// --- API: Создать нового клиента ---
 app.post('/api/clients', async (req, res) => {
   const { Name, Contact, Address, Notes } = req.body;
-  if (!Name) return res.status(400).json({ success: false, message: 'Имя клиента обязательно' });
+
+  if (!Name) {
+    return res.status(400).json({ success: false, message: 'Имя клиента обязательно' });
+  }
+
   try {
-    const result = await pool.query(`
+    const query = `
       INSERT INTO clients (Name, Contact, Address, Notes)
-      VALUES ($1,$2,$3,$4) RETURNING ClientID
-    `, [Name, Contact, Address, Notes]);
-    res.json({ success: true, ClientID: result.rows[0].clientid });
+      VALUES ($1, $2, $3, $4)
+      RETURNING ClientID
+    `;
+
+    const result = await pool.query(query, [Name, Contact, Address, Notes]);
+
+    res.json({ success: true, ClientID: result.rows[0].ClientID });
   } catch (err) {
-    console.error(err);
+    console.error('❌ Ошибка при добавлении клиента в БД:', err);
     res.status(500).json({ success: false, message: 'Ошибка базы данных', details: err.message });
   }
 });
 
-// Получить клиента по ID
+// --- API: Получить клиента по ID ---
 app.get('/api/clients/:id', async (req, res) => {
-  const id = req.params.id;
+  const clientId = Number(req.params.id); // приводим к числу
+
+  if (!clientId || isNaN(clientId)) {
+    return res.status(400).json({ success: false, message: 'Некорректный ID клиента' });
+  }
+
   try {
-    const result = await pool.query(`SELECT * FROM clients WHERE ClientID=$1`, [id]);
-    if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'Клиент не найден' });
-    res.json(result.rows[0]);
+    const clientResult = await pool.query(
+      'SELECT clientid, name, contact, address, notes FROM clients WHERE clientid = $1',
+      [clientId]
+    );
+
+    if (clientResult.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Клиент не найден' });
+    }
+
+    const client = clientResult.rows[0];
+    res.json({
+      ClientID: client.clientid,
+      Name: client.name,
+      Contact: client.contact,
+      Address: client.address,
+      Notes: client.notes
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Ошибка БД', details: err.message });
+    console.error('❌ Ошибка при получении клиента по ID из БД:', err);
+    res.status(500).json({ success: false, message: 'Не удалось загрузить клиента', details: err.message });
   }
 });
-
-// Обновить клиента
+// --- API: Обновить клиента ---
 app.put('/api/clients/:id', async (req, res) => {
-  const id = req.params.id;
+  const clientId = Number(req.params.id); // <-- важно!
   const { Name, Contact, Address, Notes } = req.body;
+
+  if (!clientId || isNaN(clientId)) {
+    return res.status(400).json({ success: false, message: 'Некорректный ID клиента' });
+  }
+
   try {
-    await pool.query(`UPDATE clients SET Name=$1, Contact=$2, Address=$3, Notes=$4 WHERE ClientID=$5`,
-      [Name, Contact, Address, Notes, id]);
-    res.json({ success: true, message: 'Клиент обновлен' });
+    const query = `
+      UPDATE clients 
+      SET name = $1, contact = $2, address = $3, notes = $4
+      WHERE clientid = $5
+    `;
+
+    await pool.query(query, [Name, Contact, Address, Notes, clientId]);
+
+    res.json({ success: true, message: 'Клиент обновлен успешно' });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Ошибка БД', details: err.message });
+    console.error('❌ Ошибка при обновлении клиента в БД:', err);
+    res.status(500).json({ success: false, message: 'Ошибка базы данных', details: err.message });
   }
 });
 
-// Удалить клиента
+// --- API: Удалить клиента ---
 app.delete('/api/clients/:id', async (req, res) => {
-  const id = req.params.id;
+  const clientId = req.params.id;
+
   try {
-    await pool.query(`DELETE FROM clients WHERE ClientID=$1`, [id]);
-    res.json({ success: true, message: 'Клиент удален' });
+    await pool.query('DELETE FROM clients WHERE ClientID = $1', [clientId]);
+    res.json({ success: true, message: 'Клиент удален успешно' });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Ошибка БД', details: err.message });
+    console.error('❌ Ошибка при удалении клиента из БД:', err);
+    res.status(500).json({ success: false, message: 'Ошибка базы данных', details: err.message });
   }
 });
 
-// Поиск клиентов
+// --- API: Поиск клиентов ---
 app.get('/api/clients/search', async (req, res) => {
   const query = req.query.q;
-  if (!query) return res.json([]);
+
+  if (!query) {
+    return res.json([]);
+  }
+
   try {
-    const result = await pool.query(`SELECT * FROM clients WHERE Name ILIKE $1 OR Contact ILIKE $1 ORDER BY Name`, [`%${query}%`]);
-    res.json(result.rows);
+    const searchResult = await pool.query(`
+      SELECT ClientID, Name, Contact, Address, Notes
+      FROM clients
+      WHERE Name ILIKE $1 OR Contact ILIKE $1
+      ORDER BY Name
+    `, [`%${query}%`]);
+
+    const clients = searchResult.rows.map(row => ({
+      ClientID: row.ClientID,
+      Name: row.Name,
+      Contact: row.Contact,
+      Address: row.Address,
+      Notes: row.Notes
+    }));
+
+    res.json(clients);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Ошибка поиска', details: err.message });
+    console.error('❌ Ошибка при поиске клиентов в БД:', err);
+    res.status(500).json({ success: false, message: 'Не удалось выполнить поиск', details: err.message });
   }
 });
 
-// ======================= БАЕРЫ =======================
-
-// CRUD и поиск для баеров аналогично клиентам
+// --- API: Получить всех баеров ---
 app.get('/api/buyers', async (req, res) => {
   try {
-    const { rows } = await pool.query('SELECT * FROM buyers ORDER BY Name');
-    res.json(rows);
-  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'Ошибка БД', details: err.message }); }
+    const buyersResult = await pool.query(`
+      SELECT buyerid, name, contact, notes
+      FROM buyers
+      ORDER BY name
+    `);
+
+    const buyers = buyersResult.rows.map(row => ({
+      BuyerID: row.buyerid,
+      Name: row.name,
+      Contact: row.contact,
+      Notes: row.notes
+    }));
+
+    res.json(buyers);
+  } catch (err) {
+    console.error('❌ Ошибка при получении баеров из БД:', err);
+    res.status(500).json({ success: false, message: 'Не удалось загрузить баеров', details: err.message });
+  }
 });
+
+// --- API: Создать нового баера ---
 app.post('/api/buyers', async (req, res) => {
   const { Name, Contact, Notes } = req.body;
-  if (!Name) return res.status(400).json({ success: false, message: 'Имя баера обязательно' });
-  try { const result = await pool.query(`INSERT INTO buyers (Name, Contact, Notes) VALUES ($1,$2,$3) RETURNING BuyerID`, [Name, Contact, Notes]); res.json({ success: true, BuyerID: result.rows[0].buyerid }); }
-  catch (err) { console.error(err); res.status(500).json({ success: false, message: 'Ошибка БД', details: err.message }); }
+
+  if (!Name) {
+    return res.status(400).json({ success: false, message: 'Имя баера обязательно' });
+  }
+
+  try {
+    const query = `
+      INSERT INTO buyers (Name, Contact, Notes)
+      VALUES ($1, $2, $3)
+      RETURNING BuyerID
+    `;
+
+    const result = await pool.query(query, [Name, Contact, Notes]);
+
+    res.json({ success: true, BuyerID: result.rows[0].BuyerID });
+  } catch (err) {
+    console.error('❌ Ошибка при добавлении баера в БД:', err);
+    res.status(500).json({ success: false, message: 'Ошибка базы данных', details: err.message });
+  }
 });
-app.get('/api/buyers/:id', async (req, res) => { const id = req.params.id; try { const result = await pool.query(`SELECT * FROM buyers WHERE BuyerID=$1`, [id]); if (!result.rows.length) return res.status(404).json({ success: false, message: 'Баер не найден' }); res.json(result.rows[0]); } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'Ошибка БД', details: err.message }); } });
-app.put('/api/buyers/:id', async (req, res) => { const id=req.params.id; const {Name,Contact,Notes}=req.body; try{await pool.query(`UPDATE buyers SET Name=$1,Contact=$2,Notes=$3 WHERE BuyerID=$4`,[Name,Contact,Notes,id]);res.json({success:true,message:'Баер обновлен'});}catch(err){console.error(err);res.status(500).json({success:false,message:'Ошибка БД',details:err.message});} });
-app.delete('/api/buyers/:id', async (req,res)=>{ const id=req.params.id; try{await pool.query(`DELETE FROM buyers WHERE BuyerID=$1`,[id]);res.json({success:true,message:'Баер удален'});}catch(err){console.error(err);res.status(500).json({success:false,message:'Ошибка БД',details:err.message});} });
-app.get('/api/buyers/search', async(req,res)=>{ const q=req.query.q;if(!q)return res.json([]); try{ const result=await pool.query(`SELECT * FROM buyers WHERE Name ILIKE $1 ORDER BY Name`,[`%${q}%`]); res.json(result.rows);}catch(err){console.error(err);res.status(500).json({success:false,message:'Ошибка поиска',details:err.message});} });
 
-// ======================= ПАРТИИ (Shipments) =======================
+// --- API: Получить баера по ID ---
+app.get('/api/buyers/:id', async (req, res) => {
+  const buyerId = Number(req.params.id);
+  if (!buyerId || isNaN(buyerId)) {
+    return res.status(400).json({ success: false, message: 'Некорректный ID баера' });
+  }
 
-// Получить все партии
-app.get('/api/shipments', async (req,res)=>{ try{ const {rows}=await pool.query('SELECT * FROM shipments ORDER BY ShipmentDate DESC'); res.json(rows);}catch(err){console.error(err);res.status(500).json({success:false,message:'Ошибка БД',details:err.message});} });
-// CRUD, поиск по партиям делается аналогично заказам
+  try {
+    const buyerResult = await pool.query(
+      'SELECT buyerid, name, contact, notes FROM buyers WHERE buyerid = $1',
+      [buyerId]
+    );
 
-// ======================= РАСПРЕДЕЛЕНИЯ =======================
-// Аналогично: CRUD + поиск
+    if (buyerResult.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Баер не найден' });
+    }
 
-// ======================= ПЛАТЕЖИ =======================
+    const buyer = buyerResult.rows[0];
+    res.json({
+      BuyerID: buyer.buyerid, // CamelCase для фронта
+      Name: buyer.name,
+      Contact: buyer.contact,
+      Notes: buyer.notes
+    });
+  } catch (err) {
+    console.error('❌ Ошибка при получении баера по ID из БД:', err);
+    res.status(500).json({ success: false, message: 'Не удалось загрузить баера', details: err.message });
+  }
+});
 
-// Получить все платежи
-app.get('/api/payments', async (req,res)=>{ try{ const {rows}=await pool.query('SELECT * FROM payments ORDER BY PaymentDate DESC'); res.json(rows);}catch(err){console.error(err);res.status(500).json({success:false,message:'Ошибка БД',details:err.message});} });
+// --- API: Обновить баера ---
+app.put('/api/buyers/:id', async (req, res) => {
+  const buyerId = req.params.id;
+  const { Name, Contact, Notes } = req.body;
 
-// Создать платеж
-app.post('/api/payments', async (req,res)=>{
+  try {
+    const query = `
+      UPDATE buyers 
+      SET name = $1, contact = $2, notes = $3
+      WHERE buyerID = $4
+    `;
+
+    await pool.query(query, [Name, Contact, Notes, buyerId]);
+
+    res.json({ success: true, message: 'Баер обновлен успешно' });
+  } catch (err) {
+    console.error('❌ Ошибка при обновлении баера в БД:', err);
+    res.status(500).json({ success: false, message: 'Ошибка базы данных', details: err.message });
+  }
+});
+
+// --- API: Удалить баера ---
+app.delete('/api/buyers/:id', async (req, res) => {
+  const buyerId = req.params.id;
+
+  try {
+    await pool.query('DELETE FROM buyers WHERE BuyerID = $1', [buyerId]);
+    res.json({ success: true, message: 'Баер удален успешно' });
+  } catch (err) {
+    console.error('❌ Ошибка при удалении баера из БД:', err);
+    res.status(500).json({ success: false, message: 'Ошибка базы данных', details: err.message });
+  }
+});
+
+// --- API: Поиск баеров ---
+app.get('/api/buyers/search', async (req, res) => {
+  const query = req.query.q;
+
+  if (!query) {
+    return res.json([]);
+  }
+
+  try {
+    const searchResult = await pool.query(`
+      SELECT BuyerID, Name, Contact, Notes
+      FROM buyers
+      WHERE Name ILIKE $1 OR Contact ILIKE $1
+      ORDER BY Name
+    `, [`%${query}%`]);
+
+    const buyers = searchResult.rows.map(row => ({
+      BuyerID: row.BuyerID,
+      Name: row.Name,
+      Contact: row.Contact,
+      Notes: row.Notes
+    }));
+
+    res.json(buyers);
+  } catch (err) {
+    console.error('❌ Ошибка при поиске баеров в БД:', err);
+    res.status(500).json({ success: false, message: 'Не удалось выполнить поиск', details: err.message });
+  }
+});
+
+// --- API: Получить все партии ---
+app.get('/api/shipments', async (req, res) => {
+  try {
+    const shipmentsResult = await pool.query(`
+      SELECT 
+        s.ShipmentID,
+        s.OrderID,
+        s.ShipmentNumber,
+        s.TrackingNumber,
+        s.DepartureDate,
+        s.ArrivalDate,
+        s.ShipmentStatus,
+        s.DeliveryCost,
+        s.PaymentStatus,
+        s.PaymentDate,
+        s.Comments,
+        po.OurOrderNumber as OrderNumber
+      FROM shipments s
+      LEFT JOIN PurchaseOrders po ON s.OrderID = po.OrderID
+      ORDER BY s.DepartureDate DESC
+    `);
+
+    const shipments = shipmentsResult.rows.map(row => ({
+      ShipmentID: row.ShipmentID,
+      OrderID: row.OrderID,
+      ShipmentNumber: row.ShipmentNumber,
+      TrackingNumber: row.TrackingNumber,
+      DepartureDate: row.DepartureDate,
+      ArrivalDate: row.ArrivalDate,
+      ShipmentStatus: row.ShipmentStatus,
+      DeliveryCost: parseFloat(row.DeliveryCost) || null,
+      PaymentStatus: row.PaymentStatus,
+      PaymentDate: row.PaymentDate,
+      Comments: row.Comments,
+      OrderNumber: row.OrderNumber
+    }));
+
+    res.json(shipments);
+  } catch (err) {
+    console.error('❌ Ошибка при получении партий из БД:', err);
+    res.status(500).json({ success: false, message: 'Не удалось загрузить партии', details: err.message });
+  }
+});
+
+// --- API: Создать новую партию ---
+app.post('/api/shipments', async (req, res) => {
+  const { OrderID, ShipmentNumber, TrackingNumber, DepartureDate, ArrivalDate, ShipmentStatus, DeliveryCost, PaymentStatus, PaymentDate, Comments } = req.body;
+
+  if (!OrderID) {
+    return res.status(400).json({ success: false, message: 'ID заказа обязателен' });
+  }
+
+  try {
+    const query = `
+      INSERT INTO shipments (OrderID, ShipmentNumber, TrackingNumber, DepartureDate, ArrivalDate, ShipmentStatus, DeliveryCost, PaymentStatus, PaymentDate, Comments)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      RETURNING ShipmentID
+    `;
+
+    const result = await pool.query(query, [OrderID, ShipmentNumber, TrackingNumber, DepartureDate, ArrivalDate, ShipmentStatus, DeliveryCost, PaymentStatus, PaymentDate, Comments]);
+
+    res.json({ success: true, ShipmentID: result.rows[0].ShipmentID });
+  } catch (err) {
+    console.error('❌ Ошибка при добавлении партии в БД:', err);
+    res.status(500).json({ success: false, message: 'Ошибка базы данных', details: err.message });
+  }
+});
+
+// --- API: Получить партию по ID ---
+app.get('/api/shipments/:id', async (req, res) => {
+  const shipmentId = req.params.id;
+
+  try {
+    const shipmentResult = await pool.query('SELECT ShipmentID, OrderID, ShipmentNumber, TrackingNumber, DepartureDate, ArrivalDate, ShipmentStatus, DeliveryCost, PaymentStatus, PaymentDate, Comments FROM shipments WHERE ShipmentID = $1', [shipmentId]);
+
+    if (shipmentResult.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Партия не найдена' });
+    }
+
+    const shipment = shipmentResult.rows[0];
+    res.json({
+      ShipmentID: shipment.ShipmentID,
+      OrderID: shipment.OrderID,
+      ShipmentNumber: shipment.ShipmentNumber,
+      TrackingNumber: shipment.TrackingNumber,
+      DepartureDate: shipment.DepartureDate,
+      ArrivalDate: shipment.ArrivalDate,
+      ShipmentStatus: shipment.ShipmentStatus,
+      DeliveryCost: parseFloat(shipment.DeliveryCost) || null,
+      PaymentStatus: shipment.PaymentStatus,
+      PaymentDate: shipment.PaymentDate,
+      Comments: shipment.Comments
+    });
+  } catch (err) {
+    console.error('❌ Ошибка при получении партии по ID из БД:', err);
+    res.status(500).json({ success: false, message: 'Не удалось загрузить партию', details: err.message });
+  }
+});
+
+// --- API: Обновить партию ---
+app.put('/api/shipments/:id', async (req, res) => {
+  const shipmentId = req.params.id;
+  const { OrderID, ShipmentNumber, TrackingNumber, DepartureDate, ArrivalDate, ShipmentStatus, DeliveryCost, PaymentStatus, PaymentDate, Comments } = req.body;
+
+  try {
+    const query = `
+      UPDATE shipments 
+      SET OrderID = $1, ShipmentNumber = $2, TrackingNumber = $3, DepartureDate = $4, ArrivalDate = $5, ShipmentStatus = $6, DeliveryCost = $7, PaymentStatus = $8, PaymentDate = $9, Comments = $10
+      WHERE ShipmentID = $11
+    `;
+
+    await pool.query(query, [OrderID, ShipmentNumber, TrackingNumber, DepartureDate, ArrivalDate, ShipmentStatus, DeliveryCost, PaymentStatus, PaymentDate, Comments, shipmentId]);
+
+    res.json({ success: true, message: 'Партия обновлена успешно' });
+  } catch (err) {
+    console.error('❌ Ошибка при обновлении партии в БД:', err);
+    res.status(500).json({ success: false, message: 'Ошибка базы данных', details: err.message });
+  }
+});
+
+// --- API: Удалить партию ---
+app.delete('/api/shipments/:id', async (req, res) => {
+  const shipmentId = req.params.id;
+
+  try {
+    await pool.query('DELETE FROM shipments WHERE ShipmentID = $1', [shipmentId]);
+    res.json({ success: true, message: 'Партия удалена успешно' });
+  } catch (err) {
+    console.error('❌ Ошибка при удалении партии из БД:', err);
+    res.status(500).json({ success: false, message: 'Ошибка базы данных', details: err.message });
+  }
+});
+
+// --- API: Поиск партий ---
+app.get('/api/shipments/search', async (req, res) => {
+  const query = req.query.q;
+
+  if (!query) {
+    return res.json([]);
+  }
+
+  try {
+    const searchResult = await pool.query(`
+      SELECT 
+        s.ShipmentID,
+        s.OrderID,
+        s.ShipmentNumber,
+        s.TrackingNumber,
+        s.DepartureDate,
+        s.ArrivalDate,
+        s.ShipmentStatus,
+        s.DeliveryCost,
+        s.PaymentStatus,
+        s.PaymentDate,
+        s.Comments,
+        po.OurOrderNumber as OrderNumber
+      FROM shipments s
+      LEFT JOIN PurchaseOrders po ON s.OrderID = po.OrderID
+      WHERE s.ShipmentNumber ILIKE $1 OR s.TrackingNumber ILIKE $1 OR po.OurOrderNumber ILIKE $1
+      ORDER BY s.DepartureDate DESC
+    `, [`%${query}%`]);
+
+    const shipments = searchResult.rows.map(row => ({
+      ShipmentID: row.ShipmentID,
+      OrderID: row.OrderID,
+      ShipmentNumber: row.ShipmentNumber,
+      TrackingNumber: row.TrackingNumber,
+      DepartureDate: row.DepartureDate,
+      ArrivalDate: row.ArrivalDate,
+      ShipmentStatus: row.ShipmentStatus,
+      DeliveryCost: parseFloat(row.DeliveryCost) || null,
+      PaymentStatus: row.PaymentStatus,
+      PaymentDate: row.PaymentDate,
+      Comments: row.Comments,
+      OrderNumber: row.OrderNumber
+    }));
+
+    res.json(shipments);
+  } catch (err) {
+    console.error('❌ Ошибка при поиске партий в БД:', err);
+    res.status(500).json({ success: false, message: 'Не удалось выполнить поиск', details: err.message });
+  }
+});
+
+// --- API: Получить все распределения ---
+app.get('/api/distribution', async (req, res) => {
+  try {
+    const distributionResult = await pool.query(`
+      SELECT 
+        d.DistributionID,
+        d.ShipmentID,
+        d.ClientID,
+        d.Address,
+        d.ItemDescription,
+        d.Quantity,
+        d.DeliveryCost,
+        d.PaymentStatus,
+        d.Status,
+        c.Name as ClientName,
+        s.ShipmentNumber
+      FROM distribution d
+      LEFT JOIN Clients c ON d.ClientID = c.ClientID
+      LEFT JOIN Shipments s ON d.ShipmentID = s.ShipmentID
+      ORDER BY d.DistributionID DESC
+    `);
+
+    const distribution = distributionResult.rows.map(row => ({
+      DistributionID: row.DistributionID,
+      ShipmentID: row.ShipmentID,
+      ClientID: row.ClientID,
+      Address: row.Address,
+      ItemDescription: row.ItemDescription,
+      Quantity: row.Quantity,
+      DeliveryCost: parseFloat(row.DeliveryCost) || null,
+      PaymentStatus: row.PaymentStatus,
+      Status: row.Status,
+      ClientName: row.ClientName,
+      ShipmentNumber: row.ShipmentNumber
+    }));
+
+    res.json(distribution);
+  } catch (err) {
+    console.error('❌ Ошибка при получении распределений из БД:', err);
+    res.status(500).json({ success: false, message: 'Не удалось загрузить распределения', details: err.message });
+  }
+});
+
+// --- API: Создать новое распределение ---
+app.post('/api/distribution', async (req, res) => {
+  const { ShipmentID, ClientID, Address, ItemDescription, Quantity, DeliveryCost, PaymentStatus, Status } = req.body;
+
+  if (!ShipmentID || !ClientID || !Address) {
+    return res.status(400).json({ success: false, message: 'Не все обязательные поля заполнены' });
+  }
+
+  try {
+    const query = `
+      INSERT INTO distribution (ShipmentID, ClientID, Address, ItemDescription, Quantity, DeliveryCost, PaymentStatus, Status)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING DistributionID
+    `;
+
+    const result = await pool.query(query, [ShipmentID, ClientID, Address, ItemDescription, Quantity, DeliveryCost, PaymentStatus, Status]);
+
+    res.json({ success: true, DistributionID: result.rows[0].DistributionID });
+  } catch (err) {
+    console.error('❌ Ошибка при добавлении распределения в БД:', err);
+    res.status(500).json({ success: false, message: 'Ошибка базы данных', details: err.message });
+  }
+});
+
+// --- API: Получить распределение по ID ---
+app.get('/api/distribution/:id', async (req, res) => {
+  const distributionId = req.params.id;
+
+  try {
+    const distributionResult = await pool.query('SELECT DistributionID, ShipmentID, ClientID, Address, ItemDescription, Quantity, DeliveryCost, PaymentStatus, Status FROM distribution WHERE DistributionID = $1', [distributionId]);
+
+    if (distributionResult.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Распределение не найдено' });
+    }
+
+    const distribution = distributionResult.rows[0];
+    res.json({
+      DistributionID: distribution.DistributionID,
+      ShipmentID: distribution.ShipmentID,
+      ClientID: distribution.ClientID,
+      Address: distribution.Address,
+      ItemDescription: distribution.ItemDescription,
+      Quantity: distribution.Quantity,
+      DeliveryCost: parseFloat(distribution.DeliveryCost) || null,
+      PaymentStatus: distribution.PaymentStatus,
+      Status: distribution.Status
+    });
+  } catch (err) {
+    console.error('❌ Ошибка при получении распределения по ID из БД:', err);
+    res.status(500).json({ success: false, message: 'Не удалось загрузить распределение', details: err.message });
+  }
+});
+
+// --- API: Обновить распределение ---
+app.put('/api/distribution/:id', async (req, res) => {
+  const distributionId = req.params.id;
+  const { ShipmentID, ClientID, Address, ItemDescription, Quantity, DeliveryCost, PaymentStatus, Status } = req.body;
+
+  try {
+    const query = `
+      UPDATE distribution 
+      SET ShipmentID = $1, ClientID = $2, Address = $3, ItemDescription = $4, Quantity = $5, DeliveryCost = $6, PaymentStatus = $7, Status = $8
+      WHERE DistributionID = $9
+    `;
+
+    await pool.query(query, [ShipmentID, ClientID, Address, ItemDescription, Quantity, DeliveryCost, PaymentStatus, Status, distributionId]);
+
+    res.json({ success: true, message: 'Распределение обновлено успешно' });
+  } catch (err) {
+    console.error('❌ Ошибка при обновлении распределения в БД:', err);
+    res.status(500).json({ success: false, message: 'Ошибка базы данных', details: err.message });
+  }
+});
+
+// --- API: Удалить распределение ---
+app.delete('/api/distribution/:id', async (req, res) => {
+  const distributionId = req.params.id;
+
+  try {
+    await pool.query('DELETE FROM distribution WHERE DistributionID = $1', [distributionId]);
+    res.json({ success: true, message: 'Распределение удалено успешно' });
+  } catch (err) {
+    console.error('❌ Ошибка при удалении распределения из БД:', err);
+    res.status(500).json({ success: false, message: 'Ошибка базы данных', details: err.message });
+  }
+});
+
+// --- API: Поиск распределений ---
+app.get('/api/distribution/search', async (req, res) => {
+  const query = req.query.q;
+
+  if (!query) {
+    return res.json([]);
+  }
+
+  try {
+    const searchResult = await pool.query(`
+      SELECT 
+        d.DistributionID,
+        d.ShipmentID,
+        d.ClientID,
+        d.Address,
+        d.ItemDescription,
+        d.Quantity,
+        d.DeliveryCost,
+        d.PaymentStatus,
+        d.Status,
+        c.Name as ClientName,
+        s.ShipmentNumber
+      FROM distribution d
+      LEFT JOIN Clients c ON d.ClientID = c.ClientID
+      LEFT JOIN Shipments s ON d.ShipmentID = s.ShipmentID
+      WHERE d.Address ILIKE $1 OR c.Name ILIKE $1 OR d.ItemDescription ILIKE $1
+      ORDER BY d.DistributionID DESC
+    `, [`%${query}%`]);
+
+    const distribution = searchResult.rows.map(row => ({
+      DistributionID: row.DistributionID,
+      ShipmentID: row.ShipmentID,
+      ClientID: row.ClientID,
+      Address: row.Address,
+      ItemDescription: row.ItemDescription,
+      Quantity: row.Quantity,
+      DeliveryCost: parseFloat(row.DeliveryCost) || null,
+      PaymentStatus: row.PaymentStatus,
+      Status: row.Status,
+      ClientName: row.ClientName,
+      ShipmentNumber: row.ShipmentNumber
+    }));
+
+    res.json(distribution);
+  } catch (err) {
+    console.error('❌ Ошибка при поиске распределений в БД:', err);
+    res.status(500).json({ success: false, message: 'Не удалось выполнить поиск', details: err.message });
+  }
+});
+
+// --- API: Получить все платежи ---
+app.get('/api/payments', async (req, res) => {
+  try {
+    const paymentsResult = await pool.query('SELECT PaymentID, RelatedOrderID, RelatedShipmentID, RelatedDistributionID, Amount, Currency, PaymentDate, PaymentType, Direction, Notes FROM payments ORDER BY PaymentDate DESC');
+
+    const payments = paymentsResult.rows.map(row => ({
+      PaymentID: row.PaymentID,
+      RelatedOrderID: row.RelatedOrderID,
+      RelatedShipmentID: row.RelatedShipmentID,
+      RelatedDistributionID: row.RelatedDistributionID,
+      Amount: parseFloat(row.Amount),
+      Currency: row.Currency,
+      PaymentDate: row.PaymentDate,
+      PaymentType: row.PaymentType,
+      Direction: row.Direction,
+      Notes: row.Notes
+    }));
+
+    res.json(payments);
+  } catch (err) {
+    console.error('❌ Ошибка при получении платежей из БД:', err);
+    res.status(500).json({ success: false, message: 'Не удалось загрузить платежи', details: err.message });
+  }
+});
+
+// --- API: Создать новый платеж ---
+app.post('/api/payments', async (req, res) => {
   const { RelatedOrderID, RelatedShipmentID, RelatedDistributionID, Amount, Currency, PaymentDate, PaymentType, Direction, Notes } = req.body;
-  if(!Amount || !Currency || !PaymentDate) return res.status(400).json({success:false,message:'Не все обязательные поля'});
-  try{
-    const result = await pool.query(`
+
+  if (!Amount || Amount <= 0) {
+    return res.status(400).json({ success: false, message: 'Сумма платежа обязательна и должна быть положительной' });
+  }
+
+  try {
+    const query = `
       INSERT INTO payments (RelatedOrderID, RelatedShipmentID, RelatedDistributionID, Amount, Currency, PaymentDate, PaymentType, Direction, Notes)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING PaymentID
-    `,[RelatedOrderID,RelatedShipmentID,RelatedDistributionID,Amount,Currency,PaymentDate,PaymentType,Direction,Notes]);
-    res.json({success:true,PaymentID:result.rows[0].paymentid});
-  }catch(err){console.error(err);res.status(500).json({success:false,message:'Ошибка БД',details:err.message});}
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING PaymentID
+    `;
+
+    const result = await pool.query(query, [RelatedOrderID, RelatedShipmentID, RelatedDistributionID, Amount, Currency, PaymentDate, PaymentType, Direction, Notes]);
+
+    res.json({ success: true, PaymentID: result.rows[0].PaymentID });
+  } catch (err) {
+    console.error('❌ Ошибка при добавлении платежа в БД:', err);
+    res.status(500).json({ success: false, message: 'Ошибка базы данных', details: err.message });
+  }
 });
 
-// Получить платеж по ID
-app.get('/api/payments/:id', async(req,res)=>{
-  const id=req.params.id;
-  try{ const result=await pool.query('SELECT * FROM payments WHERE PaymentID=$1',[id]);
-    if(!result.rows.length) return res.status(404).json({success:false,message:'Платеж не найден'});
-    res.json(result.rows[0]);
-  }catch(err){console.error(err);res.status(500).json({success:false,message:'Ошибка БД',details:err.message});}
+// --- API: Получить платеж по ID ---
+app.get('/api/payments/:id', async (req, res) => {
+  const paymentId = req.params.id;
+
+  try {
+    const paymentResult = await pool.query('SELECT PaymentID, RelatedOrderID, RelatedShipmentID, RelatedDistributionID, Amount, Currency, PaymentDate, PaymentType, Direction, Notes FROM payments WHERE PaymentID = $1', [paymentId]);
+
+    if (paymentResult.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Платеж не найден' });
+    }
+
+    const payment = paymentResult.rows[0];
+    res.json({
+      PaymentID: payment.PaymentID,
+      RelatedOrderID: payment.RelatedOrderID,
+      RelatedShipmentID: payment.RelatedShipmentID,
+      RelatedDistributionID: payment.RelatedDistributionID,
+      Amount: parseFloat(payment.Amount),
+      Currency: payment.Currency,
+      PaymentDate: payment.PaymentDate,
+      PaymentType: payment.PaymentType,
+      Direction: payment.Direction,
+      Notes: payment.Notes
+    });
+  } catch (err) {
+    console.error('❌ Ошибка при получении платежа по ID из БД:', err);
+    res.status(500).json({ success: false, message: 'Не удалось загрузить платеж', details: err.message });
+  }
 });
 
-// Обновить платеж
-app.put('/api/payments/:id', async(req,res)=>{
-  const id=req.params.id;
+// --- API: Обновить платеж ---
+app.put('/api/payments/:id', async (req, res) => {
+  const paymentId = req.params.id;
   const { RelatedOrderID, RelatedShipmentID, RelatedDistributionID, Amount, Currency, PaymentDate, PaymentType, Direction, Notes } = req.body;
-  try{
-    await pool.query(`UPDATE payments SET RelatedOrderID=$1, RelatedShipmentID=$2, RelatedDistributionID=$3, Amount=$4, Currency=$5, PaymentDate=$6, PaymentType=$7, Direction=$8, Notes=$9 WHERE PaymentID=$10`,
-      [RelatedOrderID,RelatedShipmentID,RelatedDistributionID,Amount,Currency,PaymentDate,PaymentType,Direction,Notes,id]);
-    res.json({success:true,message:'Платеж обновлен'});
-  }catch(err){console.error(err);res.status(500).json({success:false,message:'Ошибка БД',details:err.message});}
+
+  try {
+    const query = `
+      UPDATE payments 
+      SET RelatedOrderID = $1, RelatedShipmentID = $2, RelatedDistributionID = $3, Amount = $4, Currency = $5, PaymentDate = $6, PaymentType = $7, Direction = $8, Notes = $9
+      WHERE PaymentID = $10
+    `;
+
+    await pool.query(query, [RelatedOrderID, RelatedShipmentID, RelatedDistributionID, Amount, Currency, PaymentDate, PaymentType, Direction, Notes, paymentId]);
+
+    res.json({ success: true, message: 'Платеж обновлен успешно' });
+  } catch (err) {
+    console.error('❌ Ошибка при обновлении платежа в БД:', err);
+    res.status(500).json({ success: false, message: 'Ошибка базы данных', details: err.message });
+  }
 });
 
-// Удалить платеж
-app.delete('/api/payments/:id', async(req,res)=>{
-  const id=req.params.id;
-  try{ await pool.query('DELETE FROM payments WHERE PaymentID=$1',[id]); res.json({success:true,message:'Платеж удален'});}catch(err){console.error(err);res.status(500).json({success:false,message:'Ошибка БД',details:err.message});}
+// --- API: Удалить платеж ---
+app.delete('/api/payments/:id', async (req, res) => {
+  const paymentId = req.params.id;
+
+  try {
+    await pool.query('DELETE FROM payments WHERE PaymentID = $1', [paymentId]);
+    res.json({ success: true, message: 'Платеж удален успешно' });
+  } catch (err) {
+    console.error('❌ Ошибка при удалении платежа из БД:', err);
+    res.status(500).json({ success: false, message: 'Ошибка базы данных', details: err.message });
+  }
 });
 
-// Поиск платежей
-app.get('/api/payments/search', async(req,res)=>{
-  const q=req.query.q;
-  if(!q)return res.json([]);
-  try{
-    const result=await pool.query(`SELECT * FROM payments WHERE Notes ILIKE $1 ORDER BY PaymentDate DESC`,[`%${q}%`]);
-    res.json(result.rows);
-  }catch(err){console.error(err);res.status(500).json({success:false,message:'Ошибка поиска',details:err.message});}
+// --- API: Поиск платежей ---
+app.get('/api/payments/search', async (req, res) => {
+  const query = req.query.q;
+
+  if (!query) {
+    return res.json([]);
+  }
+
+  try {
+    const searchResult = await pool.query(`
+      SELECT PaymentID, RelatedOrderID, RelatedShipmentID, RelatedDistributionID, Amount, Currency, PaymentDate, PaymentType, Direction, Notes
+      FROM Payments
+      WHERE Amount::text ILIKE $1 OR Notes ILIKE $1 OR PaymentType ILIKE $1
+      ORDER BY PaymentDate DESC
+    `, [`%${query}%`]);
+
+    const payments = searchResult.rows.map(row => ({
+      PaymentID: row.PaymentID,
+      RelatedOrderID: row.RelatedOrderID,
+      RelatedShipmentID: row.RelatedShipmentID,
+      RelatedDistributionID: row.RelatedDistributionID,
+      Amount: parseFloat(row.Amount),
+      Currency: row.Currency,
+      PaymentDate: row.PaymentDate,
+      PaymentType: row.PaymentType,
+      Direction: row.Direction,
+      Notes: row.Notes
+    }));
+
+    res.json(payments);
+  } catch (err) {
+    console.error('❌ Ошибка при поиске платежей в БД:', err);
+    res.status(500).json({ success: false, message: 'Не удалось выполнить поиск', details: err.message });
+  }
 });
 
 // === СПЕЦИФИЧНЫЕ HTML маршруты ===
