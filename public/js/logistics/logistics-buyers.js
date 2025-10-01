@@ -15,7 +15,44 @@ async function loadBuyers() {
     }
 }
 
+function renderBuyers(buyers) {
+    const container = document.getElementById('buyers-grid');
+    if (!container) return;
 
+    container.innerHTML = '';
+
+    if (!buyers || buyers.length === 0) {
+        container.innerHTML = '<div class="empty">Нет баеров</div>';
+        return;
+    }
+
+    buyers.forEach(buyer => {
+        // --- НОВАЯ ПРОВЕРКА ---
+        // Проверяем, что BuyerID существует и является числом перед генерацией HTML
+        if (!buyer.BuyerID || typeof buyer.BuyerID !== 'number') {
+            console.warn('Пропускаем баера без корректного ID:', buyer);
+            // Пропускаем текущий элемент цикла forEach
+            return;
+        }
+        // --- КОНЕЦ ПРОВЕРКИ ---
+
+        const card = document.createElement('div');
+        card.className = 'logistics-card';
+
+        // Теперь мы уверены, что buyer.BuyerID - это число
+        card.innerHTML = `
+            <h3>${logisticsPanel.escapeHtml(buyer.Name)}</h3>
+            <p><strong>Контакт:</strong> ${logisticsPanel.escapeHtml(buyer.Contact || 'Не указан')}</p>
+            <p><strong>Примечания:</strong> ${logisticsPanel.escapeHtml(buyer.Notes || '')}</p>
+            <div class="logistics-actions">
+                <button class="btn-primary" onclick="editBuyer(${buyer.BuyerID})">Редактировать</button>
+                <button class="btn-danger" onclick="deleteBuyer(${buyer.BuyerID})">Удалить</button>
+            </div>
+        `;
+
+        container.appendChild(card);
+    });
+}
 
 // Обработчик формы баера
 document.getElementById('buyer-form')?.addEventListener('submit', async (e) => {
