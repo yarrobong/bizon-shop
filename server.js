@@ -1897,6 +1897,7 @@ app.get('/api/clients/search', async (req, res) => {
 
 // --- API: Получить всех баеров ---
 app.get('/api/buyers', async (req, res) => {
+  console.log('rows из БД:', buyersResult.rows);
   try {
     const buyersResult = await pool.query('SELECT BuyerID, Name, Contact, Notes FROM Buyers ORDER BY Name');
 
