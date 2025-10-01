@@ -1764,20 +1764,26 @@ app.get('/api/purchase-orders/search', async (req, res) => {
 // --- API: Получить всех клиентов ---
 app.get('/api/clients', async (req, res) => {
   try {
+    // Запрос с маленькими буквами, как в таблице
     const { rows } = await pool.query(`
       SELECT clientid, name, contact, address, notes
       FROM clients
       ORDER BY name
     `);
 
-    res.json(rows);
+    // Преобразуем поля в CamelCase для фронта
+    const clients = rows.map(r => ({
+      ClientID: r.clientid,
+      Name: r.name,
+      Contact: r.contact,
+      Address: r.address,
+      Notes: r.notes
+    }));
+
+    res.json(clients); // возвращаем массив объектов
   } catch (err) {
     console.error('❌ Ошибка при получении клиентов из БД:', err);
-    res.status(500).json({
-      success: false,
-      message: 'Не удалось загрузить клиентов',
-      details: err.message
-    });
+    res.status(500).json({ success: false, message: 'Не удалось загрузить клиентов', details: err.message });
   }
 });
 
