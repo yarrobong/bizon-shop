@@ -136,7 +136,27 @@ async function deleteClient(id) {
 
 // Инициализация после загрузки DOM
 document.addEventListener('DOMContentLoaded', () => {
+
     if (document.getElementById('clients-tab')?.classList.contains('active')) {
         loadClientsTab();
     }
+    // Обработчик для кнопки "Добавить клиента"
+    const addClientBtn = document.getElementById('add-client-btn');
+    if (addClientBtn) {
+        addClientBtn.addEventListener('click', () => {
+            document.getElementById('client-id').value = ''; // Сбросить ID
+            document.getElementById('client-form').reset(); // Сбросить форму
+            document.getElementById('client-modal-title').textContent = 'Добавить клиента'; // Изменить заголовок
+            document.getElementById('client-modal').style.display = 'block'; // Показать модальное окно
+        });
+    }
+
+    // Обработчик для кнопки "Отмена" в модальном окне клиента
+    const cancelClientBtn = document.getElementById('cancel-client-btn');
+    if (cancelClientBtn) {
+        cancelClientBtn.addEventListener('click', () => {
+            logisticsPanel.closeModal('client-modal'); // Используем функцию из core
+        });
+    }
+
 });
