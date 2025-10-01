@@ -1964,7 +1964,7 @@ app.get('/api/buyers/:id', async (req, res) => {
   const buyerId = Number(req.params.id);
 
   try {
-    const buyerResult = await pool.query('SELECT buyerID, name, contact, notes FROM buyers WHERE nuyerID = $1', [buyerId]);
+    const buyerResult = await pool.query('SELECT buyerID, name, contact, notes FROM buyers WHERE buyerID = $1', [buyerId]);
 
     if (buyerResult.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Баер не найден' });
