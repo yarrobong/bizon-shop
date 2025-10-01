@@ -262,25 +262,29 @@ document.addEventListener('DOMContentLoaded', function() {
 document.getElementById('buyer-form').addEventListener('submit', function(e) {
     e.preventDefault();
 
-    const formData = new FormData(this);
+    // Собираем данные в объект
+    const buyerData = {
+        Name: document.getElementById('buyer-name').value,
+        Contact: document.getElementById('buyer-contact').value,
+        Notes: document.getElementById('buyer-notes').value
+    };
 
     fetch('/api/buyers', {
         method: 'POST',
-        body: formData
+        headers: {
+            'Content-Type': 'application/json', // Указываем, что отправляем JSON
+        },
+        body: JSON.stringify(buyerData) // Преобразуем объект в JSON строку
     })
     .then(response => {
-        // Проверяем, успешен ли ответ (status 2xx)
         if (!response.ok) {
-            // Если ответ не успешный, возвращаем текст ошибки
             return response.text().then(text => {
                 throw new Error(`HTTP error! status: ${response.status}, body: ${text}`);
             });
         }
-        // Если успешный, парсим JSON
         return response.json();
     })
     .then(data => {
-        // Теперь data - это гарантированно JSON из успешного ответа
         if(data.success) {
             showMessage('Баер сохранен успешно!', 'success');
             document.getElementById('buyer-modal').style.display = 'none';
@@ -290,11 +294,11 @@ document.getElementById('buyer-form').addEventListener('submit', function(e) {
         }
     })
     .catch(error => {
-        // Обработка ошибок сети, ошибок парсинга или ошибок сервера
         console.error('Ошибка:', error);
         showMessage('Ошибка при сохранении баера: ' + error.message, 'error');
     });
 });
+
 function loadBuyers() {
     fetch('/api/buyers')
         .then(response => {
