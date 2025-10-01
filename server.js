@@ -1964,7 +1964,7 @@ app.get('/api/buyers/:id', async (req, res) => {
   const buyerId = Number(req.params.id);
 
   try {
-    const buyerResult = await pool.query('SELECT BuyerID, Name, Contact, Notes FROM buyers WHERE BuyerID = $1', [buyerId]);
+    const buyerResult = await pool.query('SELECT buyerID, name, contact, notes FROM buyers WHERE nuyerID = $1', [buyerId]);
 
     if (buyerResult.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Баер не найден' });
@@ -1991,8 +1991,8 @@ app.put('/api/buyers/:id', async (req, res) => {
   try {
     const query = `
       UPDATE buyers 
-      SET Name = $1, Contact = $2, Notes = $3
-      WHERE BuyerID = $4
+      SET name = $1, contact = $2, notes = $3
+      WHERE buyerID = $4
     `;
 
     await pool.query(query, [Name, Contact, Notes, buyerId]);
