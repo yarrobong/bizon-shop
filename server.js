@@ -1565,120 +1565,199 @@ app.post('/api/purchase-orders', (req, res) => {
     });
 });
 
-// ======================= ЗАКАЗЫ =======================
+// server.js
 
-// Получить все заказы
+// --- API: Получить все заказы ---
 app.get('/api/purchase-orders', async (req, res) => {
   try {
+    // Запрос с джойнами для получения имен клиентов и баеров
     const ordersResult = await pool.query(`
-      SELECT po.OrderID, po.OurOrderNumber, po.BuyerOrderNumber, po.ClientID, po.BuyerID,
-             po.OrderDate, po.Description, po.Status, po.Comments,
-             c.Name as ClientName, b.Name as BuyerName
+      SELECT 
+        po.OrderID,
+        po.OurOrderNumber,
+        po.BuyerOrderNumber,
+        po.ClientID,
+        po.BuyerID,
+        po.OrderDate,
+        po.Description,
+        po.Status,
+        po.Comments,
+        c.Name as ClientName,
+        b.Name as BuyerName
       FROM purchaseOrders po
       LEFT JOIN Clients c ON po.ClientID = c.ClientID
       LEFT JOIN Buyers b ON po.BuyerID = b.BuyerID
       ORDER BY po.OrderDate DESC
     `);
 
-    res.json(ordersResult.rows.map(row => ({
-      OrderID: row.orderid,
-      OurOrderNumber: row.ourordernumber,
-      BuyerOrderNumber: row.buyerordernumber,
-      ClientID: row.clientid,
-      BuyerID: row.buyerid,
-      OrderDate: row.orderdate,
-      Description: row.description,
-      Status: row.status,
-      Comments: row.comments,
-      ClientName: row.clientname,
-      BuyerName: row.buyername
-    })));
+    const orders = ordersResult.rows.map(row => ({
+      OrderID: row.OrderID,
+      OurOrderNumber: row.OurOrderNumber,
+      BuyerOrderNumber: row.BuyerOrderNumber,
+      ClientID: row.ClientID,
+      BuyerID: row.BuyerID,
+      OrderDate: row.OrderDate,
+      Description: row.Description,
+      Status: row.Status,
+      Comments: row.Comments,
+      ClientName: row.ClientName,
+      BuyerName: row.BuyerName
+    }));
+
+    res.json(orders);
   } catch (err) {
-    console.error(err);
+    console.error('❌ Ошибка при получении заказов из БД:', err);
     res.status(500).json({ success: false, message: 'Не удалось загрузить заказы', details: err.message });
   }
 });
 
-// Создать новый заказ
+// --- API: Создать новый заказ ---
 app.post('/api/purchase-orders', async (req, res) => {
   const { OurOrderNumber, BuyerOrderNumber, ClientID, BuyerID, OrderDate, Description, Status, Comments } = req.body;
 
+  // Проверка обязательных полей
   if (!OurOrderNumber || !ClientID || !BuyerID || !OrderDate) {
     return res.status(400).json({ success: false, message: 'Не все обязательные поля заполнены' });
   }
 
   try {
-    const result = await pool.query(`
+    const query = `
       INSERT INTO purchaseOrders (OurOrderNumber, BuyerOrderNumber, ClientID, BuyerID, OrderDate, Description, Status, Comments)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING OrderID
-    `, [OurOrderNumber, BuyerOrderNumber, ClientID, BuyerID, OrderDate, Description, Status, Comments]);
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING OrderID
+    `;
 
-    res.json({ success: true, OrderID: result.rows[0].orderid });
+    const result = await pool.query(query, [OurOrderNumber, BuyerOrderNumber, ClientID, BuyerID, OrderDate, Description, Status, Comments]);
+
+    res.json({ success: true, OrderID: result.rows[0].OrderID });
   } catch (err) {
-    console.error(err);
+    console.error('❌ Ошибка при добавлении заказа в БД:', err);
     res.status(500).json({ success: false, message: 'Ошибка базы данных', details: err.message });
   }
 });
 
-// Получить заказ по ID
+// --- API: Получить заказ по ID ---
 app.get('/api/purchase-orders/:id', async (req, res) => {
   const orderId = req.params.id;
+
   try {
-    const result = await pool.query(`SELECT * FROM purchaseOrders WHERE OrderID=$1`, [orderId]);
-    if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'Заказ не найден' });
-    res.json(result.rows[0]);
+    const orderResult = await pool.query(`
+      SELECT 
+        po.OrderID,
+        po.OurOrderNumber,
+        po.BuyerOrderNumber,
+        po.ClientID,
+        po.BuyerID,
+        po.OrderDate,
+        po.Description,
+        po.Status,
+        po.Comments
+      FROM purchaseOrders po
+      WHERE po.OrderID = $1`, [orderId]);
+
+    if (orderResult.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Заказ не найден' });
+    }
+
+    const order = orderResult.rows[0];
+    res.json({
+      OrderID: order.OrderID,
+      OurOrderNumber: order.OurOrderNumber,
+      BuyerOrderNumber: order.BuyerOrderNumber,
+      ClientID: order.ClientID,
+      BuyerID: order.BuyerID,
+      OrderDate: order.OrderDate,
+      Description: order.Description,
+      Status: order.Status,
+      Comments: order.Comments
+    });
   } catch (err) {
-    console.error(err);
+    console.error('❌ Ошибка при получении заказа по ID из БД:', err);
     res.status(500).json({ success: false, message: 'Не удалось загрузить заказ', details: err.message });
   }
 });
 
-// Обновить заказ
+// --- API: Обновить заказ ---
 app.put('/api/purchase-orders/:id', async (req, res) => {
   const orderId = req.params.id;
   const { OurOrderNumber, BuyerOrderNumber, ClientID, BuyerID, OrderDate, Description, Status, Comments } = req.body;
 
   try {
-    await pool.query(`
-      UPDATE purchaseOrders SET OurOrderNumber=$1, BuyerOrderNumber=$2, ClientID=$3, BuyerID=$4,
-      OrderDate=$5, Description=$6, Status=$7, Comments=$8 WHERE OrderID=$9
-    `, [OurOrderNumber, BuyerOrderNumber, ClientID, BuyerID, OrderDate, Description, Status, Comments, orderId]);
+    const query = `
+      UPDATE purchaseOrders 
+      SET OurOrderNumber = $1, BuyerOrderNumber = $2, ClientID = $3, BuyerID = $4, OrderDate = $5, Description = $6, Status = $7, Comments = $8
+      WHERE OrderID = $9
+    `;
+
+    await pool.query(query, [OurOrderNumber, BuyerOrderNumber, ClientID, BuyerID, OrderDate, Description, Status, Comments, orderId]);
+
     res.json({ success: true, message: 'Заказ обновлен успешно' });
   } catch (err) {
-    console.error(err);
+    console.error('❌ Ошибка при обновлении заказа в БД:', err);
     res.status(500).json({ success: false, message: 'Ошибка базы данных', details: err.message });
   }
 });
 
-// Удалить заказ
+// --- API: Удалить заказ ---
 app.delete('/api/purchase-orders/:id', async (req, res) => {
   const orderId = req.params.id;
+
   try {
-    await pool.query(`DELETE FROM purchaseOrders WHERE OrderID=$1`, [orderId]);
+    await pool.query('DELETE FROM purchaseOrders WHERE OrderID = $1', [orderId]);
     res.json({ success: true, message: 'Заказ удален успешно' });
   } catch (err) {
-    console.error(err);
+    console.error('❌ Ошибка при удалении заказа из БД:', err);
     res.status(500).json({ success: false, message: 'Ошибка базы данных', details: err.message });
   }
 });
 
-// Поиск заказов
+// --- API: Поиск заказов ---
 app.get('/api/purchase-orders/search', async (req, res) => {
   const query = req.query.q;
-  if (!query) return res.json([]);
+
+  if (!query) {
+    return res.json([]);
+  }
+
   try {
-    const result = await pool.query(`
-      SELECT po.*, c.Name as ClientName, b.Name as BuyerName
+    const searchResult = await pool.query(`
+      SELECT 
+        po.OrderID,
+        po.OurOrderNumber,
+        po.BuyerOrderNumber,
+        po.ClientID,
+        po.BuyerID,
+        po.OrderDate,
+        po.Description,
+        po.Status,
+        po.Comments,
+        c.Name as ClientName,
+        b.Name as BuyerName
       FROM purchaseOrders po
-      LEFT JOIN Clients c ON po.ClientID=c.ClientID
-      LEFT JOIN Buyers b ON po.BuyerID=b.BuyerID
+      LEFT JOIN Clients c ON po.ClientID = c.ClientID
+      LEFT JOIN Buyers b ON po.BuyerID = b.BuyerID
       WHERE po.OurOrderNumber ILIKE $1 OR c.Name ILIKE $1
       ORDER BY po.OrderDate DESC
     `, [`%${query}%`]);
-    res.json(result.rows);
+
+    const orders = searchResult.rows.map(row => ({
+      OrderID: row.OrderID,
+      OurOrderNumber: row.OurOrderNumber,
+      BuyerOrderNumber: row.BuyerOrderNumber,
+      ClientID: row.ClientID,
+      BuyerID: row.BuyerID,
+      OrderDate: row.OrderDate,
+      Description: row.Description,
+      Status: row.Status,
+      Comments: row.Comments,
+      ClientName: row.ClientName,
+      BuyerName: row.BuyerName
+    }));
+
+    res.json(orders);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Ошибка поиска', details: err.message });
+    console.error('❌ Ошибка при поиске заказов в БД:', err);
+    res.status(500).json({ success: false, message: 'Не удалось выполнить поиск', details: err.message });
   }
 });
 
