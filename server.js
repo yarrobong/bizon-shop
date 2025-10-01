@@ -1549,7 +1549,7 @@ app.post('/api/purchase-orders', (req, res) => {
     const { OurOrderNumber, BuyerOrderNumber, ClientID, BuyerID, OrderDate, Description, Status, Comments } = req.body;
     
     const query = `
-        INSERT INTO PurchaseOrders (OurOrderNumber, BuyerOrderNumber, ClientID, BuyerID, OrderDate, Description, Status, Comments)
+        INSERT INTO purchaseOrders (OurOrderNumber, BuyerOrderNumber, ClientID, BuyerID, OrderDate, Description, Status, Comments)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING OrderID
     `;
@@ -1584,7 +1584,7 @@ app.get('/api/purchase-orders', async (req, res) => {
         po.Comments,
         c.Name as ClientName,
         b.Name as BuyerName
-      FROM PurchaseOrders po
+      FROM purchaseOrders po
       LEFT JOIN Clients c ON po.ClientID = c.ClientID
       LEFT JOIN Buyers b ON po.BuyerID = b.BuyerID
       ORDER BY po.OrderDate DESC
@@ -1622,7 +1622,7 @@ app.post('/api/purchase-orders', async (req, res) => {
 
   try {
     const query = `
-      INSERT INTO PurchaseOrders (OurOrderNumber, BuyerOrderNumber, ClientID, BuyerID, OrderDate, Description, Status, Comments)
+      INSERT INTO purchaseOrders (OurOrderNumber, BuyerOrderNumber, ClientID, BuyerID, OrderDate, Description, Status, Comments)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING OrderID
     `;
@@ -1652,7 +1652,7 @@ app.get('/api/purchase-orders/:id', async (req, res) => {
         po.Description,
         po.Status,
         po.Comments
-      FROM PurchaseOrders po
+      FROM purchaseOrders po
       WHERE po.OrderID = $1`, [orderId]);
 
     if (orderResult.rows.length === 0) {
@@ -1684,7 +1684,7 @@ app.put('/api/purchase-orders/:id', async (req, res) => {
 
   try {
     const query = `
-      UPDATE PurchaseOrders 
+      UPDATE purchaseOrders 
       SET OurOrderNumber = $1, BuyerOrderNumber = $2, ClientID = $3, BuyerID = $4, OrderDate = $5, Description = $6, Status = $7, Comments = $8
       WHERE OrderID = $9
     `;
@@ -1703,7 +1703,7 @@ app.delete('/api/purchase-orders/:id', async (req, res) => {
   const orderId = req.params.id;
 
   try {
-    await pool.query('DELETE FROM PurchaseOrders WHERE OrderID = $1', [orderId]);
+    await pool.query('DELETE FROM purchaseOrders WHERE OrderID = $1', [orderId]);
     res.json({ success: true, message: 'Заказ удален успешно' });
   } catch (err) {
     console.error('❌ Ошибка при удалении заказа из БД:', err);
@@ -1733,7 +1733,7 @@ app.get('/api/purchase-orders/search', async (req, res) => {
         po.Comments,
         c.Name as ClientName,
         b.Name as BuyerName
-      FROM PurchaseOrders po
+      FROM purchaseOrders po
       LEFT JOIN Clients c ON po.ClientID = c.ClientID
       LEFT JOIN Buyers b ON po.BuyerID = b.BuyerID
       WHERE po.OurOrderNumber ILIKE $1 OR c.Name ILIKE $1
@@ -1764,7 +1764,7 @@ app.get('/api/purchase-orders/search', async (req, res) => {
 // --- API: Получить всех клиентов ---
 app.get('/api/clients', async (req, res) => {
   try {
-    const clientsResult = await pool.query('SELECT ClientID, Name, Contact, Address, Notes FROM Clients ORDER BY Name');
+    const clientsResult = await pool.query('SELECT ClientID, Name, Contact, Address, Notes FROM clients ORDER BY Name');
 
     const clients = clientsResult.rows.map(row => ({
       ClientID: row.ClientID,
@@ -1791,7 +1791,7 @@ app.post('/api/clients', async (req, res) => {
 
   try {
     const query = `
-      INSERT INTO Clients (Name, Contact, Address, Notes)
+      INSERT INTO clients (Name, Contact, Address, Notes)
       VALUES ($1, $2, $3, $4)
       RETURNING ClientID
     `;
@@ -1810,7 +1810,7 @@ app.get('/api/clients/:id', async (req, res) => {
   const clientId = req.params.id;
 
   try {
-    const clientResult = await pool.query('SELECT ClientID, Name, Contact, Address, Notes FROM Clients WHERE ClientID = $1', [clientId]);
+    const clientResult = await pool.query('SELECT ClientID, Name, Contact, Address, Notes FROM clients WHERE ClientID = $1', [clientId]);
 
     if (clientResult.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Клиент не найден' });
@@ -1837,7 +1837,7 @@ app.put('/api/clients/:id', async (req, res) => {
 
   try {
     const query = `
-      UPDATE Clients 
+      UPDATE clients 
       SET Name = $1, Contact = $2, Address = $3, Notes = $4
       WHERE ClientID = $5
     `;
@@ -1856,7 +1856,7 @@ app.delete('/api/clients/:id', async (req, res) => {
   const clientId = req.params.id;
 
   try {
-    await pool.query('DELETE FROM Clients WHERE ClientID = $1', [clientId]);
+    await pool.query('DELETE FROM clients WHERE ClientID = $1', [clientId]);
     res.json({ success: true, message: 'Клиент удален успешно' });
   } catch (err) {
     console.error('❌ Ошибка при удалении клиента из БД:', err);
@@ -1875,7 +1875,7 @@ app.get('/api/clients/search', async (req, res) => {
   try {
     const searchResult = await pool.query(`
       SELECT ClientID, Name, Contact, Address, Notes
-      FROM Clients
+      FROM clients
       WHERE Name ILIKE $1 OR Contact ILIKE $1
       ORDER BY Name
     `, [`%${query}%`]);
@@ -1928,7 +1928,7 @@ app.post('/api/buyers', async (req, res) => {
 
   try {
     const query = `
-      INSERT INTO Buyers (Name, Contact, Notes)
+      INSERT INTO buyers (Name, Contact, Notes)
       VALUES ($1, $2, $3)
       RETURNING BuyerID
     `;
@@ -1947,7 +1947,7 @@ app.get('/api/buyers/:id', async (req, res) => {
   const buyerId = req.params.id;
 
   try {
-    const buyerResult = await pool.query('SELECT BuyerID, Name, Contact, Notes FROM Buyers WHERE BuyerID = $1', [buyerId]);
+    const buyerResult = await pool.query('SELECT BuyerID, Name, Contact, Notes FROM buyers WHERE BuyerID = $1', [buyerId]);
 
     if (buyerResult.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Баер не найден' });
@@ -1973,7 +1973,7 @@ app.put('/api/buyers/:id', async (req, res) => {
 
   try {
     const query = `
-      UPDATE Buyers 
+      UPDATE buyers 
       SET Name = $1, Contact = $2, Notes = $3
       WHERE BuyerID = $4
     `;
@@ -1992,7 +1992,7 @@ app.delete('/api/buyers/:id', async (req, res) => {
   const buyerId = req.params.id;
 
   try {
-    await pool.query('DELETE FROM Buyers WHERE BuyerID = $1', [buyerId]);
+    await pool.query('DELETE FROM buyers WHERE BuyerID = $1', [buyerId]);
     res.json({ success: true, message: 'Баер удален успешно' });
   } catch (err) {
     console.error('❌ Ошибка при удалении баера из БД:', err);
@@ -2011,7 +2011,7 @@ app.get('/api/buyers/search', async (req, res) => {
   try {
     const searchResult = await pool.query(`
       SELECT BuyerID, Name, Contact, Notes
-      FROM Buyers
+      FROM buyers
       WHERE Name ILIKE $1 OR Contact ILIKE $1
       ORDER BY Name
     `, [`%${query}%`]);
@@ -2047,7 +2047,7 @@ app.get('/api/shipments', async (req, res) => {
         s.PaymentDate,
         s.Comments,
         po.OurOrderNumber as OrderNumber
-      FROM Shipments s
+      FROM shipments s
       LEFT JOIN PurchaseOrders po ON s.OrderID = po.OrderID
       ORDER BY s.DepartureDate DESC
     `);
@@ -2084,7 +2084,7 @@ app.post('/api/shipments', async (req, res) => {
 
   try {
     const query = `
-      INSERT INTO Shipments (OrderID, ShipmentNumber, TrackingNumber, DepartureDate, ArrivalDate, ShipmentStatus, DeliveryCost, PaymentStatus, PaymentDate, Comments)
+      INSERT INTO shipments (OrderID, ShipmentNumber, TrackingNumber, DepartureDate, ArrivalDate, ShipmentStatus, DeliveryCost, PaymentStatus, PaymentDate, Comments)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING ShipmentID
     `;
@@ -2103,7 +2103,7 @@ app.get('/api/shipments/:id', async (req, res) => {
   const shipmentId = req.params.id;
 
   try {
-    const shipmentResult = await pool.query('SELECT ShipmentID, OrderID, ShipmentNumber, TrackingNumber, DepartureDate, ArrivalDate, ShipmentStatus, DeliveryCost, PaymentStatus, PaymentDate, Comments FROM Shipments WHERE ShipmentID = $1', [shipmentId]);
+    const shipmentResult = await pool.query('SELECT ShipmentID, OrderID, ShipmentNumber, TrackingNumber, DepartureDate, ArrivalDate, ShipmentStatus, DeliveryCost, PaymentStatus, PaymentDate, Comments FROM shipments WHERE ShipmentID = $1', [shipmentId]);
 
     if (shipmentResult.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Партия не найдена' });
@@ -2136,7 +2136,7 @@ app.put('/api/shipments/:id', async (req, res) => {
 
   try {
     const query = `
-      UPDATE Shipments 
+      UPDATE shipments 
       SET OrderID = $1, ShipmentNumber = $2, TrackingNumber = $3, DepartureDate = $4, ArrivalDate = $5, ShipmentStatus = $6, DeliveryCost = $7, PaymentStatus = $8, PaymentDate = $9, Comments = $10
       WHERE ShipmentID = $11
     `;
@@ -2155,7 +2155,7 @@ app.delete('/api/shipments/:id', async (req, res) => {
   const shipmentId = req.params.id;
 
   try {
-    await pool.query('DELETE FROM Shipments WHERE ShipmentID = $1', [shipmentId]);
+    await pool.query('DELETE FROM shipments WHERE ShipmentID = $1', [shipmentId]);
     res.json({ success: true, message: 'Партия удалена успешно' });
   } catch (err) {
     console.error('❌ Ошибка при удалении партии из БД:', err);
@@ -2186,7 +2186,7 @@ app.get('/api/shipments/search', async (req, res) => {
         s.PaymentDate,
         s.Comments,
         po.OurOrderNumber as OrderNumber
-      FROM Shipments s
+      FROM shipments s
       LEFT JOIN PurchaseOrders po ON s.OrderID = po.OrderID
       WHERE s.ShipmentNumber ILIKE $1 OR s.TrackingNumber ILIKE $1 OR po.OurOrderNumber ILIKE $1
       ORDER BY s.DepartureDate DESC
@@ -2230,7 +2230,7 @@ app.get('/api/distribution', async (req, res) => {
         d.Status,
         c.Name as ClientName,
         s.ShipmentNumber
-      FROM Distribution d
+      FROM distribution d
       LEFT JOIN Clients c ON d.ClientID = c.ClientID
       LEFT JOIN Shipments s ON d.ShipmentID = s.ShipmentID
       ORDER BY d.DistributionID DESC
@@ -2267,7 +2267,7 @@ app.post('/api/distribution', async (req, res) => {
 
   try {
     const query = `
-      INSERT INTO Distribution (ShipmentID, ClientID, Address, ItemDescription, Quantity, DeliveryCost, PaymentStatus, Status)
+      INSERT INTO distribution (ShipmentID, ClientID, Address, ItemDescription, Quantity, DeliveryCost, PaymentStatus, Status)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING DistributionID
     `;
@@ -2286,7 +2286,7 @@ app.get('/api/distribution/:id', async (req, res) => {
   const distributionId = req.params.id;
 
   try {
-    const distributionResult = await pool.query('SELECT DistributionID, ShipmentID, ClientID, Address, ItemDescription, Quantity, DeliveryCost, PaymentStatus, Status FROM Distribution WHERE DistributionID = $1', [distributionId]);
+    const distributionResult = await pool.query('SELECT DistributionID, ShipmentID, ClientID, Address, ItemDescription, Quantity, DeliveryCost, PaymentStatus, Status FROM distribution WHERE DistributionID = $1', [distributionId]);
 
     if (distributionResult.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Распределение не найдено' });
@@ -2317,7 +2317,7 @@ app.put('/api/distribution/:id', async (req, res) => {
 
   try {
     const query = `
-      UPDATE Distribution 
+      UPDATE distribution 
       SET ShipmentID = $1, ClientID = $2, Address = $3, ItemDescription = $4, Quantity = $5, DeliveryCost = $6, PaymentStatus = $7, Status = $8
       WHERE DistributionID = $9
     `;
@@ -2336,7 +2336,7 @@ app.delete('/api/distribution/:id', async (req, res) => {
   const distributionId = req.params.id;
 
   try {
-    await pool.query('DELETE FROM Distribution WHERE DistributionID = $1', [distributionId]);
+    await pool.query('DELETE FROM distribution WHERE DistributionID = $1', [distributionId]);
     res.json({ success: true, message: 'Распределение удалено успешно' });
   } catch (err) {
     console.error('❌ Ошибка при удалении распределения из БД:', err);
@@ -2366,7 +2366,7 @@ app.get('/api/distribution/search', async (req, res) => {
         d.Status,
         c.Name as ClientName,
         s.ShipmentNumber
-      FROM Distribution d
+      FROM distribution d
       LEFT JOIN Clients c ON d.ClientID = c.ClientID
       LEFT JOIN Shipments s ON d.ShipmentID = s.ShipmentID
       WHERE d.Address ILIKE $1 OR c.Name ILIKE $1 OR d.ItemDescription ILIKE $1
@@ -2397,7 +2397,7 @@ app.get('/api/distribution/search', async (req, res) => {
 // --- API: Получить все платежи ---
 app.get('/api/payments', async (req, res) => {
   try {
-    const paymentsResult = await pool.query('SELECT PaymentID, RelatedOrderID, RelatedShipmentID, RelatedDistributionID, Amount, Currency, PaymentDate, PaymentType, Direction, Notes FROM Payments ORDER BY PaymentDate DESC');
+    const paymentsResult = await pool.query('SELECT PaymentID, RelatedOrderID, RelatedShipmentID, RelatedDistributionID, Amount, Currency, PaymentDate, PaymentType, Direction, Notes FROM payments ORDER BY PaymentDate DESC');
 
     const payments = paymentsResult.rows.map(row => ({
       PaymentID: row.PaymentID,
@@ -2429,7 +2429,7 @@ app.post('/api/payments', async (req, res) => {
 
   try {
     const query = `
-      INSERT INTO Payments (RelatedOrderID, RelatedShipmentID, RelatedDistributionID, Amount, Currency, PaymentDate, PaymentType, Direction, Notes)
+      INSERT INTO payments (RelatedOrderID, RelatedShipmentID, RelatedDistributionID, Amount, Currency, PaymentDate, PaymentType, Direction, Notes)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING PaymentID
     `;
@@ -2448,7 +2448,7 @@ app.get('/api/payments/:id', async (req, res) => {
   const paymentId = req.params.id;
 
   try {
-    const paymentResult = await pool.query('SELECT PaymentID, RelatedOrderID, RelatedShipmentID, RelatedDistributionID, Amount, Currency, PaymentDate, PaymentType, Direction, Notes FROM Payments WHERE PaymentID = $1', [paymentId]);
+    const paymentResult = await pool.query('SELECT PaymentID, RelatedOrderID, RelatedShipmentID, RelatedDistributionID, Amount, Currency, PaymentDate, PaymentType, Direction, Notes FROM payments WHERE PaymentID = $1', [paymentId]);
 
     if (paymentResult.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Платеж не найден' });
@@ -2480,7 +2480,7 @@ app.put('/api/payments/:id', async (req, res) => {
 
   try {
     const query = `
-      UPDATE Payments 
+      UPDATE payments 
       SET RelatedOrderID = $1, RelatedShipmentID = $2, RelatedDistributionID = $3, Amount = $4, Currency = $5, PaymentDate = $6, PaymentType = $7, Direction = $8, Notes = $9
       WHERE PaymentID = $10
     `;
@@ -2499,7 +2499,7 @@ app.delete('/api/payments/:id', async (req, res) => {
   const paymentId = req.params.id;
 
   try {
-    await pool.query('DELETE FROM Payments WHERE PaymentID = $1', [paymentId]);
+    await pool.query('DELETE FROM payments WHERE PaymentID = $1', [paymentId]);
     res.json({ success: true, message: 'Платеж удален успешно' });
   } catch (err) {
     console.error('❌ Ошибка при удалении платежа из БД:', err);
@@ -2518,7 +2518,7 @@ app.get('/api/payments/search', async (req, res) => {
   try {
     const searchResult = await pool.query(`
       SELECT PaymentID, RelatedOrderID, RelatedShipmentID, RelatedDistributionID, Amount, Currency, PaymentDate, PaymentType, Direction, Notes
-      FROM Payments
+      FROM payments
       WHERE Amount::text ILIKE $1 OR Notes ILIKE $1 OR PaymentType ILIKE $1
       ORDER BY PaymentDate DESC
     `, [`%${query}%`]);
