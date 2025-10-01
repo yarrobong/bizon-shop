@@ -1844,7 +1844,7 @@ app.put('/api/clients/:id', async (req, res) => {
   try {
     const query = `
       UPDATE clients 
-      SET Name = $1, Contact = $2, Address = $3, Notes = $4
+      SET name = $1, contact = $2, address = $3, notes = $4
       WHERE ClientID = $5
     `;
 
