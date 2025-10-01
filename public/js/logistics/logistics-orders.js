@@ -182,9 +182,34 @@ async function deletePurchaseOrder(id) {
     }
 }
 
-// Инициализация после загрузки DOM
 document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('orders-tab')?.classList.contains('active')) {
-        loadPurchaseOrdersTab();
+    // Обработчик для кнопки "Добавить заказ"
+    const addOrderBtn = document.getElementById('add-order-btn');
+    if (addOrderBtn) {
+        addOrderBtn.addEventListener('click', () => {
+            document.getElementById('order-id').value = ''; // Сбросить ID (для отличия создания от редактирования)
+            document.getElementById('order-form').reset(); // Сбросить форму
+            document.getElementById('order-modal-title').textContent = 'Добавить заказ'; // Изменить заголовок
+            document.getElementById('order-modal').style.display = 'block'; // Показать модальное окно
+        });
     }
+
+    // Обработчик для кнопки "Отмена" в модальном окне заказа
+    const cancelOrderBtn = document.getElementById('cancel-order-btn');
+    if (cancelOrderBtn) {
+        cancelOrderBtn.addEventListener('click', () => {
+            logisticsPanel.closeModal('order-modal'); // Используем функцию из core
+        });
+    }
+
+    // Обработчик для кнопки "Отмена" в модальном окне заказа (может быть другая кнопка)
+    // Убедитесь, что ID #cancel-order-btn соответствует кнопке в HTML
+    // Если у вас есть другая кнопка "Отмена" с другим ID, добавьте обработчик для неё тоже.
+    // Пример:
+    // const anotherCancelBtn = document.getElementById('another-cancel-order-btn-id');
+    // if (anotherCancelBtn) {
+    //     anotherCancelBtn.addEventListener('click', () => {
+    //         logisticsPanel.closeModal('order-modal');
+    //     });
+    // }
 });

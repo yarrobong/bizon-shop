@@ -134,12 +134,8 @@ async function deleteClient(id) {
     }
 }
 
-// Инициализация после загрузки DOM
+// Инициализация после загрузки DOM - только для установки обработчиков
 document.addEventListener('DOMContentLoaded', () => {
-
-    if (document.getElementById('clients-tab')?.classList.contains('active')) {
-        loadClientsTab();
-    }
     // Обработчик для кнопки "Добавить клиента"
     const addClientBtn = document.getElementById('add-client-btn');
     if (addClientBtn) {
@@ -159,4 +155,5 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Обратите внимание: loadClientsTab() здесь нет, полагаемся на logistics-core.js
 });
