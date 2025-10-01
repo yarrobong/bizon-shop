@@ -1960,11 +1960,16 @@ app.post('/api/buyers', async (req, res) => {
 
 // --- API: Получить баера по ID ---
 app.get('/api/buyers/:id', async (req, res) => {
-
   const buyerId = Number(req.params.id);
+  if (!buyerId || isNaN(buyerId)) {
+    return res.status(400).json({ success: false, message: 'Некорректный ID баера' });
+  }
 
   try {
-    const buyerResult = await pool.query('SELECT buyerID, name, contact, notes FROM buyers WHERE buyerID = $1', [buyerId]);
+    const buyerResult = await pool.query(
+      'SELECT buyerid, name, contact, notes FROM buyers WHERE buyerid = $1',
+      [buyerId]
+    );
 
     if (buyerResult.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Баер не найден' });
@@ -1972,10 +1977,10 @@ app.get('/api/buyers/:id', async (req, res) => {
 
     const buyer = buyerResult.rows[0];
     res.json({
-      BuyerID: buyer.BuyerID,
-      Name: buyer.Name,
-      Contact: buyer.Contact,
-      Notes: buyer.Notes
+      BuyerID: buyer.buyerid, // CamelCase для фронта
+      Name: buyer.name,
+      Contact: buyer.contact,
+      Notes: buyer.notes
     });
   } catch (err) {
     console.error('❌ Ошибка при получении баера по ID из БД:', err);
