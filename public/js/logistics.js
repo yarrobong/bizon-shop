@@ -258,17 +258,18 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    // Логика для формы баера
+   // Логика для формы баера
 document.getElementById('buyer-form').addEventListener('submit', function(e) {
     e.preventDefault();
 
-    // Собираем данные в объект
+    // Собираем данные из формы в объект JavaScript
     const buyerData = {
         Name: document.getElementById('buyer-name').value,
         Contact: document.getElementById('buyer-contact').value,
         Notes: document.getElementById('buyer-notes').value
     };
 
+    // Отправляем POST-запрос с JSON в теле
     fetch('/api/buyers', {
         method: 'POST',
         headers: {
@@ -277,28 +278,36 @@ document.getElementById('buyer-form').addEventListener('submit', function(e) {
         body: JSON.stringify(buyerData) // Преобразуем объект в JSON строку
     })
     .then(response => {
+        // Проверяем успешность ответа (status 2xx)
         if (!response.ok) {
+            // Если ошибка, пытаемся получить текст ошибки
             return response.text().then(text => {
+                // Бросаем ошибку с деталями
                 throw new Error(`HTTP error! status: ${response.status}, body: ${text}`);
             });
         }
+        // Если успешный ответ, парсим JSON
         return response.json();
     })
     .then(data => {
+        // Обработка успешного ответа JSON
         if(data.success) {
             showMessage('Баер сохранен успешно!', 'success');
             document.getElementById('buyer-modal').style.display = 'none';
-            loadBuyers();
+            // Сброс формы после успешного сохранения
+            document.getElementById('buyer-form').reset();
+            // Обновляем список баеров
+            loadBuyers(); // Используйте правильное имя функции
         } else {
             showMessage('Ошибка: ' + data.message, 'error');
         }
     })
     .catch(error => {
-        console.error('Ошибка:', error);
+        // Обработка ошибок сети, парсинга или сервера
+        console.error('Ошибка при сохранении баера:', error);
         showMessage('Ошибка при сохранении баера: ' + error.message, 'error');
     });
 });
-
 function loadBuyers() {
     fetch('/api/buyers')
         .then(response => {
