@@ -91,6 +91,11 @@ document.getElementById('buyer-form')?.addEventListener('submit', async (e) => {
 
 // Функция редактирования
 async function editBuyer(id) {
+     if (typeof id !== 'number' || isNaN(id)) {
+        console.error('Некорректный ID баера для редактирования:', id);
+        logisticsPanel.showMessage('Некорректный ID баера', 'error');
+        return; // Прерываем выполнение функции
+    }
     try {
         const buyerData = await logisticsPanel.apiRequest(`/api/buyers/${id}`);
         document.getElementById('buyer-id').value = buyerData.BuyerID;
