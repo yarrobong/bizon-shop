@@ -29,11 +29,7 @@ function renderBuyers(buyers) {
     buyers.forEach(buyer => {
         // --- НОВАЯ ПРОВЕРКА ---
         // Проверяем, что BuyerID существует и является числом перед генерацией HTML
-        if (!buyer.BuyerID || typeof buyer.BuyerID !== 'number') {
-            console.warn('Пропускаем баера без корректного ID:', buyer);
-            // Пропускаем текущий элемент цикла forEach
-            return;
-        }
+       
         // --- КОНЕЦ ПРОВЕРКИ ---
 
         const card = document.createElement('div');
