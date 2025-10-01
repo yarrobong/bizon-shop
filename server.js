@@ -1764,20 +1764,20 @@ app.get('/api/purchase-orders/search', async (req, res) => {
 // --- API: Получить всех клиентов ---
 app.get('/api/clients', async (req, res) => {
   try {
-    const clientsResult = await pool.query('SELECT ClientID, Name, Contact, Address, Notes FROM clients ORDER BY Name');
+    const { rows } = await pool.query(`
+      SELECT clientid, name, contact, address, notes
+      FROM clients
+      ORDER BY name
+    `);
 
-    const clients = clientsResult.rows.map(row => ({
-      ClientID: row.ClientID,
-      Name: row.Name,
-      Contact: row.Contact,
-      Address: row.Address,
-      Notes: row.Notes
-    }));
-
-    res.json(clients);
+    res.json(rows);
   } catch (err) {
     console.error('❌ Ошибка при получении клиентов из БД:', err);
-    res.status(500).json({ success: false, message: 'Не удалось загрузить клиентов', details: err.message });
+    res.status(500).json({
+      success: false,
+      message: 'Не удалось загрузить клиентов',
+      details: err.message
+    });
   }
 });
 
@@ -2518,7 +2518,7 @@ app.get('/api/payments/search', async (req, res) => {
   try {
     const searchResult = await pool.query(`
       SELECT PaymentID, RelatedOrderID, RelatedShipmentID, RelatedDistributionID, Amount, Currency, PaymentDate, PaymentType, Direction, Notes
-      FROM payments
+      FROM Payments
       WHERE Amount::text ILIKE $1 OR Notes ILIKE $1 OR PaymentType ILIKE $1
       ORDER BY PaymentDate DESC
     `, [`%${query}%`]);
