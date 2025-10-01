@@ -1838,14 +1838,18 @@ app.get('/api/clients/:id', async (req, res) => {
 
 // --- API: Обновить клиента ---
 app.put('/api/clients/:id', async (req, res) => {
-  const clientId = req.params.id;
+  const clientId = Number(req.params.id); // <-- важно!
   const { Name, Contact, Address, Notes } = req.body;
+
+  if (!clientId || isNaN(clientId)) {
+    return res.status(400).json({ success: false, message: 'Некорректный ID клиента' });
+  }
 
   try {
     const query = `
       UPDATE clients 
       SET name = $1, contact = $2, address = $3, notes = $4
-      WHERE ClientID = $5
+      WHERE clientid = $5
     `;
 
     await pool.query(query, [Name, Contact, Address, Notes, clientId]);
