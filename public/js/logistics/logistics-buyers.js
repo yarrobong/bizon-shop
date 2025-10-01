@@ -113,6 +113,11 @@ async function editBuyer(id) {
 
 // Функция удаления
 async function deleteBuyer(id) {
+     if (typeof id !== 'number' || isNaN(id)) {
+        console.error('Некорректный ID баера для удаления:', id);
+        logisticsPanel.showMessage('Некорректный ID баера', 'error');
+        return; // Прерываем выполнение функции
+    }
     if (!confirm(`Вы уверены, что хотите удалить баера #${id}?`)) return;
 
     try {
