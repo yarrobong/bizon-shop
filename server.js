@@ -1813,10 +1813,17 @@ app.post('/api/clients', async (req, res) => {
 
 // --- API: Получить клиента по ID ---
 app.get('/api/clients/:id', async (req, res) => {
-  const clientId = req.params.id;
+  const clientId = Number(req.params.id); // приводим к числу
+
+  if (!clientId || isNaN(clientId)) {
+    return res.status(400).json({ success: false, message: 'Некорректный ID клиента' });
+  }
 
   try {
-    const clientResult = await pool.query('SELECT ClientID, Name, Contact, Address, Notes FROM clients WHERE ClientID = $1', [clientId]);
+    const clientResult = await pool.query(
+      'SELECT clientid, name, contact, address, notes FROM clients WHERE clientid = $1',
+      [clientId]
+    );
 
     if (clientResult.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Клиент не найден' });
@@ -1824,18 +1831,17 @@ app.get('/api/clients/:id', async (req, res) => {
 
     const client = clientResult.rows[0];
     res.json({
-      ClientID: client.ClientID,
-      Name: client.Name,
-      Contact: client.Contact,
-      Address: client.Address,
-      Notes: client.Notes
+      ClientID: client.clientid,
+      Name: client.name,
+      Contact: client.contact,
+      Address: client.address,
+      Notes: client.notes
     });
   } catch (err) {
     console.error('❌ Ошибка при получении клиента по ID из БД:', err);
     res.status(500).json({ success: false, message: 'Не удалось загрузить клиента', details: err.message });
   }
 });
-
 // --- API: Обновить клиента ---
 app.put('/api/clients/:id', async (req, res) => {
   const clientId = Number(req.params.id); // <-- важно!
