@@ -149,6 +149,33 @@ async function deleteBuyer(id) {
     }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    // Находим кнопку "Добавить баера"
+    const addBuyerBtn = document.getElementById('add-buyer-btn');
+    if (addBuyerBtn) {
+        // Вешаем обработчик события клика
+        addBuyerBtn.addEventListener('click', () => {
+            // Сбросить ID (чтобы отличать создание от редактирования)
+            document.getElementById('buyer-id').value = '';
+            // Сбросить форму
+            document.getElementById('buyer-form').reset();
+            // Изменить заголовок модального окна
+            document.getElementById('buyer-modal-title').textContent = 'Добавить баера';
+            // Показать модальное окно
+            document.getElementById('buyer-modal').style.display = 'block';
+        });
+    }
+
+    // Аналогично можно добавить обработчики для других кнопок "Добавить" в этой вкладке, если нужно
+    // Например, кнопка отмены в модальном окне
+    const cancelBuyerBtn = document.getElementById('cancel-buyer-btn');
+    if (cancelBuyerBtn) {
+        cancelBuyerBtn.addEventListener('click', () => {
+            logisticsPanel.closeModal('buyer-modal');
+        });
+    }
+});
+
 // Инициализация после загрузки DOM
 document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('buyers-tab')?.classList.contains('active')) {
