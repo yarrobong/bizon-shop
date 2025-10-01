@@ -259,64 +259,81 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Логика для формы баера
-    document.getElementById('buyer-form').addEventListener('submit', function(e) {
-        e.preventDefault();
+document.getElementById('buyer-form').addEventListener('submit', function(e) {
+    e.preventDefault();
 
-        const formData = new FormData(this);
+    const formData = new FormData(this);
 
-        fetch('/api/buyers', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if(data.success) {
-                showMessage('Баер сохранен успешно!', 'success');
-                document.getElementById('buyer-modal').style.display = 'none';
-                loadBuyers();
-            } else {
-                showMessage('Ошибка: ' + data.message, 'error');
+    fetch('/api/buyers', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        // Проверяем, успешен ли ответ (status 2xx)
+        if (!response.ok) {
+            // Если ответ не успешный, возвращаем текст ошибки
+            return response.text().then(text => {
+                throw new Error(`HTTP error! status: ${response.status}, body: ${text}`);
+            });
+        }
+        // Если успешный, парсим JSON
+        return response.json();
+    })
+    .then(data => {
+        // Теперь data - это гарантированно JSON из успешного ответа
+        if(data.success) {
+            showMessage('Баер сохранен успешно!', 'success');
+            document.getElementById('buyer-modal').style.display = 'none';
+            loadBuyers();
+        } else {
+            showMessage('Ошибка: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        // Обработка ошибок сети, ошибок парсинга или ошибок сервера
+        console.error('Ошибка:', error);
+        showMessage('Ошибка при сохранении баера: ' + error.message, 'error');
+    });
+});
+function loadBuyers() {
+    fetch('/api/buyers')
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(`HTTP error! status: ${response.status}, body: ${text}`);
+                });
             }
+            return response.json();
+        })
+        .then(buyers => {
+            const buyersGrid = document.getElementById('buyers-grid');
+            buyersGrid.innerHTML = '';
+
+            if(buyers.length === 0) {
+                buyersGrid.innerHTML = '<div class="empty">Нет баеров</div>';
+                return;
+            }
+
+            buyers.forEach(buyer => {
+                const buyerCard = document.createElement('div');
+                buyerCard.className = 'logistics-card';
+                buyerCard.innerHTML = `
+                    <h3>${buyer.Name}</h3>
+                    <p><strong>Контакт:</strong> ${buyer.Contact || 'Не указан'}</p>
+                    <p><strong>Примечания:</strong> ${buyer.Notes || ''}</p>
+                    <div class="logistics-actions">
+                        <button class="btn-primary" onclick="editBuyer(${buyer.BuyerID})">Редактировать</button>
+                        <button class="btn-danger" onclick="deleteBuyer(${buyer.BuyerID})">Удалить</button>
+                    </div>
+                `;
+                buyersGrid.appendChild(buyerCard);
+            });
         })
         .catch(error => {
-            console.error('Ошибка:', error);
-            showMessage('Ошибка при сохранении баера', 'error');
+            console.error('Ошибка загрузки баеров:', error);
+            showMessage('Ошибка загрузки баеров: ' + error.message, 'error');
         });
-    });
-
-    function loadBuyers() {
-        fetch('/api/buyers')
-            .then(response => response.json())
-            .then(buyers => {
-                const buyersGrid = document.getElementById('buyers-grid');
-                buyersGrid.innerHTML = '';
-
-                if(buyers.length === 0) {
-                    buyersGrid.innerHTML = '<div class="empty">Нет баеров</div>';
-                    return;
-                }
-
-                buyers.forEach(buyer => {
-                    const buyerCard = document.createElement('div');
-                    buyerCard.className = 'logistics-card';
-                    buyerCard.innerHTML = `
-                        <h3>${buyer.Name}</h3>
-                        <p><strong>Контакт:</strong> ${buyer.Contact || 'Не указан'}</p>
-                        <p><strong>Примечания:</strong> ${buyer.Notes || ''}</p>
-                        <div class="logistics-actions">
-                            <button class="btn-primary" onclick="editBuyer(${buyer.BuyerID})">Редактировать</button>
-                            <button class="btn-danger" onclick="deleteBuyer(${buyer.BuyerID})">Удалить</button>
-                        </div>
-                    `;
-                    buyersGrid.appendChild(buyerCard);
-                });
-            })
-            .catch(error => {
-                console.error('Ошибка загрузки баеров:', error);
-                showMessage('Ошибка загрузки баеров', 'error');
-            });
-    }
-
+}
     // Логика для формы партии
     document.getElementById('shipment-form').addEventListener('submit', function(e) {
         e.preventDefault();
