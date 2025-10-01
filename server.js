@@ -1960,7 +1960,8 @@ app.post('/api/buyers', async (req, res) => {
 
 // --- API: Получить баера по ID ---
 app.get('/api/buyers/:id', async (req, res) => {
-  const buyerId = req.params.id;
+
+  const buyerId = Number(req.params.id);
 
   try {
     const buyerResult = await pool.query('SELECT BuyerID, Name, Contact, Notes FROM buyers WHERE BuyerID = $1', [buyerId]);
