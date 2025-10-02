@@ -350,7 +350,7 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
         <div class="total">Итого: ${formatPrice(total)}</div>
 
         <div class="footer-note">
-            <p>Данное коммерческое предложение является официальным и действует в течение 30 дней с даты составления.</p>
+            <p>Данное коммерческое предложение является официальным и действует в течение 7 дней с даты составления.</p>
             <p>© ${new Date().getFullYear()} BIZON — Все права защищены</p>
         </div>
 
