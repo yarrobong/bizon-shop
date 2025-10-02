@@ -2772,7 +2772,7 @@ app.put('/api/products/:id/variants', async (req, res) => {
 });
 
 // --- НОВЫЙ маршрут: Обработать форму и сгенерировать PDF ---
-app.post('/generate_proposal_pdf', async (req, res) => { // Изменили на POST
+app.post('/generate_proposal_pdf', async (req, res) => {
     console.log('Получен запрос на /generate_proposal_pdf');
     console.log('req.body:', req.body);
 
@@ -2808,12 +2808,10 @@ app.post('/generate_proposal_pdf', async (req, res) => { // Изменили н�
 
     try {
         // --- Генерация PDF с помощью Puppeteer ---
-        
         const browser = await puppeteer.launch({
             headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox'] // Добавляем флаги
-        }); // Запускаем браузер без GUI и без песочницы
-        
+            args: ['--no-sandbox', '--disable-setuid-sandbox'] // <-- Добавлены флаги
+        });
         const page = await browser.newPage();
 
         // Устанавливаем размер страницы (A4)
