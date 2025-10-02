@@ -63,59 +63,7 @@ body {
   50% { transform: scale(1.05); opacity: 0.4; }
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 2rem;
-  background-color: rgba(0, 0, 0, 0.8);
-  border-bottom: 1px solid var(--accent);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
 
-.logo {
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-  color: inherit;
-}
-
-.logo-icon img {
-  height: 40px;
-  width: auto;
-}
-
-.logo-title {
-  margin-left: 0.75rem;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--accent);
-}
-
-.main-nav ul {
-  display: flex;
-  list-style: none;
-  gap: 2rem;
-}
-
-.main-nav a {
-  color: var(--text-secondary);
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s ease;
-}
-
-.main-nav a:hover {
-  color: var(--accent);
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
 
 .btn {
   padding: 0.5rem 1rem;
