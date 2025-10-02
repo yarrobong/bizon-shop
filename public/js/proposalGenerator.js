@@ -73,11 +73,13 @@ function generateProposalHTML(manager_name, manager_contact, customer_name, prop
                 font-family: 'Inter', sans-serif;
                 background-color: var(--bg-primary); /* Темный фон */
                 color: var(--text-secondary); /* Вторичный цвет текста */
-                
+                line-height: 1.6;
                 margin: 0;
-                padding: 20mm; /* Отступы для печати */
+                padding: 20mm; /* Отступы для PDF */
                 position: relative; /* Для позиционирования фона */
-                min-height: 100vh;
+                min-height: 297mm; /* Высота A4 */
+                width: 210mm; /* Ширина A4 */
+                box-sizing: border-box;
             }
 
             /* Фоновая сетка */
@@ -102,7 +104,7 @@ function generateProposalHTML(manager_name, manager_contact, customer_name, prop
 
             /* Пульсы */
             .bg-overlay {
-              position: fixed; /* Используем fixed для равномерного охвата при печати */
+              position: fixed; /* Используем fixed для равномерного охвата при PDF */
               top: 0;
               left: 0;
               width: 100%;
@@ -142,7 +144,7 @@ function generateProposalHTML(manager_name, manager_contact, customer_name, prop
 
             /* Стили для заголовка */
             .header {
-                text-align: left;
+                text-align: center;
                 margin-bottom: 20px;
                 padding-bottom: 15px;
                 border-bottom: 2px solid var(--accent-electric-blue); /* Акцентная граница */
@@ -152,7 +154,7 @@ function generateProposalHTML(manager_name, manager_contact, customer_name, prop
             .logo {
                 font-size: 28px;
                 font-weight: 700;
-                color: #ffffff;
+                color: var(--accent-electric-blue); /* Акцентный цвет */
                 margin-bottom: 5px;
                 display: flex;
                 align-items: center;
@@ -160,7 +162,7 @@ function generateProposalHTML(manager_name, manager_contact, customer_name, prop
                 gap: 10px;
             }
             .logo-icon img {
-                height: 50px;
+                height: 36px;
                 width: auto;
             }
             .title {
@@ -247,59 +249,11 @@ function generateProposalHTML(manager_name, manager_contact, customer_name, prop
                 z-index: 1; /* Поверх фона */
             }
 
-            /* Стили для кнопки печати */
+            /* Убираем кнопку печати */
             .print-btn {
-                display: block;
-                margin: 20px auto 0; /* Центрируем и отступ сверху */
-                padding: 0.5rem 1rem;
-                border: 1px solid var(--accent-electric-blue);
-                border-radius: 0.5rem;
-                background: transparent;
-                color: var(--text-primary);
-                font-weight: 500;
-                cursor: pointer;
-                transition: all 0.2s ease;
-                position: relative; /* Для z-index */
-                z-index: 1; /* Поверх фона */
+                display: none; /* Скрываем кнопку */
             }
 
-            .print-btn:hover {
-              background: var(--card-bg-hover);
-              border-color: var(--accent-deep-blue);
-              color: var(--accent-deep-blue);
-            }
-
-            /* Правила для печати */
-            @media print {
-                body {
-                    padding: 10mm; /* Уменьшаем отступы при печати */
-                    
-                    
-                }
-                body::before {
-                    display: none; /* Скрываем сетку при печати */
-                }
-                
-                .header, .proposal-text, .table-container, .total, .footer-note, .print-btn {
-                    color: black; /* Текст становится черным */
-                    border-color: black; /* Границы становятся черными */
-                    background: transparent; /* Убираем фон */
-                    box-shadow: none; /* Убираем тени */
-                    z-index: auto; /* Сбрасываем z-index */
-                }
-                .logo, .table th, .total {
-                    color: #000000; /* Черный цвет для акцентов при печати */
-                }
-                .table th {
-                    background-color: #f0f0f0; /* Светлый фон заголовков при печати */
-                }
-                .image-cell img {
-                    border: 1px solid #ccc; /* Граница для изображения при печати */
-                }
-                .print-btn {
-                    display: none; /* Скрываем кнопку при печати */
-                }
-            }
         </style>
     </head>
     <body>
@@ -357,7 +311,7 @@ function generateProposalHTML(manager_name, manager_contact, customer_name, prop
             <p>© ${new Date().getFullYear()} BIZON — Все права защищены</p>
         </div>
 
-        <button class="print-btn" onclick="window.print();">Скачать PDF</button>
+        <!-- Убрана кнопка печати -->
 
     </body>
     </html>

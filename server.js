@@ -44,6 +44,8 @@ const storage = multer.diskStorage({
   }
 });
 const upload = multer({ storage });
+// --- Требуем puppeteer ---
+const puppeteer = require('puppeteer'); // Добавьте эту строку
 
 // --- Endpoint загрузки файлов ---
 app.post('/api/upload', upload.single('image'), (req, res) => {
@@ -2769,6 +2771,74 @@ app.put('/api/products/:id/variants', async (req, res) => {
   }
 });
 
+// --- НОВЫЙ маршрут: Обработать форму и сгенерировать PDF ---
+app.post('/generate_proposal_pdf', async (req, res) => { // Изменили на POST
+    console.log('Получен запрос на /generate_proposal_pdf');
+    console.log('req.body:', req.body);
+
+    const { manager_name, manager_contact, customer_name, proposal_title, proposal_text, selected_products } = req.body;
+
+    console.log('manager_name из req.body:', manager_name);
+
+    if (!manager_name || !manager_contact || !customer_name || !selected_products) {
+        console.error('Ошибка: Отсутствуют обязательные поля в req.body:', { manager_name, manager_contact, customer_name, selected_products });
+        return res.status(400).json({ error: 'Отсутствуют обязательные поля' });
+    }
+
+    let selectedProductsArray = [];
+    try {
+        selectedProductsArray = JSON.parse(selected_products);
+        if (!Array.isArray(selectedProductsArray)) {
+            throw new Error('selected_products не является массивом');
+        }
+    } catch (e) {
+        console.error('Ошибка парсинга selected_products из req.body:', e);
+        return res.status(400).json({ error: 'Неверный формат данных товаров' });
+    }
+
+    let total = 0;
+    for (const item of selectedProductsArray) {
+        const itemPrice = parseFloat(item.product.price) || 0;
+        const itemQuantity = parseInt(item.quantity) || 0;
+        total += itemPrice * itemQuantity;
+    }
+
+    // --- ВЫЗОВ ИМПОРТИРОВАННОЙ ФУНКЦИИ для генерации HTML ---
+    const proposalHTML = generateProposalHTML(manager_name, manager_contact, customer_name, proposal_title, proposal_text, selectedProductsArray, total);
+
+    try {
+        // --- Генерация PDF с помощью Puppeteer ---
+        const browser = await puppeteer.launch({ headless: true }); // Запускаем браузер без GUI
+        const page = await browser.newPage();
+
+        // Устанавливаем размер страницы (A4)
+        await page.setViewport({ width: 2480, height: 3508 }); // Примерно A4 при 96 DPI
+        await page.setContent(proposalHTML, { waitUntil: 'networkidle0' }); // Загружаем HTML
+
+        // Генерируем PDF
+        const pdfBuffer = await page.pdf({
+            format: 'A4',
+            printBackground: true, // ВАЖНО: включает фоновые изображения и цвета
+            margin: {
+                top: '20mm',
+                bottom: '20mm',
+                left: '20mm',
+                right: '20mm'
+            }
+        });
+
+        await browser.close(); // Закрываем браузер
+
+        // Отправляем PDF пользователю
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="kommercheskoe_predlozhenie_${customer_name.replace(/\s+/g, '_')}.pdf"`); // Имя файла
+        res.send(pdfBuffer);
+
+    } catch (error) {
+        console.error('Ошибка при генерации PDF:', error);
+        res.status(500).json({ error: 'Ошибка при генерации PDF' });
+    }
+});
 
 // === СПЕЦИФИЧНЫЕ HTML маршруты ===
 // Отдаём product.html для маршрутов вида /product/:slug
