@@ -1,4 +1,6 @@
-// js/proposalGenerator.js
+// proposalGenerator.js
+const fs = require('fs').promises; // Импортируем fs.promises для асинхронного чтения
+const path = require('path'); // Импортируем path для построения путей
 
 // Форматирование цены
 const formatPrice = (price) => {
@@ -10,20 +12,78 @@ const formatPrice = (price) => {
     }).format(price);
 };
 
-// Функция получения URL первого изображения
-const getFirstImageURL = (images) => {
+// --- НОВАЯ функция: преобразование изображения в base64 ---
+async function imageToBase64(imagePath) {
+    try {
+        // Путь к изображению строим относительно корня проекта или public
+        // Предположим, что server.js запускается из корня проекта
+        const fullPath = path.join(__dirname, '..', imagePath); // Поднимаемся на уровень выше к public
+        const data = await fs.readFile(fullPath);
+        const base64String = data.toString('base64');
+        const mimeType = getMimeType(path.extname(fullPath).toLowerCase());
+        return `data:${mimeType};base64,${base64String}`;
+    } catch (error) {
+        console.error(`Ошибка при чтении изображения ${imagePath}:`, error);
+        // Возвращаем URL заглушки
+        return await imageToBase64('/assets/icons/placeholder1.webp'); // Рекурсивно для заглушки
+    }
+}
+
+// --- Вспомогательная функция: определение MIME-типа ---
+function getMimeType(extension) {
+    const mimeTypes = {
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.gif': 'image/gif',
+        '.webp': 'image/webp',
+        '.svg': 'image/svg+xml'
+    };
+    return mimeTypes[extension] || 'image/png'; // По умолчанию PNG
+}
+
+// --- НОВАЯ функция: получение base64 логотипа ---
+async function getLogoBase64() {
+    return await imageToBase64('/assets/logo/logo-Photoroom.webp'); // Путь к логотипу
+}
+
+// Функция получения base64 URL первого изображения товара
+async function getFirstImageBase64(images) {
     if (Array.isArray(images) && images.length > 0) {
         const first_image = images[0];
+        let imagePath = '';
         if (first_image && typeof first_image === 'object' && first_image.url) {
-            return first_image.url;
+            imagePath = first_image.url;
         } else if (typeof first_image === 'string') {
-            return first_image;
+            imagePath = first_image;
+        }
+        if (imagePath) {
+            return await imageToBase64(imagePath);
         }
     }
-    return '/assets/icons/placeholder1.webp'; // Путь к заглушке
-};
+    // Возврат заглушки, если изображение не найдено
+    return await imageToBase64('/assets/icons/placeholder1.webp');
+}
 
-function generateProposalHTML(manager_name, manager_contact, customer_name, proposal_title, proposal_text, selectedProducts, total) {
+
+// --- ОБНОВЛЕННАЯ функция генерации HTML (теперь асинхронная) ---
+async function generateProposalHTML(manager_name, manager_contact, customer_name, proposal_title, proposal_text, selectedProducts, total) {
+    // Получаем base64 для логотипа
+    const logoBase64 = await getLogoBase64();
+
+    // Получаем base64 для изображений товаров
+    const processedSelectedProducts = [];
+    for (const item of selectedProducts) {
+        const imageBase64 = await getFirstImageBase64(item.product.images);
+        processedSelectedProducts.push({
+            ...item,
+            product: {
+                ...item.product,
+                imageBase64: imageBase64 // Добавляем base64 строку к продукту
+            }
+        });
+    }
+
     // CSS-переменные, взятые из вашего сайта
     const cssVariables = `
         :root {
@@ -39,7 +99,7 @@ function generateProposalHTML(manager_name, manager_contact, customer_name, prop
     `;
 
     let tableRows = '';
-    for (const item of selectedProducts) {
+    for (const item of processedSelectedProducts) { // Используем обработанный массив
         const itemPrice = parseFloat(item.product.price) || 0;
         const itemQuantity = parseInt(item.quantity) || 0;
         const totalItemPrice = itemPrice * itemQuantity;
@@ -47,7 +107,7 @@ function generateProposalHTML(manager_name, manager_contact, customer_name, prop
         tableRows += `
             <tr>
                 <td class="image-cell">
-                    <img src="${getFirstImageURL(item.product.images)}" alt="${item.product.title}">
+                    <img src="${item.product.imageBase64}" alt="${item.product.title}">
                 </td>
                 <td>${item.product.title}</td>
                 <td>${formatPrice(itemPrice)}</td>
@@ -271,7 +331,7 @@ function generateProposalHTML(manager_name, manager_contact, customer_name, prop
         <div class="header">
             <div class="logo">
                 <div class="logo-icon">
-                    <img src="/assets/logo/logo-Photoroom.webp" alt="BIZON Logo">
+                    <img src="${logoBase64}" alt="BIZON Logo"> <!-- Используем base64 логотип -->
                 </div>
                 <div class="logo-title">BIZON</div>
             </div>
@@ -318,7 +378,7 @@ function generateProposalHTML(manager_name, manager_contact, customer_name, prop
     `;
 }
 
-// Экспортируем функцию
+// Экспортируем функцию (теперь она асинхронная)
 module.exports = { generateProposalHTML };
 // Или, если используется ES6 modules (и в package.json указан "type": "module"):
 // export { generateProposalHTML };

@@ -2681,97 +2681,6 @@ app.post('/generate_proposal', (req, res) => {
 
 
 // === API: Установить варианты товара ===
-app.put('/api/products/:id/variants', async (req, res) => {
-  // ... ваш существующий код ...
-  // Не забудьте обернуть его в try/catch и освободить клиент, как в предыдущем коде
-  // Это важно для стабильности соединений с БД
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-
-    const { id } = req.params;
-    const productId = parseInt(id, 10);
-    const { variantIds } = req.body;
-
-    if (isNaN(productId)) {
-      await client.query('ROLLBACK');
-      return res.status(400).json({ error: 'Некорректный ID товара' });
-    }
-
-    const productExists = await client.query('SELECT 1 FROM products WHERE id = $1', [productId]);
-    if (productExists.rows.length === 0) {
-      await client.query('ROLLBACK');
-      return res.status(404).json({ error: 'Основной товар не найден' });
-    }
-
-    let validatedVariantIds = [];
-    if (Array.isArray(variantIds)) {
-        validatedVariantIds = [...new Set(variantIds.map(vId => parseInt(vId, 10)).filter(vId => !isNaN(vId) && vId !== productId))];
-    }
-
-    const existingGroupRes = await client.query(
-      'SELECT group_id FROM product_variants_link WHERE product_id = $1',
-      [productId]
-    );
-
-    let groupIdToUse = null;
-
-    if (validatedVariantIds.length > 0) {
-        if (existingGroupRes.rows.length > 0) {
-            groupIdToUse = existingGroupRes.rows[0].group_id;
-        } else {
-            groupIdToUse = productId;
-        }
-        await client.query('DELETE FROM product_variants_link WHERE group_id = $1', [groupIdToUse]);
-
-        await client.query(
-            'INSERT INTO product_variants_link (product_id, group_id) VALUES ($1, $2)',
-            [productId, groupIdToUse]
-        );
-
-        if (validatedVariantIds.length > 0) {
-            const placeholders = validatedVariantIds.map((_, i) => `$${i + 1}`).join(', ');
-            const checkVariantsQuery = `SELECT id FROM products WHERE id IN (${placeholders})`;
-            const checkResult = await client.query(checkVariantsQuery, validatedVariantIds);
-            const existingVariantIds = checkResult.rows.map(r => r.id);
-            const notFoundIds = validatedVariantIds.filter(id => !existingVariantIds.includes(id));
-
-            if (notFoundIds.length > 0) {
-                console.warn(`Некоторые варианты не найдены и будут проигнорированы:`, notFoundIds);
-            }
-
-            for (const variantId of existingVariantIds) {
-                await client.query(
-                    'INSERT INTO product_variants_link (product_id, group_id) VALUES ($1, $2)',
-                    [variantId, groupIdToUse]
-                );
-            }
-        }
-
-    } else {
-        if (existingGroupRes.rows.length > 0) {
-            const oldGroupId = existingGroupRes.rows[0].group_id;
-            await client.query('DELETE FROM product_variants_link WHERE group_id = $1', [oldGroupId]);
-        }
-    }
-
-    await client.query('COMMIT');
-    res.json({ success: true, message: 'Варианты товара обновлены', groupId: groupIdToUse });
-
-  } catch (err) {
-    await client.query('ROLLBACK');
-    console.error('Ошибка установки вариантов товара:', err);
-    if (err.code === '23503' || err.code === '23505') {
-         res.status(400).json({ error: 'Ошибка данных при обновлении вариантов' });
-    } else {
-         res.status(500).json({ error: 'Не удалось обновить варианты товара' });
-    }
-  } finally {
-    client.release();
-  }
-});
-
-// --- НОВЫЙ маршрут: Обработать форму и сгенерировать PDF ---
 app.post('/generate_proposal_pdf', async (req, res) => {
     console.log('Получен запрос на /generate_proposal_pdf');
     console.log('req.body:', req.body);
@@ -2803,14 +2712,14 @@ app.post('/generate_proposal_pdf', async (req, res) => {
         total += itemPrice * itemQuantity;
     }
 
-    // --- ВЫЗОВ ИМПОРТИРОВАННОЙ ФУНКЦИИ для генерации HTML ---
-    const proposalHTML = generateProposalHTML(manager_name, manager_contact, customer_name, proposal_title, proposal_text, selectedProductsArray, total);
-
     try {
+        // --- ВЫЗОВ ИМПОРТИРОВАННОЙ АСИНХРОННОЙ ФУНКЦИИ для генерации HTML ---
+        const proposalHTML = await generateProposalHTML(manager_name, manager_contact, customer_name, proposal_title, proposal_text, selectedProductsArray, total);
+
         // --- Генерация PDF с помощью Puppeteer ---
         const browser = await puppeteer.launch({
             headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox'] // <-- Добавлены флаги
+            args: ['--no-sandbox', '--disable-setuid-sandbox'] // Добавлены флаги
         });
         const page = await browser.newPage();
 
