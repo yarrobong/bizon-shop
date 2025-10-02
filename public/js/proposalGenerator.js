@@ -151,7 +151,7 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
               width: 100%;
               height: 100%;
               background-image: radial-gradient(
-                circle at 15px 15px,
+                circle at 5px 55px,
                 var(--accent-electric-blue) 2px,
                 transparent 1.5px
               );
