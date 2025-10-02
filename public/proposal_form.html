@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BIZON — Создание КП</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/favicon/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/proposal_form.css"> <!-- Подключаем отдельный CSS -->
+  <!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+    (function(m,e,t,r,i,k,a){
+        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=104163309', 'ym');
+
+    ym(104163309, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", accurateTrackBounce:true, trackLinks:true});
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/104163309" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
+ <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-8WGSW9TZS2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-8WGSW9TZS2');
+</script>
+</head>
+<body>
+
+  <div class="bg-overlay" aria-hidden="true">
+    <div class="pulse-1"></div>
+    <div class="pulse-2"></div>
+    <div class="pulse-3"></div>
+    <div class="pulse-4"></div>
+    <div class="pulse-5"></div>
+    <div class="pulse-6"></div>
+  </div>
+
+  <header class="header" role="banner">
+    <a href="/" class="logo">
+      <div class="logo-icon">
+        <picture>
+          <img src="/assets/logo/logo-Photoroom.webp" alt="BIZON Logo">
+        </picture>
+      </div>
+      <div class="logo-title">BIZON</div>
+    </a>
+    <nav class="main-nav" role="navigation" aria-label="Основная навигация">
+      <ul class="nav-list">
+        <li><a href="/">Главная</a></li>
+        <li><a href="/catalog">Каталог</a></li>
+        <li><a href="/contact">Контакты</a></li>
+      </ul>
+    </nav>
+    <div class="header-actions">
+      <a href="/catalog" class="btn">Каталог</a>
+    </div>
+  </header>
+
+  <main role="main">
+    <section class="form-section">
+      <h2>Создание коммерческого предложения</h2>
+      <form id="proposal-form" action="/generate_proposal" method="POST"> <!-- Отправка на Node.js маршрут -->
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="manager_name">Имя менеджера</label>
+            <input type="text" id="manager_name" name="manager_name" placeholder="Иван Иванов" required>
+          </div>
+          <div class="form-group">
+            <label for="manager_contact">Контактные данные менеджера</label>
+            <input type="text" id="manager_contact" name="manager_contact" placeholder="Телефон, email" required>
+          </div>
+          <div class="form-group">
+            <label for="customer_name">Имя клиента</label>
+            <input type="text" id="customer_name" name="customer_name" placeholder="ООО Рога и Копыта" required>
+          </div>
+          <div class="form-group">
+            <label for="proposal_title">Заголовок КП</label>
+            <input type="text" id="proposal_title" name="proposal_title" value="Коммерческое предложение" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="proposal_text">Текст предложения</label>
+          <textarea id="proposal_text" name="proposal_text" placeholder="Опишите суть предложения..." required>Уважаемые партнеры!
+
+Настоящим письмом представляем вам наше коммерческое предложение на поставку VR-оборудования и комплексных решений.
+
+Мы предлагаем широкий ассортимент продукции от ведущих производителей, а также услуги по интеграции и технической поддержке.</textarea>
+        </div>
+
+        <h3>Добавить товары</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="product_select">Выберите товар</label>
+            <select id="product_select" name="product_select" required>
+              <option value="">Загрузка товаров...</option>
+              <!-- Опции будут загружены через JS -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="product_quantity">Количество</label>
+            <input type="number" id="product_quantity" name="product_quantity" min="1" value="1" required>
+          </div>
+        </div>
+        <button type="button" class="btn btn-add" id="add-product-btn">Добавить товар</button>
+
+        <div class="product-list" id="product-list">
+          <!-- Выбранные товары будут отображаться здесь -->
+        </div>
+        <input type="hidden" id="selected_products_json" name="selected_products" value="[]"> <!-- Для отправки данных формы -->
+
+        <div style="margin-top: 1rem; text-align: right; font-weight: 700;">
+          Итого: <span id="total-amount">0 ₽</span>
+        </div>
+
+        <div style="margin-top: 2rem; text-align: center;">
+          <button type="submit" class="btn btn-primary">Сформировать КП</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <footer role="contentinfo">
+    © <span id="year"></span> BIZON — Все права защищены
+  </footer>
+
+  <script src="/js/proposal_form.js"></script> <!-- Подключаем отдельный JS -->
+</body>
+</html>

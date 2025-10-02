@@ -2565,6 +2565,77 @@ app.get('/api/payments/search', async (req, res) => {
   }
 });
 
+// api/products_for_proposal.js (или просто добавьте в server.js)
+const express = require('express');
+const router = express.Router();
+
+// --- НОВЫЙ маршрут: Получить товары для КП (все, включая недоступные) ---
+app.get('/api/products_for_proposal', async (req, res) => {
+  try {
+    // Запрос всех товаров, включая недоступные
+    const result = await pool.query(`
+      SELECT
+        id,
+        title,
+        description,
+        price,
+        tag,
+        available,
+        category,
+        brand,
+        compatibility,
+        images_json,
+        supplier_link,
+        supplier_notes,
+        slug
+      FROM products
+      ORDER BY category, id
+    `);
+
+    const products = result.rows.map(row => {
+      let images = [];
+      if (row.images_json) {
+        if (typeof row.images_json === 'string') {
+          try {
+            const parsed = JSON.parse(row.images_json);
+            images = Array.isArray(parsed) ? parsed : [];
+          } catch (e) {
+            console.error(`Ошибка парсинга images_json для товара ${row.id}:`, e);
+            images = [];
+          }
+        } else if (Array.isArray(row.images_json)) {
+          images = row.images_json;
+        } else if (typeof row.images_json === 'object') {
+          images = [row.images_json];
+        } else {
+          images = [];
+        }
+      }
+
+      return {
+        id: row.id,
+        title: row.title,
+        description: row.description,
+        price: parseFloat(row.price),
+        tag: row.tag,
+        available: row.available !== false,
+        category: row.category,
+        brand: row.brand,
+        compatibility: row.compatibility,
+        images: images,
+        supplier_link: row.supplier_link,
+        supplier_notes: row.supplier_notes,
+        slug: row.slug
+      };
+    });
+
+    res.json({ success: true, products: products });
+  } catch (err) {
+    console.error('Ошибка загрузки товаров для КП:', err);
+    res.status(500).json({ success: false, error: 'Ошибка сервера при загрузке товаров для КП.' });
+  }
+});
+
 // === СПЕЦИФИЧНЫЕ HTML маршруты ===
 // Отдаём product.html для маршрутов вида /product/:slug
 app.get('/product/:slug', (req, res) => {
