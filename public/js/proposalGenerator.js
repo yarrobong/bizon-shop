@@ -142,27 +142,27 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
                 box-sizing: border-box;
             }
 
+           
             /* Фоновая сетка */
-/* Фоновая сетка */
-body::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  /* Используем градиент с очень маленькой точкой */
-  background-image: radial-gradient(
-    circle,                           /* Убедимся, что это круг */
-    var(--accent-electric-blue) 0.3px, /* Радиус синего цвета - МИНИМАЛЬНЫЙ */
-   
-  );
-  background-size: 20px 20px;        /* Размер ячейки - определяет расстояние между точками */
-  z-index: -3; /* Позади пульсов */
-  pointer-events: none;
-  opacity: 0.10;
-  background-blend-mode: screen;
-}
+            body::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                /* Используем градиент с очень маленькой точкой */
+                background-image: radial-gradient(
+                circle,                           /* Убедимся, что это круг */
+                var(--accent-electric-blue) 0.3px, /* Радиус синего цвета - МИНИМАЛЬНЫЙ */
+                transparent 1.2px                /* Радиус прозрачной области - чуть больше */
+                );
+                background-size: 20px 20px;        /* Размер ячейки - определяет расстояние между точками */
+                z-index: -3; /* Позади пульсов */
+                pointer-events: none;
+                opacity: 0.10;
+                background-blend-mode: screen;
+            }
 
             /* Пульсы */
             .bg-overlay {
