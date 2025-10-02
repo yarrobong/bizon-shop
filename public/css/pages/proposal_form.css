@@ -76,11 +76,7 @@ body {
   transition: all 0.2s ease;
 }
 
-.btn:hover {
-  background: var(--card-bg-hover);
-  border-color: var(--accent-hover);
-  color: var(--accent-hover);
-}
+
 
 .btn-primary {
   background: var(--accent);
@@ -88,10 +84,7 @@ body {
   color: var(--bg-primary);
 }
 
-.btn-primary:hover {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
-}
+
 
 .btn-add {
   background: rgba(0, 0, 0, 0.3);
@@ -99,9 +92,7 @@ body {
   color: var(--text-primary);
 }
 
-.btn-add:hover {
-  background: var(--card-bg-hover);
-}
+
 
 main {
   padding: 2rem;
