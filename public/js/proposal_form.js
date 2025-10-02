@@ -20,10 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const option = document.createElement('option');
                     option.value = product.id;
                     option.textContent = `${product.title} (${formatPrice(product.price)})`;
-                    if (!product.available) {
-                        option.textContent += ' (Недоступен)';
-                        option.disabled = true; // Сделать недоступный товар неактивным
-                    }
+                    
                     productSelect.appendChild(option);
                 });
             } else {
