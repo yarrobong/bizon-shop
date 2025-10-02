@@ -212,13 +212,12 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
                 font-weight: 700;
                 color: var(--text-primary); /* Основной цвет текста */
                 margin: 10px 0;
-
-                text-align: left;
             }
             .manager-info {
                 margin-bottom: 20px;
                 font-size: 14px;
                 color: var(--text-secondary);
+                align-items: center;
             }
             .manager-info p {
                 margin: 5px 0;
