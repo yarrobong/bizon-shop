@@ -217,7 +217,7 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
                 margin-bottom: 20px;
                 font-size: 14px;
                 color: var(--text-secondary);
-                align-items: left;
+               
                 text-align: left;
             }
             .manager-info p {
