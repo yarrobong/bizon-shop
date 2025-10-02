@@ -24,16 +24,14 @@ const getFirstImageURL = (images) => {
 };
 
 function generateProposalHTML(manager_name, manager_contact, customer_name, proposal_title, proposal_text, selectedProducts, total) {
-    // Используем те же переменные, что и в proposal_form.css
+    // CSS-переменные, взятые из вашего сайта
     const cssVariables = `
         :root {
-          --bg-primary: #000;
-          --bg-secondary: rgba(0, 4, 172, 0.2);
-          --text-primary: #fff;
-          --text-secondary: rgba(255, 255, 255, 0.7);
-          --accent: #00e5ff;
-          --accent-hover: #00b3c4;
-          --border: #00e5ff;
+          --bg-primary: #0d0f17; /* Темный фон как на сайте */
+          --accent-electric-blue: #00E5FF;
+          --accent-deep-blue: #2B6CFF;
+          --text-primary: #FFFFFF;
+          --text-secondary: #AAB3C5;
           --card-bg: rgba(255, 255, 255, 0.1);
           --card-bg-hover: rgba(255, 255, 255, 0.2);
           --shadow: 0 6px 15px rgba(0, 229, 255, 0.4);
@@ -67,68 +65,148 @@ function generateProposalHTML(manager_name, manager_contact, customer_name, prop
         <title>Коммерческое предложение - ${customer_name}</title>
         <style>
             ${cssVariables}
+            /* Подключаем шрифт Inter */
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+            /* Стили для тела документа */
             body {
-                font-family: 'Inter', sans-serif; /* Используем шрифт сайта */
-                padding: 20mm; /* Отступы для печати */
+                font-family: 'Inter', sans-serif;
                 background-color: var(--bg-primary); /* Темный фон */
-                color: var(--text-primary); /* Светлый текст */
+                color: var(--text-secondary); /* Вторичный цвет текста */
                 line-height: 1.6;
-                margin: 0; /* Убираем стандартные отступы */
+                margin: 0;
+                padding: 20mm; /* Отступы для печати */
+                position: relative; /* Для позиционирования фона */
+                min-height: 100vh;
             }
+
+            /* Фоновая сетка */
+            body::before {
+              content: "";
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              background-image: radial-gradient(
+                circle at 15px 15px,
+                var(--accent-electric-blue) 2px,
+                transparent 1.5px
+              );
+              background-size: 60px 60px;
+              z-index: -3; /* Позади пульсов */
+              pointer-events: none;
+              opacity: 0.10;
+              background-blend-mode: screen;
+            }
+
+            /* Пульсы */
+            .bg-overlay {
+              position: fixed; /* Используем fixed для равномерного охвата при печати */
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              pointer-events: none;
+              z-index: -2; /* Поверх сетки, позади контента */
+              overflow: hidden;
+            }
+
+            .pulse-1,
+            .pulse-2,
+            .pulse-3,
+            .pulse-4,
+            .pulse-5,
+            .pulse-6 {
+              position: absolute;
+              width: 24rem;
+              height: 24rem;
+              border-radius: 9999px;
+              filter: blur(60px);
+              opacity: 0.6;
+              pointer-events: none;
+              animation: pulse 3s ease-in-out infinite;
+            }
+
+            .pulse-1 { top: 0vh; left: 70vw; background: rgba(0, 4, 172, 0.9); }
+            .pulse-2 { top: 60vh; right: 80vw; background: rgba(0, 4, 172, 0.7); }
+            .pulse-3 { top: 160vh; right: 10vw; background: rgba(0, 4, 172, 0.7); }
+            .pulse-4 { top: 230vh; right: 80vw; background: rgba(0, 4, 172, 0.7); }
+            .pulse-5 { top: 300vh; right: 0vw; background: rgba(0, 4, 172, 0.7); }
+            .pulse-6 { top: 350vh; right: 80vw; background: rgba(0, 4, 172, 0.7); }
+
+            @keyframes pulse {
+              0%, 100% { transform: scale(1); opacity: 0.6; }
+              50% { transform: scale(1.05); opacity: 0.4; }
+            }
+
+            /* Стили для заголовка */
             .header {
-                text-align: left;
+                text-align: center;
                 margin-bottom: 20px;
                 padding-bottom: 15px;
-                border-bottom: 2px solid var(--accent); /* Акцентная граница */
+                border-bottom: 2px solid var(--accent-electric-blue); /* Акцентная граница */
+                position: relative; /* Для z-index */
+                z-index: 1; /* Поверх фона */
             }
             .logo {
-                font-size: 28px; /* Увеличенный логотип */
-                font-weight: 700; /* Жирный */
-                color: var(--accent); /* Акцентный цвет */
+                font-size: 28px;
+                font-weight: 700;
+                color: var(--accent-electric-blue); /* Акцентный цвет */
                 margin-bottom: 5px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                gap: 10px; /* Расстояние между иконкой и текстом */
+                gap: 10px;
             }
             .logo-icon img {
-                height: 36px; /* Высота иконки логотипа */
+                height: 36px;
                 width: auto;
             }
             .title {
                 font-size: 24px;
                 font-weight: 700;
-                color: var(--text-primary);
+                color: var(--text-primary); /* Основной цвет текста */
                 margin: 10px 0;
             }
             .manager-info {
                 margin-bottom: 20px;
-                font-size: 14px; /* Уменьшенный размер текста */
+                font-size: 14px;
+                color: var(--text-secondary);
             }
             .manager-info p {
                 margin: 5px 0;
             }
+
+            /* Стили для текста предложения */
             .proposal-text {
                 margin-bottom: 20px;
-                font-size: 15px; /* Размер текста предложения */
+                font-size: 15px;
+                color: var(--text-secondary);
+                position: relative; /* Для z-index */
+                z-index: 1; /* Поверх фона */
             }
+
+            /* Стили для таблицы и контейнера */
             .table-container {
                 background: var(--card-bg); /* Полупрозрачный фон как у карточек */
                 border-radius: 0.5rem;
                 padding: 1rem;
                 margin-bottom: 20px;
-                overflow-x: auto; /* На случай, если таблица широкая */
+                overflow-x: auto;
+                position: relative; /* Для z-index */
+                z-index: 1; /* Поверх фона */
             }
             .table {
                 width: 100%;
                 border-collapse: collapse;
-                margin-bottom: 0; /* Убираем отступ снизу, так как он внутри .table-container */
+                margin-bottom: 0;
             }
             .table th, .table td {
                 border: 1px solid rgba(255, 255, 255, 0.3); /* Светлая граница */
-                padding: 10px; /* Увеличенный отступ */
+                padding: 10px;
                 text-align: left;
-                color: var(--text-primary);
+                color: var(--text-primary); /* Основной цвет текста */
             }
             .table th {
                 background-color: rgba(0, 229, 255, 0.2); /* Акцентный фон заголовков */
@@ -136,29 +214,61 @@ function generateProposalHTML(manager_name, manager_contact, customer_name, prop
             }
             .image-cell {
                 text-align: center;
-                vertical-align: middle; /* Выравнивание по центру по вертикали */
+                vertical-align: middle;
             }
             .image-cell img {
-                max-width: 60px; /* Увеличенный размер изображения */
-                max-height: 60px;
+                max-width: 80px; /* Увеличенный размер изображения */
+                max-height: 80px; /* Увеличенный размер изображения */
                 object-fit: contain;
-                border-radius: 0.25rem; /* Легкое скругление */
+                border-radius: 0.25rem;
+                border: 1px solid rgba(255, 255, 255, 0.1); /* Легкая граница */
             }
+
+            /* Стили для итога */
             .total {
                 text-align: right;
                 font-weight: 700;
-                font-size: 18px; /* Увеличенный размер итога */
-                color: var(--accent); /* Акцентный цвет */
+                font-size: 18px;
+                color: var(--accent-electric-blue); /* Акцентный цвет */
                 margin-top: 10px;
+                position: relative; /* Для z-index */
+                z-index: 1; /* Поверх фона */
             }
+
+            /* Стили для футера */
             .footer-note {
                 margin-top: 20px;
                 font-size: 12px;
-                color: var(--text-secondary); /* Вторичный цвет текста */
+                color: var(--text-secondary);
                 text-align: center;
                 border-top: 1px solid rgba(255, 255, 255, 0.1);
                 padding-top: 10px;
+                position: relative; /* Для z-index */
+                z-index: 1; /* Поверх фона */
             }
+
+            /* Стили для кнопки печати */
+            .print-btn {
+                display: block;
+                margin: 20px auto 0; /* Центрируем и отступ сверху */
+                padding: 0.5rem 1rem;
+                border: 1px solid var(--accent-electric-blue);
+                border-radius: 0.5rem;
+                background: transparent;
+                color: var(--text-primary);
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                position: relative; /* Для z-index */
+                z-index: 1; /* Поверх фона */
+            }
+
+            .print-btn:hover {
+              background: var(--card-bg-hover);
+              border-color: var(--accent-deep-blue);
+              color: var(--accent-deep-blue);
+            }
+
             /* Правила для печати */
             @media print {
                 body {
@@ -166,28 +276,50 @@ function generateProposalHTML(manager_name, manager_contact, customer_name, prop
                     background-color: white; /* Белый фон для печати */
                     color: black; /* Черный текст для печати */
                 }
-                .header, .proposal-text, .table-container, .total, .footer-note {
+                body::before {
+                    display: none; /* Скрываем сетку при печати */
+                }
+                .bg-overlay {
+                    display: none; /* Скрываем пульсы при печати */
+                }
+                .header, .proposal-text, .table-container, .total, .footer-note, .print-btn {
                     color: black; /* Текст становится черным */
                     border-color: black; /* Границы становятся черными */
+                    background: transparent; /* Убираем фон */
+                    box-shadow: none; /* Убираем тени */
+                    z-index: auto; /* Сбрасываем z-index */
                 }
                 .logo, .table th, .total {
-                    color: var(--accent); /* Акцентный цвет сохраняется */
+                    color: #000000; /* Черный цвет для акцентов при печати */
                 }
                 .table th {
-                    background-color: var(--card-bg-hover); /* Светлый фон заголовков при печати */
+                    background-color: #f0f0f0; /* Светлый фон заголовков при печати */
                 }
                 .image-cell img {
                     border: 1px solid #ccc; /* Граница для изображения при печати */
+                }
+                .print-btn {
+                    display: none; /* Скрываем кнопку при печати */
                 }
             }
         </style>
     </head>
     <body>
 
+        <!-- Фоновая анимация (пульсы) -->
+        <div class="bg-overlay" aria-hidden="true">
+            <div class="pulse-1"></div>
+            <div class="pulse-2"></div>
+            <div class="pulse-3"></div>
+            <div class="pulse-4"></div>
+            <div class="pulse-5"></div>
+            <div class="pulse-6"></div>
+        </div>
+
         <div class="header">
             <div class="logo">
                 <div class="logo-icon">
-                    <img src="/assets/logo/logo-Photoroom.webp" alt="BIZON Logo"> <!-- Используем ваш логотип -->
+                    <img src="/assets/logo/logo-Photoroom.webp" alt="BIZON Logo">
                 </div>
                 <div class="logo-title">BIZON</div>
             </div>
@@ -200,7 +332,7 @@ function generateProposalHTML(manager_name, manager_contact, customer_name, prop
         </div>
 
         <div class="proposal-text">
-            ${proposal_text.replace(/\n/g, '<br>')} <!-- Заменяем переводы строк на <br> -->
+            ${proposal_text.replace(/\n/g, '<br>')}
         </div>
 
         <div class="table-container">
