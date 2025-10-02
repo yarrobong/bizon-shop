@@ -155,10 +155,10 @@ body::before {
     var(--accent-electric-blue) 0.5px,  /* Радиус синего цвета - ОЧЕНЬ МАЛЕНЬКИЙ */
     transparent 0.5px          /* Радиус прозрачной области начинается сразу после синего */
   );
-  background-size: 25px 25px;  /* Расстояние между центрами точек - УМЕНЬШЕННО */
+  background-size: 20px 20px;  /* Расстояние между центрами точек - УМЕНЬШЕННО */
   z-index: -3; /* Позади пульсов */
   pointer-events: none;
-  opacity: 0.10;
+  opacity: 0.30;
   background-blend-mode: screen;
 }
 
