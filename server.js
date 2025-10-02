@@ -2565,9 +2565,7 @@ app.get('/api/payments/search', async (req, res) => {
   }
 });
 
-// api/products_for_proposal.js (или просто добавьте в server.js)
-const express = require('express');
-const router = express.Router();
+
 
 // --- НОВЫЙ маршрут: Получить товары для КП (все, включая недоступные) ---
 app.get('/api/products_for_proposal', async (req, res) => {
