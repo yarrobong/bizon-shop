@@ -154,7 +154,7 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
                 background-image: radial-gradient(
                     circle at 15px 15px,                       /* Убедимся, что это круг */
                     var(--accent-electric-blue) 2px, /* Радиус синего цвета - МИНИМАЛЬНЫЙ */
-                    transparent 1.5px                /* Радиус прозрачной области - чуть больше */
+                    transparent 1px                /* Радиус прозрачной области - чуть больше */
                 );
                 background-size: 20px 20px;        /* Размер ячейки - определяет расстояние между точками */
                 z-index: -3; /* Позади пульсов */
