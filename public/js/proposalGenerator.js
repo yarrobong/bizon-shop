@@ -133,7 +133,6 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
                 font-family: 'Inter', sans-serif;
                 background-color: var(--bg-primary); /* Темный фон */
                 color: var(--text-secondary); /* Вторичный цвет текста */
-               
                 margin: 0;
                 padding: 20mm; /* Отступы для PDF */
                 position: relative; /* Для позиционирования фона */
@@ -153,9 +152,9 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
                 height: 100%;
                 /* Используем градиент с очень маленькой точкой */
                 background-image: radial-gradient(
-                circle,                           /* Убедимся, что это круг */
-                var(--accent-electric-blue) 0.3px, /* Радиус синего цвета - МИНИМАЛЬНЫЙ */
-                transparent 1.2px                /* Радиус прозрачной области - чуть больше */
+                    circle at 15px 15px,                       /* Убедимся, что это круг */
+                    var(--accent-electric-blue) 2px, /* Радиус синего цвета - МИНИМАЛЬНЫЙ */
+                    transparent 1.5px                /* Радиус прозрачной области - чуть больше */
                 );
                 background-size: 20px 20px;        /* Размер ячейки - определяет расстояние между точками */
                 z-index: -3; /* Позади пульсов */
