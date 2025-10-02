@@ -2624,7 +2624,7 @@ app.get('/api/products_for_proposal', async (req, res) => {
         description: row.description,
         price: parseFloat(row.price),
         tag: row.tag,
-        available: row.available !== false,
+        available: row.available,
         category: row.category,
         brand: row.brand,
         compatibility: row.compatibility,
