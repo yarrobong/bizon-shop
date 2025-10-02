@@ -155,7 +155,7 @@ body::before {
   background-image: radial-gradient(
     circle,                           /* Убедимся, что это круг */
     var(--accent-electric-blue) 0.3px, /* Радиус синего цвета - МИНИМАЛЬНЫЙ */
-    transparent 1.2px                /* Радиус прозрачной области - чуть больше */
+   
   );
   background-size: 20px 20px;        /* Размер ячейки - определяет расстояние между точками */
   z-index: -3; /* Позади пульсов */
