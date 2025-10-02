@@ -155,7 +155,7 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
                 var(--accent-electric-blue) 1px,
                 transparent 1.5px
               );
-              background-size: 30px 30px;
+              background-size: 50px 50px;
               z-index: -3; /* Позади пульсов */
               pointer-events: none;
               opacity: 0.10;
