@@ -79,6 +79,8 @@ function generateSlug(title) {
 // Установка часового пояса (лучше делать на уровне ОС или БД, но можно и так)
 process.env.TZ = 'Europe/Moscow';
 
+const { generateProposalHTML } = require('./js/proposalGenerator.js'); // Путь к файлу относительно server.js
+
 // === API: Получить товары (все поля) ===
 app.get('/api/products', async (req, res) => {
   try {
@@ -2632,15 +2634,18 @@ app.get('/api/products_for_proposal', async (req, res) => {
 
 // --- НОВЫЙ маршрут: Обработать форму и отобразить результат КП ---
 app.post('/generate_proposal', (req, res) => {
-    // Получаем данные из формы
+    console.log('Получен запрос на /generate_proposal');
+    console.log('req.body:', req.body);
+
     const { manager_name, manager_contact, customer_name, proposal_title, proposal_text, selected_products } = req.body;
 
-    // Валидация и проверка данных (обязательно добавьте)
+    console.log('manager_name из req.body:', manager_name);
+
     if (!manager_name || !manager_contact || !customer_name || !selected_products) {
+        console.error('Ошибка: Отсутствуют обязательные поля в req.body:', { manager_name, manager_contact, customer_name, selected_products });
         return res.status(400).json({ error: 'Отсутствуют обязательные поля' });
     }
 
-    // Декодируем JSON с выбранными товарами
     let selectedProductsArray = [];
     try {
         selectedProductsArray = JSON.parse(selected_products);
@@ -2648,11 +2653,10 @@ app.post('/generate_proposal', (req, res) => {
             throw new Error('selected_products не является массивом');
         }
     } catch (e) {
-        console.error('Ошибка парсинга selected_products:', e);
+        console.error('Ошибка парсинга selected_products из req.body:', e);
         return res.status(400).json({ error: 'Неверный формат данных товаров' });
     }
 
-    // Вычисляем общую сумму
     let total = 0;
     for (const item of selectedProductsArray) {
         const itemPrice = parseFloat(item.product.price) || 0;
@@ -2660,165 +2664,11 @@ app.post('/generate_proposal', (req, res) => {
         total += itemPrice * itemQuantity;
     }
 
-    // --- Генерация HTML для КП ---
+    // --- ВЫЗОВ ИМПОРТИРОВАННОЙ ФУНКЦИИ ---
     const proposalHTML = generateProposalHTML(manager_name, manager_contact, customer_name, proposal_title, proposal_text, selectedProductsArray, total);
-    res.send(proposalHTML); // Отправляем сгенерированный HTML
+    res.send(proposalHTML);
 });
 
-// --- Вспомогательная функция для генерации HTML КП ---
-function generateProposalHTML(manager_name, manager_contact, customer_name, proposal_title, proposal_text, selectedProducts, total) {
-    // Форматирование цены
-    const formatPrice = (price) => {
-        return new Intl.NumberFormat('ru-RU', {
-            style: 'currency',
-            currency: 'RUB',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        }).format(price);
-    };
-
-    // Функция получения URL первого изображения
-    const getFirstImageURL = (images) => {
-        if (Array.isArray(images) && images.length > 0) {
-            const first_image = images[0];
-            if (first_image && typeof first_image === 'object' && first_image.url) {
-                return first_image.url;
-            } else if (typeof first_image === 'string') {
-                return first_image;
-            }
-        }
-        return '/assets/icons/placeholder1.webp'; // Путь к заглушке
-    };
-
-    let tableRows = '';
-    for (const item of selectedProducts) {
-        const itemPrice = parseFloat(item.product.price) || 0;
-        const itemQuantity = parseInt(item.quantity) || 0;
-        const totalItemPrice = itemPrice * itemQuantity;
-
-        tableRows += `
-            <tr>
-                <td class="image-cell">
-                    <img src="${getFirstImageURL(item.product.images)}" alt="${item.product.title}">
-                </td>
-                <td>${item.product.title}</td>
-                <td>${formatPrice(itemPrice)}</td>
-                <td>${itemQuantity}</td>
-                <td>${formatPrice(totalItemPrice)}</td>
-            </tr>
-        `;
-    }
-
-    return `
-    <!DOCTYPE html>
-    <html lang="ru">
-    <head>
-        <meta charset="UTF-8">
-        <title>Коммерческое предложение - ${customer_name}</title>
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                padding: 20mm;
-                background-color: white;
-                color: black;
-            }
-            .header {
-                text-align: center;
-                margin-bottom: 20px;
-            }
-            .logo {
-                font-size: 24px;
-                font-weight: bold;
-                color: #00e5ff; /* Цвет логотипа BIZON */
-            }
-            .title {
-                font-size: 20px;
-                font-weight: bold;
-                margin: 10px 0;
-            }
-            .manager-info {
-                margin-bottom: 20px;
-            }
-            .table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-bottom: 20px;
-            }
-            .table th, .table td {
-                border: 1px solid #000;
-                padding: 8px;
-                text-align: left;
-            }
-            .table th {
-                background-color: #f0f0f0;
-            }
-            .image-cell {
-                text-align: center;
-            }
-            .image-cell img {
-                max-width: 50px;
-                max-height: 50px;
-                object-fit: contain;
-            }
-            .total {
-                text-align: right;
-                font-weight: bold;
-                font-size: 16px;
-            }
-            .footer-note {
-                margin-top: 20px;
-                font-size: 12px;
-                color: gray;
-            }
-            @media print {
-                body {
-                    margin: 0;
-                }
-                .print-btn { display: none; }
-            }
-        </style>
-    </head>
-    <body>
-
-        <div class="header">
-            <div class="logo">BIZON</div> <!-- Логотип -->
-            <div class="title">${proposal_title}</div>
-            <div class="manager-info">
-                <p><strong>От:</strong> ${manager_name}</p>
-                <p><strong>Контакты:</strong> ${manager_contact}</p>
-                <p><strong>Для:</strong> ${customer_name}</p>
-            </div>
-        </div>
-
-        <p>${proposal_text.replace(/\n/g, '<br>')}</p> <!-- Заменяем переводы строк на <br> -->
-
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Изображение</th>
-                    <th>Наименование</th>
-                    <th>Цена</th>
-                    <th>Кол-во</th>
-                    <th>Сумма</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${tableRows}
-            </tbody>
-        </table>
-
-        <div class="total">Итого: ${formatPrice(total)}</div>
-
-        <div class="footer-note">
-            <p>Данное коммерческое предложение является официальным и действует в течение 30 дней с даты составления.</p>
-        </div>
-
-        <button class="print-btn" onclick="window.print();">Скачать PDF</button>
-
-    </body>
-    </html>
-    `;
-}
 
 // === API: Установить варианты товара ===
 app.put('/api/products/:id/variants', async (req, res) => {
