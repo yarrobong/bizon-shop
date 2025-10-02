@@ -151,12 +151,13 @@ body::before {
   left: 0;
   width: 100%;
   height: 100%;
+  /* Используем градиент с очень маленькой точкой */
   background-image: radial-gradient(
-    circle at 2.5px 2.5px,      /* Позиция центра градиента (каждые 2.5px по x и y) */
-    var(--accent-electric-blue) 0.5px,  /* Радиус синего цвета - ОЧЕНЬ МАЛЕНЬКИЙ */
-    transparent 0.5px          /* Радиус прозрачной области начинается сразу после синего */
+    circle,                           /* Убедимся, что это круг */
+    var(--accent-electric-blue) 0.3px, /* Радиус синего цвета - МИНИМАЛЬНЫЙ */
+    transparent 1.2px                /* Радиус прозрачной области - чуть больше */
   );
-  background-size: 25px 25px;  /* Расстояние между центрами точек - УМЕНЬШЕННО */
+  background-size: 20px 20px;        /* Размер ячейки - определяет расстояние между точками */
   z-index: -3; /* Позади пульсов */
   pointer-events: none;
   opacity: 0.10;
