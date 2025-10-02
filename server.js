@@ -2566,11 +2566,9 @@ app.get('/api/payments/search', async (req, res) => {
 });
 
 
-
 // --- НОВЫЙ маршрут: Получить товары для КП (все, включая недоступные) ---
 app.get('/api/products_for_proposal', async (req, res) => {
   try {
-    // Запрос всех товаров, включая недоступные
     const result = await pool.query(`
       SELECT
         id,
@@ -2631,6 +2629,287 @@ app.get('/api/products_for_proposal', async (req, res) => {
   } catch (err) {
     console.error('Ошибка загрузки товаров для КП:', err);
     res.status(500).json({ success: false, error: 'Ошибка сервера при загрузке товаров для КП.' });
+  }
+});
+
+// --- НОВЫЙ маршрут: Обработать форму и отобразить результат КП ---
+app.post('/generate_proposal', (req, res) => {
+    // Получаем данные из формы
+    const { manager_name, manager_contact, customer_name, proposal_title, proposal_text, selected_products } = req.body;
+
+    // Валидация и проверка данных (обязательно добавьте)
+    if (!manager_name || !manager_contact || !customer_name || !selected_products) {
+        return res.status(400).json({ error: 'Отсутствуют обязательные поля' });
+    }
+
+    // Декодируем JSON с выбранными товарами
+    let selectedProductsArray = [];
+    try {
+        selectedProductsArray = JSON.parse(selected_products);
+        if (!Array.isArray(selectedProductsArray)) {
+            throw new Error('selected_products не является массивом');
+        }
+    } catch (e) {
+        console.error('Ошибка парсинга selected_products:', e);
+        return res.status(400).json({ error: 'Неверный формат данных товаров' });
+    }
+
+    // Вычисляем общую сумму
+    let total = 0;
+    for (const item of selectedProductsArray) {
+        const itemPrice = parseFloat(item.product.price) || 0;
+        const itemQuantity = parseInt(item.quantity) || 0;
+        total += itemPrice * itemQuantity;
+    }
+
+    // --- Генерация HTML для КП ---
+    const proposalHTML = generateProposalHTML(manager_name, manager_contact, customer_name, proposal_title, proposal_text, selectedProductsArray, total);
+    res.send(proposalHTML); // Отправляем сгенерированный HTML
+});
+
+// --- Вспомогательная функция для генерации HTML КП ---
+function generateProposalHTML(manager_name, manager_contact, customer_name, proposal_title, proposal_text, selectedProducts, total) {
+    // Форматирование цены
+    const formatPrice = (price) => {
+        return new Intl.NumberFormat('ru-RU', {
+            style: 'currency',
+            currency: 'RUB',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(price);
+    };
+
+    // Функция получения URL первого изображения
+    const getFirstImageURL = (images) => {
+        if (Array.isArray(images) && images.length > 0) {
+            const first_image = images[0];
+            if (first_image && typeof first_image === 'object' && first_image.url) {
+                return first_image.url;
+            } else if (typeof first_image === 'string') {
+                return first_image;
+            }
+        }
+        return '/assets/icons/placeholder1.webp'; // Путь к заглушке
+    };
+
+    let tableRows = '';
+    for (const item of selectedProducts) {
+        const itemPrice = parseFloat(item.product.price) || 0;
+        const itemQuantity = parseInt(item.quantity) || 0;
+        const totalItemPrice = itemPrice * itemQuantity;
+
+        tableRows += `
+            <tr>
+                <td class="image-cell">
+                    <img src="${getFirstImageURL(item.product.images)}" alt="${item.product.title}">
+                </td>
+                <td>${item.product.title}</td>
+                <td>${formatPrice(itemPrice)}</td>
+                <td>${itemQuantity}</td>
+                <td>${formatPrice(totalItemPrice)}</td>
+            </tr>
+        `;
+    }
+
+    return `
+    <!DOCTYPE html>
+    <html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <title>Коммерческое предложение - ${customer_name}</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                padding: 20mm;
+                background-color: white;
+                color: black;
+            }
+            .header {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            .logo {
+                font-size: 24px;
+                font-weight: bold;
+                color: #00e5ff; /* Цвет логотипа BIZON */
+            }
+            .title {
+                font-size: 20px;
+                font-weight: bold;
+                margin: 10px 0;
+            }
+            .manager-info {
+                margin-bottom: 20px;
+            }
+            .table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 20px;
+            }
+            .table th, .table td {
+                border: 1px solid #000;
+                padding: 8px;
+                text-align: left;
+            }
+            .table th {
+                background-color: #f0f0f0;
+            }
+            .image-cell {
+                text-align: center;
+            }
+            .image-cell img {
+                max-width: 50px;
+                max-height: 50px;
+                object-fit: contain;
+            }
+            .total {
+                text-align: right;
+                font-weight: bold;
+                font-size: 16px;
+            }
+            .footer-note {
+                margin-top: 20px;
+                font-size: 12px;
+                color: gray;
+            }
+            @media print {
+                body {
+                    margin: 0;
+                }
+                .print-btn { display: none; }
+            }
+        </style>
+    </head>
+    <body>
+
+        <div class="header">
+            <div class="logo">BIZON</div> <!-- Логотип -->
+            <div class="title">${proposal_title}</div>
+            <div class="manager-info">
+                <p><strong>От:</strong> ${manager_name}</p>
+                <p><strong>Контакты:</strong> ${manager_contact}</p>
+                <p><strong>Для:</strong> ${customer_name}</p>
+            </div>
+        </div>
+
+        <p>${proposal_text.replace(/\n/g, '<br>')}</p> <!-- Заменяем переводы строк на <br> -->
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Изображение</th>
+                    <th>Наименование</th>
+                    <th>Цена</th>
+                    <th>Кол-во</th>
+                    <th>Сумма</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${tableRows}
+            </tbody>
+        </table>
+
+        <div class="total">Итого: ${formatPrice(total)}</div>
+
+        <div class="footer-note">
+            <p>Данное коммерческое предложение является официальным и действует в течение 30 дней с даты составления.</p>
+        </div>
+
+        <button class="print-btn" onclick="window.print();">Скачать PDF</button>
+
+    </body>
+    </html>
+    `;
+}
+
+// === API: Установить варианты товара ===
+app.put('/api/products/:id/variants', async (req, res) => {
+  // ... ваш существующий код ...
+  // Не забудьте обернуть его в try/catch и освободить клиент, как в предыдущем коде
+  // Это важно для стабильности соединений с БД
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const { id } = req.params;
+    const productId = parseInt(id, 10);
+    const { variantIds } = req.body;
+
+    if (isNaN(productId)) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Некорректный ID товара' });
+    }
+
+    const productExists = await client.query('SELECT 1 FROM products WHERE id = $1', [productId]);
+    if (productExists.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Основной товар не найден' });
+    }
+
+    let validatedVariantIds = [];
+    if (Array.isArray(variantIds)) {
+        validatedVariantIds = [...new Set(variantIds.map(vId => parseInt(vId, 10)).filter(vId => !isNaN(vId) && vId !== productId))];
+    }
+
+    const existingGroupRes = await client.query(
+      'SELECT group_id FROM product_variants_link WHERE product_id = $1',
+      [productId]
+    );
+
+    let groupIdToUse = null;
+
+    if (validatedVariantIds.length > 0) {
+        if (existingGroupRes.rows.length > 0) {
+            groupIdToUse = existingGroupRes.rows[0].group_id;
+        } else {
+            groupIdToUse = productId;
+        }
+        await client.query('DELETE FROM product_variants_link WHERE group_id = $1', [groupIdToUse]);
+
+        await client.query(
+            'INSERT INTO product_variants_link (product_id, group_id) VALUES ($1, $2)',
+            [productId, groupIdToUse]
+        );
+
+        if (validatedVariantIds.length > 0) {
+            const placeholders = validatedVariantIds.map((_, i) => `$${i + 1}`).join(', ');
+            const checkVariantsQuery = `SELECT id FROM products WHERE id IN (${placeholders})`;
+            const checkResult = await client.query(checkVariantsQuery, validatedVariantIds);
+            const existingVariantIds = checkResult.rows.map(r => r.id);
+            const notFoundIds = validatedVariantIds.filter(id => !existingVariantIds.includes(id));
+
+            if (notFoundIds.length > 0) {
+                console.warn(`Некоторые варианты не найдены и будут проигнорированы:`, notFoundIds);
+            }
+
+            for (const variantId of existingVariantIds) {
+                await client.query(
+                    'INSERT INTO product_variants_link (product_id, group_id) VALUES ($1, $2)',
+                    [variantId, groupIdToUse]
+                );
+            }
+        }
+
+    } else {
+        if (existingGroupRes.rows.length > 0) {
+            const oldGroupId = existingGroupRes.rows[0].group_id;
+            await client.query('DELETE FROM product_variants_link WHERE group_id = $1', [oldGroupId]);
+        }
+    }
+
+    await client.query('COMMIT');
+    res.json({ success: true, message: 'Варианты товара обновлены', groupId: groupIdToUse });
+
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Ошибка установки вариантов товара:', err);
+    if (err.code === '23503' || err.code === '23505') {
+         res.status(400).json({ error: 'Ошибка данных при обновлении вариантов' });
+    } else {
+         res.status(500).json({ error: 'Не удалось обновить варианты товара' });
+    }
+  } finally {
+    client.release();
   }
 });
 
