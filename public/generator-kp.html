@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BIZON — Генератор КП</title>
+  <link rel="icon" type="image/png" href="/assets/icons/favicon/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/favicon/favicon.svg" />
+  <link rel="shortcut icon" href="/assets/icons/favicon/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/favicon/apple-touch-icon.png" />
+  <link rel="manifest" href="/assets/icons/favicon/site.webmanifest" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-primary: #000;
+      --bg-secondary: rgba(0, 4, 172, 0.2);
+      --text-primary: #fff;
+      --text-secondary: rgba(255, 255, 255, 0.7);
+      --accent: #00e5ff;
+      --accent-hover: #00b3c4;
+      --border: #00e5ff;
+      --card-bg: rgba(255, 255, 255, 0.1);
+      --card-bg-hover: rgba(255, 255, 255, 0.2);
+      --shadow: 0 6px 15px rgba(0, 229, 255, 0.4);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      position: relative;
+      padding-bottom: 2rem;
+    }
+
+    /* Фоновые пульсы */
+    .bg-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -2;
+      overflow: hidden;
+    }
+
+    .pulse-1, .pulse-2, .pulse-3, .pulse-4, .pulse-5, .pulse-6 {
+      position: absolute;
+      width: 24rem;
+      height: 24rem;
+      border-radius: 9999px;
+      filter: blur(60px);
+      opacity: 0.6;
+      pointer-events: none;
+      animation: pulse 3s ease-in-out infinite;
+    }
+
+    .pulse-1 { top: 0vh; left: 70vw; background: rgba(0, 4, 172, 0.9); }
+    .pulse-2 { top: 60vh; right: 80vw; background: rgba(0, 4, 172, 0.7); }
+    .pulse-3 { top: 160vh; right: 10vw; background: rgba(0, 4, 172, 0.7); }
+    .pulse-4 { top: 230vh; right: 80vw; background: rgba(0, 4, 172, 0.7); }
+    .pulse-5 { top: 300vh; right: 0vw; background: rgba(0, 4, 172, 0.7); }
+    .pulse-6 { top: 350vh; right: 80vw; background: rgba(0, 4, 172, 0.7); }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.6; }
+      50% { transform: scale(1.05); opacity: 0.4; }
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background-color: rgba(0, 0, 0, 0.8);
+      border-bottom: 1px solid var(--accent);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .logo-icon img {
+      height: 40px; /* Уменьшил высоту */
+      width: auto;
+    }
+
+    .logo-title {
+      margin-left: 0.75rem;
+      font-size: 1.5rem; /* Уменьшил размер */
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .main-nav ul {
+      display: flex;
+      list-style: none;
+      gap: 2rem;
+    }
+
+    .main-nav a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+
+    .main-nav a:hover {
+      color: var(--accent);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      background: transparent;
+      color: var(--text-primary);
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      background: var(--card-bg-hover);
+      border-color: var(--accent-hover);
+      color: var(--accent-hover);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg-primary);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    main {
+      padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .form-section, .preview-section {
+      background: var(--card-bg);
+      padding: 2rem;
+      border-radius: 1rem;
+      margin-bottom: 2rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .form-section h2, .preview-section h2 {
+      margin-bottom: 1.5rem;
+      color: var(--accent);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label {
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .form-group input, .form-group select, .form-group textarea {
+      padding: 0.75rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 0.5rem;
+      background: rgba(0, 0, 0, 0.3);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+    }
+
+    .form-group textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    .product-controls {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+        align-items: flex-start;
+    }
+
+    .product-list {
+        margin-top: 1.5rem;
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.1);
+    }
+
+    .product-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .product-item:last-child {
+        border-bottom: none;
+    }
+
+    .product-info {
+        flex-grow: 1;
+    }
+
+    .product-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .product-actions button {
+        padding: 0.25rem 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 0.25rem;
+        background: transparent;
+        color: var(--text-primary);
+        cursor: pointer;
+    }
+
+    .product-actions button:hover {
+        background: var(--card-bg-hover);
+    }
+
+    .preview-content {
+        background: white;
+        color: black;
+        padding: 3rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        min-height: 800px; /* Приблизительная высота A4 */
+        font-size: 14px; /* Приблизительный размер шрифта для печати */
+    }
+
+    .preview-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #ccc;
+    }
+
+    .preview-logo {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--accent);
+        margin-bottom: 0.5rem;
+    }
+
+    .preview-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .preview-manager-info {
+        margin-bottom: 2rem;
+        font-size: 0.9rem;
+    }
+
+    .preview-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 2rem;
+    }
+
+    .preview-table th, .preview-table td {
+        border: 1px solid #ccc;
+        padding: 0.5rem;
+        text-align: left;
+    }
+
+    .preview-table th {
+        background-color: #f0f0f0;
+        font-weight: 600;
+    }
+
+    .preview-image {
+        max-width: 50px;
+        max-height: 50px;
+        object-fit: contain;
+    }
+
+    .preview-total {
+        text-align: right;
+        font-weight: 700;
+        font-size: 1.2rem;
+        margin-top: 1rem;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    /* Для печати/экспорта в PDF */
+    @media print {
+        body, .preview-content {
+            background: white !important;
+            color: black !important;
+        }
+        .bg-overlay, .header, .form-section, .preview-section > :not(.preview-content) {
+            display: none !important;
+        }
+        .preview-content {
+            box-shadow: none !important;
+            padding: 1cm;
+            margin: 0 !important;
+            page-break-after: auto;
+        }
+    }
+
+    footer {
+      text-align: center;
+      padding: 1rem;
+      margin-top: 2rem;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+  </style>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script>
+    // Используем те же данные, что и в ui.js
+    const LOCAL_PRODUCTS = [
+      {
+        id: 1,
+        title: "BOBOVR BD3",
+        description: "Док-станция для B100",
+        price: 3390,
+        category: "Док станции",
+        images: [
+          { url: "/assets/Images-Products/Док станции/BOBOVR BD3 для B100/1.png", alt: "BOBOVR BD3" }
+        ],
+        tag: "Хит",
+        available: true
+      },
+      {
+        id: 2,
+        title: "Meta Quest 3",
+        description: "VR-шлем последнего поколения",
+        price: 45990,
+        category: "VR шлемы",
+        images: [
+          { url: "/assets/Images-Products/VR шлемы/Meta Quest 3/1.png", alt: "Meta Quest 3" }
+        ],
+        tag: "Новинка",
+        available: true
+      },
+      {
+        id: 3,
+        title: "Pico 4 Ultra",
+        description: "Профессиональный VR-шлем",
+        price: 79990,
+        category: "VR шлемы",
+        images: [
+          { url: "/assets/Images-Products/VR шлемы/Pico 4 Ultra/1.png", alt: "Pico 4 Ultra" }
+        ],
+        tag: "",
+        available: true
+      },
+      {
+        id: 4,
+        title: "Аккумулятор Anker",
+        description: "Высокая емкость, быстрая зарядка",
+        price: 2490,
+        category: "Аккумуляторы",
+        images: [
+          { url: "/assets/Images-Products/Аккумуляторы/Anker/1.png", alt: "Аккумулятор Anker" }
+        ],
+        tag: "",
+        available: false // Пример недоступного товара
+      }
+    ];
+
+    // Глобальное состояние для выбранных товаров
+    let selectedProducts = [];
+
+    // Функция генерации slug из названия товара
+    function generateSlug(title) {
+      return encodeURIComponent(
+        title
+          .toLowerCase()
+          .trim()
+          .replace(/[^\w\s-]/g, '')
+          .replace(/[\s_-]+/g, '-')
+          .replace(/^-+|-+$/g, '')
+      );
+    }
+
+    // Форматирование цены
+    function formatPrice(price) {
+      return new Intl.NumberFormat('ru-RU', {
+        style: 'currency',
+        currency: 'RUB',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(price);
+    }
+
+    // Инициализация при загрузке
+    document.addEventListener('DOMContentLoaded', function() {
+        const productSelect = document.getElementById('product-select');
+        const addProductBtn = document.getElementById('add-product-btn');
+        const productQuantities = document.getElementById('product-quantities');
+        const generateBtn = document.getElementById('generate-pdf-btn');
+        const previewSection = document.getElementById('preview-section');
+        const previewContent = document.getElementById('preview-content');
+
+        // Заполняем список товаров
+        LOCAL_PRODUCTS.forEach(product => {
+            const option = document.createElement('option');
+            option.value = product.id;
+            option.textContent = `${product.title} (${formatPrice(product.price)})`;
+            if (!product.available) {
+                option.textContent += ' (Недоступен)';
+                option.disabled = true; // Сделать недоступный товар неактивным
+            }
+            productSelect.appendChild(option);
+        });
+
+        // Обработчик добавления товара
+        addProductBtn.addEventListener('click', function() {
+            const selectedId = parseInt(productSelect.value);
+            const quantity = parseInt(document.getElementById('product-quantity').value) || 1;
+
+            if (isNaN(selectedId) || quantity <= 0) {
+                alert('Выберите товар и укажите корректное количество.');
+                return;
+            }
+
+            const product = LOCAL_PRODUCTS.find(p => p.id === selectedId);
+            if (!product) {
+                alert('Товар не найден.');
+                return;
+            }
+
+            // Проверяем, есть ли уже такой товар в списке
+            const existingItemIndex = selectedProducts.findIndex(item => item.product.id === selectedId);
+            if (existingItemIndex > -1) {
+                // Обновляем количество, если товар уже есть
+                selectedProducts[existingItemIndex].quantity += quantity;
+            } else {
+                // Добавляем новый товар
+                selectedProducts.push({
+                    product: product,
+                    quantity: quantity
+                });
+            }
+
+            renderSelectedProducts();
+            calculateTotal();
+        });
+
+        // Рендер выбранных товаров
+        function renderSelectedProducts() {
+            productQuantities.innerHTML = '';
+            selectedProducts.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'product-item';
+                div.innerHTML = `
+                    <div class="product-info">
+                        <strong>${item.product.title}</strong> - ${formatPrice(item.product.price)} x ${item.quantity}
+                    </div>
+                    <div class="product-actions">
+                        <button type="button" onclick="removeProduct(${index})">Удалить</button>
+                    </div>
+                `;
+                productQuantities.appendChild(div);
+            });
+        }
+
+        // Удаление товара (глобальная функция для onclick)
+        window.removeProduct = function(index) {
+            selectedProducts.splice(index, 1);
+            renderSelectedProducts();
+            calculateTotal();
+        }
+
+        // Пересчет общей суммы
+        function calculateTotal() {
+            const total = selectedProducts.reduce((sum, item) => {
+                return sum + (item.product.price * item.quantity);
+            }, 0);
+            document.getElementById('total-amount').textContent = formatPrice(total);
+        }
+
+        // Генерация превью
+        function generatePreview() {
+            const managerName = document.getElementById('manager-name').value || 'Менеджер';
+            const managerContact = document.getElementById('manager-contact').value || 'Контактные данные менеджера';
+            const customerName = document.getElementById('customer-name').value || 'Клиент';
+            const proposalTitle = document.getElementById('proposal-title').value || 'Коммерческое предложение';
+            const proposalText = document.getElementById('proposal-text').value || 'Текст коммерческого предложения...';
+
+            let tableRows = '';
+            let total = 0;
+            selectedProducts.forEach(item => {
+                const totalItemPrice = item.product.price * item.quantity;
+                total += totalItemPrice;
+                tableRows += `
+                    <tr>
+                        <td><img src="${item.product.images[0]?.url || '/assets/icons/placeholder1.webp'}" alt="${item.product.title}" class="preview-image" /></td>
+                        <td>${item.product.title}</td>
+                        <td>${formatPrice(item.product.price)}</td>
+                        <td>${item.quantity}</td>
+                        <td>${formatPrice(totalItemPrice)}</td>
+                    </tr>
+                `;
+            });
+
+            previewContent.innerHTML = `
+                <div class="preview-header">
+                    <div class="preview-logo">BIZON</div>
+                    <div class="preview-title">${proposalTitle}</div>
+                    <div class="preview-manager-info">
+                        <p><strong>От:</strong> ${managerName}</p>
+                        <p><strong>Контакты:</strong> ${managerContact}</p>
+                        <p><strong>Для:</strong> ${customerName}</p>
+                    </div>
+                </div>
+                <p>${proposalText}</p>
+                <table class="preview-table">
+                    <thead>
+                        <tr>
+                            <th>Изображение</th>
+                            <th>Наименование</th>
+                            <th>Цена</th>
+                            <th>Кол-во</th>
+                            <th>Сумма</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows}
+                    </tbody>
+                </table>
+                <div class="preview-total">Итого: ${formatPrice(total)}</div>
+            `;
+        }
+
+        // Обработчик генерации PDF
+        generateBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            generatePreview();
+            previewSection.classList.remove('hidden');
+            window.scrollTo({ top: previewSection.offsetTop - 100, behavior: 'smooth' });
+        });
+
+        // Инициализация
+        calculateTotal();
+    });
+
+    // Функция экспорта в PDF
+    function exportToPDF() {
+        const { jsPDF } = window.jspdf;
+        const element = document.getElementById('preview-content');
+
+        html2canvas(element, {
+            scale: 2, // Повышаем качество
+            useCORS: true,
+            logging: false
+        }).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgWidth = 210; // A4 width in mm
+            const pageHeight = 297; // A4 height in mm
+            const imgHeight = canvas.height * imgWidth / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            while (heightLeft >= 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+            }
+
+            pdf.save('kommercheskoe_predlozhenie.pdf');
+        });
+    }
+
+    // Добавляем глобально
+    window.exportToPDF = exportToPDF;
+  </script>
+</head>
+<body>
+
+  <div class="bg-overlay" aria-hidden="true">
+    <div class="pulse-1"></div>
+    <div class="pulse-2"></div>
+    <div class="pulse-3"></div>
+    <div class="pulse-4"></div>
+    <div class="pulse-5"></div>
+    <div class="pulse-6"></div>
+  </div>
+
+  <header class="header" role="banner">
+    <a href="https://bizon-business.ru" class="logo">
+      <div class="logo-icon">
+        <picture>
+          <img src="/assets/logo/logo-Photoroom.webp" alt="BIZON Logo">
+        </picture>
+      </div>
+      <div class="logo-title">BIZON</div>
+    </a>
+
+    <nav class="main-nav" role="navigation" aria-label="Основная навигация">
+      <ul class="nav-list">
+        <li><a href="https://bizon-business.ru/">Главная</a></li>
+        <li><a href="https://bizon-business.ru/catalog">Каталог</a></li>
+        <li><a href="https://bizon-business.ru/attractions">VR Аттракционы</a></li>
+        <li><a href="https://bizon-business.ru/contact">Контакты</a></li>
+      </ul>
+    </nav>
+
+    <div class="header-actions">
+      <a href="https://bizon-business.ru/catalog" class="btn">Каталог</a>
+    </div>
+  </header>
+
+  <main role="main">
+    <section class="form-section">
+      <h2>Создание коммерческого предложения</h2>
+      <form id="proposal-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="manager-name">Имя менеджера</label>
+            <input type="text" id="manager-name" name="manager-name" placeholder="Иван Иванов">
+          </div>
+          <div class="form-group">
+            <label for="manager-contact">Контактные данные менеджера</label>
+            <input type="text" id="manager-contact" name="manager-contact" placeholder="Телефон, email">
+          </div>
+          <div class="form-group">
+            <label for="customer-name">Имя клиента</label>
+            <input type="text" id="customer-name" name="customer-name" placeholder="ООО Рога и Копыта">
+          </div>
+          <div class="form-group">
+            <label for="proposal-title">Заголовок КП</label>
+            <input type="text" id="proposal-title" name="proposal-title" value="Коммерческое предложение">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="proposal-text">Текст предложения</label>
+          <textarea id="proposal-text" name="proposal-text" placeholder="Опишите суть предложения...">Уважаемые партнеры!
+
+Настоящим письмом представляем вам наше коммерческое предложение на поставку VR-оборудования и комплексных решений.
+
+Мы предлагаем широкий ассортимент продукции от ведущих производителей, а также услуги по интеграции и технической поддержке.</textarea>
+        </div>
+      </form>
+    </section>
+
+    <section class="form-section">
+      <h2>Добавить товары</h2>
+      <div class="form-grid">
+          <div class="form-group">
+              <label for="product-select">Выберите товар</label>
+              <select id="product-select" name="product-select">
+                  <!-- Заполняется скриптом -->
+              </select>
+          </div>
+          <div class="form-group">
+              <label for="product-quantity">Количество</label>
+              <input type="number" id="product-quantity" name="product-quantity" min="1" value="1">
+          </div>
+      </div>
+      <div class="product-controls">
+          <button type="button" class="btn btn-primary" id="add-product-btn">Добавить товар</button>
+          <div style="margin-left: auto; font-weight: 700;">Итого: <span id="total-amount">0 ₽</span></div>
+      </div>
+
+      <div class="product-list" id="product-quantities">
+        <!-- Заполняется скриптом -->
+      </div>
+    </section>
+
+    <div class="preview-section hidden" id="preview-section">
+        <h2>Предварительный просмотр</h2>
+        <div class="preview-content" id="preview-content">
+            <!-- Заполняется скриптом -->
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <button type="button" class="btn btn-primary" onclick="exportToPDF()">Скачать PDF</button>
+        </div>
+    </div>
+
+  </main>
+
+  <footer role="contentinfo">
+    © <span id="year"></span> BIZON — Все права защищены
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+
+</body>
+</html>
