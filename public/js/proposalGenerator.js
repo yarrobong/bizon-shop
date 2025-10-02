@@ -234,7 +234,7 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
 
             /* Стили для таблицы и контейнера */
             .table-container {
-                background: var(--card-bg); /* Полупрозрачный фон как у карточек */
+                background:  rgba(11, 11, 38, 0.35);
                 border-radius: 0.5rem;
                 padding: 1rem;
                 margin-bottom: 20px;
