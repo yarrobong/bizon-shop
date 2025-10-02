@@ -234,44 +234,29 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
 
             /* Стили для таблицы и контейнера */
             .table-container {
-    background: var(--card-bg);
-    border-radius: 0.5rem;
-    padding: 1rem;
-    margin-bottom: 20px;
-    overflow-x: auto;
-    position: relative;
-    z-index: 1;
-    /* Неоновая обводка контейнера */
-    box-shadow: 
-        0 0 10px rgba(0, 229, 255, 0.5),
-        0 0 20px rgba(0, 229, 255, 0.3),
-        0 0 30px rgba(0, 229, 255, 0.2);
-    border: 1px solid rgba(0, 229, 255, 0.4); /* Тонкая неоновая рамка */
-}
-
-.table {
-    width: 100%;
-    border-collapse: separate; /* Важно для теней ячеек */
-    border-spacing: 0;
-    margin-bottom: 0;
-}
-
-.table th,
-.table td {
-    border: 1px solid rgba(0, 229, 255, 0.3); /* Неоновая граница */
-    padding: 12px;
-    text-align: left;
-    color: var(--text-primary);
-    /* Дополнительно: лёгкое свечение текста (опционально) */
-    text-shadow: 0 0 5px rgba(0, 229, 255, 0.3);
-}
-
-.table th {
-    background-color: rgba(0, 229, 255, 0.15); /* Более насыщенный неон */
-    font-weight: 600;
-    /* Свечение заголовков */
-    box-shadow: inset 0 0 8px rgba(0, 229, 255, 0.2);
-}
+                background: var(--card-bg); /* Полупрозрачный фон как у карточек */
+                border-radius: 0.5rem;
+                padding: 1rem;
+                margin-bottom: 20px;
+                overflow-x: auto;
+                position: relative; /* Для z-index */
+                z-index: 1; /* Поверх фона */
+            }
+            .table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 0;
+            }
+            .table th, .table td {
+                border: 1px solid rgba(255, 255, 255, 0.3); /* Светлая граница */
+                padding: 10px;
+                text-align: left;
+                color: var(--text-primary); /* Основной цвет текста */
+            }
+            .table th {
+                background-color: rgba(0, 229, 255, 0.2); /* Акцентный фон заголовков */
+                font-weight: 600;
+            }
             .image-cell {
                 text-align: center;
                 vertical-align: middle;
