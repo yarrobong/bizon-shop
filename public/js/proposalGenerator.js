@@ -76,7 +76,7 @@ function generateProposalHTML(manager_name, manager_contact, customer_name, prop
                 margin: 0; /* Убираем стандартные отступы */
             }
             .header {
-                text-align: center;
+                text-align: left;
                 margin-bottom: 20px;
                 padding-bottom: 15px;
                 border-bottom: 2px solid var(--accent); /* Акцентная граница */
