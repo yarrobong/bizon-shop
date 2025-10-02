@@ -2808,7 +2808,12 @@ app.post('/generate_proposal_pdf', async (req, res) => { // Изменили н�
 
     try {
         // --- Генерация PDF с помощью Puppeteer ---
-        const browser = await puppeteer.launch({ headless: true }); // Запускаем браузер без GUI
+        
+        const browser = await puppeteer.launch({
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox'] // Добавляем флаги
+        }); // Запускаем браузер без GUI и без песочницы
+        
         const page = await browser.newPage();
 
         // Устанавливаем размер страницы (A4)
