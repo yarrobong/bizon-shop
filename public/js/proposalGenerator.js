@@ -151,11 +151,11 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
               width: 100%;
               height: 100%;
               background-image: radial-gradient(
-                circle at 5px 55px,
+                circle at 5px 5px,
                 var(--accent-electric-blue) 2px,
                 transparent 1.5px
               );
-              background-size: 60px 60px;
+              background-size: 30px 30px;
               z-index: -3; /* Позади пульсов */
               pointer-events: none;
               opacity: 0.10;
