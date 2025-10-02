@@ -25,6 +25,9 @@ pool.on('error', (err) => {
   process.exit(-1);
 });
 
+// --- Middleware ---
+app.use(express.json({ limit: '10mb' }));
+app.use(express.static(path.join(__dirname, 'public')));
 
 
 // --- Multer ---
@@ -2761,9 +2764,6 @@ app.put('/api/products/:id/variants', async (req, res) => {
   }
 });
 
-// --- Middleware ---
-app.use(express.json({ limit: '10mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
 
 // === СПЕЦИФИЧНЫЕ HTML маршруты ===
 // Отдаём product.html для маршрутов вида /product/:slug
