@@ -82,7 +82,7 @@ function generateSlug(title) {
 // Установка часового пояса (лучше делать на уровне ОС или БД, но можно и так)
 process.env.TZ = 'Europe/Moscow';
 
-const { generateProposalHTML } = require('js/proposalGenerator.js'); // Путь к файлу относительно server.js
+const { generateProposalHTML } = require('/js/proposalGenerator.js'); // Путь к файлу относительно server.js
 
 // === API: Получить товары (все поля) ===
 app.get('/api/products', async (req, res) => {
