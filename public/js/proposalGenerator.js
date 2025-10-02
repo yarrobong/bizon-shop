@@ -73,7 +73,7 @@ function generateProposalHTML(manager_name, manager_contact, customer_name, prop
                 font-family: 'Inter', sans-serif;
                 background-color: var(--bg-primary); /* Темный фон */
                 color: var(--text-secondary); /* Вторичный цвет текста */
-                line-height: 1.6;
+                
                 margin: 0;
                 padding: 20mm; /* Отступы для печати */
                 position: relative; /* Для позиционирования фона */
@@ -142,7 +142,7 @@ function generateProposalHTML(manager_name, manager_contact, customer_name, prop
 
             /* Стили для заголовка */
             .header {
-                text-align: center;
+                text-align: left;
                 margin-bottom: 20px;
                 padding-bottom: 15px;
                 border-bottom: 2px solid var(--accent-electric-blue); /* Акцентная граница */
@@ -152,7 +152,7 @@ function generateProposalHTML(manager_name, manager_contact, customer_name, prop
             .logo {
                 font-size: 28px;
                 font-weight: 700;
-                color: var(--accent-electric-blue); /* Акцентный цвет */
+                color: #ffffff
                 margin-bottom: 5px;
                 display: flex;
                 align-items: center;
@@ -160,7 +160,7 @@ function generateProposalHTML(manager_name, manager_contact, customer_name, prop
                 gap: 10px;
             }
             .logo-icon img {
-                height: 36px;
+                height: 50px;
                 width: auto;
             }
             .title {
