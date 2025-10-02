@@ -9,6 +9,10 @@ const { Pool } = require('pg');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+// --- Middleware ---
+app.use(express.json({ limit: '10mb' }));
+app.use(express.static(path.join(__dirname, 'public')));
+
 
 // --- Pool PostgreSQL ---
 const pool = new Pool({
@@ -25,9 +29,6 @@ pool.on('error', (err) => {
   process.exit(-1);
 });
 
-// --- Middleware ---
-app.use(express.json({ limit: '10mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
 
 
 // --- Multer ---
