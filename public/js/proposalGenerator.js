@@ -133,7 +133,7 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
                 font-family: 'Inter', sans-serif;
                 background-color: var(--bg-primary); /* Темный фон */
                 color: var(--text-secondary); /* Вторичный цвет текста */
-                line-height: 1.6;
+               
                 margin: 0;
                 padding: 20mm; /* Отступы для PDF */
                 position: relative; /* Для позиционирования фона */
@@ -143,24 +143,24 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
             }
 
             /* Фоновая сетка */
-            body::before {
-              content: "";
-              position: absolute;
-              top: 0;
-              left: 0;
-              width: 100%;
-              height: 100%;
-              background-image: radial-gradient(
-                circle at 5px 5px,
-                var(--accent-electric-blue) 1px,
-                transparent 1.5px
-              );
-              background-size: 50px 50px;
-              z-index: -3; /* Позади пульсов */
-              pointer-events: none;
-              opacity: 0.10;
-              background-blend-mode: screen;
-            }
+body::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(
+    circle at 2.5px 2.5px,      /* Позиция центра градиента (каждые 2.5px по x и y) */
+    var(--accent-electric-blue) 0.5px,  /* Радиус синего цвета - ОЧЕНЬ МАЛЕНЬКИЙ */
+    transparent 0.5px          /* Радиус прозрачной области начинается сразу после синего */
+  );
+  background-size: 25px 25px;  /* Расстояние между центрами точек - УМЕНЬШЕННО */
+  z-index: -3; /* Позади пульсов */
+  pointer-events: none;
+  opacity: 0.10;
+  background-blend-mode: screen;
+}
 
             /* Пульсы */
             .bg-overlay {
@@ -214,7 +214,7 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
             .logo {
                 font-size: 28px;
                 font-weight: 700;
-                color: var(--accent-electric-blue); /* Акцентный цвет */
+                color: #ffffff;
                 margin-bottom: 5px;
                 display: flex;
                 align-items: center;
