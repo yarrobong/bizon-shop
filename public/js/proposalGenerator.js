@@ -152,7 +152,7 @@ function generateProposalHTML(manager_name, manager_contact, customer_name, prop
             .logo {
                 font-size: 28px;
                 font-weight: 700;
-                color: #ffffff
+                color: #ffffff;
                 margin-bottom: 5px;
                 display: flex;
                 align-items: center;
@@ -273,15 +273,13 @@ function generateProposalHTML(manager_name, manager_contact, customer_name, prop
             @media print {
                 body {
                     padding: 10mm; /* Уменьшаем отступы при печати */
-                    background-color: white; /* Белый фон для печати */
-                    color: black; /* Черный текст для печати */
+                    
+                    
                 }
                 body::before {
                     display: none; /* Скрываем сетку при печати */
                 }
-                .bg-overlay {
-                    display: none; /* Скрываем пульсы при печати */
-                }
+                
                 .header, .proposal-text, .table-container, .total, .footer-note, .print-btn {
                     color: black; /* Текст становится черным */
                     border-color: black; /* Границы становятся черными */
