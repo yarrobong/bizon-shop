@@ -9,9 +9,13 @@ const { Pool } = require('pg');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
 // --- Middleware ---
+// Добавляем оба парсера: для JSON и для form-encoded данных
 app.use(express.json({ limit: '10mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.urlencoded({ extended: true, limit: '10mb' })); // <-- Добавьте ЭТУ строку
+
+app.use(express.static(path.join(__dirname, 'public'))); // <-- static остается в конце
 
 
 // --- Pool PostgreSQL ---
