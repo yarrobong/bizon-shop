@@ -118,7 +118,7 @@ async function loadProductForEdit(productId) {
                 categorySelect.value = product.category || '';
             }
 
-
+            document.getElementById('product-available').checked = product.available !== false;
 
             loadProductImagesToForm(product.images || []);
 
@@ -434,18 +434,19 @@ async function loadCategoriesForSelect() {
 
 // --- Работа с вариантами товаров ---
 
-async function loadAllProductsCache() {
+async function loadProducts() {
     try {
-        const response = await fetch('/api/products?admin=true');
+        console.log('Загрузка товаров...');
+        const response = await fetch('/api/products?admin=true&show_all=true'); // ← изменено
         if (!response.ok) {
-            console.warn('Не удалось загрузить полный список товаров для поиска вариантов.');
-            return;
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-        allProductsCache = await response.json();
+        const products = await response.json();
         
+        renderProducts(products);
     } catch (error) {
-        console.error('Ошибка при загрузке кэша товаров:', error);
-        allProductsCache = [];
+        console.error('Ошибка загрузки товаров:', error);
+        adminPanel.showMessage('Не удалось загрузить товары', 'error');
     }
 }
 
