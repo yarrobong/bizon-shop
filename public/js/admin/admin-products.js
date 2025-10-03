@@ -118,7 +118,7 @@ async function loadProductForEdit(productId) {
                 categorySelect.value = product.category || '';
             }
 
-            document.getElementById('product-available').checked = product.available !== false;
+
 
             loadProductImagesToForm(product.images || []);
 
