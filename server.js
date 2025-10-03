@@ -2743,7 +2743,21 @@ app.post('/generate_proposal_pdf', async (req, res) => {
 
         // Отправляем PDF пользователю
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="kommercheskoe_predlozhenie_${customer_name.replace(/\s+/g, '_')}.pdf"`); // Имя файла
+        // Санитизация имени клиента для безопасного имени файла
+function sanitizeFilename(name) {
+    return name
+        .replace(/\s+/g, '_')
+        .replace(/[^\w\u0400-\u04FF\u00C0-\u017F.-]/g, '_') // разрешаем латиницу, кириллицу, акценты — но потом уберём
+        .replace(/[^a-zA-Z0-9_.-]/g, '_') // оставляем ТОЛЬКО ASCII-безопасные символы
+        .replace(/_{2,}/g, '_')
+        .trim();
+}
+
+const safeCustomerName = sanitizeFilename(customer_name || 'client');
+const filename = `kommercheskoe_predlozhenie_${safeCustomerName}.pdf`;
+
+res.setHeader('Content-Type', 'application/pdf');
+res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
         res.send(pdfBuffer);
 
     } catch (error) {
