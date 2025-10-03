@@ -94,7 +94,22 @@ const { generateProposalHTML } = require('./public/js/proposalGenerator'); // П
 // === API: Получить товары (все поля) ===
 app.get('/api/products', async (req, res) => {
   try {
-    const result = await pool.query(`
+    const isAdmin = req.query.admin === 'true';
+    const showAll = req.query.show_all === 'true';
+
+    // Формируем условие в зависимости от параметров
+    let whereClause = '';
+    let queryParams = [];
+
+    if (isAdmin && showAll) {
+      // Показываем все товары (доступные и недоступные)
+      whereClause = '';
+    } else {
+      // Только доступные товары
+      whereClause = 'WHERE available = true';
+    }
+
+    const query = `
       SELECT
         id,
         title,
@@ -110,14 +125,15 @@ app.get('/api/products', async (req, res) => {
         supplier_notes,
         slug
       FROM products
-      WHERE available = true
+      ${whereClause}
       ORDER BY id
-    `);
+    `;
+
+    const result = await pool.query(query, queryParams);
 
     const products = result.rows.map(row => {
       let images = [];
       if (row.images_json) {
-        // Проверяем, строка ли это
         if (typeof row.images_json === 'string') {
           try {
             const parsed = JSON.parse(row.images_json);
@@ -127,10 +143,8 @@ app.get('/api/products', async (req, res) => {
             images = [];
           }
         } else if (Array.isArray(row.images_json)) {
-          // Если это массив
           images = row.images_json;
         } else if (typeof row.images_json === 'object') {
-          // Если это один объект, оборачиваем в массив
           images = [row.images_json];
         } else {
           images = [];
