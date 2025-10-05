@@ -432,6 +432,25 @@ async function loadCategoriesForSelect() {
     }
 }
 
+// --- Загрузка кэша всех товаров для поиска вариантов ---
+// Обратите внимание: используем show_all=true, чтобы получить все товары, включая недоступные
+async function loadAllProductsCache() {
+    try {
+        // Обновляем кэш, используя show_all=true
+        const response = await fetch('/api/products?admin=true&show_all=true');
+        if (!response.ok) {
+            console.warn('Не удалось загрузить полный список товаров для поиска вариантов.');
+            allProductsCache = []; // Очищаем кэш в случае ошибки
+            return;
+        }
+        allProductsCache = await response.json();
+        console.log(`Кэш товаров обновлён. Загружено ${allProductsCache.length} товаров.`);
+    } catch (error) {
+        console.error('Ошибка при загрузке кэша товаров:', error);
+        allProductsCache = []; // Очищаем кэш в случае ошибки
+    }
+}
+
 // --- Работа с вариантами товаров ---
 
 async function loadProducts() {
