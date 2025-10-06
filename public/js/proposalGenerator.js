@@ -110,6 +110,7 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
                     <img src="${item.product.imageBase64}" alt="${item.product.title}">
                 </td>
                 <td>${item.product.title}</td>
+                <td>${item.product.description || 'Описание отсутствует'}</td>
                 <td>${formatPrice(itemPrice)}</td>
                 <td>${itemQuantity}</td>
                 <td>${formatPrice(totalItemPrice)}</td>
@@ -235,8 +236,8 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
             /* Стили для таблицы и контейнера */
             .table-container {
                 background:  rgba(11, 11, 38, 0.35);
-                border-radius: 0.5rem;
-                padding: 1rem;
+                border-radius: 1rem; /* Круглые углы */
+                padding: 1.5rem;
                 margin-bottom: 20px;
                 overflow-x: auto;
                 position: relative; /* Для z-index */
@@ -244,29 +245,46 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
             }
             .table {
                 width: 100%;
-                border-collapse: collapse;
+                border-collapse: separate;
+                border-spacing: 0;
                 margin-bottom: 0;
             }
             .table th, .table td {
-                border: 1px solid rgba(255, 255, 255, 0.3); /* Светлая граница */
-                padding: 10px;
+                padding: 15px;
                 text-align: left;
                 color: var(--text-primary); /* Основной цвет текста */
             }
             .table th {
                 background-color: rgba(0, 229, 255, 0.2); /* Акцентный фон заголовков */
                 font-weight: 600;
+                border-radius: 0.5rem 0.5rem 0 0; /* Круглые верхние углы */
+            }
+            .table th:first-child {
+                border-top-left-radius: 0.5rem;
+            }
+            .table th:last-child {
+                border-top-right-radius: 0.5rem;
+            }
+            .table tr:last-child td:first-child {
+                border-bottom-left-radius: 0.5rem;
+            }
+            .table tr:last-child td:last-child {
+                border-bottom-right-radius: 0.5rem;
+            }
+            .table tr:not(:last-child) td {
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             }
             .image-cell {
                 text-align: center;
                 vertical-align: middle;
+                width: 120px; /* Фиксированная ширина для изображений */
             }
             .image-cell img {
-                max-width: 80px; /* Увеличенный размер изображения */
-                max-height: 80px; /* Увеличенный размер изображения */
-                object-fit: contain;
+                width: 100px; /* Увеличенный размер изображения */
+                height: 100px; /* Увеличенный размер изображения */
+                object-fit: contain; /* Сохраняем пропорции и заполняем все пространство */
                 border-radius: 0.25rem;
-                border: 1px solid rgba(255, 255, 255, 0.1); /* Легкая граница */
+                border: none; /* Убираем рамку */
             }
 
             /* Стили для итога */
@@ -336,6 +354,7 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
                     <tr>
                         <th>Изображение</th>
                         <th>Наименование</th>
+                        <th>Описание</th>
                         <th>Цена</th>
                         <th>Кол-во</th>
                         <th>Сумма</th>
