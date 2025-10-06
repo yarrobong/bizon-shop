@@ -11,7 +11,7 @@ let currentTag = 'все';
 // === Функции корзины ===
 
 function addToCart(product) {
-  console.log("state.js: Добавляем в корзину:", product.id, product.title); // <-- Новый лог
+
   const existing = cart.find(item => item.product.id === product.id);
   if (existing) {
     existing.qty += 1;
@@ -42,7 +42,7 @@ function updateQuantity(productId, delta) {
 
 // Сохранение в localStorage
 function saveCart() {
-  console.log("state.js: Сохраняем корзину в localStorage:", cart); // <-- Новый лог
+
   localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
   updateCartCount();
 }
