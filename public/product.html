@@ -104,7 +104,7 @@
     </div>
   </header>
   
-  <main role="main">
+    <main role="main">
     <!-- === СПЛЕШ-ЭКРАН (ЗАГРУЗКА) === -->
   <div id="loading-screen" class="loading-screen">
      <!-- Фоновая анимация -->
@@ -127,12 +127,7 @@
                 <img id="product-page-main-image" src="/assets/icons/placeholder1.webp" alt="Изображение товара" />
             </div>
             <div class="product-page-thumbnails" id="product-page-thumbnails" role="group" aria-label="Миниатюры изображений"></div>
-
-            <!-- Контейнер для вариантов -->
-            <div id="product-page-variants-container" class="product-variants-container">
-                <h4>Варианты:</h4>
-                <div id="product-page-variants" class="product-variants"></div>
-            </div>
+            <!-- УДАЛЕН БЛОК ВАРИАНТОВ ИЗ ЛЕВОЙ СЕКЦИИ -->
         </div>
 
         <!-- Секция информации -->
@@ -157,12 +152,11 @@
                 <p id="product-page-description-main" class="product-page-description">Описание товара</p> <!-- Будет заполнена -->
                 <div id="product-page-price" class="product-page-price">Цена</div> <!-- Будет заполнена -->
 
-                <!-- === ПЕРЕМЕЩЁННЫЙ КОНТЕЙНЕР ВАРИАНТОВ === -->
-                <div id="product-page-variants-container" class="product-variants-container">
+                <!-- КОНТЕЙНЕР ДЛЯ ВАРИАНТОВ БУДЕТ ДОБАВЛЕН СЮДА ТОЛЬКО ПРИ НАЛИЧИИ ВАРИАНТОВ ЧЕРЕЗ JS -->
+                <!-- <div id="product-page-variants-container" class="product-variants-container">
                     <h4>Варианты:</h4>
                     <div id="product-page-variants" class="product-variants"></div>
-                </div>
-                <!-- === /ПЕРЕМЕЩЁННЫЙ КОНТЕЙНЕР ВАРИАНТОВ === -->
+                </div> -->
 
             </div>
 
