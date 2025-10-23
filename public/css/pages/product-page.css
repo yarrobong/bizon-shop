@@ -230,7 +230,7 @@
     background-color: #28a745; /* Зеленый фон */
     color: white;              /* Белый текст */
     padding: 2px 8px;          /* Отступ: 2px сверху/снизу, 8px слева/справа */
-    border-radius: 8px;        /* Округленные края */
+    border-radius: 0.75rem;        /* Округленные края */
     display: inline-block;     /* Позволяет задать ширину/высоту, если нужно, и выравнивает по содержимому */
     font-size: 1.5rem;
     font-weight: bold;
