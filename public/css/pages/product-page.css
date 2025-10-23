@@ -195,7 +195,7 @@
 
 .product-page-description {
     margin-bottom: 1rem;
-    color: #ffffffff;
+    color: #CCCCCC;
     max-height: 200px; /* Ограничение высоты */
     overflow-y: auto; /* Прокрутка, если текст длиннее */
     padding-right: 8px; /* Место для полосы прокрутки */
