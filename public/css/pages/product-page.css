@@ -186,9 +186,44 @@
     margin-bottom: 0.5rem;
 }
 
+.product-page-brand {
+    font-size: 1.2rem;
+    color: #6c757d; /* Сероватый цвет */
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
 .product-page-description {
     margin-bottom: 1rem;
     color: #555;
+    max-height: 200px; /* Ограничение высоты */
+    overflow-y: auto; /* Прокрутка, если текст длиннее */
+    padding-right: 8px; /* Место для полосы прокрутки */
+    /* Дополнительно можно добавить стиль полосы прокрутки */
+}
+
+.product-page-description::-webkit-scrollbar {
+    width: 6px;
+}
+
+.product-page-description::-webkit-scrollbar-thumb {
+    background-color: #c0c0c0;
+    border-radius: 3px;
+}
+
+.product-page-description::-webkit-scrollbar-thumb:hover {
+    background-color: #a0a0a0;
+}
+
+/* ... (остальные стили без изменений) ... */
+
+.product-page-actions {
+    margin-top: 1rem; /* Уменьшено, если варианты ближе к описанию */
+    margin-bottom: 2rem; /* Отступ снизу */
+}
+
+#product-page-buy-now-btn {
+    margin-top: 10px;
 }
 
 .product-page-price {
@@ -205,9 +240,6 @@
     color: #dc3545;
 }
 
-.product-page-actions {
-    margin-top: 2rem;
-}
 
 #product-page-buy-now-btn {
     margin-top: 10px;
