@@ -214,13 +214,8 @@ function displayProductImages(baseProduct, imagesToDisplay) {
 
 // Функция для отображения вариантов на странице товара
 function renderVariantsOnPage(baseProduct) {
-    const variantsContainer = document.getElementById('product-page-variants-container');
-    const variantsList = document.getElementById('product-page-variants');
-
-    // Очищаем список
-    if (variantsList) {
-        variantsList.innerHTML = '';
-    }
+    const variantsContainer = document.getElementById('product-page-variants-container'); // Контейнер ВСЕГО блока "Варианты"
+    const variantsList = document.getElementById('product-page-variants'); // Контейнер СПИСКА вариантов
 
     // Проверяем, есть ли данные о вариантах
     const variants = baseProduct.variants || []; // Если variants undefined, используем пустой массив
@@ -228,65 +223,70 @@ function renderVariantsOnPage(baseProduct) {
     if (variants && Array.isArray(variants) && variants.length > 0) {
         console.log("Отображаем варианты на странице товара:", variants);
 
-        if (variantsContainer) {
-            // Показываем контейнер, если есть варианты
-            variantsContainer.style.removeProperty('display');
+        if (variantsList) {
+            variantsList.innerHTML = ''; // Очищаем список перед заполнением
+            variants.forEach(variant => {
+                // Защита от некорректных данных
+                if (!variant || typeof variant !== 'object' || !variant.id) {
+                    console.warn("Некорректные данные варианта, пропускаем:", variant);
+                    return; // continue в forEach
+                }
+                const variantBtn = document.createElement('button');
+                // --- Логика создания кнопки ---
+                let variantImageUrl = '/assets/placeholder.png';
+                if (variant.images && variant.images.length > 0 && variant.images[0].url) {
+                    variantImageUrl = variant.images[0].url.trim();
+                } else if (baseProduct.images && baseProduct.images.length > 0 && baseProduct.images[0].url) {
+                    variantImageUrl = baseProduct.images[0].url.trim();
+                }
+                const imgElement = document.createElement('img');
+                imgElement.src = variantImageUrl;
+                imgElement.alt = `Фото ${variant.title || `Товар ${variant.id}`}`;
+                imgElement.className = 'variant-thumbnail';
+                const textElement = document.createElement('span');
+                textElement.textContent = variant.title || `Товар ${variant.id}`;
+                variantBtn.appendChild(imgElement);
+                variantBtn.appendChild(textElement);
+                variantBtn.className = 'product-variant-btn';
+                variantBtn.dataset.variantId = variant.id;
+
+                // Проверим, является ли этот вариант текущим отображаемым
+                if (window.currentDisplayedVariant && window.currentDisplayedVariant.id == variant.id) {
+                     variantBtn.classList.add('selected');
+                }
+
+                // --- Конец логики создания кнопки ---
+                // Добавляем обработчик клика
+                variantBtn.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    console.log("Выбран вариант на странице:", variant.id, variant.title);
+                    // Выбираем этот вариант как отображаемый
+                    selectVariantOnPage(baseProduct, variant);
+                    // Обновляем подсветку кнопок
+                    document.querySelectorAll('.product-variant-btn').forEach(btn => {
+                        btn.classList.remove('selected');
+                    });
+                    event.currentTarget.classList.add('selected');
+                });
+                if (variantsList) {
+                    variantsList.appendChild(variantBtn);
+                }
+            });
         }
 
-        variants.forEach(variant => {
-            // Защита от некорректных данных
-            if (!variant || typeof variant !== 'object' || !variant.id) {
-                console.warn("Некорректные данные варианта, пропускаем:", variant);
-                return; // continue в forEach
-            }
-            const variantBtn = document.createElement('button');
-            // --- Логика создания кнопки ---
-            let variantImageUrl = '/assets/placeholder.png';
-            if (variant.images && variant.images.length > 0 && variant.images[0].url) {
-                variantImageUrl = variant.images[0].url.trim();
-            } else if (baseProduct.images && baseProduct.images.length > 0 && baseProduct.images[0].url) {
-                variantImageUrl = baseProduct.images[0].url.trim();
-            }
-            const imgElement = document.createElement('img');
-            imgElement.src = variantImageUrl;
-            imgElement.alt = `Фото ${variant.title || `Товар ${variant.id}`}`;
-            imgElement.className = 'variant-thumbnail';
-            const textElement = document.createElement('span');
-            textElement.textContent = variant.title || `Товар ${variant.id}`;
-            variantBtn.appendChild(imgElement);
-            variantBtn.appendChild(textElement);
-            variantBtn.className = 'product-variant-btn';
-            variantBtn.dataset.variantId = variant.id;
-
-            // Проверим, является ли этот вариант текущим отображаемым
-            if (window.currentDisplayedVariant && window.currentDisplayedVariant.id == variant.id) {
-                 variantBtn.classList.add('selected');
-            }
-
-            // --- Конец логики создания кнопки ---
-            // Добавляем обработчик клика
-            variantBtn.addEventListener('click', (event) => {
-                event.preventDefault();
-                console.log("Выбран вариант на странице:", variant.id, variant.title);
-                // Выбираем этот вариант как отображаемый
-                selectVariantOnPage(baseProduct, variant);
-                // Обновляем подсветку кнопок
-                document.querySelectorAll('.product-variant-btn').forEach(btn => {
-                    btn.classList.remove('selected');
-                });
-                event.currentTarget.classList.add('selected');
-            });
-            if (variantsList) {
-                variantsList.appendChild(variantBtn);
-            }
-        });
+        // --- НОВОЕ: Показываем КОНТЕЙНЕР ВСЕГО блока "Варианты" ---
+        if (variantsContainer) {
+            variantsContainer.style.display = 'block'; // Показываем контейнер
+        }
+        // ---
 
     } else {
         console.log("У товара нет вариантов.");
-        // Явно скрываем контейнер, если нет вариантов
+        // --- НОВОЕ: Скрываем КОНТЕЙНЕР ВСЕГО блока "Варианты", если нет вариантов ---
         if (variantsContainer) {
-             variantsContainer.style.display = 'none';
+             variantsContainer.style.display = 'none'; // Скрываем весь контейнер
         }
+        // ---
     }
 }
 
