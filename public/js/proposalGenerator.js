@@ -237,7 +237,6 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
             .table-container {
                 background:  rgba(11, 11, 38, 0.35);
                 border-radius: 1rem; /* Круглые углы */
-                
                 margin-bottom: 20px;
                 overflow-x: auto;
                 position: relative; /* Для z-index */
