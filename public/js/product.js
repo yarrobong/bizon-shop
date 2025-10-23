@@ -109,16 +109,24 @@ function displayProduct(product) {
         // Основная информация
         const titleElement = document.getElementById('product-page-title-main');
         const brandElement = document.getElementById('product-page-brand'); // НОВЫЙ элемент
+        const brandContainer = document.getElementById('product-page-brand-container'); // Контейнер для бренда (новый элемент в HTML)
         const descriptionElement = document.getElementById('product-page-description-main');
         const priceElement = document.getElementById('product-page-price');
         // const availabilityElement = document.getElementById('product-page-availability'); // Убираем, если не планируется отображать
 
         if (titleElement) titleElement.textContent = product.title;
-        // --- НОВОЕ: Отображение бренда ---
-        if (brandElement) {
-            brandElement.textContent = product.brand ? `Бренд: ${product.brand}` : 'Бренд не указан';
+
+        // --- НОВОЕ: Отображение/Скрытие бренда ---
+        if (brandElement && brandContainer) {
+            if (product.brand) {
+                brandElement.textContent = `Бренд: ${product.brand}`;
+                brandContainer.style.display = 'block'; // Показываем контейнер
+            } else {
+                brandContainer.style.display = 'none'; // Скрываем контейнер
+            }
         }
         // ---
+
         if (descriptionElement) descriptionElement.textContent = product.description || 'Описание отсутствует';
         if (priceElement) priceElement.textContent = formatPrice(product.price);
 
