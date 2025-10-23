@@ -234,7 +234,6 @@
     display: inline-block;     /* Позволяет задать ширину/высоту, если нужно, и выравнивает по содержимому */
     font-size: 1.25rem;
     font-weight: bold;
-    margin-bottom: 1rem;
     text-align: center;        /* Выравнивание текста по центру (по желанию) */
 }
 .product-page-availability.in-stock {
