@@ -232,7 +232,7 @@
     padding: 2px 8px;          /* Отступ: 2px сверху/снизу, 8px слева/справа */
     border-radius: 0.75rem;        /* Округленные края */
     display: inline-block;     /* Позволяет задать ширину/высоту, если нужно, и выравнивает по содержимому */
-    font-size: 1.5rem;
+    font-size: 1rem;
     font-weight: bold;
     margin-bottom: 1rem;
     text-align: center;        /* Выравнивание текста по центру (по желанию) */
