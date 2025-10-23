@@ -108,21 +108,27 @@ function displayProduct(product) {
 
         // Основная информация
         const titleElement = document.getElementById('product-page-title-main');
+        const brandElement = document.getElementById('product-page-brand'); // НОВЫЙ элемент
         const descriptionElement = document.getElementById('product-page-description-main');
         const priceElement = document.getElementById('product-page-price');
-        const availabilityElement = document.getElementById('product-page-availability');
+        // const availabilityElement = document.getElementById('product-page-availability'); // Убираем, если не планируется отображать
 
         if (titleElement) titleElement.textContent = product.title;
+        // --- НОВОЕ: Отображение бренда ---
+        if (brandElement) {
+            brandElement.textContent = product.brand ? `Бренд: ${product.brand}` : 'Бренд не указан';
+        }
+        // ---
         if (descriptionElement) descriptionElement.textContent = product.description || 'Описание отсутствует';
         if (priceElement) priceElement.textContent = formatPrice(product.price);
 
-        // Наличие
-        if (availabilityElement) {
-            const statusText = product.available !== false ? 'В наличии' : 'Нет в наличии';
-            const statusClass = product.available !== false ? 'in-stock' : 'out-of-stock';
-            availabilityElement.querySelector('span').textContent = statusText;
-            availabilityElement.className = `product-page-availability ${statusClass}`;
-        }
+        // // Наличие (убрано, если не нужно)
+        // if (availabilityElement) {
+        //     const statusText = product.available !== false ? 'В наличии' : 'Нет в наличии';
+        //     const statusClass = product.available !== false ? 'in-stock' : 'out-of-stock';
+        //     availabilityElement.querySelector('span').textContent = statusText;
+        //     availabilityElement.className = `product-page-availability ${statusClass}`;
+        // }
 
         // Изображения
         displayProductImages(product, product.images);
