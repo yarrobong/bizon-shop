@@ -127,6 +127,10 @@
 .product-page-left {
     flex: 1;
     min-width: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Центрируем содержимое по горизонтали */
+    gap: 1rem; /* Расстояние между основным фото и миниатюрами */
 }
 
 .product-page-right {
@@ -134,9 +138,16 @@
     min-width: 300px;
 }
 
+.product-page-image {
+    width: 100%;
+    max-width: 500px; /* Ограничиваем ширину контейнера основного фото */
+    /* Вы можете изменить max-width на нужный размер */
+}
+
 .product-page-image img {
     width: 100%;
-    height: auto;
+    height: 500px; /* Фиксируем высоту */
+    object-fit: cover; /* Объект заполняет область, сохраняя пропорции */
     display: block;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
@@ -146,7 +157,9 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    margin-top: 1rem;
+    justify-content: center; /* Центрируем миниатюры */
+    width: 100%;
+    max-width: 500px; /* Соответствует ширине основного фото */
 }
 
 .product-page-thumbnails .thumbnail {
