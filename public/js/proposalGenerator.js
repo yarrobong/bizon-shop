@@ -110,7 +110,7 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
                     <img src="${item.product.imageBase64}" alt="${item.product.title}">
                 </td>
                 <td>${item.product.title}</td>
-                <td>${item.product.description || 'Описание отсутствует'}</td>
+                
                 <td>${formatPrice(itemPrice)}</td>
                 <td>${itemQuantity}</td>
                 <td>${formatPrice(totalItemPrice)}</td>
@@ -340,7 +340,6 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
                     <tr>
                         <th>Изображение</th>
                         <th>Наименование</th>
-                        <th>Описание</th>
                         <th>Цена</th>
                         <th>Кол-во</th>
                         <th>Сумма</th>
