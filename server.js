@@ -2597,7 +2597,6 @@ app.get('/api/products_for_proposal', async (req, res) => {
       SELECT
         id,
         title,
-        description,
         price,
         tag,
         available,
