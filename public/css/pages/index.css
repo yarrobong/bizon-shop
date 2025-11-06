@@ -787,33 +787,3 @@ section { scroll-snap-align: start; } */
   gap: 10px;
   justify-content: flex-end;
 }
-
-.btn-primary,
-.btn-secondary {
-  padding: 8px 16px;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
-  border: none;
-  transition: background-color 0.2s ease;
-}
-
-.btn-primary {
-  background-color: #59DEFA;
-  color: #0b0b26;
-}
-
-.btn-primary:hover {
-  background-color: #4ad6f5;
-}
-
-.btn-secondary {
-  background-color: rgba(89, 222, 250, 0.1);
-  color: #59DEFA;
-  border: 1px solid rgba(89, 222, 250, 0.3);
-}
-
-.btn-secondary:hover {
-  background-color: rgba(89, 222, 250, 0.2);
-}
