@@ -702,7 +702,7 @@ main {
   justify-content: flex-end;
 }
 
-btn-primary,
+.btn-primary,
 .btn-secondary,
 .btn-outline {
   padding: 8px 16px;
