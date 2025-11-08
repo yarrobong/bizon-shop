@@ -5,6 +5,72 @@ main {
     position: relative;
     z-index: 10;
 }
+
+/* ==================== ПУЛЬСЫ ==================== */
+.bg-overlay {
+  position: absolute; /* Изменил с fixed на absolute */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -2; /* Поверх точек, позади контента */
+  overflow: hidden;
+}
+
+/* Пульсы — абсолютные, позиционируются относительно .bg-overlay */
+.pulse-1,
+.pulse-2,
+.pulse-3,
+.pulse-4,
+.pulse-5,
+.pulse-6 {
+  position: absolute;
+  width: 24rem;
+  height: 24rem;
+  border-radius: 9999px;
+  filter: blur(60px);
+  opacity: 0.6;
+  pointer-events: none;
+  animation: pulse 3s ease-in-out infinite;
+}
+
+.pulse-1 {
+  top: 0vh;
+  left: 70vw;
+  background: rgba(0, 4, 172, 0.9);
+}
+
+.pulse-2 {
+  top: 60vh;
+  right: 80vw;
+  background: rgba(0, 4, 172, 0.7);
+}
+
+.pulse-3 {
+  top: 160vh;
+  right: 10vw;
+  background: rgba(0, 4, 172, 0.7);
+}
+
+.pulse-4 {
+  top: 230vh;
+  right: 80vw;
+  background: rgba(0, 4, 172, 0.7);
+}
+
+.pulse-5 {
+  top: 300vh;
+  right: 0vw;
+  background: rgba(0, 4, 172, 0.7);
+}
+
+.pulse-6 {
+  top: 350vh;
+  right: 80vw;
+  background: rgba(0, 4, 172, 0.7);
+}
+
 /* === TAGS FILTER === */
 /* Стили по умолчанию (для десктопа и планшета) */
 .tags {
@@ -66,7 +132,7 @@ main {
         padding-left: 0.75rem;
         padding-right: 0.75rem;
         /* Верхние и нижние отступы остаются такими же, как в 768px */
-        padding-top: 2rem;
+        padding-top: 3.5rem;
         padding-bottom: 1.5rem;
         margin-top: 1.5rem;
         margin-bottom: 1.5rem;
