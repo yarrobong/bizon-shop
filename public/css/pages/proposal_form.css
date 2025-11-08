@@ -195,3 +195,60 @@ footer {
   color: var(--text-secondary);
   font-size: 0.9rem;
 }
+
+
+/* Стили для баннера cookie */
+.cookie-consent-banner {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 320px;
+  max-width: calc(100% - 40px);
+  background: rgba(11, 11, 38, 0.95);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 2px solid rgba(43, 83, 193, 0.7);
+  border-radius: 20px;
+  box-shadow:
+    0 0 10px rgba(43, 83, 193, 0.8),
+    0 0 25px rgba(43, 83, 193, 0.6),
+    0 0 50px rgba(43, 83, 193, 0.4);
+  padding: 20px;
+  z-index: 10000;
+  font-family: 'Inter', sans-serif;
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  transform: translateY(10px);
+  opacity: 0;
+  visibility: hidden;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+.cookie-consent-banner.visible {
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
+}
+
+.cookie-consent-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cookie-consent-text a {
+  color: #59DEFA;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.cookie-consent-text a:hover {
+  text-decoration: underline;
+}
+
+.cookie-consent-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
