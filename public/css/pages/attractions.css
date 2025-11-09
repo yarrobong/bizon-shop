@@ -84,13 +84,27 @@ main {
 
 /* Обертка для внутреннего содержимого */
 .attraction-card-content {
-  display: flex;
   flex-direction: column;
-  height: 100%;
-  padding: 1.5rem; /* Внутренние отступы */
-  color: white;
+  align-items: center; /* если нужно центрировать содержимое по горизонтали */
+  gap: 24px; /* как в feature-card, чтобы сохранить пропорции отступов */
+  /* Жидкое стекло — точно как в feature-card */
+  background: rgba(11, 11, 38, 0.35);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   
-  border: 2px solid rgba(43, 83, 193, 0.7);
+  border-radius: 20px; /* как в feature-card, вместо 1rem */
+  border: 2px solid rgba(43, 83, 193, 0.7); /* как в feature-card */
+
+  /* Неоновое свечение — идентичное feature-card */
+  box-shadow: 
+    0 0 10px rgba(43, 83, 193, 0.8),
+    0 0 25px rgba(43, 83, 193, 0.6),
+    0 0 50px rgba(43, 83, 193, 0.4);
+
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  height: 100%; /* сохранил, как было */
 }
 
 /* Стили для заголовка */
