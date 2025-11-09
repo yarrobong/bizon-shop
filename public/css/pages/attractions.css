@@ -70,6 +70,7 @@ main {
 
 /* === КАРТОЧКА ПРОДУКТА === */
 .attraction-card-content {
+  padding: 1rem;
     flex-direction: column;
     align-items: center;
     gap: 24px;
