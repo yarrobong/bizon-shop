@@ -89,7 +89,8 @@ main {
   height: 100%;
   padding: 1.5rem; /* Внутренние отступы */
   color: white;
-  /* Убираем прежние стили для .attraction-info */
+  
+  border: 2px solid rgba(43, 83, 193, 0.7);
 }
 
 /* Стили для заголовка */
