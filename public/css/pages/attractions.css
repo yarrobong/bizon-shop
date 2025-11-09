@@ -98,7 +98,8 @@ main {
     text-align: center; /* Центрируем заголовок */
     flex-grow: 0; /* Не растягиваем */
     
-    /* Ограничение по высоте (2 строки) */
+    /* Фиксированная высота под 2 строки */
+    height: calc(1.2em * 2); /* Высота = 2 строки */
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
