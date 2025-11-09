@@ -277,15 +277,7 @@ function createAttractionCard(attraction) {
         }
         setupGallery(card, imagesForThisCard);
 
-        // --- НОВОЕ: Обработчик кнопки "В корзину" ---
-        const addToCartBtn = card.querySelector('.btn-cart');
-        if (addToCartBtn) {
-          addToCartBtn.addEventListener('click', (event) => {
-            event.stopPropagation(); // Останавливаем всплытие, чтобы не сработал обработчик клика по карточке
-            addToCart(attractionData); // Добавляем аттракцион в корзину
-            updateCartCount(); // Обновляем счётчик
-          });
-        }
+        
       } else {
         console.error(`Аттракцион с ID ${attraction.id} не найден в данных ATTRACTIONS при настройке галереи.`);
       }
