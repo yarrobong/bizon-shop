@@ -1,113 +1,62 @@
-main {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0 1.5rem 5rem;
-    position: relative;
-    z-index: 10;
-}
-/* === TAGS FILTER === */
-/* Стили по умолчанию (для десктопа и планшета) */
-.tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    /* Устанавливаем отступы сверху и снизу, боковые отступы */
-    padding: 120px 1.5rem 1.5rem 1.5rem; /* Верх(60px) Право(1.5rem) Низ(1.5rem) Лево(1.5rem) */
-    
-    border-bottom: 3px solid var(--text-primary); /* Граница снизу белого цвета */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Гибкая сетка: минимум 300px, максимум 1fr */
+  gap: 2rem; /* Увеличенный отступ между карточками */
+  padding: 1.5rem;
+  /* Убираем max-width и margin: 0 auto, чтобы сетка растягивалась */
 }
 
-.tag-btn {
-    padding: 0.5rem 1.5rem;
-    border: 1px solid black; /* Граница черного цвета */
-    border-radius: 1rem; /* Скругление углов */
-    font-weight: 500; /* Средняя жирность шрифта */
-    cursor: pointer; /* Курсор указатель */
-    transition: all 0.2s ease; /* Плавный переход */
-    background: rgba(255, 255, 255, 0.1); /* Светлый полупрозрачный фон по умолчанию */
-    color: rgba(255, 255, 255, 0.7); /* Светло-серый цвет текста по умолчанию */
-}
-
-/* Стили для активной кнопки */
-.tag-btn.active {
-    background: rgba(0, 229, 255, 0.2); /* Полупрозрачный акцентный фон */
-    border-color: var(--accent); /* Цвет границы из переменной */
-    box-shadow: 0 6px 15px rgba(0, 229, 255, 0.4); /* Тень с акцентным цветом */
-    transform: translateY(-2px); /* Легкое приподнимание */
-    color: var(--text-primary); /* Белый цвет текста */
-}
-
-/* Стили при наведении на НЕактивную кнопку */
-.tag-btn:hover:not(.active) {
-    background: rgba(255, 255, 255, 0.2); /* Более насыщенный фон при наведении */
-    color: var(--text-primary); /* Белый цвет текста при наведении */
-}
-
-/* Адаптация для мобильных устройств */
-@media (max-width: 768px) { /* Используем 768px как точку перехода к мобильной версии */
-    .tags {
-        /* Убираем большие отступы сверху */
-        padding-top: 2.7rem; /* Оставляем небольшой внутренний отступ сверху */
-        margin-top: 1.5rem;   /* Оставляем небольшой внешний отступ сверху */
-        /* Сохраняем боковые и нижние отступы */
-        padding-left: 1.5rem;
-        padding-right: 1.5rem;
-        padding-bottom: 1.5rem;
-        margin-bottom: 1.5rem;
-        /* Сохраняем границу снизу */
-        border-bottom: 3px solid var(--text-primary);
-    }
-}
-
-/* Адаптация для очень маленьких экранов */
-@media (max-width: 360px) {
-    .tags {
-        /* Ещё больше уменьшаем боковые отступы */
-        padding-left: 0.75rem;
-        padding-right: 0.75rem;
-        /* Верхние и нижние отступы остаются такими же, как в 768px */
-        padding-top: 2rem;
-        padding-bottom: 1.5rem;
-        margin-top: 1.5rem;
-        margin-bottom: 1.5rem;
-    }
-}
-
-/* Медиа-запрос для планшетов (если нужно что-то специфичное, иначе можно удалить) */
-@media (min-width: 769px) and (max-width: 992px) {
-  .tags {
-    /* Если нужны специфические стили для планшетов, добавьте их здесь */
-    /* В противном случае, используются стили по умолчанию */
-  }
-}
-
-
-/* Обертка для внутреннего содержимого */
-.attraction-card-content {
+/* === Стили для карточки товара === */
+.attraction-card {
+  display: flex;
   flex-direction: column;
-  align-items: center; /* если нужно центрировать содержимое по горизонтали */
-  gap: 24px; /* как в feature-card, чтобы сохранить пропорции отступов */
-  /* Жидкое стекло — точно как в feature-card */
+  border-radius: 1.5rem; /* 24px */
   background: rgba(11, 11, 38, 0.35);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  
-  border-radius: 20px; /* как в feature-card, вместо 1rem */
-  border: 2px solid rgba(43, 83, 193, 0.7); /* как в feature-card */
-
-  /* Неоновое свечение — идентичное feature-card */
-  box-shadow: 
-    0 0 10px rgba(43, 83, 193, 0.8),
-    0 0 25px rgba(43, 83, 193, 0.6),
-    0 0 50px rgba(43, 83, 193, 0.4);
-
+  border: 2px solid rgba(0, 123, 255, 0.7); /* Синяя рамка */
+  margin: 30px 30px 30px 30px ; /* Отступы по краям */
+  box-shadow:
+    0 0 10px rgba(0, 123, 255, 0.8),
+    0 0 25px rgba(0, 123, 255, 0.6),
+    0 0 50px rgba(0, 123, 255, 0.4);
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-  height: 100%; /* сохранил, как было */
+  height: 100%; /* Занимает высоту сетки */
+  cursor: pointer; /* Курсор указывает, что карточку можно нажать */
+  padding: 1.5rem; /* Внутренние отступы */
+  color: white;
+  /* Убираем flex-shrink: 0, чтобы карточки нормально уменьшались */
 }
 
-/* Стили для заголовка */
+.attraction-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(0, 123, 255, 0.9);
+  box-shadow:
+    0 0 15px rgba(0, 123, 255, 1),
+    0 0 35px rgba(0, 123, 255, 0.8),
+    0 0 70px rgba(0, 123, 255, 0.6);
+}
+
+/* Добавляем градиентный оверлей как в примере */
+.attraction-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 1.5rem;
+  background: linear-gradient(135deg, rgba(0, 123, 255, 0.15), rgba(0, 0, 0, 0));
+  opacity: 0.6;
+  z-index: 0;
+}
+
+/* Убедимся, что внутреннее содержимое поверх оверлея */
+.attraction-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* === Стили для заголовка === */
 .attraction-title {
   font-size: 1.25rem; /* 20px */
   font-weight: bold;
@@ -115,21 +64,23 @@ main {
   line-height: 1.2;
   text-align: center; /* Центрируем заголовок */
   flex-grow: 0; /* Не растягиваем */
+  /* Убираем display: flex и justify-content */
 }
 
-/* Стили для контейнера изображения */
+/* === Стили для контейнера изображения === */
 .attraction-image-container {
   width: 100%;
   height: 200px; /* Установите желаемую высоту */
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 0.5rem 0; /* Отступы сверху и снизу */
+  margin: 0.5rem 0 1.5rem 0; /* Отступы сверху и снизу */
   flex-grow: 1; /* Растягиваем, чтобы занять доступное пространство */
   min-height: 0; /* Позволяет дочернему элементу сжиматься */
+  /* Убираем border-radius, если не нужно внутреннее */
 }
 
-/* Стили для изображения */
+/* === Стили для изображения === */
 .attraction-image {
   width: 100%;
   height: 100%;
@@ -137,28 +88,30 @@ main {
   border-radius: 0.5rem; /* Небольшое скругление */
   max-width: 100%;
   max-height: 100%;
+  /* Убираем margin: auto */
 }
 
-/* Стили для цены */
+/* === Стили для цены === */
 .attraction-price {
   font-size: 1.5rem; /* 24px */
   font-weight: bold;
   color: #ffffff;
-  margin: 1rem 0; /* Отступы сверху и снизу */
+  margin: 0 0 1.5rem 0; /* Отступы сверху и снизу */
   text-align: center; /* Центрируем цену */
   flex-grow: 0; /* Не растягиваем */
 }
 
-/* Стили для блока кнопок */
+/* === Стили для блока кнопок === */
 .product-actions {
   display: flex;
   gap: 0.75rem; /* Отступы между кнопками */
-  margin-top: auto; /* Прижимаем к низу карточки */
+  /* margin-top: auto; Прижимаем к низу карточки */
   flex-shrink: 0; /* Предотвращаем сжатие */
   justify-content: center; /* Центрируем кнопки */
+  margin-top: 1rem; /* Отступ сверху от цены */
 }
 
-/* Стили для кнопок */
+/* === Стили для кнопок === */
 .btn-details,
 .btn-cart {
   flex: 1; /* Кнопки занимают равное пространство */
@@ -169,652 +122,78 @@ main {
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: center;
+  font-family: 'Inter', sans-serif; /* Применяем шрифт из примера */
 }
 
 .btn-details {
   background: rgba(255, 255, 255, 0.1);
   color: white;
+  border: 2px solid rgba(59, 130, 246, 0.7); /* Стиль border как у btn-secondary */
 }
 
 .btn-details:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(59, 130, 246, 0.15); /* Стиль hover как у btn-secondary */
+  border-color: #60a5fa; /* Стиль hover как у btn-secondary */
+  transform: translateY(-3px); /* Стиль hover как у btn-secondary */
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); /* Стиль hover как у btn-primary */
 }
 
 .btn-cart {
-  background: linear-gradient(90deg, #0062ffff, #0409AC);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); /* Градиент как у btn-primary */
   color: white;
 }
 
 .btn-cart:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(0, 98, 255, 0.3);
+  transform: translateY(-3px); /* Стиль hover как у btn-primary */
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); /* Стиль hover как у btn-primary */
 }
 
-
-.attraction-image {
-  width: 35%; /* Занимает половину ширины */
-  height: 100%;
-  position: relative;
-  overflow: hidden;
-  border-right: 2px solid rgba(0, 123, 255, 0.3); /* Разделительная линия */
-}
-
-.attraction-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* Изображение заполняет контейнер */
-}
-
-.attraction-info {
-  width: 65%; /* Занимает вторую половину */
-  padding: 1.5rem; /* Внутренние отступы */
-  display: flex;
-  flex-direction: column;
-  color: white;
-  height: 100%; /* Занимаем всю высоту */
-}
-
-.attraction-title {
-  font-size: 1.25rem; /* 20px */
-  font-weight: bold;
-  margin: 0 0 0.5rem 0; /* Отступ только снизу */
-  line-height: 1.2;
-}
-
-.attraction-price {
-  font-size: 1.5rem; /* 24px */
-  font-weight: bold;
-  color: #ffffff;
-  margin: 0 0 0.25rem 0; /* Отступ только снизу */
-}
-.attraction-stock {
-  font-size: 0.9rem;
-  color: #a0aec0; /* Серый цвет для остатка */
-  margin: 0 0 0.75rem 0; /* Отступ только снизу */
-}
-
-/* Контейнер для спецификаций и описания будет занимать оставшееся пространство */
-.attraction-info > div:not(.attraction-title):not(.attraction-price):not(.attraction-stock):not(.product-actions) {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden; /* Скрываем переполнение */
-}
-
-.attraction-specs {
-  display: grid;
-  grid-template-columns: 1fr; /* Одна колонка */
-  gap: 0.5rem; /* Отступы между строками */
-  font-size: 0.9rem; /* Меньший шрифт */
-  background: rgba(255, 255, 255, 0.05); /* Слегка светлый фон */
-  padding: 0.75rem;
-  border-radius: 0.5rem; /* Скругление углов */
-}
-
-.spec-item {
-  display: flex;
-  justify-content: space-between;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Тонкая линия снизу */
-  padding: 0.25rem 0;
-}
-
-.spec-label {
-  font-weight: 500;
-  color: #ffffff;
-}
-
-.spec-value {
-  color: #007bff; /* Синий цвет для значений */
-}
-
-.attraction-description {
-  font-size: 0.9rem;
-  line-height: 1.4;
-  color: rgba(255, 255, 255, 0.8);
-  margin-top: 20px;
-  /* overflow: hidden; - если нужно ограничить высоту */
-  /* display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; - для ограничения строк */
-}
-
-/* Стили для блока спецификаций в модальном окне */
-.attraction-specs-details {
-  display: grid;
-  grid-template-columns: 1fr 1fr; /* Две колонки в модалке */
-  gap: 0.75rem;
-  margin-top: 1rem;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 0.75rem;
-  font-size: 0.95rem;
-}
-
-.attraction-specs-details .spec-item {
-  display: flex;
-  flex-direction: column;
-  border-bottom: none; /* Убираем линию */
-  padding: 0;
-  gap: 0.25rem;
-}
-
-.attraction-specs-details .spec-label {
-  font-weight: 600;
-  color: #a0aec0; /* Серый цвет для меток */
-  font-size: 0.85rem;
-}
-
-.attraction-specs-details .spec-value {
-  color: #ffffff;
-  font-weight: 500;
-}
-
-.product-actions {
-  display: flex;
-  gap: 0.75rem; /* Отступы между кнопками */
-  margin-top: 1rem; /* Отступ сверху */
-  flex-shrink: 0; /* Предотвращаем сжатие */
-}
-
-.btn-details,
-.btn-cart {
-  flex: 1; /* Кнопки занимают равное пространство */
-  padding: 0.75rem;
-  border: none;
-  border-radius: 0.75rem; /* 12px */
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: center;
-}
-
-.btn-details {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-}
-
-.btn-details:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.btn-cart {
-  background: linear-gradient(90deg, #0062ffff, #0409AC);
-  color: white;
-}
-
-.btn-cart:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(0, 98, 255, 0.3);
-}
-
-.specs-section {
-    display: flex;
-    flex-direction: column;
-
-    padding: 15px 0; /* Отступы сверху и снизу секции */
-}
-
-.specs-section h3 {
-    margin: 0 0 10px 0; /* Отступ только снизу у заголовка */
-}
-
-.specs-section label {
-    display: block;
-    margin-bottom: 5px; /* Небольшой отступ между лейблом и инпутом */
-    font-weight: bold; /* Сделать лейблы более заметными */
-}
-
-.specs-section input {
-    width: 100%; /* Инпуты занимают всю ширину контейнера */
-    padding: 8px 12px; /* Внутренние отступы */
-    border: 1px solid #ddd; /* Граница */
-    border-radius: 4px; /* Скругленные углы */
-    box-sizing: border-box; /* Ширина включает padding и border */
-}
-
-.specs-section input:focus {
-    outline: none;
-    border-color: #007bff; /* Цвет границы при фокусе */
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25); /* Тень при фокусе */
-}
-
-.drop-hint {
-    text-align: center;
-    color: #666;
-    padding: 20px;
-    display: none;
-}
-
-.drop-hint.show {
-    display: block;
-}
-
-.products-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 столбца */
-  gap: 1.5rem; /* Отступы между карточками */
-  padding: 1.5rem;
-}
-
-/* Адаптивность для карточек */
+/* === Адаптивность === */
 @media (max-width: 768px) {
   .products-grid {
-    grid-template-columns: repeat(2, 1fr); /* 2 столбца на планшетах */
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* На планшетах чуть меньше */
     gap: 1.5rem;
-    padding: 1.5rem;
-  }
-
- 
-
-  .attraction-card {
-    flex-direction: column; /* На мобильных карточка становится колонкой */
-  }
-
-  .attraction-image {
-    width: 100%;
-    height: 200px; /* Фиксированная высота изображения */
-    border-right: none; /* Убираем правую границу */
-    border-bottom: 2px solid rgba(0, 123, 255, 0.3); /* Добавляем нижнюю */
-  }
-
-  .attraction-info {
-    width: 100%;
     padding: 1rem;
   }
-
-  .attraction-specs-details {
-    grid-template-columns: 1fr; /* Одна колонка на мобильных */
+  .attraction-card {
+    margin: 20px 20px 20px 20px ; /* Меньше отступов */
+    padding: 1.25rem; /* Меньше внутренних отступов */
+  }
+  .attraction-title {
+    font-size: 1.1rem; /* Меньше шрифт */
+  }
+  .attraction-price {
+    font-size: 1.25rem; /* Меньше шрифт */
+  }
+  .attraction-image-container {
+    height: 180px; /* Меньше высота */
   }
 }
 
 @media (max-width: 480px) {
   .products-grid {
-     grid-template-columns: 1fr; /* 1 столбец на мобильных */
+    grid-template-columns: 1fr; /* 1 столбец на мобильных */
     gap: 1rem;
-    padding: 1rem;
-  }
-
-  .attraction-info {
     padding: 0.75rem;
   }
-
+  .attraction-card {
+    margin: 15px 15px 15px 15px ; /* Ещё меньше отступов */
+    padding: 1rem;
+  }
   .attraction-title {
+    font-size: 1rem;
+  }
+  .attraction-price {
     font-size: 1.1rem;
   }
-
-  .attraction-price {
-    font-size: 1.25rem;
+  .attraction-image-container {
+    height: 150px; /* Ещё меньше высота */
   }
-
   .product-actions {
     flex-direction: column; /* Кнопки друг под другом */
     gap: 0.5rem;
   }
-
   .btn-details, .btn-cart {
     width: 100%;
   }
-}
-
-/* --- Стили для детального просмотра аттракциона --- */
-
-.attraction-detail {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    padding: 20px;
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.attraction-back-btn {
-    align-self: flex-start;
-    background-color: #f0f0f0;
-    color: #333;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.3s ease;
-}
-
-.attraction-back-btn:hover {
-    background-color: #e0e0e0;
-}
-
-.attraction-detail-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-
-.attraction-detail-title {
-    margin: 0;
-    font-size: 2rem;
-    font-weight: 700;
-    color: #222;
-}
-
-.attraction-detail-price {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #28a745; /* Зеленый цвет цены */
-    white-space: nowrap;
-}
-
-.attraction-detail-content {
-    display: flex;
-    flex-direction: column;
-    gap: 30px;
-    max-width: 600px;
-    margin-top: 50px; /* Или любое другое значение, например 30px, 40px */
-    /* ------------------------ */
-    
-    position: relative; 
-}
-/* --- Галерея изображений внутри карточки --- */
-
-/* Контейнер галереи внутри карточки */
-.attraction-card .attraction-gallery {
-    position: relative;
-    width: 35%; /* Занимает ту же ширину, что и старый .attraction-image */
-    height: 100%;
-    /* Убираем стандартные margin/padding, так как они заданы родителем */
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    border-right: 2px solid rgba(0, 123, 255, 0.3); /* Разделительная линия, как у старого .attraction-image */
-    border-radius: 1rem 0 0 1rem; /* Скругляем только левую часть */
-    flex-direction: column;
-    /* position: relative; и z-index: 1; уже наследуются от .attraction-card > * */
-}
-
-/* Контейнер для главного изображения */
-.attraction-card .attraction-main-image-container {
-    position: relative;
-    width: 100%;
-    /* Используем viewport height для высоты, чтобы изображение было видно */
-    /* 40vh - это пример, можно подобрать */
-    height: 45vh;
-    min-height: 200px; /* Минимальная высота для очень маленьких экранов */
-    overflow: hidden;
-    /* border-radius переносится сюда */
-    border-radius: 1rem 0 0 1rem;
-    
-}
-
-/* Главное изображение */
-.attraction-card .attraction-main-image {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain; /* Изображение заполняет контейнер, обрезая края. Можете изменить на 'contain' если нужно показывать всё изображение. */
-    transition: opacity 0.3s ease;
-    /* z-index: 1; уже наследуется */
-}
-
-/* Стрелки навигации внутри карточки */
-.attraction-card .attraction-gallery-nav {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background-color: rgba(0, 0, 0, 0.5);
-    color: white;
-    border: none;
-    padding: 10px 12px; /* Сlightly smaller padding for cards */
-    cursor: pointer;
-    font-size: 18px; /* Или меньше, например, 16px */
-    /* border-radius убираем, пусть квадратные */
-    z-index: 2;
-    transition: background-color 0.3s ease, opacity 0.3s ease;
-    opacity: 0; /* Скрываем по умолчанию */
-}
-
-/* Показываем стрелки при наведении на галерею */
-.attraction-card .attraction-gallery:hover .attraction-gallery-nav {
-    opacity: 1;
-}
-
-.attraction-card .attraction-gallery-nav:hover {
-    background-color: rgba(0, 0, 0, 0.8);
-}
-
-.attraction-card .attraction-gallery-nav.prev {
-    left: 10px; /* Отступ от края */
-}
-
-.attraction-card .attraction-gallery-nav.next {
-    right: 10px; /* Отступ от края */
-}
-
-/* Миниатюры внутри карточки */
-.attraction-card .attraction-thumbnails {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px; /* Меньше отступ между миниатюрами */
-    padding: 10px 5px; /* Внутренний отступ сверху/снизу и по краям */
-   
-    /* border-radius переносится сюда */
-    border-radius: 0 0 0 1rem;
-    flex-wrap: nowrap; /* Предотвращаем перенос на маленьких экранах, если возможно */
-    overflow-x: auto; /* Горизонтальная прокрутка, если миниатюр много */
-    scrollbar-width: thin; /* Тонкая полоса прокрутки для Firefox */
-    scrollbar-color: rgba(0, 123, 255, 0.5) transparent; /* Цвет полосы прокрутки для Firefox */
-}
-
-/* Стили для полосы прокрутки в Webkit (Chrome, Safari) */
-.attraction-card .attraction-thumbnails::-webkit-scrollbar {
-    height: 6px; /* Высота горизонтальной полосы */
-}
-
-.attraction-card .attraction-thumbnails::-webkit-scrollbar-track {
-    background: transparent; /* Фон трека */
-}
-
-.attraction-card .attraction-thumbnails::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 123, 255, 0.5); /* Цвет "бегунка" */
-    border-radius: 3px; /* Скругление бегунка */
-}
-
-.attraction-card .attraction-thumbnail {
-    width: 50px; /* Ширина миниатюры */
-    height: 40px; /* Высота миниатюры */
-    object-fit: cover; /* Миниатюры также покрывают контейнер */
-    border: 2px solid transparent;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: border-color 0.3s ease, transform 0.2s ease;
-    flex-shrink: 0; /* Предотвращаем сжатие миниатюр */
-}
-
-.attraction-card .attraction-thumbnail:hover {
-    transform: scale(1.1); /* Немного увеличиваем при наведении */
-}
-
-.attraction-card .attraction-thumbnail.active {
-    border-color: #007bff; /* Цвет активной миниатюры */
-}
-
-/* Опционально: стилизация для недоступных аттракционов в админке */
-#admin-attractions-grid .product-card.unavailable {
-    opacity: 0.7;
-    border: 2px dashed #ccc;
-}
-#admin-attractions-grid .product-card.unavailable::after {
-    content: "Недоступен";
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    background-color: #ffc107;
-    color: #000;
-    padding: 2px 5px;
-    font-size: 0.8em;
-    border-radius: 3px;
-}
-/* Убедитесь, что .product-card имеет position: relative; если используете ::after */
-#admin-attractions-grid .product-card {
-    position: relative; /* Нужно для позиционирования ::after */
-}
-
-/* Адаптивность для карточек с галереей */
-@media (max-width: 768px) {
-    /* На мобильных карточка становится колонкой */
-    .attraction-card {
-        flex-direction: column;
-    }
-
-    /* Галерея растягивается на всю ширину */
-    .attraction-card .attraction-gallery {
-        width: 100%;
-        height: auto; /* Высота определяется контентом */
-        border-right: none; /* Убираем правую границу */
-        border-bottom: 2px solid rgba(0, 123, 255, 0.3); /* Добавляем нижнюю границу */
-        border-radius: 1rem 1rem 0 0; /* Скругляем верх */
-    }
-
-    /* Контейнер изображения на мобильных */
-    .attraction-card .attraction-main-image-container {
-        height: 30vh; /* Меньше высота на мобильных */
-        min-height: 150px;
-        border-radius: 1rem 1rem 0 0; /* Скругляем верх */
-    }
-
-    /* Миниатюры на мобильных */
-    .attraction-card .attraction-thumbnails {
-        border-radius: 0 0 1rem 1rem; /* Скругляем низ */
-        /* justify-content: flex-start; */ /* Если хотите выравнивание по левому краю */
-    }
-
-    /* Информационная часть растягивается на всю ширину */
-    .attraction-card .attraction-info {
-        width: 100%;
-        padding: 1rem;
-    }
-
-    /* Скрываем стрелки на мобильных, так как есть миниатюры */
-    .attraction-card .attraction-gallery-nav {
-        display: none;
-    }
-}
-
-@media (max-width: 480px) {
-    .attraction-card .attraction-info {
-        padding: 0.75rem;
-    }
-
-    .attraction-card .attraction-main-image-container {
-        height: 25vh;
-        min-height: 120px;
-    }
-
-    .attraction-card .attraction-thumbnail {
-        width: 40px; /* Ещё меньше миниатюры */
-        height: 30px;
-    }
-}
-
-
-/* Стили для баннера cookie */
-.cookie-consent-banner {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 320px;
-  max-width: calc(100% - 40px);
-  background: rgba(11, 11, 38, 0.95);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 2px solid rgba(43, 83, 193, 0.7);
-  border-radius: 20px;
-  box-shadow:
-    0 0 10px rgba(43, 83, 193, 0.8),
-    0 0 25px rgba(43, 83, 193, 0.6),
-    0 0 50px rgba(43, 83, 193, 0.4);
-  padding: 20px;
-  z-index: 10000;
-  font-family: 'Inter', sans-serif;
-  color: #e2e8f0;
-  font-size: 0.85rem;
-  line-height: 1.5;
-  transform: translateY(10px);
-  opacity: 0;
-  visibility: hidden;
-  transition: transform 0.4s ease, opacity 0.4s ease;
-}
-
-.cookie-consent-banner.visible {
-  transform: translateY(0);
-  opacity: 1;
-  visibility: visible;
-}
-
-.cookie-consent-content {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.cookie-consent-text a {
-  color: #59DEFA;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.cookie-consent-text a:hover {
-  text-decoration: underline;
-}
-
-.cookie-consent-buttons {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
-
-.btn-primary,
-.btn-secondary,
-.btn-outline {
-  padding: 8px 16px;
-  font-weight: 500;
-  font-size: 0.85rem;
-  border-radius: 12px;
-  text-decoration: none;
-  display: inline-block;
-  transition: background-color 0.2s ease;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  z-index: 1;
-  border: none;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: white;
-  
-}
-
-.btn-primary:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
-}
-
-.btn-secondary {
-  background: transparent;
-  color: white;
-  border: 2px solid #3b82f6;
-  
-}
-
-.btn-secondary:hover {
-  background: rgba(59, 130, 246, 0.15);
-  border-color: #60a5fa;
-  transform: translateY(-3px);
 }
