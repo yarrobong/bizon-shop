@@ -196,7 +196,7 @@ main {
   height: 100%;
   position: relative;
   overflow: hidden;
-  border-right: 2px solid rgba(0, 123, 255, 0.3); /* Разделительная линия */
+ 
 }
 
 .attraction-image img {
