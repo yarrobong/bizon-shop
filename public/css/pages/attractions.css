@@ -81,48 +81,100 @@ main {
   }
 }
 
-.attraction-card {
+
+/* Обертка для внутреннего содержимого */
+.attraction-card-content {
   display: flex;
-  flex-direction: row;
-  border-radius: 1rem; /* 16px */
-  background: rgba(11, 11, 38, 0.35);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 2px solid rgba(0, 123, 255, 0.7); /* Синяя рамка */
-  margin: 30px 30px 30px 30px ;
-  box-shadow:
-    0 0 10px rgba(0, 123, 255, 0.8),
-    0 0 25px rgba(0, 123, 255, 0.6),
-    0 0 50px rgba(0, 123, 255, 0.4);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
+  flex-direction: column;
   height: 100%;
+  padding: 1.5rem; /* Внутренние отступы */
+  color: white;
+  /* Убираем прежние стили для .attraction-info */
 }
 
-.attraction-card:hover {
-  transform: translateY(-6px);
-  border-color: rgba(0, 123, 255, 0.9);
-  box-shadow:
-    0 0 15px rgba(0, 123, 255, 1),
-    0 0 35px rgba(0, 123, 255, 0.8),
-    0 0 70px rgba(0, 123, 255, 0.6);
+/* Стили для заголовка */
+.attraction-title {
+  font-size: 1.25rem; /* 20px */
+  font-weight: bold;
+  margin: 0 0 1rem 0; /* Отступ только снизу */
+  line-height: 1.2;
+  text-align: center; /* Центрируем заголовок */
+  flex-grow: 0; /* Не растягиваем */
 }
 
-.attraction-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 1rem;
-  background: linear-gradient(135deg, rgba(0, 123, 255, 0.15), rgba(0, 0, 0, 0));
-  opacity: 0.6;
-  z-index: 0;
+/* Стили для контейнера изображения */
+.attraction-image-container {
+  width: 100%;
+  height: 200px; /* Установите желаемую высоту */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0.5rem 0; /* Отступы сверху и снизу */
+  flex-grow: 1; /* Растягиваем, чтобы занять доступное пространство */
+  min-height: 0; /* Позволяет дочернему элементу сжиматься */
 }
 
-.attraction-card > * {
-  position: relative;
-  z-index: 1;
+/* Стили для изображения */
+.attraction-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Изображение помещается внутрь, сохраняя пропорции */
+  border-radius: 0.5rem; /* Небольшое скругление */
+  max-width: 100%;
+  max-height: 100%;
 }
+
+/* Стили для цены */
+.attraction-price {
+  font-size: 1.5rem; /* 24px */
+  font-weight: bold;
+  color: #ffffff;
+  margin: 1rem 0; /* Отступы сверху и снизу */
+  text-align: center; /* Центрируем цену */
+  flex-grow: 0; /* Не растягиваем */
+}
+
+/* Стили для блока кнопок */
+.product-actions {
+  display: flex;
+  gap: 0.75rem; /* Отступы между кнопками */
+  margin-top: auto; /* Прижимаем к низу карточки */
+  flex-shrink: 0; /* Предотвращаем сжатие */
+  justify-content: center; /* Центрируем кнопки */
+}
+
+/* Стили для кнопок */
+.btn-details,
+.btn-cart {
+  flex: 1; /* Кнопки занимают равное пространство */
+  padding: 0.75rem;
+  border: none;
+  border-radius: 0.75rem; /* 12px */
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.btn-details {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.btn-details:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.btn-cart {
+  background: linear-gradient(90deg, #0062ffff, #0409AC);
+  color: white;
+}
+
+.btn-cart:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 98, 255, 0.3);
+}
+
 
 .attraction-image {
   width: 35%; /* Занимает половину ширины */

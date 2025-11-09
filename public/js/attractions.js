@@ -88,85 +88,74 @@
   
 
   // --- Функция для создания карточки аттракциона с галереей ---
-  function createAttractionCard(attraction) {
-    // Извлекаем спецификации из объекта
-    const specs = attraction.specs || {};
-    const places = specs.places || 'N/A';
-    const power = specs.power || 'N/A';
-    const games = specs.games || 'N/A';
-    const area = specs.area || 'N/A';
-    const dimensions = specs.dimensions || 'N/A';
-
-    // Обработка изображений: используем массив images, если он есть и не пуст, иначе fallback на поле image
-    let imagesArray = [];
-    if (attraction.images && Array.isArray(attraction.images) && attraction.images.length > 0) {
-        imagesArray = attraction.images;
-    } else if (attraction.image) {
-        // Для обратной совместимости со старым форматом
-        imagesArray = [{ url: attraction.image, alt: attraction.title || 'Изображение' }];
-    } else {
-        // Заглушка, если изображений нет совсем
-        imagesArray = [{ url: '/assets/icons/placeholder1.webp', alt: 'Нет изображения' }];
-    }
-
-    const card = document.createElement('div');
-    card.className = 'attraction-card';
-    // Уникальный ID для контейнеров галереи этой карточки
-    const galleryId = `gallery-${attraction.id}`;
-    const mainImageId = `main-image-${attraction.id}`;
-    const thumbnailsId = `thumbnails-${attraction.id}`;
-
-    card.innerHTML = `
-      <div class="attraction-gallery" id="${galleryId}" data-attraction-id="${attraction.id}">
-        <div class="attraction-main-image-container">
-            <img id="${mainImageId}" class="attraction-main-image" src="${imagesArray[0].url}" onerror="this.onerror=null; this.src='/assets/icons/placeholder1.webp';" alt="${imagesArray[0].alt || attraction.title}" />
-            ${imagesArray.length > 1 ? `
-            <button class="attraction-gallery-nav prev" aria-label="Предыдущее изображение">&#10094;</button>
-            <button class="attraction-gallery-nav next" aria-label="Следующее изображение">&#10095;</button>
-            ` : ''}
-        </div>
-        ${imagesArray.length > 1 ? `
-        <div class="attraction-thumbnails" id="${thumbnailsId}">
-            ${imagesArray.map((img, index) => `
-                <img class="attraction-thumbnail ${index === 0 ? 'active' : ''}" 
-                     src="${img.url}" 
-                     alt="Миниатюра ${index + 1} для ${attraction.title}" 
-                     data-index="${index}"
-                     onerror="this.onerror=null; this.src='/assets/icons/placeholder1.webp';"/>
-            `).join('')}
-        </div>
-        ` : ''}
-      </div>
-      <div class="attraction-info">
-        <h3 class="attraction-title">${attraction.title}</h3>
-        <div class="attraction-price">${window.formatPrice ? window.formatPrice(attraction.price) : `${attraction.price}₽`}</div>
-    
-        <div class="attraction-specs">
-          <div class="spec-item">
-            <span class="spec-label">Мест:</span> <span class="spec-value">${places}</span>
-          </div>
-          <div class="spec-item">
-            <span class="spec-label">Мощность:</span> <span class="spec-value">${power}</span>
-          </div>
-          <div class="spec-item">
-            <span class="spec-label">Игры:</span> <span class="spec-value">${games}</span>
-          </div>
-          <div class="spec-item">
-            <span class="spec-label">Площадь:</span> <span class="spec-value">${area}</span>
-          </div>
-          <div class="spec-item">
-            <span class="spec-label">Размеры:</span> <span class="spec-value">${dimensions}</span>
-          </div>
-        </div>
-        <div class="attraction-description">${attraction.description ? (attraction.description) : ''}</div>
-        <!-- Кнопка перемещена вниз -->
-        <div class="product-actions">
-          <button class="btn-cart" data-id="${attraction.id}">В корзину</button>
-        </div>
-      </div>
-    `;
-    return card;
+  // --- Функция для создания карточки аттракциона ---
+function createAttractionCard(attraction) {
+  // Обработка изображений: используем массив images, если он есть и не пуст, иначе fallback на поле image
+  let imagesArray = [];
+  if (attraction.images && Array.isArray(attraction.images) && attraction.images.length > 0) {
+      imagesArray = attraction.images;
+  } else if (attraction.image) {
+      // Для обратной совместимости со старым форматом
+      imagesArray = [{ url: attraction.image, alt: attraction.title || 'Изображение' }];
+  } else {
+      // Заглушка, если изображений нет совсем
+      imagesArray = [{ url: '/assets/icons/placeholder1.webp', alt: 'Нет изображения' }];
   }
+
+  const card = document.createElement('div');
+  card.className = 'attraction-card'; // Убедитесь, что класс остался тем же
+  card.dataset.id = attraction.id; // Добавляем ID аттракциона как data-атрибут для обработчика
+
+  card.innerHTML = `
+    <div class="attraction-card-content"> <!-- Обертка для внутреннего содержимого -->
+      <h3 class="attraction-title">${attraction.title}</h3>
+      <div class="attraction-image-container">
+        <img class="attraction-image" src="${imagesArray[0].url}" onerror="this.onerror=null; this.src='/assets/icons/placeholder1.webp';" alt="${imagesArray[0].alt || attraction.title}" />
+      </div>
+      <div class="attraction-price">${window.formatPrice ? window.formatPrice(attraction.price) : `${attraction.price}₽`}</div>
+      <div class="product-actions">
+        <button class="btn-details" data-id="${attraction.id}">Подробнее</button>
+        <button class="btn-cart" data-id="${attraction.id}">В корзину</button>
+      </div>
+    </div>
+  `;
+
+  // --- НОВОЕ: Обработчик клика по всей карточке ---
+  card.addEventListener('click', (event) => {
+    // Проверяем, не был ли клик по кнопке "В корзину" или "Подробнее"
+    // Если был клик по кнопке, событие всплывет до карточки, но мы его проигнорируем
+    // потому что обработчики для кнопок будут добавлены отдельно и остановят всплытие
+    // или будут выполнены первыми. Проверим тут, если клик НЕ по кнопке, то переходим.
+    if (!event.target.classList.contains('btn-cart') && !event.target.classList.contains('btn-details')) {
+      // Переход на страницу товара. Здесь нужно указать путь к детальной странице.
+      // Предположим, что путь /product/:id
+      window.location.href = `/product/${attraction.id}`; // ЗАМЕНИТЕ НА ВАШ ФАКТИЧЕСКИЙ ПУТЬ
+    }
+  });
+
+  // --- НОВОЕ: Обработчик кнопки "В корзину" ---
+  const addToCartBtn = card.querySelector('.btn-cart');
+  if (addToCartBtn) {
+    addToCartBtn.addEventListener('click', (event) => {
+      event.stopPropagation(); // Останавливаем всплытие, чтобы не сработал обработчик клика по карточке
+      addToCart(attraction); // Добавляем аттракцион в корзину
+      updateCartCount(); // Обновляем счётчик
+    });
+  }
+
+  // --- НОВОЕ: Обработчик кнопки "Подробнее" ---
+  const detailsBtn = card.querySelector('.btn-details');
+  if (detailsBtn) {
+    detailsBtn.addEventListener('click', (event) => {
+      event.stopPropagation(); // Останавливаем всплытие
+      // Переход на страницу товара. Здесь нужно указать путь к детальной странице.
+      // Предположим, что путь /product/:id
+      window.location.href = `/product/${attraction.id}`; // ЗАМЕНИТЕ НА ВАШ ФАКТИЧЕСКИЙ ПУТЬ
+    });
+  }
+
+  return card;
+}
 
   // --- Функция для настройки галереи конкретной карточки ---
   function setupGallery(cardElement, imagesArray) {
@@ -386,113 +375,9 @@
     return scrollbarWidth;
   }
 
-  // --- Modals (только корзина) ---
-  // Открытие модального окна корзины
-  function openCartModal() {
-    // Сохраняем текущую позицию прокрутки
-    const scrollY = window.scrollY || window.pageYOffset;
-    document.body.setAttribute('data-scroll-position', scrollY);
-    // Блокируем скролл, но сохраняем позицию
-    document.body.classList.add('modal-open');
-    document.body.style.setProperty('--scrollbar-width', getScrollbarWidth() + 'px');
-    document.body.style.top = `-${scrollY}px`;
-    if (cartItems) {
-      const cart = getCart();
-      if (cart.length === 0) {
-        cartItems.innerHTML = '<div class="empty">Ваша корзина пуста</div>';
-      } else {
-        cartItems.innerHTML = '';
-        let total = 0;
-        cart.forEach(item => {
-          // Обеспечиваем наличие изображения в данных корзины
-          const imageUrl = item.product.image || 
-                           (item.product.images && item.product.images[0] ? item.product.images[0].url : '/assets/icons/placeholder1.webp') ||
-                           '/assets/icons/placeholder1.webp';
-          const row = document.createElement('div');
-          row.className = 'cart-item';
-          row.innerHTML = `
-            <img src="${imageUrl}" alt="" onerror="this.onerror=null; this.src='/assets/icons/placeholder1.webp';"/>
-            <div class="cart-item-info">
-              <div class="cart-item-title">${item.product.title}</div>
-              <div class="cart-item-price">${formatPrice(item.product.price)}</div>
-              <div class="cart-quantity">
-                <button class="qty-minus" data-id="${item.product.id}">−</button>
-                <span>${item.qty}</span>
-                <button class="qty-plus" data-id="${item.product.id}">+</button>
-              </div>
-            </div>
-            <div class="cart-item-total">${formatPrice(item.product.price * item.qty)}</div>
-          `;
-          cartItems.appendChild(row);
-          total += item.product.price * item.qty;
-        });
-        const totalRow = document.createElement('div');
-        totalRow.className = 'total-row';
-        totalRow.innerHTML = `<span>Итого:</span><span>${formatPrice(total)}</span>`;
-        cartItems.appendChild(totalRow);
-        // Обработчики изменения количества
-        document.querySelectorAll('.qty-minus').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const id = parseInt(btn.dataset.id);
-            updateQuantity(id, -1); // Исправлен вызов
-            openCartModal();
-          });
-        });
-        document.querySelectorAll('.qty-plus').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const id = parseInt(btn.dataset.id);
-            updateQuantity(id, 1); // Исправлен вызов
-            openCartModal();
-          });
-        });
-      }
-    }
-    // Проверяем, что jQuery и maskedinput доступны, и элемент существует
-    if (typeof $ !== 'undefined' && $.fn.mask && phoneInput) {
-      // Сначала удаляем любую существующую маску, чтобы избежать конфликтов
-      $(phoneInput).unmask();
-      // Применяем маску
-      $(phoneInput).mask("+7 (999) 999-99-99", { placeholder: "+7 (___) ___-__-__" });
-    } else {
-      console.warn("jQuery, maskedinput или элемент #phone не найдены. Маска не применена.");
-      if (phoneInput) {
-         phoneInput.removeEventListener('input', sanitizePhoneInput);
-         phoneInput.addEventListener('input', sanitizePhoneInput);
-      }
-    }
-    updateSendOrderButton();
-    cartModal.setAttribute('aria-hidden', 'false');
-    cartModal.setAttribute('tabindex', '-1');
-    cartModal.classList.add('open');
-    setTimeout(() => {
-      const phoneInputToFocus = document.getElementById('phone');
-      if (phoneInputToFocus && typeof phoneInputToFocus.focus === 'function') {
-        phoneInputToFocus.focus();
-      } else {
-        const closeButton = cartModal.querySelector('.modal-close');
-        if (closeButton && typeof closeButton.focus === 'function') {
-          closeButton.focus();
-        } else {
-          cartModal.setAttribute('tabindex', '-1');
-          cartModal.focus();
-        }
-      }
-    }, 0);
-    if (typeof $ !== 'undefined' && $.fn.mask && phoneInput) {
-      $(phoneInput).unmask();
-      $(phoneInput).mask("+7 (999) 999-99-99", { placeholder: "+7 (___) ___-__-__" });
-    } else {
-      console.warn("jQuery, maskedinput или элемент #phone не найдены. Маска не применена.");
-      if (phoneInput) {
-         phoneInput.removeEventListener('input', sanitizePhoneInput);
-         phoneInput.addEventListener('input', sanitizePhoneInput);
-      }
-    }
-  }
+  
 
-  function sanitizePhoneInput(event) {
-    event.target.value = event.target.value.replace(/[^0-9+]/g, '');
-  }
+  
 
   function updateSendOrderButton() {
     if (!sendOrderBtn) return;
