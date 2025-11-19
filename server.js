@@ -1043,13 +1043,13 @@ app.get('/api/attractions', async (req, res) => {
         // Получаем только доступные аттракционы
         const attractionsQuery = `
             SELECT
-                id, title, price, category, image_url AS image, description, -- available не нужен для публичного API
-                specs_places AS "specs.places", specs_power AS "specs.power",
-                specs_games AS "specs.games", specs_area AS "specs.area",
-                specs_dimensions AS "specs.dimensions"
-            FROM attractions
-            WHERE available = true -- <-- Фильтр по доступности
-            ORDER BY id ASC;
+        id, title, price, category, image_url AS image, description, available, slug, -- <-- Добавлен slug
+        specs_places AS "specs.places", specs_power AS "specs.power",
+        specs_games AS "specs.games", specs_area AS "specs.area",
+        specs_dimensions AS "specs.dimensions"
+    FROM attractions
+    WHERE available = true
+    ORDER BY id ASC;
         `;
         const attractionsResult = await pool.query(attractionsQuery);
         
@@ -1107,7 +1107,8 @@ app.get('/api/attractions', async (req, res) => {
                     games: row["specs.games"] || null,
                     area: row["specs.area"] || null,
                     dimensions: row["specs.dimensions"] || null
-                }
+                },
+                slug: row.slug
             };
         });
 
@@ -1339,6 +1340,92 @@ app.get('/api/attractions/:id', async (req, res) => {
         res.json(attraction);
     } catch (err) {
         console.error(`❌ Ошибка при получении аттракциона с ID ${id} из БД:`, err);
+        res.status(500).json({ error: 'Не удалось загрузить аттракцион', details: err.message });
+    }
+});
+
+// --- API endpoint для получения аттракциона по SLUG (с изображениями и видео) ---
+app.get('/api/attractions/slug/:slug', async (req, res) => {
+    const { slug } = req.params;
+    console.log(`Получение аттракциона по slug: ${slug} из БД...`);
+    try {
+        const attractionSlug = slug; // Используем slug напрямую
+        if (!attractionSlug) {
+            return res.status(400).json({ error: 'Slug аттракциона не указан' });
+        }
+
+        // Получаем основные данные аттракциона по slug
+        const attractionQuery = `
+            SELECT
+                id, title, price, category, image_url AS image, description, available,
+                specs_places AS "specs.places", specs_power AS "specs.power",
+                specs_games AS "specs.games", specs_area AS "specs.area",
+                specs_dimensions AS "specs.dimensions"
+            FROM attractions
+            WHERE slug = $1; -- Ищем по slug
+        `;
+        const attractionResult = await pool.query(attractionQuery, [attractionSlug]);
+        if (attractionResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Аттракцион не найден' });
+        }
+        const row = attractionResult.rows[0];
+
+        // Получаем изображения для этого аттракциона
+        const imagesQuery = `
+            SELECT url, alt, sort_order
+            FROM attraction_images
+            WHERE attraction_id = $1
+            ORDER BY sort_order ASC;
+        `;
+        const imagesResult = await pool.query(imagesQuery, [row.id]);
+        let imagesArray = imagesResult.rows.map(img => ({
+            url: img.url,
+            alt: img.alt || ''
+        }));
+
+        // Для обратной совместимости: если массив пуст, используем старое поле image
+        if (imagesArray.length === 0 && row.image) {
+             imagesArray.push({ url: row.image, alt: row.title || 'Изображение' });
+        }
+
+        // --- НОВОЕ: Получаем видео для этого аттракциона ---
+        const videosQuery = `
+            SELECT url, alt, sort_order, is_primary
+            FROM attraction_videos
+            WHERE attraction_id = $1
+            ORDER BY sort_order ASC;
+        `;
+        const videosResult = await pool.query(videosQuery, [row.id]);
+        let videosArray = videosResult.rows.map(vid => ({
+            url: vid.url,
+            alt: vid.alt || '',
+            sort_order: vid.sort_order,
+            is_primary: vid.is_primary
+        }));
+
+        const attraction = {
+            id: row.id,
+            title: row.title,
+            price: parseFloat(row.price),
+            category: row.category,
+            available: row.available !== false, // Учитываем доступность
+            // image: row.image, // Можно убрать, если фронтенд полностью перешел на images
+            images: imagesArray, // Массив изображений
+            videos: videosArray, // Массив видео
+            description: row.description,
+            specs: {
+                places: row["specs.places"] || null,
+                power: row["specs.power"] || null,
+                games: row["specs.games"] || null,
+                area: row["specs.area"] || null,
+                dimensions: row["specs.dimensions"] || null
+            }
+        };
+
+        console.log(`✅ Успешно получен аттракцион с slug ${slug} из БД`);
+        res.json(attraction);
+    } catch (err) {
+        console.error(`❌ Ошибка при получении аттракциона по slug ${slug} из БД:`, err);
         res.status(500).json({ error: 'Не удалось загрузить аттракцион', details: err.message });
     }
 });
@@ -2784,7 +2871,11 @@ res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
 app.get('/product/:slug', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'product.html'));
 });
-
+// --- НОВОЕ: Отдаём product.html для маршрутов вида /attraction/:slug ---
+app.get('/attraction/:slug', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'product.html')); // Используем тот же HTML
+});
+// --- /НОВОЕ ---
 
 // --- КАСТОМНЫЕ МАРШРУТЫ ДЛЯ HTML СТРАНИЦ ---
 // Универсальный маршрут для отдачи .html страниц (например, /catalog -> public/catalog.html)

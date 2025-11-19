@@ -129,7 +129,7 @@ function createAttractionCard(attraction) {
     if (!event.target.classList.contains('btn-cart') && !event.target.classList.contains('btn-details')) {
       // Переход на страницу товара. Здесь нужно указать путь к детальной странице.
       // Предположим, что путь /product/:id
-      window.location.href = `/product/${attraction.id}`; // ЗАМЕНИТЕ НА ВАШ ФАКТИЧЕСКИЙ ПУТЬ
+      window.location.href =  `/attraction/${attraction.slug}`; // ИСПОЛЬЗУЕМ SLUG
     }
   });
 
