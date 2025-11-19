@@ -970,7 +970,7 @@ app.get('/api/attractions/public', async (req, res) => {
         // Получаем основные данные аттракционов
         const attractionsQuery = `
             SELECT
-                id, title, price, category, image_url AS image, description, available, -- <-- Добавлен available
+                id, title, price, category, image_url AS image, description, available, slug, -- <-- Добавлен slug
                 specs_places AS "specs.places", specs_power AS "specs.power",
                 specs_games AS "specs.games", specs_area AS "specs.area",
                 specs_dimensions AS "specs.dimensions"
@@ -1024,7 +1024,8 @@ app.get('/api/attractions/public', async (req, res) => {
                     games: row["specs.games"] || null,
                     area: row["specs.area"] || null,
                     dimensions: row["specs.dimensions"] || null
-                }
+                },
+                slug: row.slug // <-- Добавлен slug
             };
         });
 
@@ -1043,13 +1044,13 @@ app.get('/api/attractions', async (req, res) => {
         // Получаем только доступные аттракционы
         const attractionsQuery = `
             SELECT
-        id, title, price, category, image_url AS image, description, available, slug, -- <-- Добавлен slug
-        specs_places AS "specs.places", specs_power AS "specs.power",
-        specs_games AS "specs.games", specs_area AS "specs.area",
-        specs_dimensions AS "specs.dimensions"
-    FROM attractions
-    WHERE available = true
-    ORDER BY id ASC;
+                id, title, price, category, image_url AS image, description, slug, -- <-- Добавлен slug
+                specs_places AS "specs.places", specs_power AS "specs.power",
+                specs_games AS "specs.games", specs_area AS "specs.area",
+                specs_dimensions AS "specs.dimensions"
+            FROM attractions
+            WHERE available = true -- <-- Фильтр по доступности
+            ORDER BY id ASC;
         `;
         const attractionsResult = await pool.query(attractionsQuery);
         
@@ -1108,7 +1109,7 @@ app.get('/api/attractions', async (req, res) => {
                     area: row["specs.area"] || null,
                     dimensions: row["specs.dimensions"] || null
                 },
-                slug: row.slug
+                slug: row.slug // <-- Добавлен slug
             };
         });
 
