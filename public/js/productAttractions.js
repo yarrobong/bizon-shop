@@ -31,7 +31,11 @@ document.addEventListener('DOMContentLoaded', async function () {
         } catch (error) {
             console.error('Ошибка загрузки данных аттракциона:', error);
             document.querySelector('.product-page-container').innerHTML = `<p>${error.message}</p>`;
-            document.getElementById('loading-screen').style.display = 'none';
+            // Убедимся, что сплеш-скрин скрыт даже при ошибке
+            const loadingScreen = document.getElementById('loading-screen');
+            if (loadingScreen) {
+                loadingScreen.style.display = 'none';
+            }
             return;
         }
     } else if (pathSegments.length >= 2 && pathSegments[0] === 'product') {
@@ -40,21 +44,36 @@ document.addEventListener('DOMContentLoaded', async function () {
         // Пока что просто покажем ошибку, если /product/:slug не реализован
         console.warn('Страница /product/:slug не реализована в этом примере.');
         document.querySelector('.product-page-container').innerHTML = '<p>Страница товара не найдена.</p>';
-        document.getElementById('loading-screen').style.display = 'none';
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+            loadingScreen.style.display = 'none';
+        }
         return;
     } else {
         // Неверный путь
         console.error('Неверный путь для страницы товара/аттракциона');
         document.querySelector('.product-page-container').innerHTML = '<p>Неверный путь.</p>';
-        document.getElementById('loading-screen').style.display = 'none';
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+            loadingScreen.style.display = 'none';
+        }
         return;
     }
 
     if (!itemData) {
         console.error('Данные аттракциона не были загружены');
         document.querySelector('.product-page-container').innerHTML = '<p>Ошибка загрузки данных.</p>';
-        document.getElementById('loading-screen').style.display = 'none';
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+            loadingScreen.style.display = 'none';
+        }
         return;
+    }
+
+    // --- СКРЫВАЕМ СПЛЕШ-СКРИН ---
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) {
+        loadingScreen.style.display = 'none';
     }
 
     // --- Заполнение страницы информацией об аттракционе ---
@@ -100,6 +119,8 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (mediaElement) {
             mainImageContainer.appendChild(mediaElement);
         }
+    } else {
+         console.error('❌ Контейнер .product-page-image не найден в DOM');
     }
 
     // --- НОВОЕ: Отображение миниатюр (изображений и видео) ---
@@ -160,18 +181,19 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
 
         // Добавляем обработчик кликов по миниатюрам
+        // ВАЖНО: используем делегирование событий
         thumbnailsContainer.addEventListener('click', (e) => {
-            const thumb = e.target.closest('.product-page-thumbnail');
-            if (!thumb) return;
+            const clickedThumb = e.target.closest('.product-page-thumbnail');
+            if (!clickedThumb) return;
 
-            const index = parseInt(thumb.querySelector('img').dataset.index);
-            const type = thumb.querySelector('img').dataset.type;
-            const src = thumb.querySelector('img').dataset.src;
-            const isVideo = thumb.querySelector('img').dataset.isVideo === "true";
+            const index = parseInt(clickedThumb.querySelector('img').dataset.index);
+            const type = clickedThumb.querySelector('img').dataset.type;
+            const src = clickedThumb.querySelector('img').dataset.src;
+            const isVideo = clickedThumb.querySelector('img').dataset.isVideo === "true";
 
             // Обновляем активную миниатюру
             thumbnailsContainer.querySelectorAll('.product-page-thumbnail').forEach(t => t.classList.remove('active'));
-            thumb.classList.add('active');
+            clickedThumb.classList.add('active');
 
             // Обновляем главное окно (изображение или видео)
             const mainImageContainer = document.querySelector('.product-page-image');
@@ -204,6 +226,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                 mainImageContainer.appendChild(newMediaElement);
             }
         });
+    } else {
+        console.warn('⚠️ Контейнер #product-page-thumbnails не найден в DOM. Галерея не будет отображена.');
     }
 
 
@@ -223,7 +247,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     const ogTitle = document.getElementById('product-og-title');
     if (ogTitle) ogTitle.setAttribute('content', itemData.title || 'BIZON - Аттракцион');
     const ogDescription = document.getElementById('product-og-description');
-    if (ogDescription) ogDescription.setAttribute('content', itemData.description || 'Информация об аттракционе на BIZON.');
+    if (ogDescription) ogDescription.setAttribute('content', itemData.description || 'Информация об аттракциона на BIZON.');
     const ogImage = document.getElementById('product-og-image');
     if (ogImage) ogImage.setAttribute('content', (itemData.images && itemData.images[0].url) || '/assets/icons/placeholder1.webp');
     const ogUrl = document.querySelector('meta[property="og:url"]');
@@ -250,7 +274,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         brandElement.style.display = 'none'; // Скрываем, если нет бренда
     }
 
-    // Навигационная цочка (Breadcrumb)
+    // Навигационная цепочка (Breadcrumb)
     const breadcrumbCategory = document.getElementById('breadcrumb-category');
     if (breadcrumbCategory && breadcrumbCategory.querySelector('a')) {
         const categoryLink = breadcrumbCategory.querySelector('a');
@@ -277,8 +301,14 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         if (specsList.children.length > 0) {
             specsContainer.appendChild(specsList);
-            // Вставляем перед кнопками действий или описанием
-            infoSection.insertBefore(specsContainer, document.querySelector('.product-page-actions') || null);
+            // Вставляем перед кнопками действий или в конец секции info
+            const referenceElement = document.querySelector('.product-page-actions'); // Элемент, перед которым вставить
+            // Проверяем, существует ли referenceElement и является ли он потомком infoSection
+            if (referenceElement && infoSection.contains(referenceElement)) {
+                 infoSection.insertBefore(specsContainer, referenceElement); // Вставляем перед кнопками
+            } else {
+                 infoSection.appendChild(specsContainer); // Вставляем в конец, если кнопки не найдены или не в нужном месте
+            }
         }
     }
 
