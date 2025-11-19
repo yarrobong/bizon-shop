@@ -85,6 +85,16 @@ function generateSlug(title) {
       .replace(/^-+|-+$/g, '')
   );
 }
+function generateAttractionSlug(title) {
+  return encodeURIComponent( // Или без encodeURIComponent, если храните без кодирования
+    title
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '') // Убираем спецсимволы
+      .replace(/[\s_-]+/g, '-') // Заменяем пробелы/подчёркивания/дефисы на один дефис
+      .replace(/^-+|-+$/g, '')  // Убираем дефисы в начале и конце
+  );
+}
 
 // Установка часового пояса (лучше делать на уровне ОС или БД, но можно и так)
 process.env.TZ = 'Europe/Moscow';
@@ -1350,12 +1360,15 @@ app.get('/api/attractions/slug/:slug', async (req, res) => {
     const { slug } = req.params;
     console.log(`Получение аттракциона по slug: ${slug} из БД...`);
     try {
-        const attractionSlug = slug; // Используем slug напрямую
-        if (!attractionSlug) {
+        // Декодируем slug, так как он может быть закодирован в URL (например, %20 -> пробел)
+        const decodedSlug = decodeURIComponent(slug);
+        console.log(`Декодированный slug: ${decodedSlug}`);
+
+        if (!decodedSlug) {
             return res.status(400).json({ error: 'Slug аттракциона не указан' });
         }
 
-        // Получаем основные данные аттракциона по slug
+        // Получаем основные данные аттракциона по декодированному slug
         const attractionQuery = `
             SELECT
                 id, title, price, category, image_url AS image, description, available,
@@ -1363,10 +1376,11 @@ app.get('/api/attractions/slug/:slug', async (req, res) => {
                 specs_games AS "specs.games", specs_area AS "specs.area",
                 specs_dimensions AS "specs.dimensions"
             FROM attractions
-            WHERE slug = $1; -- Ищем по slug
+            WHERE slug = $1; -- Ищем по декодированному slug
         `;
-        const attractionResult = await pool.query(attractionQuery, [attractionSlug]);
+        const attractionResult = await pool.query(attractionQuery, [decodedSlug]);
         if (attractionResult.rows.length === 0) {
+            console.log(`❌ Аттракцион с slug '${decodedSlug}' не найден в БД`);
             return res.status(404).json({ error: 'Аттракцион не найден' });
         }
         const row = attractionResult.rows[0];
@@ -1420,10 +1434,11 @@ app.get('/api/attractions/slug/:slug', async (req, res) => {
                 games: row["specs.games"] || null,
                 area: row["specs.area"] || null,
                 dimensions: row["specs.dimensions"] || null
-            }
+            },
+            slug: row.slug // Включаем slug в ответ
         };
 
-        console.log(`✅ Успешно получен аттракцион с slug ${slug} из БД`);
+        console.log(`✅ Успешно получен аттракцион с slug ${decodedSlug} из БД`);
         res.json(attraction);
     } catch (err) {
         console.error(`❌ Ошибка при получении аттракциона по slug ${slug} из БД:`, err);
@@ -2872,10 +2887,12 @@ res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
 app.get('/product/:slug', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'product.html'));
 });
-// --- НОВОЕ: Отдаём product.html для маршрутов вида /attraction/:slug ---
+
 app.get('/attraction/:slug', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'product.html')); // Используем тот же HTML
 });
+// --- НОВОЕ: Отдаём product.html для маршрутов вида /attraction/:slug ---
+
 // --- /НОВОЕ ---
 
 // --- КАСТОМНЫЕ МАРШРУТЫ ДЛЯ HTML СТРАНИЦ ---
