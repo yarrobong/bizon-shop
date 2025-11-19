@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="product-page-title">Товар - BIZON</title> <!-- Будет изменен динамически -->
+  <meta name="description" id="product-page-description" content="Подробная информация о товаре."> <!-- Будет изменен динамически -->
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="product">
+  <meta property="og:title" id="product-og-title" content="Товар - BIZON"> <!-- Будет изменен -->
+  <meta property="og:description" id="product-og-description" content="Подробная информация о товаре."> <!-- Будет изменен -->
+  <meta property="og:image" id="product-og-image" content="/assets/icons/placeholder1.webp"> <!-- Будет изменен -->
+  <meta property="og:url" content=""> <!-- Будет изменен динамически -->
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+
+  <link rel="icon" type="image/png" href="/assets/icons/favicon/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/favicon/favicon.svg" />
+  <link rel="shortcut icon" href="/assets/icons/favicon/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/favicon/apple-touch-icon.png" />
+  <link rel="manifest" href="/assets/icons/favicon/site.webmanifest" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js" type="text/javascript"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery.maskedinput@1.4.1/src/jquery.maskedinput.js" type="text/javascript"></script>
+
+  <!-- Общие стили -->
+  <link rel="stylesheet" href="/css/layout/header.css">
+  <link rel="stylesheet" href="/css/components/background.css">
+  <!-- Стили для карточки товара, модальных окон и корзины могут понадобиться, если они используют общие классы -->
+  <link rel="stylesheet" href="/css/components/product-card.css">
+  <link rel="stylesheet" href="/css/components/modal.css">
+
+  <!-- Специфичные стили для страницы товара (если потребуются) -->
+  <link rel="stylesheet" href="/css/pages/product-page.css"> <!-- Создадим позже -->
+
+  
+
+  
+</head>
+<body>
+   
+
+  <!-- Фоновая анимация -->
+  <div class="bg-overlay" aria-hidden="true">
+    <div class="pulse-1"></div>
+    <div class="pulse-2"></div>
+    <div class="pulse-3"></div>
+    <div class="pulse-4"></div>
+    <div class="pulse-5"></div>
+    <div class="pulse-6"></div>
+  </div>
+
+
+  <!-- Шапка -->
+  <header class="header" role="banner">
+    <a href="/" class="logo">
+      <div class="logo-icon">
+        <picture>
+          <img src="/assets/logo/logo-Photoroom.webp" alt="BIZON">
+        </picture>
+      </div>
+      <div class="logo-title">BIZON</div>
+    </a>
+
+    <nav class="main-nav" id="mainNav" role="navigation" aria-label="Основная навигация">
+      <ul class="nav-list">
+        <li><a href="/" data-page="index">Главная</a></li>
+        <li><a href="/catalog" data-page="catalog">Каталог</a></li>
+        <li><a href="/attractions" data-page="attractions">VR Аттракционы</a></li>
+        <li><a href="/contact" data-page="contact">Контакты</a></li>
+      </ul>
+    </nav>
+
+    <div class="header-actions">
+        <button id="cart-btn" class="cart-btn" aria-label="Корзина">
+    <!-- Иконка корзины (только на мобильных) -->
+    <img src="/assets/icons/cart-icon-mobile.svg" alt="Корзина" class="cart-icon-mobile" />
+    <!-- Текст кнопки (только на десктопе) -->
+    <span class="cart-text-desktop">Корзина</span>
+    <!-- Счетчик (всегда виден) -->
+    <span id="cart-count" class="cart-count">0</span>
+</button>
+    </div>
+
+    <div class="hamburger" id="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+  </header>
+  
+    <main role="main">
+    <!-- === СПЛЕШ-ЭКРАН (ЗАГРУЗКА) === -->
+  <div id="loading-screen" class="loading-screen">
+     <!-- Фоновая анимация -->
+  <div class="bg-overlay" aria-hidden="true">
+    <div class="pulse-1"></div>
+    <div class="pulse-2"></div>
+    <div class="pulse-3"></div>
+    <div class="pulse-4"></div>
+    <div class="pulse-5"></div>
+    <div class="pulse-6"></div>
+  </div>
+    <div class="loading-spinner"></div>
+    <p>Загрузка...</p>
+  </div>
+    <!-- Основной контент страницы товара -->
+    <div class="product-page-container">
+        <!-- Секция изображений -->
+        <div class="product-page-left">
+            <div class="product-page-image">
+                <img id="product-page-main-image" src="/assets/icons/placeholder1.webp" alt="Изображение товара" />
+            </div>
+            <div class="product-page-thumbnails" id="product-page-thumbnails" role="group" aria-label="Миниатюры изображений"></div>
+            <!-- УДАЛЕН БЛОК ВАРИАНТОВ ИЗ ЛЕВОЙ СЕКЦИИ -->
+        </div>
+
+        <!-- Секция информации -->
+        <div class="product-page-right">
+            <div class="product-page-info">
+                <nav aria-label="Навигационная цепочка">
+                    <ol class="breadcrumb">
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/catalog">Каталог</a></li>
+                        <li id="breadcrumb-category"><a href="#">Категория</a></li>
+                    </ol>
+                </nav>
+
+                <h1 id="product-page-title-main" class="product-page-title">Название товара</h1> <!-- Будет заполнена -->
+
+                <!-- === НОВОЕ: КОНТЕЙНЕР ДЛЯ БРЕНДА === -->
+                <div id="product-page-brand-container" class="product-page-brand-container">
+                    <div id="product-page-brand" class="product-page-brand">Бренд: </div>
+                </div>
+                <!-- === /НОВОЕ === -->
+
+                <p id="product-page-description-main" class="product-page-description">Описание товара</p> <!-- Будет заполнена -->
+                <div id="product-page-price" class="product-page-price">Цена</div> <!-- Будет заполнена -->
+
+                <!-- КОНТЕЙНЕР ДЛЯ ВАРИАНТОВ БУДЕТ ДОБАВЛЕН СЮДА ТОЛЬКО ПРИ НАЛИЧИИ ВАРИАНТОВ ЧЕРЕЗ JS -->
+                 <div id="product-page-variants-container" class="product-variants-container">
+                    <h4>Варианты:</h4>
+                    <div id="product-page-variants" class="product-variants"></div>
+                </div> 
+
+            </div>
+
+            <div class="product-page-actions">
+                <button id="product-page-add-to-cart-btn" class="btn-add full-width" disabled>Добавить в корзину</button>
+                <button id="product-page-buy-now-btn" class="btn-buy full-width" disabled>Купить сейчас</button>
+            </div>
+
+            <!-- Дополнительная информация (характеристики, теги и т.д.) - можно добавить позже -->
+        </div>
+    </div>
+  </main>
+
+  <!-- Подвал -->
+  <footer role="contentinfo">
+    © <span id="year"></span> BIZON — Все права защищены
+  </footer>
+
+  <script defer src="/js/utils.js"></script>
+  <script defer src="/js/state.js"></script> <!-- Должен быть до product.js -->
+  <!-- Скрипт для страницы товара -->
+<script defer src="/js/productAttractions.js"></script> 
+  <!-- Основной скрипт (может содержать общие функции, например, для корзины) -->
+  <script defer src="/js/main.js"></script>
+  <script>
+    // Установка года
+    document.getElementById('year').textContent = new Date().getFullYear();
+    // Инициализация страницы товара
+    document.addEventListener('DOMContentLoaded', function() {
+        // product.js сам обработает загрузку данных
+    });
+  </script>
+
+   <!-- Cookie Consent Banner -->
+<div id="cookieConsent" class="cookie-consent-banner">
+  <div class="cookie-consent-content">
+    <div class="cookie-consent-text">
+      <p>Мы используем файлы cookie и аналогичные технологии для улучшения работы сайта, анализа трафика и персонализации контента. Продолжая использовать наш сайт, вы соглашаетесь с <a href="/privacy" target="_blank">Политикой конфиденциальности</a> и <a href="/cookie-policy" target="_blank">Политикой использования файлов cookie</a>.</p>
+    </div>
+    <div class="cookie-consent-buttons">
+      <button id="acceptCookies" class="btn-primary">Принимаю</button>
+      <button id="declineCookies" class="btn-secondary">Отклонить</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

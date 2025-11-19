@@ -2889,7 +2889,7 @@ app.get('/product/:slug', (req, res) => {
 });
 
 app.get('/attraction/:slug', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'product.html')); // Используем тот же HTML
+  res.sendFile(path.join(__dirname, 'public', 'productAttractions.html')); // Используем тот же HTML
 });
 // --- НОВОЕ: Отдаём product.html для маршрутов вида /attraction/:slug ---
 
