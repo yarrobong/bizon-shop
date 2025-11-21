@@ -100,9 +100,17 @@ body {
     margin-bottom: 10px;
 }
 
+
 .product-card h3 {
     margin: 10px 0 5px;
     font-size: 1.1em;
+    /* --- Новые стили для ограничения по 3 строкам --- */
+    display: -webkit-box;        /* Используем flexbox в WebKit */
+    -webkit-line-clamp: 3;       /* Ограничиваем тремя строками */
+    -webkit-box-orient: vertical; /* Направление текста вертикальное */
+    overflow: hidden;            /* Скрываем всё, что выходит за границы */
+    text-overflow: ellipsis;     /* Добавляем многоточие (...) */
+    /* --- /Новые стили --- */
 }
 
 .product-card p {
