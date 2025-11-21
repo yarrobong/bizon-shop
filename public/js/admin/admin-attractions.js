@@ -596,15 +596,7 @@ async function saveAttraction() {
         }
     }
 
-    // --- Генерация slug ---
-    // Проверим, нужно ли генерировать slug. Если это редактирование, можно не перегенерировать,
-    // если title не менялся, или всегда обновлять.
-    // Для простоты, генерируем всегда при сохранении.
-    // Функцию generateSlug нужно будет импортировать или определить в этом файле.
-    // Импортируем из admin-core.js, если возможно, или копируем.
-    // Предположим, что функция доступна глобально или определена в admin-core.js
-    attractionData.slug = window.generateSlug ? window.generateSlug(attractionData.title) : encodeURIComponent(attractionData.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, ''));
-
+    
     try {
         let response;
         if (isEdit) {

@@ -1133,7 +1133,7 @@ app.get('/api/attractions', async (req, res) => {
 
 // - API endpoint для создания аттракциона -
 app.post('/api/attractions', async (req, res) => {
-    const { title, price, category, description, specs, images, videos, available, slug } = req.body; // <-- Добавлены specs, images, videos, slug
+    const { title, price, category, description, specs, images, videos, available, slug: providedSlug } = req.body; // <-- Добавлены specs, images, videos, slug; переименовали для ясности
     console.log('Создание нового аттракциона:', req.body);
 
     // ... (валидация title, price и т.д.) ...
@@ -1144,11 +1144,12 @@ app.post('/api/attractions', async (req, res) => {
         primaryImageUrl = images[0].url;
     }
 
+
     // Значение по умолчанию для available - true
     const isAvailable = available !== false;
 
     // --- НОВОЕ: Генерация slug, если не передан ---
-    const finalSlug = slug || generateAttractionSlug(title);
+    const finalSlug = providedSlug || generateAttractionSlug(title);
 
     try {
         // 1. Начинаем транзакцию
@@ -1230,7 +1231,10 @@ app.post('/api/attractions', async (req, res) => {
 // --- API endpoint для обновления аттракциона ---
 app.put('/api/attractions/:id', async (req, res) => {
     const { id } = req.params;
-    const { title, price, category, description, specs, images, videos, available, slug } = req.body; // <-- Добавлены specs, images, videos, slug
+    // Убираем slug из деструктуризации, чтобы не использовать его напрямую
+    const { title, price, category, description, specs, images, videos, available } = req.body; // <-- Убран slug
+    // Добавляем отдельно, чтобы явно проверить его наличие
+    const { slug: providedSlug } = req.body;
     console.log(`Обновление аттракциона с ID ${id}:`, req.body);
 
     // ... (валидация, проверка id) ...
@@ -1244,10 +1248,12 @@ app.put('/api/attractions/:id', async (req, res) => {
     const isAvailableProvided = 'available' in req.body;
     const isAvailable = isAvailableProvided ? available === true : undefined; // undefined означает "не обновлять"
 
-    // --- НОВОЕ: Обновление slug ---
-    const slugProvided = 'slug' in req.body;
-    const finalSlug = slugProvided ? slug : undefined; // undefined означает "не обновлять"
-
+    // --- НОВОЕ: Проверка, передан ли slug ---
+    const slugProvided = 'slug' in req.body && providedSlug !== undefined && providedSlug !== null;
+    // Если slug не передан, он не будет обновляться в запросе UPDATE
+    // Если передан - сервер обновит его на указанный.
+    // Это позволяет админке передавать slug, если он был изменён пользователем,
+    // или не передавать, если изменений не было.
     try {
         const attractionId = parseInt(id, 10);
         if (isNaN(attractionId)) {
@@ -1270,7 +1276,6 @@ app.put('/api/attractions/:id', async (req, res) => {
                 { field: 'category', value: category },
                 { field: 'image_url', value: primaryImageUrl },
                 { field: 'description', value: description },
-                // --- НОВОЕ: Обновление произвольных specs ---
                 { field: 'specs_places', value: specs?.places || null },
                 { field: 'specs_power', value: specs?.power || null },
                 { field: 'specs_games', value: specs?.games || null },
@@ -1280,7 +1285,7 @@ app.put('/api/attractions/:id', async (req, res) => {
 
             // Добавляем поля, которые были переданы в запросе
             fieldsToUpdate.forEach(({ field, value }) => {
-                if (value !== undefined) { // Проверяем, передано ли значение
+                if (value !== undefined) {
                     if (values.length > 0) query += ', ';
                     query += `${field} = $${paramCounter}`;
                     values.push(value);
@@ -1296,11 +1301,11 @@ app.put('/api/attractions/:id', async (req, res) => {
                 paramCounter++;
             }
 
-            // Обновляем slug, если передано
+            // Обновляем slug, ТОЛЬКО если он был передан в теле запроса
             if (slugProvided) {
                 if (values.length > 0) query += ', ';
                 query += `slug = $${paramCounter}`;
-                values.push(finalSlug);
+                values.push(providedSlug); // Используем переданный slug
                 paramCounter++;
             }
 
@@ -1308,7 +1313,7 @@ app.put('/api/attractions/:id', async (req, res) => {
             values.push(attractionId);
 
             await client.query(query, values);
-            console.log(`✅ Аттракцион с ID ${attractionId} успешно обновлен в БД`);
+            console.log(`✅ Аттракцион с ID ${attractionId} успешно обновлен в БД (slug обновлён: ${slugProvided ? providedSlug : 'нет'})`);
 
             // 3. Удаляем все старые изображения для этого аттракциона
             await client.query('DELETE FROM attraction_images WHERE attraction_id = $1', [attractionId]);
