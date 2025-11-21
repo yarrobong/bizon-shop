@@ -2,6 +2,7 @@
 
 // Глобальные переменные для аттракционов
 let attractionImages = []; // Массив для хранения изображений аттракциона
+let attractionVideos = []; // Массив для хранения видео аттракциона
 
 // Инициализация вкладки аттракционов
 async function loadAttractionsTab() {
@@ -113,9 +114,10 @@ function openAttractionModal(attractionId = null) {
     }
 }
 
+// --- Функция загрузки аттракциона для редактирования ---
 async function loadAttractionForEdit(attractionId) {
     try {
-        const response = await fetch(`/api/attractions/${attractionId}`);
+        const response = await fetch(`/api/attractions/${attractionId}`); // Используем существующий API
         if (response.ok) {
             const attraction = await response.json();
             const title = document.getElementById('attraction-modal-title');
@@ -126,22 +128,21 @@ async function loadAttractionForEdit(attractionId) {
             document.getElementById('attraction-price').value = attraction.price || '';
             document.getElementById('attraction-category').value = attraction.category || '';
 
-            // --- ИЗМЕНЕНИЕ: Загрузка состояния доступности ---
+            // --- Загрузка состояния доступности ---
             const availableCheckbox = document.getElementById('attraction-available');
             if (availableCheckbox) {
-                // Если поле available отсутствует в данных, считаем его доступным (true)
                 availableCheckbox.checked = attraction.available !== false;
             }
-            // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
-            const specs = attraction.specs || {};
-            document.getElementById('attraction-specs-places').value = specs.places || '';
-            document.getElementById('attraction-specs-power').value = specs.power || '';
-            document.getElementById('attraction-specs-games').value = specs.games || '';
-            document.getElementById('attraction-specs-area').value = specs.area || '';
-            document.getElementById('attraction-specs-dimensions').value = specs.dimensions || '';
+            // --- Загрузка произвольных характеристик (JSON строка) ---
+            const specsTextarea = document.getElementById('attraction-specs');
+            if (specsTextarea) {
+                // Превращаем объект specs в JSON строку для отображения в textarea
+                const specsString = JSON.stringify(attraction.specs || {}, null, 2);
+                specsTextarea.value = specsString;
+            }
 
-            // Загружаем изображения в форму (массив)
+            // --- Загрузка изображений ---
             // Совместимость со старым форматом (поле image)
             let imagesToLoad = [];
             if (attraction.images && Array.isArray(attraction.images)) {
@@ -150,6 +151,10 @@ async function loadAttractionForEdit(attractionId) {
                 imagesToLoad = [{ url: attraction.image, alt: attraction.title || 'Изображение' }];
             }
             loadAttractionImagesToForm(imagesToLoad);
+
+            // --- Загрузка видео ---
+            // Предполагаем, что attraction.videos - это массив объектов {url, alt, sort_order, is_primary}
+            loadAttractionVideosToForm(attraction.videos || []);
 
             const modal = document.getElementById('attraction-modal');
             modal.style.display = 'block';
@@ -161,6 +166,102 @@ async function loadAttractionForEdit(attractionId) {
         console.error('Ошибка загрузки аттракциона для редактирования:', error);
         showMessage(`Ошибка загрузки аттракциона: ${error.message}`, 'error');
     }
+}
+// --- Функция очистки видео ---
+function clearAttractionVideoFields() {
+    const container = document.getElementById('attraction-videos-container');
+    if (container) {
+        container.innerHTML = '';
+    }
+    attractionVideos = [];
+}
+
+// --- Функция загрузки видео в форму ---
+function loadAttractionVideosToForm(videos) {
+    clearAttractionVideoFields();
+    if (videos && Array.isArray(videos) && videos.length > 0) {
+        videos.forEach(video => {
+            addAttractionVideoField(video);
+        });
+    }
+}
+
+// --- Функция добавления поля видео ---
+function addAttractionVideoField(videoData = null) {
+    const container = document.getElementById('attraction-videos-container');
+    if (!container) return;
+
+    const videoId = Date.now() + Math.floor(Math.random() * 10000);
+    const videoItem = document.createElement('div');
+    videoItem.className = 'video-item';
+    videoItem.dataset.id = videoId;
+
+    const videoUrl = videoData?.url || '';
+    const videoAlt = videoData?.alt || '';
+    const isPrimary = videoData?.is_primary || false;
+
+    videoItem.innerHTML = `
+        <input type="text" class="video-input-url" value="${videoUrl}" placeholder="Ссылка на видео (YouTube/Vimeo/...)">
+        <input type="text" class="video-input-alt" value="${videoAlt}" placeholder="Описание видео (alt)">
+        <label>
+            <input type="checkbox" class="video-input-primary" ${isPrimary ? 'checked' : ''}> Главное видео
+        </label>
+        <button type="button" class="delete-video-btn" data-id="${videoId}" title="Удалить видео">&times;</button>
+    `;
+
+    container.appendChild(videoItem);
+
+    attractionVideos.push({
+        id: videoId,
+        url: videoUrl,
+        alt: videoAlt,
+        is_primary: isPrimary
+    });
+
+    const deleteBtn = videoItem.querySelector('.delete-video-btn');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            deleteAttractionVideo(videoId);
+        });
+    }
+
+    // Обработчик для чекбокса "Главное видео"
+    const primaryCheckbox = videoItem.querySelector('.video-input-primary');
+    if (primaryCheckbox) {
+        primaryCheckbox.addEventListener('change', () => {
+            // Сбрасываем все остальные чекбоксы "Главное видео" в массиве
+            attractionVideos.forEach(v => {
+                if (v.id !== videoId) {
+                    v.is_primary = false;
+                }
+            });
+            // Обновляем состояние текущего
+            const videoInArray = attractionVideos.find(v => v.id === videoId);
+            if (videoInArray) {
+                videoInArray.is_primary = primaryCheckbox.checked;
+            }
+        });
+    }
+}
+
+// --- Функция удаления видео ---
+function deleteAttractionVideo(videoId) {
+    const videoItem = document.querySelector(`#attraction-videos-container .video-item[data-id="${videoId}"]`);
+    if (videoItem) {
+        videoItem.remove();
+        attractionVideos = attractionVideos.filter(vid => vid.id !== videoId);
+    }
+}
+
+// --- Функция получения видео из формы ---
+function getAttractionVideosFromForm() {
+    return attractionVideos.map(vid => ({
+        url: vid.url,
+        alt: vid.alt || '',
+        is_primary: vid.is_primary || false
+    })).filter(vid => vid.url); // Фильтруем пустые url
 }
 
 // Обработчики событий формы
@@ -463,27 +564,46 @@ async function saveAttraction() {
     const id = document.getElementById('attraction-id').value;
     const isEdit = !!id;
 
-    const formData = new FormData(form);
+    // Подготавливаем данные
+    const attractionData = {
+        title: document.getElementById('attraction-title').value,
+        description: document.getElementById('attraction-description').value,
+        price: parseFloat(document.getElementById('attraction-price').value) || 0,
+        category: document.getElementById('attraction-category').value,
+        available: document.getElementById('attraction-available').checked,
+        // --- НОВОЕ: Произвольные характеристики ---
+        specs: {}, // Инициализируем пустым объектом
+        // --- НОВОЕ: Изображения ---
+        images: getAttractionImagesFromForm(),
+        // --- НОВОЕ: Видео ---
+        videos: getAttractionVideosFromForm()
+    };
 
+    // --- Парсим JSON из textarea ---
+    const specsTextareaValue = document.getElementById('attraction-specs').value.trim();
+    if (specsTextareaValue) {
+        try {
+            const parsedSpecs = JSON.parse(specsTextareaValue);
+            if (typeof parsedSpecs === 'object' && parsedSpecs !== null) {
+                attractionData.specs = parsedSpecs;
+            } else {
+                throw new Error('JSON характеристик должен быть объектом');
+            }
+        } catch (e) {
+            console.error('Ошибка парсинга JSON характеристик:', e);
+            showMessage(`Ошибка в формате характеристик: ${e.message}`, 'error');
+            return; // Не отправляем, если JSON неверен
+        }
+    }
 
-// Подготавливаем данные
-const attractionData = {
-    title: formData.get('attraction-title'),
-    description: formData.get('attraction-description'),
-    price: parseFloat(formData.get('attraction-price')) || 0,
-    category: formData.get('attraction-category'),
-    available: formData.get('attraction-available') === 'on', // Чекбоксы отправляют 'on' если отмечены
-    specs: {
-        
-        places: formData.get('attraction-specs-places') || null,
-        power: formData.get('attraction-specs-power') || null,
-        games: formData.get('attraction-specs-games') || null,
-        area: formData.get('attraction-specs-area') || null,
-        dimensions: formData.get('attraction-specs-dimensions') || null
-    },
-    // Отправляем только первое изображение в старом поле
-   images: getAttractionImagesFromForm()
-};
+    // --- Генерация slug ---
+    // Проверим, нужно ли генерировать slug. Если это редактирование, можно не перегенерировать,
+    // если title не менялся, или всегда обновлять.
+    // Для простоты, генерируем всегда при сохранении.
+    // Функцию generateSlug нужно будет импортировать или определить в этом файле.
+    // Импортируем из admin-core.js, если возможно, или копируем.
+    // Предположим, что функция доступна глобально или определена в admin-core.js
+    attractionData.slug = window.generateSlug ? window.generateSlug(attractionData.title) : encodeURIComponent(attractionData.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, ''));
 
     try {
         let response;
@@ -503,7 +623,6 @@ const attractionData = {
 
         if (response.ok) {
             const result = await response.json();
-            
             showMessage(`${isEdit ? 'Аттракцион обновлен' : 'Аттракцион создан'} успешно!`, 'success');
             closeModal('attraction-modal');
             await loadAttractions(); // Перезагружаем список
@@ -516,6 +635,9 @@ const attractionData = {
         showMessage(`Ошибка: ${error.message}`, 'error');
     }
 }
+document.getElementById('add-attraction-video-btn')?.addEventListener('click', () => {
+    addAttractionVideoField();
+});
 
 async function deleteAttraction(id) {
     if (!confirm('Вы уверены, что хотите удалить этот аттракцион?')) return;
@@ -612,6 +734,11 @@ function closeModal(modalId) {
 // --- Инициализация после загрузки DOM ---
 document.addEventListener('DOMContentLoaded', () => {
     setupAttractionImageEventListeners();
+    // Инициализация обработчика кнопки добавления видео
+    document.getElementById('add-attraction-video-btn')?.addEventListener('click', () => {
+        addAttractionVideoField();
+    });
+
     // Если вкладка аттракционов активна при загрузке, загрузить данные
     if (document.getElementById('attractions-tab')?.classList.contains('active')) {
         loadAttractionsTab();

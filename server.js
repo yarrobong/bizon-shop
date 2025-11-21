@@ -85,8 +85,9 @@ function generateSlug(title) {
       .replace(/^-+|-+$/g, '')
   );
 }
+// --- Функция генерации slug (убедитесь, что она определена) ---
 function generateAttractionSlug(title) {
-  return encodeURIComponent( // Или без encodeURIComponent, если храните без кодирования
+  return encodeURIComponent(
     title
       .toLowerCase()
       .trim()
@@ -95,7 +96,6 @@ function generateAttractionSlug(title) {
       .replace(/^-+|-+$/g, '')  // Убираем дефисы в начале и конце
   );
 }
-
 // Установка часового пояса (лучше делать на уровне ОС или БД, но можно и так)
 process.env.TZ = 'Europe/Moscow';
 
@@ -1131,10 +1131,12 @@ app.get('/api/attractions', async (req, res) => {
     }
 });
 
-// --- API endpoint для создания аттракциона ---
+// - API endpoint для создания аттракциона -
 app.post('/api/attractions', async (req, res) => {
-    const { title, price, category, description, specs, images, available } = req.body; // <-- Добавлен available
+    const { title, price, category, description, specs, images, videos, available, slug } = req.body; // <-- Добавлены specs, images, videos, slug
     console.log('Создание нового аттракциона:', req.body);
+
+    // ... (валидация title, price и т.д.) ...
 
     // URL первого изображения для поля image_url (для обратной совместимости)
     let primaryImageUrl = null;
@@ -1143,45 +1145,95 @@ app.post('/api/attractions', async (req, res) => {
     }
 
     // Значение по умолчанию для available - true
-    const isAvailable = available !== false; // Если available undefined или true, будет true. Если false, будет false.
+    const isAvailable = available !== false;
+
+    // --- НОВОЕ: Генерация slug, если не передан ---
+    const finalSlug = slug || generateAttractionSlug(title);
 
     try {
-        const query = `
-      INSERT INTO attractions (
-        title, price, category, image_url, description, available, -- <-- Добавлен available
-        specs_places, specs_power, specs_games, specs_area, specs_dimensions
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) -- <-- Добавлен $6
-      RETURNING id;
-    `;
-        const values = [
-            title,
-            price,
-            category,
-            primaryImageUrl,
-            description,
-            isAvailable, // <-- Используем isAvailable
-            specs?.places || null,
-            specs?.power || null,
-            specs?.games || null,
-            specs?.area || null,
-            specs?.dimensions || null
-        ];
-        const result = await pool.query(query, values);
-        const newId = result.rows[0].id;
-        console.log(`✅ Аттракцион с ID ${newId} успешно создан в БД`);
-        res.status(201).json({ id: newId, message: 'Аттракцион создан' });
+        // 1. Начинаем транзакцию
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+
+            // 2. Вставляем основной аттракцион
+            const query = `
+                INSERT INTO attractions (
+                    title, price, category, image_url, description, available, specs_places, specs_power, specs_games, specs_area, specs_dimensions, slug
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                RETURNING id;
+            `;
+            const values = [
+                title,
+                price,
+                category,
+                primaryImageUrl,
+                description,
+                isAvailable,
+                // --- НОВОЕ: Обработка произвольных specs ---
+                // Если вы хотите хранить в отдельных полях, распакуйте:
+                specs?.places || null,
+                specs?.power || null,
+                specs?.games || null,
+                specs?.area || null,
+                specs?.dimensions || null,
+                finalSlug // <-- Добавлен slug
+            ];
+
+            const result = await client.query(query, values);
+            const newId = result.rows[0].id;
+            console.log(`✅ Аттракцион с ID ${newId} успешно создан в БД`);
+
+            // 3. Вставляем изображения
+            if (images && Array.isArray(images) && images.length > 0) {
+                const imageInsertQuery = `
+                    INSERT INTO attraction_images (attraction_id, url, alt, sort_order)
+                    VALUES ($1, $2, $3, $4);
+                `;
+                for (let i = 0; i < images.length; i++) {
+                    const img = images[i];
+                    if (img.url) { // Проверяем, что URL есть
+                        await client.query(imageInsertQuery, [newId, img.url, img.alt || '', i]);
+                    }
+                }
+            }
+
+            // 4. Вставляем видео
+            if (videos && Array.isArray(videos) && videos.length > 0) {
+                const videoInsertQuery = `
+                    INSERT INTO attraction_videos (attraction_id, url, alt, sort_order, is_primary)
+                    VALUES ($1, $2, $3, $4, $5);
+                `;
+                for (let i = 0; i < videos.length; i++) {
+                    const vid = videos[i];
+                    if (vid.url) { // Проверяем, что URL есть
+                        await client.query(videoInsertQuery, [newId, vid.url, vid.alt || '', i, vid.is_primary || false]);
+                    }
+                }
+            }
+
+            // 5. Фиксируем транзакцию
+            await client.query('COMMIT');
+            client.release();
+
+            res.status(201).json({ id: newId, message: 'Аттракцион создан' });
+        } catch (err) {
+            await client.query('ROLLBACK');
+            client.release();
+            throw err;
+        }
     } catch (err) {
         console.error('❌ Ошибка при создании аттракциона в БД:', err);
         res.status(500).json({ error: 'Не удалось создать аттракцион', details: err.message });
     }
 });
-
 // --- API endpoint для обновления аттракциона ---
 app.put('/api/attractions/:id', async (req, res) => {
     const { id } = req.params;
-    const { title, price, category, description, specs, images, available } = req.body; // <-- Добавлен available
+    const { title, price, category, description, specs, images, videos, available, slug } = req.body; // <-- Добавлены specs, images, videos, slug
     console.log(`Обновление аттракциона с ID ${id}:`, req.body);
+
+    // ... (валидация, проверка id) ...
 
     // URL первого изображения для поля image_url (для обратной совместимости)
     let primaryImageUrl = null;
@@ -1189,51 +1241,119 @@ app.put('/api/attractions/:id', async (req, res) => {
         primaryImageUrl = images[0].url;
     }
 
-    // Значение по умолчанию для available - true (если не передано, считаем, что не меняется или true)
-    // Лучше явно проверить, было ли поле передано
     const isAvailableProvided = 'available' in req.body;
     const isAvailable = isAvailableProvided ? available === true : undefined; // undefined означает "не обновлять"
+
+    // --- НОВОЕ: Обновление slug ---
+    const slugProvided = 'slug' in req.body;
+    const finalSlug = slugProvided ? slug : undefined; // undefined означает "не обновлять"
 
     try {
         const attractionId = parseInt(id, 10);
         if (isNaN(attractionId)) {
             return res.status(400).json({ error: 'Некорректный ID аттракциона' });
         }
-        
-        // Динамически строим запрос UPDATE
-        let query = `UPDATE attractions SET `;
-        const values = [];
-        let paramCounter = 1;
 
-        const fieldsToUpdate = [
-            { field: 'title', value: title },
-            { field: 'price', value: price },
-            { field: 'category', value: category },
-            { field: 'image_url', value: primaryImageUrl },
-            { field: 'description', value: description },
-            { field: 'specs_places', value: specs?.places || null },
-            { field: 'specs_power', value: specs?.power || null },
-            { field: 'specs_games', value: specs?.games || null },
-            { field: 'specs_area', value: specs?.area || null },
-            { field: 'specs_dimensions', value: specs?.dimensions || null }
-        ];
-        
-        // Добавляем available только если оно было передано
-        if (isAvailableProvided) {
-             fieldsToUpdate.push({ field: 'available', value: isAvailable });
+        // 1. Начинаем транзакцию
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+
+            // 2. Формируем запрос UPDATE динамически
+            let query = `UPDATE attractions SET `;
+            const values = [];
+            let paramCounter = 1;
+
+            const fieldsToUpdate = [
+                { field: 'title', value: title },
+                { field: 'price', value: price },
+                { field: 'category', value: category },
+                { field: 'image_url', value: primaryImageUrl },
+                { field: 'description', value: description },
+                // --- НОВОЕ: Обновление произвольных specs ---
+                { field: 'specs_places', value: specs?.places || null },
+                { field: 'specs_power', value: specs?.power || null },
+                { field: 'specs_games', value: specs?.games || null },
+                { field: 'specs_area', value: specs?.area || null },
+                { field: 'specs_dimensions', value: specs?.dimensions || null }
+            ];
+
+            // Добавляем поля, которые были переданы в запросе
+            fieldsToUpdate.forEach(({ field, value }) => {
+                if (value !== undefined) { // Проверяем, передано ли значение
+                    if (values.length > 0) query += ', ';
+                    query += `${field} = $${paramCounter}`;
+                    values.push(value);
+                    paramCounter++;
+                }
+            });
+
+            // Обновляем available, если передано
+            if (isAvailableProvided) {
+                if (values.length > 0) query += ', ';
+                query += `available = $${paramCounter}`;
+                values.push(isAvailable);
+                paramCounter++;
+            }
+
+            // Обновляем slug, если передано
+            if (slugProvided) {
+                if (values.length > 0) query += ', ';
+                query += `slug = $${paramCounter}`;
+                values.push(finalSlug);
+                paramCounter++;
+            }
+
+            query += ` WHERE id = $${paramCounter}`;
+            values.push(attractionId);
+
+            await client.query(query, values);
+            console.log(`✅ Аттракцион с ID ${attractionId} успешно обновлен в БД`);
+
+            // 3. Удаляем все старые изображения для этого аттракциона
+            await client.query('DELETE FROM attraction_images WHERE attraction_id = $1', [attractionId]);
+
+            // 4. Вставляем новые изображения
+            if (images && Array.isArray(images) && images.length > 0) {
+                const imageInsertQuery = `
+                    INSERT INTO attraction_images (attraction_id, url, alt, sort_order)
+                    VALUES ($1, $2, $3, $4);
+                `;
+                for (let i = 0; i < images.length; i++) {
+                    const img = images[i];
+                    if (img.url) {
+                        await client.query(imageInsertQuery, [attractionId, img.url, img.alt || '', i]);
+                    }
+                }
+            }
+
+            // 5. Удаляем все старые видео для этого аттракциона
+            await client.query('DELETE FROM attraction_videos WHERE attraction_id = $1', [attractionId]);
+
+            // 6. Вставляем новые видео
+            if (videos && Array.isArray(videos) && videos.length > 0) {
+                const videoInsertQuery = `
+                    INSERT INTO attraction_videos (attraction_id, url, alt, sort_order, is_primary)
+                    VALUES ($1, $2, $3, $4, $5);
+                `;
+                for (let i = 0; i < videos.length; i++) {
+                    const vid = videos[i];
+                    if (vid.url) {
+                        await client.query(videoInsertQuery, [attractionId, vid.url, vid.alt || '', i, vid.is_primary || false]);
+                    }
+                }
+            }
+
+            // 7. Фиксируем транзакцию
+            await client.query('COMMIT');
+            client.release();
+
+            res.json({ message: 'Аттракцион обновлен' });
+        } catch (err) {
+            await client.query('ROLLBACK');
+            client.release();
+            throw err;
         }
-
-        query += fieldsToUpdate.map(f => `${f.field} = $${paramCounter++}`).join(', ');
-        values.push(...fieldsToUpdate.map(f => f.value));
-        query += ` WHERE id = $${paramCounter} RETURNING id;`;
-        values.push(attractionId);
-
-        const result = await pool.query(query, values);
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Аттракцион не найден для обновления' });
-        }
-        console.log(`✅ Аттракцион с ID ${id} успешно обновлен в БД`);
-        res.json({ message: 'Аттракцион обновлен' });
     } catch (err) {
         console.error(`❌ Ошибка при обновлении аттракциона с ID ${id} в БД:`, err);
         res.status(500).json({ error: 'Не удалось обновить аттракцион', details: err.message });

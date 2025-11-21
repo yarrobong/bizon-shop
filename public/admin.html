@@ -182,30 +182,13 @@
                 <!-- Опции будут загружены динамически -->
             </datalist>
 
-            
-
-            <!-- Спецификации аттракциона -->
-            <div class="specs-section">
-                <h3>Спецификации</h3>
-
-                <label for="attraction-specs-places">Мест:</label>
-                <input type="text" id="attraction-specs-places" name="attraction-specs-places">
-
-                <label for="attraction-specs-power">Мощность:</label>
-                <input type="text" id="attraction-specs-power" name="attraction-specs-power">
-
-                <label for="attraction-specs-games">Игры:</label>
-                <input type="text" id="attraction-specs-games" name="attraction-specs-games">
-
-                <label for="attraction-specs-area">Площадь:</label>
-                <input type="text" id="attraction-specs-area" name="attraction-specs-area">
-
-                <label for="attraction-specs-dimensions">Размеры:</label>
-                <input type="text" id="attraction-specs-dimensions" name="attraction-specs-dimensions">
+            <!-- НОВОЕ: Поле для произвольных характеристик -->
+            <div class="form-group">
+                <label for="attraction-specs">Характеристики (JSON):</label>
+                <textarea id="attraction-specs" name="attraction-specs" rows="4" placeholder='{"places": "1", "power": "500W", "custom_field": "value"}'></textarea>
             </div>
 
-            
-                        <!-- Управление изображениями (ИСПРАВЛЕННЫЕ ID) -->
+            <!-- Управление изображениями (ИСПРАВЛЕННЫЕ ID) -->
             <div class="images-section">
                 <h3>Изображения аттракциона</h3>
                 <div id="attraction-images-drop-zone" class="images-drop-zone"> <!-- ИЗМЕНЕН ID -->
@@ -217,6 +200,15 @@
                     </div>
                 </div>
                 <button type="button" id="add-attraction-image-btn" class="btn-secondary">Добавить изображение</button> <!-- ИЗМЕНЕН ID -->
+            </div>
+
+            <!-- НОВОЕ: Управление видео -->
+            <div class="form-group">
+                <h3>Видео аттракциона</h3>
+                <div id="attraction-videos-container" class="videos-container">
+                    <!-- Здесь будут добавляться поля для видео -->
+                </div>
+                <button type="button" id="add-attraction-video-btn" class="btn-secondary">Добавить видео</button>
             </div>
 
             <label>
