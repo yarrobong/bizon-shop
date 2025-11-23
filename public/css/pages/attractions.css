@@ -154,6 +154,13 @@ main {
     height: 100%;
 }
 
+.attraction-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%; /* ← важно! */
+  height: auto;     /* ← переопределяем, если где-то задано */
+}
+
 /* === ЗАГОЛОВОК === */
 .attraction-title {
     font-size: 1.25rem; /* 20px */
