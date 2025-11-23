@@ -444,7 +444,7 @@ text-overflow: ellipsis;
 }
 
 .btn-cart {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    background: linear-gradient(90deg, #0062ffff, #0409AC);
     color: white;
 }
 
@@ -456,9 +456,9 @@ text-overflow: ellipsis;
 /* === СЕТКА ПРОДУКТОВ === */
 .products-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-    padding: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.75rem;
+  padding: 1.5rem;
 }
 
 /* === АДАПТИВНОСТЬ СЕТКИ === */
