@@ -397,3 +397,88 @@ main {
   font-size: 1.1rem;
   margin: 0.5rem 0;
 }
+
+
+/* === БЛОК ХАРАКТЕРИСТИК === */
+.attraction-specs {
+  margin: 1.25rem 0;
+  background: rgba(11, 11, 38, 0.35);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 16px;
+  padding: 1.25rem;
+  position: relative;
+  overflow: hidden;
+
+  /* Неоновая обводка */
+  border: 1px solid rgba(43, 83, 193, 0.6);
+  box-shadow:
+    0 0 8px rgba(43, 83, 193, 0.7),
+    0 0 16px rgba(59, 130, 246, 0.4),
+    inset 0 0 6px rgba(59, 130, 246, 0.2);
+}
+
+.attraction-specs h4 {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 1rem;
+  color: #e2e8f0;
+  text-align: center;
+}
+
+/* === СПИСОК ХАРАКТЕРИСТИК === */
+.specs-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.specs-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.95rem;
+  color: #cbd5e1;
+  font-family: 'Inter', sans-serif;
+  align-items: center;
+  transition: background 0.2s ease;
+}
+
+.specs-list li:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.specs-list li strong {
+  color: #f0f4ff;
+  font-weight: 600;
+  min-width: 140px;
+  flex-shrink: 0;
+}
+
+/* === АДАПТИВНОСТЬ НА МАЛЕНЬКИХ ЭКРАНАХ === */
+@media (max-width: 480px) {
+  .attraction-specs {
+    padding: 1rem;
+  }
+
+  .attraction-specs h4 {
+    font-size: 1rem;
+  }
+
+  .specs-list li {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    padding: 0.65rem;
+  }
+
+  .specs-list li strong {
+    min-width: auto;
+    font-size: 0.95rem;
+  }
+}
