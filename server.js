@@ -1079,7 +1079,7 @@ app.get('/api/attractions/yml', async (req, res) => {
 
         ymlContent += `   <offer id="${row.id}" type="vendor.model">\n`;
         ymlContent += `    <name>${xmlEscape(row.title)}</name>\n`;
-        ymlContent += `    <url>https://bizon-business.ru/attraction/${row.slug || row.id}</url>\n`; <!-- Замените на ваш путь -->
+        ymlContent += `    <url>https://bizon-business.ru/attraction/${row.slug || row.id}</url>\n`; 
         ymlContent += `    <price>${parseFloat(row.price)}</price>\n`;
         ymlContent += `    <currencyId>RUR</currencyId>\n`;
         if (category_id) {
