@@ -53,6 +53,148 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
   res.json({ url: `/uploads/${req.file.filename}` });
 });
 
+// --- НОВЫЙ МАРШРУТ ДЛЯ YML-ФИДА ---
+app.get('/api/attractions/yml', async (req, res) => {
+  console.log('Генерация YML-фида для аттракционов...');
+  try {
+    // 1. Получаем данные из БД (аналогично /api/attractions, но с нужными полями)
+    //    Включаем доступность, если нужно фильтровать.
+    const attractionsQuery = `
+      SELECT
+        id,
+        title,
+        price,
+        category,
+        image_url AS image,
+        description,
+        slug, -- <-- Используем slug для формирования URL
+        specs_places AS "specs.places",
+        specs_power AS "specs.power",
+        specs_games AS "specs.games",
+        specs_area AS "specs.area",
+        specs_dimensions AS "specs.dimensions"
+      FROM attractions
+      WHERE available = true -- <-- Фильтр по доступности (если нужно)
+      ORDER BY id ASC;
+    `;
+    const attractionsResult = await pool.query(attractionsQuery);
+
+    // 2. Получаем все изображения для всех аттракционов за один запрос (для picture)
+    const availableAttractionIds = attractionsResult.rows.map(r => r.id);
+    let imagesQuery, imagesResult;
+    if (availableAttractionIds.length > 0) {
+      const placeholders = availableAttractionIds.map((_, i) => `$${i + 1}`).join(', ');
+      imagesQuery = `
+        SELECT attraction_id, url, alt, sort_order
+        FROM attraction_images
+        WHERE attraction_id IN (${placeholders})
+        ORDER BY attraction_id, sort_order ASC; -- Получаем все, но используем первое
+      `;
+      imagesResult = await pool.query(imagesQuery, availableAttractionIds);
+    } else {
+      imagesResult = { rows: [] };
+    }
+
+    // 3. Группируем изображения по attraction_id
+    const imagesMap = {};
+    imagesResult.rows.forEach(img => {
+      if (!imagesMap[img.attraction_id]) {
+        imagesMap[img.attraction_id] = [];
+      }
+      imagesMap[img.attraction_id].push(img.url); // Берем только URL
+    });
+
+    // 4. Начинаем формировать YML
+    let ymlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<yml_catalog date="${new Date().toISOString().replace('T', ' ').substring(0, 19)}">
+ <shop>
+  <name>BIZON</name> <!-- Замените на реальное имя -->
+  <company>BIZON</company> <!-- Замените на реальное имя компании -->
+  <url>https://bizon-business.ru</url> <!-- Замените на ваш реальный URL -->
+  <currencies>
+   <currency id="RUR" rate="1"/>
+  </currencies>
+  <categories>
+`;
+
+    // 5. Собираем уникальные категории (для секции <categories>)
+    const categoriesSet = new Set(attractionsResult.rows.map(row => row.category).filter(cat => cat)); // Фильтруем null/undefined
+    let categoryIdMap = new Map(); // Для сопоставления названия категории с ID
+    let catIdCounter = 1;
+    for (const catName of categoriesSet) {
+        if (!categoryIdMap.has(catName)) {
+            categoryIdMap.set(catName, catIdCounter);
+            ymlContent += `   <category id="${catIdCounter}">${xmlEscape(catName)}</category>\n`;
+            catIdCounter++;
+        }
+    }
+
+    ymlContent += `  </categories>\n  <offers>\n`;
+
+    // 6. Генерируем <offer> для каждого аттракциона
+    attractionsResult.rows.forEach(row => {
+        const imagesForAttraction = imagesMap[row.id] || [];
+        const primaryImage = imagesForAttraction.length > 0 ? imagesForAttraction[0] : row.image; // Используем первое изображение или старое поле image
+        const category_id = categoryIdMap.get(row.category) || ''; // Используем ID категории из карты
+
+        ymlContent += `   <offer id="${row.id}" type="vendor.model">\n`;
+        ymlContent += `    <name>${xmlEscape(row.title)}</name>\n`;
+        ymlContent += `    <url>https://yoursite.com/attraction/${row.slug || row.id}</url> <!-- Замените на ваш путь -->\n`;
+        ymlContent += `    <price>${parseFloat(row.price)}</price>\n`;
+        ymlContent += `    <currencyId>RUR</currencyId>\n`;
+        if (category_id) {
+            ymlContent += `    <categoryId>${category_id}</categoryId>\n`;
+        }
+        if (primaryImage) {
+            ymlContent += `    <picture>${xmlEscape(primaryImage)}</picture>\n`;
+        }
+        if (row.description) {
+            ymlContent += `    <description>${xmlEscape(row.description)}</description>\n`;
+        }
+        // vendor и model (пример: vendor = категория, model = название, или наоборот, или пустые)
+        // ymlContent += `    <vendor>${xmlEscape(row.category || '')}</vendor>\n`;
+        ymlContent += `    <model>${xmlEscape(row.title)}</model>\n`;
+
+        // Добавляем параметры (specs)
+        if (row["specs.places"]) ymlContent += `    <param name="Количество мест">${xmlEscape(row["specs.places"])}</param>\n`;
+        if (row["specs.power"]) ymlContent += `    <param name="Потребляемая мощность">${xmlEscape(row["specs.power"])}</param>\n`;
+        if (row["specs.area"]) ymlContent += `    <param name="Площадь">${xmlEscape(row["specs.area"])}</param>\n`;
+        if (row["specs.dimensions"]) ymlContent += `    <param name="Габариты">${xmlEscape(row["specs.dimensions"])}</param>\n`;
+        if (row["specs.games"]) ymlContent += `    <param name="Игры">${xmlEscape(row["specs.games"])}</param>\n`;
+
+        ymlContent += `   </offer>\n`;
+    });
+
+    ymlContent += `  </offers>\n </shop>\n</yml_catalog>`;
+
+    // 7. Отправляем YML как ответ
+    res.setHeader('Content-Type', 'text/xml; charset=utf-8');
+    res.send(ymlContent);
+    console.log('YML-фид успешно сгенерирован и отправлен.');
+
+  } catch (err) {
+    console.error('❌ Ошибка при генерации YML-фида:', err);
+    res.status(500).send('Ошибка сервера при генерации фида.');
+  }
+});
+
+// --- ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ ЭКРАНИРОВАНИЯ XML ---
+function xmlEscape(str) {
+  if (typeof str !== 'string') {
+    str = String(str); // Преобразуем к строке, если не строка
+  }
+  return str.replace(/[&<>"']/g, function (match) {
+    switch (match) {
+      case '&': return '&amp;';
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '"': return '&quot;';
+      case "'": return '&apos;';
+      default: return match;
+    }
+  });
+}
+
 // --- Старт сервера ---
 app.listen(PORT, async () => {
   console.log(`✅ Сервер запущен на http://localhost:${PORT}`);
@@ -3019,6 +3161,8 @@ app.get('/attraction/:slug', (req, res) => {
 // --- НОВОЕ: Отдаём product.html для маршрутов вида /attraction/:slug ---
 
 // --- /НОВОЕ ---
+
+
 
 // --- КАСТОМНЫЕ МАРШРУТЫ ДЛЯ HTML СТРАНИЦ ---
 // Универсальный маршрут для отдачи .html страниц (например, /catalog -> public/catalog.html)
