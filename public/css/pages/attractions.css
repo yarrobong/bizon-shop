@@ -105,18 +105,7 @@ main {
     color: var(--text-primary);
 }
 
-/* === АДАПТИВНОСТЬ ФИЛЬТРА ТЕГОВ === */
-@media (max-width: 768px) {
-    .tags {
-        padding-top: 2.7rem;
-        margin-top: 1.5rem;
-        padding-left: 1.5rem;
-        padding-right: 1.5rem;
-        padding-bottom: 1.5rem;
-        margin-bottom: 1.5rem;
-        border-bottom: 3px solid var(--text-primary);
-    }
-}
+
 
 @media (max-width: 360px) {
     .tags {
@@ -212,7 +201,7 @@ height: 100%;
 /* === ИЗОБРАЖЕНИЕ === */
 .attraction-image-container {
     width: 100%;
-    height: 200px;
+
     display: flex;
     justify-content: center;
     align-items: center;
@@ -497,7 +486,68 @@ text-overflow: ellipsis;
 }
 
 
+/* === АДАПТИВНОСТЬ: планшеты (<=768px) === */
+@media (max-width: 768px) {
 
+    /* --- Карточка --- */
+    .attraction-card {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    /* --- Галерея --- */
+    .attraction-card .attraction-gallery {
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 2px solid rgba(0, 123, 255, 0.3);
+        border-radius: 1rem 1rem 0 0;
+    }
+
+    .attraction-card .attraction-main-image-container {
+        height: 30vh;
+        min-height: 150px;
+        border-radius: 1rem 1rem 0 0;
+    }
+
+    .attraction-card .attraction-thumbnails {
+        border-radius: 0 0 1rem 1rem;
+    }
+
+    .attraction-card .attraction-gallery-nav {
+        display: none;
+    }
+
+    /* --- Теги --- */
+    .tags {
+        padding: 2.7rem 1.5rem 1.5rem 1.5rem;
+        margin: 1.5rem 0;
+        border-bottom: 3px solid var(--text-primary);
+    }
+
+    /* --- Сетка товаров --- */
+    .products-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+
+    /* --- Контент внутри карточки --- */
+    .attraction-image {
+        width: 100%;
+        height: 200px;
+        border-right: none;
+    }
+
+    .attraction-info {
+        width: 100%;
+        padding: 1rem;
+    }
+
+    .attraction-specs-details {
+        grid-template-columns: 1fr;
+    }
+}
 
 
 /* === АДАПТИВНОСТЬ: телефоны (<=479px) === */
@@ -666,34 +716,6 @@ text-overflow: ellipsis;
     display: block;
 }
 
-/* === АДАПТИВНОСТЬ ГАЛЕРЕИ === */
-@media (max-width: 768px) {
-    .attraction-card {
-        flex-direction: column;
-    }
-
-    .attraction-card .attraction-gallery {
-        width: 100%;
-        height: auto;
-        border-right: none;
-        border-bottom: 2px solid rgba(0, 123, 255, 0.3);
-        border-radius: 1rem 1rem 0 0;
-    }
-
-    .attraction-card .attraction-main-image-container {
-        height: 30vh;
-        min-height: 150px;
-        border-radius: 1rem 1rem 0 0;
-    }
-
-    .attraction-card .attraction-thumbnails {
-        border-radius: 0 0 1rem 1rem;
-    }
-
-    .attraction-card .attraction-gallery-nav {
-        display: none;
-    }
-}
 
 
 
