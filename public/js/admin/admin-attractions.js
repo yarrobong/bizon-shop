@@ -14,19 +14,20 @@ async function loadAttractionsTab() {
 
 async function loadAttractions() {
     try {
-        console.log('Загрузка аттракционов...');
-        const response = await fetch('/api/attractions/public');
+        console.log('Загрузка аттракционов... (админ)');
+        // Возвращаем адрес API, который есть на сервере
+        const response = await fetch('/api/attractions/public'); // <-- Вот эту строку восстанавливаем
         
         if (response.ok) {
             const attractions = await response.json();
             
             renderAttractions(attractions);
         } else {
-            console.error('Ошибка загрузки аттракционов:', response.status);
+            console.error('Ошибка загрузки аттракционов (админ):', response.status);
             renderAttractions([]);
         }
     } catch (error) {
-        console.error('Ошибка загрузки аттракционов:', error);
+        console.error('Ошибка загрузки аттракционов (админ):', error);
         renderAttractions([]);
     }
 }
