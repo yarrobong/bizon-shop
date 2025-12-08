@@ -528,7 +528,7 @@ text-overflow: ellipsis;
 
 /* === АДАПТИВНОСТЬ: телефоны (<=479px) === */
 @media (max-width: 479px) {
-    .main {
+    main {
         padding-left: 0;
         padding-right: 0;
     }
