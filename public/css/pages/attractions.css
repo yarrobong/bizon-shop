@@ -124,6 +124,10 @@ main {
         margin-top: 1.5rem;
         margin-bottom: 1.5rem;
     }
+    .product-actions button {
+    font-size: 0.65rem;
+    padding: 0.3rem 0.5rem;
+  }
 }
 
 /* === КАРТОЧКА ПРОДУКТА === */
@@ -420,27 +424,22 @@ height: 100%;
 
 /* === КНОПКИ ДЕЙСТВИЙ === */
 .product-actions {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 1rem;
-    flex-shrink: 0;
-    justify-content: center;
-    width: 100%;
+    display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
 }
 
 .product-actions button {
-    padding: 0.75rem 1rem;
-    border: none;
-    border-radius: 0.5rem;
-    font-size: 0.8rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex: 1;
-    max-width: 200px;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .btn-details,
@@ -575,15 +574,12 @@ height: 100%;
     .attraction-price {
         font-size: 1.2rem;
     }
-
-    .product-actions {
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .product-actions button {
-        max-width: none;
-    }
+.product-actions button {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.7rem;
+    border-radius: 0.4rem;
+  }
+    
 }
 
 /* === АДАПТИВНОСТЬ: очень маленькие экраны (<=320px) === */
