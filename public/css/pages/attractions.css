@@ -497,33 +497,7 @@ text-overflow: ellipsis;
 }
 
 
-/* === АДАПТИВНОСТЬ: планшеты (<=768px) === */
-@media (max-width: 768px) {
-    .products-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1.5rem;
-        padding: 1.5rem;
-    }
 
-    .attraction-card {
-        flex-direction: column;
-    }
-
-    .attraction-image {
-        width: 100%;
-        height: 200px;
-        border-right: none;
-    }
-
-    .attraction-info {
-        width: 100%;
-        padding: 1rem;
-    }
-
-    .attraction-specs-details {
-        grid-template-columns: 1fr;
-    }
-}
 
 
 /* === АДАПТИВНОСТЬ: телефоны (<=479px) === */
