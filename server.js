@@ -1118,10 +1118,7 @@ app.get('/api/attractions/yml', async (req, res) => {
   }
 });
 
-app.get('/api/attractions/yml', (req, res) => {
-  res.set('Content-Type', 'text/xml');
-  res.send(generateYmlFeed(products));
-});
+
 
 // --- API endpoint для получения аттракциона по ID (ДОЛЖЕН БЫТЬ ПОСЛЕ /yml) ---
 app.get('/api/attractions/:id', async (req, res) => {
