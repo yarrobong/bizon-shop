@@ -530,7 +530,7 @@ text-overflow: ellipsis;
 @media (max-width: 479px) {
     .main {
         padding-left: 0;
-padding-right: 0;
+        padding-right: 0;
     }
     .product-content {
         padding: 0.75rem;
