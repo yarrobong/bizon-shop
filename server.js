@@ -1048,9 +1048,9 @@ app.get('/api/attractions/yml', async (req, res) => {
     let ymlContent = `<?xml version="1.0" encoding="UTF-8"?>
 <yml_catalog date="${new Date().toISOString().replace('T', ' ').substring(0, 19)}">
  <shop>
-  <name>BIZON</name> <!-- Замените на реальное имя -->
-  <company>BIZON</company> <!-- Замените на реальное имя компании -->
-  <url>https://bizon-business.ru</url> <!-- Замените на ваш реальный URL -->
+  <name>BIZON</name> 
+  <company>BIZON</company> 
+  <url>https://bizon-business.ru</url> 
   <currencies>
    <currency id="RUR" rate="1"/>
   </currencies>
