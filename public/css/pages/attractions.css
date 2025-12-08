@@ -151,7 +151,7 @@ main {
 /* === PRODUCTS GRID (Mobile-first) === */
 .products-grid {
   display: grid;
-  grid-template-columns: 2fr; /* 1 колонка — по умолчанию (мобильные) */
+  grid-template-columns: 2fr; 
   gap: 1rem;
   padding: 0.5rem;
 }
