@@ -128,25 +128,21 @@ main {
 
 /* === КАРТОЧКА ПРОДУКТА === */
 .attraction-card {
-    display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 24px;
-    background: rgba(11, 11, 38, 0.35);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-radius: 20px;
-    border: 2px solid rgba(43, 83, 193, 0.7);
-    box-shadow:
-        0 0 10px rgba(43, 83, 193, 0.8),
-        0 0 25px rgba(43, 83, 193, 0.6),
-        0 0 50px rgba(43, 83, 193, 0.4);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    height: 100%;
-    text-decoration: none;
-    color: inherit;
+align-items: center;
+gap: 24px;
+background: rgba(11, 11, 38, 0.35);
+backdrop-filter: blur(20px) saturate(180%);
+-webkit-backdrop-filter: blur(20px) saturate(180%);
+border-radius: 20px;
+border: 2px solid rgba(43, 83, 193, 0.7);
+box-shadow: 0 0 10px rgba(43, 83, 193, 0.8),
+0 0 25px rgba(43, 83, 193, 0.6),
+0 0 50px rgba(43, 83, 193, 0.4);
+transition: all 0.3s ease;
+position: relative;
+overflow: hidden;
+height: 100%;
 }
 
 .attraction-card:hover {
@@ -489,10 +485,7 @@ main {
 
 /* === АДАПТИВНОСТЬ: планшеты (<=768px) === */
 @media (max-width: 768px) {
-    .attraction-card {
-        flex-direction: column;
-        width: 100%;
-    }
+    
 
     .attraction-card .attraction-gallery {
         width: 100%;
@@ -860,23 +853,3 @@ main {
     background: rgba(255, 255, 255, 0.5);
 }
 
-/* === ОБЩИЕ СТИЛИ ДЛЯ ТЕЛЕФОНОВ === */
-@media (max-width: 768px) {
-    .attraction-card {
-        margin: 0.5rem;
-        padding: 1rem;
-    }
-    
-    .attraction-info {
-        padding: 1rem;
-    }
-    
-    .attraction-specs {
-        padding: 0.5rem;
-        font-size: 0.8rem;
-    }
-    
-    .attraction-description {
-        font-size: 0.85rem;
-    }
-}
