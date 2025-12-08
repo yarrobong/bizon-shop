@@ -1120,78 +1120,7 @@ app.get('/api/attractions/yml', async (req, res) => {
 
 
 
-// --- API endpoint для получения аттракциона по ID (ДОЛЖЕН БЫТЬ ПОСЛЕ /yml) ---
-app.get('/api/attractions/:id', async (req, res) => {
-    const { id } = req.params;
-    console.log(`Получение аттракциона с ID ${id} из БД...`);
 
-    try {
-        // ... (ваш текущий код для получения аттракциона по ID) ...
-        const attractionId = parseInt(id, 10);
-        if (isNaN(attractionId)) {
-            return res.status(400).json({ error: 'Некорректный ID аттракциона' });
-        }
-
-        // Получаем основные данные аттракциона
-        const attractionQuery = `
-            SELECT
-                id, title, price, category, image_url AS image, description,
-                specs_places AS "specs.places", specs_power AS "specs.power",
-                specs_games AS "specs.games", specs_area AS "specs.area",
-                specs_dimensions AS "specs.dimensions"
-            FROM attractions
-            WHERE id = $1;
-        `;
-        const attractionResult = await pool.query(attractionQuery, [attractionId]);
-
-        if (attractionResult.rows.length === 0) {
-            return res.status(404).json({ error: 'Аттракцион не найден' });
-        }
-
-        const row = attractionResult.rows[0];
-
-        // Получаем изображения для этого аттракциона
-        const imagesQuery = `
-            SELECT url, alt
-            FROM attraction_images
-            WHERE attraction_id = $1
-            ORDER BY sort_order ASC;
-        `;
-        const imagesResult = await pool.query(imagesQuery, [attractionId]);
-        let imagesArray = imagesResult.rows.map(img => ({
-            url: img.url,
-            alt: img.alt || ''
-        }));
-
-        // Для обратной совместимости: если массив пуст, используем старое поле image
-        if (imagesArray.length === 0 && row.image) {
-             imagesArray.push({ url: row.image, alt: row.title || 'Изображение' });
-        }
-
-        const attraction = {
-            id: row.id,
-            title: row.title,
-            price: parseFloat(row.price),
-            category: row.category,
-            // image: row.image, // Можно убрать, если фронтенд полностью перешел на images
-            images: imagesArray, // Массив изображений
-            description: row.description,
-            specs: {
-                places: row["specs.places"] || null,
-                power: row["specs.power"] || null,
-                games: row["specs.games"] || null,
-                area: row["specs.area"] || null,
-                dimensions: row["specs.dimensions"] || null
-            }
-        };
-
-        console.log(`✅ Успешно получен аттракцион с ID ${id} из БД`);
-        res.json(attraction);
-    } catch (err) {
-        console.error(`❌ Ошибка при получении аттракциона с ID ${id} из БД:`, err);
-        res.status(500).json({ error: 'Не удалось загрузить аттракцион', details: err.message });
-    }
-});
 
 // --- API endpoint для получения аттракционов из БД (для админки - все аттракционы) ---
 app.get('/api/attractions/public', async (req, res) => {
