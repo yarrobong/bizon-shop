@@ -251,7 +251,7 @@ main {
 /* Адаптация: меньше отступы на малых экранах */
 @media (max-width: 479px) {
   .attraction-card-content {
-    padding: 0rem;
+    padding: 0.75rem;
   }
 }
 
