@@ -347,7 +347,7 @@ height: 100%;
     height: 100%;
 }
 
-.attraction-info > div:not(.attraction-title):not(.attraction-price):not(.attraction-stock):not(.product-actions) {
+.attraction-info > div:not(.attraction-title):not(.attraction-price):not(.attraction-stock) {
     flex: 1;
     display: flex;
     flex-direction: column;
