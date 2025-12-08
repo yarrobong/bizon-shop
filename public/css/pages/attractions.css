@@ -1014,10 +1014,6 @@ height: calc(1.3em * 2);
 
 /* === ОБЩИЕ СТИЛИ ДЛЯ ТЕЛЕФОНОВ === */
 @media (max-width: 768px) {
-  .attraction-card {
-    margin: 0rem;
-    padding: 1rem;
-  }
   
   .attraction-info {
     padding: 1rem;
