@@ -1,15 +1,12 @@
 const express = require('express');
 const puppeteer = require('puppeteer');
 const { generateProposalHTML } = require('../public/js/proposalGenerator');
-const { requireAuth } = require('../middleware/auth');
 
 // Создаем два отдельных роутера для разных путей
 const generateProposalRouter = express.Router();
 const generateProposalPdfRouter = express.Router();
 
-// Оба роутера требуют аутентификации
-generateProposalRouter.use(requireAuth);
-generateProposalPdfRouter.use(requireAuth);
+// Роутеры публичные - не требуют аутентификации
 
 /**
  * POST /generate_proposal

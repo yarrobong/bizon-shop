@@ -37,7 +37,7 @@ app.use('/api/admin', require('./routes/admin'));
 // Админские операции с товарами
 app.use('/api/products', require('./routes/products'));
 
-// Товары для КП (требует аутентификации)
+// Товары для КП (публичный доступ)
 app.use('/api/products_for_proposal', require('./routes/productsForProposal'));
 
 // Категории (требуют аутентификации)
@@ -58,7 +58,7 @@ app.use('/api/shipments', logistics.shipments);
 app.use('/api/distribution', logistics.distribution);
 app.use('/api/payments', logistics.payments);
 
-// Коммерческие предложения (требуют аутентификации)
+// Коммерческие предложения (публичный доступ)
 const proposals = require('./routes/proposals');
 app.use('/generate_proposal', proposals.generateProposal);
 app.use('/generate_proposal_pdf', proposals.generateProposalPdf);
