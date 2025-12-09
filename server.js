@@ -103,6 +103,28 @@ process.env.TZ = 'Europe/Moscow';
 
 const { generateProposalHTML } = require('./public/js/proposalGenerator'); // Путь к файлу относительно server.js
 
+// === Утилитарная функция для парсинга images_json ===
+function parseImagesJson(imagesJson, productId = null) {
+  if (!imagesJson) return [];
+  
+  if (typeof imagesJson === 'string') {
+    try {
+      const parsed = JSON.parse(imagesJson);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      if (productId) {
+        console.error(`Ошибка парсинга images_json для товара ${productId}:`, e);
+      }
+      return [];
+    }
+  } else if (Array.isArray(imagesJson)) {
+    return imagesJson;
+  } else if (typeof imagesJson === 'object') {
+    return [imagesJson];
+  }
+  return [];
+}
+
 // === API: Получить товары (все поля) ===
 app.get('/api/products', async (req, res) => {
   try {
@@ -144,24 +166,7 @@ app.get('/api/products', async (req, res) => {
     const result = await pool.query(query, queryParams);
 
     const products = result.rows.map(row => {
-      let images = [];
-      if (row.images_json) {
-        if (typeof row.images_json === 'string') {
-          try {
-            const parsed = JSON.parse(row.images_json);
-            images = Array.isArray(parsed) ? parsed : [];
-          } catch (e) {
-            console.error(`Ошибка парсинга images_json для товара ${row.id}:`, e);
-            images = [];
-          }
-        } else if (Array.isArray(row.images_json)) {
-          images = row.images_json;
-        } else if (typeof row.images_json === 'object') {
-          images = [row.images_json];
-        } else {
-          images = [];
-        }
-      }
+      const images = parseImagesJson(row.images_json, row.id);
 
       return {
         id: row.id,
@@ -389,24 +394,7 @@ app.get('/api/products/:id', async (req, res) => {
     const productRow = productResult.rows[0];
 
     // 2. Обработка изображений
-    let productImages = [];
-    if (productRow.images_json) {
-      if (typeof productRow.images_json === 'string') {
-        try {
-          const parsed = JSON.parse(productRow.images_json);
-          productImages = Array.isArray(parsed) ? parsed : [];
-        } catch (e) {
-          console.error(`Ошибка парсинга images_json для товара ${productId}:`, e);
-          productImages = [];
-        }
-      } else if (Array.isArray(productRow.images_json)) {
-        productImages = productRow.images_json;
-      } else if (typeof productRow.images_json === 'object') {
-        productImages = [productRow.images_json];
-      } else {
-        productImages = [];
-      }
-    }
+    const productImages = parseImagesJson(productRow.images_json, productId);
 
     const product = {
       id: productRow.id,
@@ -456,24 +444,7 @@ app.get('/api/products/:id', async (req, res) => {
       );
 
       variants = variantsResult.rows.map(row => {
-        let variantImages = [];
-        if (row.images_json) {
-          if (typeof row.images_json === 'string') {
-            try {
-              const parsed = JSON.parse(row.images_json);
-              variantImages = Array.isArray(parsed) ? parsed : [];
-            } catch (e) {
-              console.error(`Ошибка парсинга images_json для варианта ${row.id}:`, e);
-              variantImages = [];
-            }
-          } else if (Array.isArray(row.images_json)) {
-            variantImages = row.images_json;
-          } else if (typeof row.images_json === 'object') {
-            variantImages = [row.images_json];
-          } else {
-            variantImages = [];
-          }
-        }
+        const variantImages = parseImagesJson(row.images_json, row.id);
 
         return {
           id: row.id,
@@ -754,36 +725,57 @@ ${cart.map(item => `• ${item.product?.title || 'Неизвестный тов�
 // === API: Получить заказы ===
 app.get('/api/orders', async (req, res) => {
   try {
-    const ordersResult = await pool.query(`
-      SELECT
-        id,
-        phone,
-        comment,
-        total_amount,
-        created_at,
-        COALESCE(status, 'новый') as status
-      FROM orders
-      ORDER BY created_at DESC
+    // Оптимизированный запрос: используем JOIN вместо N+1 запросов
+    const ordersWithItemsResult = await pool.query(`
+      SELECT 
+        o.id,
+        o.phone,
+        o.comment,
+        o.total_amount,
+        o.created_at,
+        COALESCE(o.status, 'новый') as status,
+        oi.product_id,
+        oi.product_title,
+        oi.quantity,
+        oi.price_per_unit,
+        (oi.quantity * oi.price_per_unit) as total_price,
+        oi.id as item_id
+      FROM orders o
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      ORDER BY o.created_at DESC, oi.id
     `);
 
-    const ordersWithItems = await Promise.all(ordersResult.rows.map(async (order) => {
-      const itemsResult = await pool.query(`
-        SELECT
-          product_id,
-          product_title,
-          quantity,
-          price_per_unit,
-          (quantity * price_per_unit) as total_price
-        FROM order_items
-        WHERE order_id = $1
-        ORDER BY id
-      `, [order.id]);
+    // Группируем результаты по заказам
+    const ordersMap = new Map();
+    
+    ordersWithItemsResult.rows.forEach(row => {
+      const orderId = row.id;
+      
+      if (!ordersMap.has(orderId)) {
+        ordersMap.set(orderId, {
+          id: row.id,
+          phone: row.phone,
+          comment: row.comment,
+          total_amount: row.total_amount,
+          created_at: row.created_at,
+          status: row.status,
+          items: []
+        });
+      }
+      
+      // Добавляем товар, если он есть (LEFT JOIN может вернуть null)
+      if (row.product_id) {
+        ordersMap.get(orderId).items.push({
+          product_id: row.product_id,
+          product_title: row.product_title,
+          quantity: row.quantity,
+          price_per_unit: row.price_per_unit,
+          total_price: row.total_price
+        });
+      }
+    });
 
-      return {
-        ...order,
-        items: itemsResult.rows || []
-      };
-    }));
+    const ordersWithItems = Array.from(ordersMap.values());
 
     res.json(ordersWithItems);
   } catch (err) {
@@ -1758,24 +1750,7 @@ app.post('/api/products/bulk', async (req, res) => {
 
     const result = await pool.query(query, [validIds]);
     const products = result.rows.map(row => {
-      let images = [];
-      if (row.images_json) {
-        if (typeof row.images_json === 'string') {
-          try {
-            const parsed = JSON.parse(row.images_json);
-            images = Array.isArray(parsed) ? parsed : [];
-          } catch (e) {
-            console.error(`Ошибка парсинга images_json для товара ${row.id}:`, e);
-            images = [];
-          }
-        } else if (Array.isArray(row.images_json)) {
-          images = row.images_json;
-        } else if (typeof row.images_json === 'object') {
-          images = [row.images_json];
-        } else {
-          images = [];
-        }
-      }
+      const images = parseImagesJson(row.images_json, row.id);
 
       return {
         id: row.id,
@@ -1831,24 +1806,7 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
     const productRow = productResult.rows[0];
 
     // --- НОВОЕ: Безопасная обработка images_json ---
-    let productImages = [];
-    if (productRow.images_json) {
-      if (typeof productRow.images_json === 'string') {
-        try {
-          const parsed = JSON.parse(productRow.images_json);
-          productImages = Array.isArray(parsed) ? parsed : [];
-        } catch (e) {
-          console.error(`Ошибка парсинга images_json для товара ${productRow.id}:`, e);
-          productImages = [];
-        }
-      } else if (Array.isArray(productRow.images_json)) {
-        productImages = productRow.images_json;
-      } else if (typeof productRow.images_json === 'object') {
-        productImages = [productRow.images_json];
-      } else {
-        productImages = [];
-      }
-    }
+    const productImages = parseImagesJson(productRow.images_json, productRow.id);
 
     const product = {
       id: productRow.id,
@@ -1900,24 +1858,7 @@ app.get('/api/product-by-slug/:slug', async (req, res) => {
 
       variants = variantsResult.rows.map(row => {
         // --- НОВОЕ: Безопасная обработка images_json для варианта ---
-        let variantImages = [];
-        if (row.images_json) {
-          if (typeof row.images_json === 'string') {
-            try {
-              const parsed = JSON.parse(row.images_json);
-              variantImages = Array.isArray(parsed) ? parsed : [];
-            } catch (e) {
-              console.error(`Ошибка парсинга images_json для варианта ${row.id}:`, e);
-              variantImages = [];
-            }
-          } else if (Array.isArray(row.images_json)) {
-            variantImages = row.images_json;
-          } else if (typeof row.images_json === 'object') {
-            variantImages = [row.images_json];
-          } else {
-            variantImages = [];
-          }
-        }
+        const variantImages = parseImagesJson(row.images_json, row.id);
 
         return {
           id: row.id,
@@ -2992,24 +2933,7 @@ app.get('/api/products_for_proposal', async (req, res) => {
     `);
 
     const products = result.rows.map(row => {
-      let images = [];
-      if (row.images_json) {
-        if (typeof row.images_json === 'string') {
-          try {
-            const parsed = JSON.parse(row.images_json);
-            images = Array.isArray(parsed) ? parsed : [];
-          } catch (e) {
-            console.error(`Ошибка парсинга images_json для товара ${row.id}:`, e);
-            images = [];
-          }
-        } else if (Array.isArray(row.images_json)) {
-          images = row.images_json;
-        } else if (typeof row.images_json === 'object') {
-          images = [row.images_json];
-        } else {
-          images = [];
-        }
-      }
+      const images = parseImagesJson(row.images_json, row.id);
 
       return {
         id: row.id,
