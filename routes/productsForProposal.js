@@ -1,15 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
-const { requireAuth } = require('../middleware/auth');
 const { parseImagesJson } = require('../utils/parseImages');
-
-// Роут требует аутентификации
-router.use(requireAuth);
 
 /**
  * GET /api/products_for_proposal
  * Получить товары для КП (все, включая недоступные)
+ * Публичный доступ - не требует аутентификации
  */
 router.get('/', async (req, res) => {
   try {
