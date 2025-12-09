@@ -130,12 +130,31 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
             /* Стили для тела документа */
+            @page {
+                margin: 0;
+                padding: 0;
+                size: A4;
+            }
+            
+            * {
+                margin: 0;
+                padding: 0;
+            }
+            
+            html, body {
+                margin: 0;
+                padding: 0;
+                width: 210mm;
+                height: 297mm;
+                overflow: hidden;
+            }
+            
             body {
                 font-family: 'Inter', sans-serif;
                 background-color: var(--bg-primary); /* Темный фон */
                 color: var(--text-secondary); /* Вторичный цвет текста */
                 margin: 0;
-                padding: 10mm; /* Минимальные внутренние отступы для читаемости */
+                padding: 15mm; /* Внутренние отступы для читаемости контента */
                 position: relative; /* Для позиционирования фона */
                 min-height: 297mm; /* Высота A4 */
                 width: 210mm; /* Ширина A4 */

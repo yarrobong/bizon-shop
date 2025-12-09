@@ -85,11 +85,12 @@ generateProposalPdfRouter.post('/', async (req, res) => {
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
+      preferCSSPageSize: false,
       margin: {
-        top: '0mm',
-        bottom: '0mm',
-        left: '0mm',
-        right: '0mm'
+        top: 0,
+        bottom: 0,
+        left: 0,
+        right: 0
       }
     });
 
