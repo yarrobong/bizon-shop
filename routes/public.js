@@ -306,18 +306,79 @@ ${cart.map(item => `• ${item.product?.title || 'Неизвестный тов�
  * Обратная связь (публичный доступ)
  */
 router.post('/contact', publicRateLimit, async (req, res) => {
-  try {
-    const { name, phone, message } = req.body;
+  const { name, phone } = req.body;
 
-    if (!name || !phone || !message) {
-      return res.status(400).json({ success: false, error: 'Все поля обязательны' });
+  if (!phone) {
+    return res.status(400).json({ success: false, error: 'Не указан номер телефона' });
+  }
+
+  const requestHash = JSON.stringify({ name, phone });
+  if (req.app.locals.lastContactRequest === requestHash) {
+    return res.status(200).json({
+      success: true,
+      message: 'Заявка уже обрабатывается'
+    });
+  }
+
+  req.app.locals.lastContactRequest = requestHash;
+  setTimeout(() => {
+    if (req.app.locals.lastContactRequest === requestHash) {
+      req.app.locals.lastContactRequest = null;
+    }
+  }, 30000);
+
+  let telegramSent = false;
+
+  try {
+    const moscowTimeObj = new Date(new Date().toLocaleString("en-US", { timeZone: 'Europe/Moscow' }));
+    const moscowTimeString = moscowTimeObj.toLocaleString('ru-RU', {
+      timeZone: 'Europe/Moscow',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+
+    const cleanPhone = phone.replace(/[^0-9+]/g, '');
+
+    const message = `
+📞 *Новая заявка на обратный звонок BIZON!*
+👤 *Имя:* ${name || 'не указано'}
+📱 *Телефон:* \`${cleanPhone}\`
+🕐 ${moscowTimeString}
+`.trim();
+
+    const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+    const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+    if (BOT_TOKEN && CHAT_ID) {
+      try {
+        await axios.post(
+          `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
+          {
+            chat_id: CHAT_ID,
+            text: message,
+            parse_mode: 'Markdown',
+            disable_web_page_preview: true
+          }
+        );
+        telegramSent = true;
+      } catch (telegramError) {
+        console.error('Ошибка отправки в Telegram:', telegramError.message);
+      }
     }
 
-    // Здесь можно добавить отправку email или сохранение в БД
-    res.json({ success: true, message: 'Сообщение отправлено' });
+    res.json({
+      success: true,
+      savedToDB: false,
+      sentToTelegram: telegramSent
+    });
   } catch (error) {
-    console.error('Ошибка отправки сообщения:', error);
-    res.status(500).json({ success: false, error: 'Ошибка сервера' });
+    console.error('Ошибка обработки заявки:', error);
+    req.app.locals.lastContactRequest = null;
+    res.status(500).json({ success: false, error: 'Ошибка обработки заявки на сервере' });
   }
 });
 

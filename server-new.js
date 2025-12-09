@@ -16,9 +16,10 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Статические файлы
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Инициализация для защиты от повторных заказов
+// Инициализация для защиты от повторных заказов и обратной связи
 app.locals.lastOrderRequest = null;
 app.locals.lastOrderId = null;
+app.locals.lastContactRequest = null;
 
 // --- Routes ---
 // Публичные маршруты (без аутентификации)
@@ -33,10 +34,34 @@ app.use('/api', require('./routes/upload'));
 // Админские маршруты (требуют аутентификации)
 app.use('/api/admin', require('./routes/admin'));
 
-// Здесь можно добавить другие маршруты:
-// app.use('/api/attractions', require('./routes/attractions'));
-// app.use('/api/categories', require('./routes/categories'));
-// app.use('/api/logistics', require('./routes/logistics'));
+// Админские операции с товарами
+app.use('/api/products', require('./routes/products'));
+
+// Товары для КП (требует аутентификации)
+app.use('/api/products_for_proposal', require('./routes/productsForProposal'));
+
+// Категории (требуют аутентификации)
+app.use('/api/categories', require('./routes/categories'));
+
+// Заказы (требуют аутентификации)
+app.use('/api/orders', require('./routes/orders'));
+
+// Аттракционы (публичные и админские)
+app.use('/api/attractions', require('./routes/attractions'));
+
+// Логистика (требуют аутентификации)
+const logistics = require('./routes/logistics');
+app.use('/api/purchase-orders', logistics.purchaseOrders);
+app.use('/api/clients', logistics.clients);
+app.use('/api/buyers', logistics.buyers);
+app.use('/api/shipments', logistics.shipments);
+app.use('/api/distribution', logistics.distribution);
+app.use('/api/payments', logistics.payments);
+
+// Коммерческие предложения (требуют аутентификации)
+const proposals = require('./routes/proposals');
+app.use('/generate_proposal', proposals.generateProposal);
+app.use('/generate_proposal_pdf', proposals.generateProposalPdf);
 
 // --- HTML маршруты ---
 app.get('/product/:slug', (req, res) => {
