@@ -91,10 +91,9 @@ Headers: { "x-session-id": "abc123..." }
 
 Текущая версия включает только основные маршруты. Остальные нужно перенести из `server.js`:
 
-- [ ] `/api/attractions/*` → `routes/attractions.js`
-- [ ] `/api/categories/*` → `routes/categories.js`
-- [ ] `/api/logistics/*` → `routes/logistics.js`
-- [ ] `/generate_proposal*` → `routes/proposals.js`
+- [x] `/api/attractions/*` → `routes/attractions.js`
+- [x] `/api/categories/*` → `routes/categories.js`
+- [x] `/generate_proposal*` → `routes/proposals.js`
 
 ## Безопасность
 

@@ -102,7 +102,6 @@ app.get('/api/products', async (req, res) => {
 - `routes/products.js` - маршруты для товаров
 - `routes/orders.js` - маршруты для заказов
 - `routes/attractions.js` - маршруты для аттракционов
-- `routes/logistics.js` - логистические маршруты
 - `utils/db.js` - утилиты для работы с БД
 - `utils/images.js` - утилиты для работы с изображениями
 - `middleware/auth.js` - middleware для аутентификации

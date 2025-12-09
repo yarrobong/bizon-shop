@@ -49,15 +49,6 @@ app.use('/api/orders', require('./routes/orders'));
 // Аттракционы (публичные и админские)
 app.use('/api/attractions', require('./routes/attractions'));
 
-// Логистика (требуют аутентификации)
-const logistics = require('./routes/logistics');
-app.use('/api/purchase-orders', logistics.purchaseOrders);
-app.use('/api/clients', logistics.clients);
-app.use('/api/buyers', logistics.buyers);
-app.use('/api/shipments', logistics.shipments);
-app.use('/api/distribution', logistics.distribution);
-app.use('/api/payments', logistics.payments);
-
 // Коммерческие предложения (публичный доступ)
 const proposals = require('./routes/proposals');
 app.use('/generate_proposal', proposals.generateProposal);

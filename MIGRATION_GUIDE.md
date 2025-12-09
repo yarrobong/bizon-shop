@@ -81,8 +81,6 @@ bizon-server/
 
 - `/api/attractions/*` - аттракционы
 - `/api/categories/*` - категории
-- `/api/logistics/*` - логистика (clients, buyers, shipments, etc.)
-- `/api/purchase-orders/*` - заказы поставщикам
 - `/generate_proposal*` - генерация коммерческих предложений
 
 ## Защита API
