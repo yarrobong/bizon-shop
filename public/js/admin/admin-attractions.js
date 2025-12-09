@@ -18,6 +18,9 @@ window.loadAttractionsTab = loadAttractionsTab;
 async function loadAttractions() {
     try {
         console.log('Загрузка аттракционов... (админ)');
+        const sessionId = localStorage.getItem('sessionId');
+        console.log('sessionId:', sessionId ? 'найден' : 'НЕ НАЙДЕН');
+        
         // Возвращаем адрес API, который есть на сервере
         const response = await fetchWithAuth('/api/attractions/public'); // <-- Вот эту строку восстанавливаем
         
@@ -27,6 +30,14 @@ async function loadAttractions() {
             renderAttractions(attractions);
         } else {
             console.error('Ошибка загрузки аттракционов (админ):', response.status);
+            if (response.status === 401) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Детали ошибки 401:', errorData);
+                adminPanel.showMessage('Сессия истекла. Пожалуйста, войдите снова.', 'error');
+                setTimeout(() => {
+                    window.location.href = '../login.html';
+                }, 2000);
+            }
             renderAttractions([]);
         }
     } catch (error) {
@@ -655,7 +666,12 @@ async function deleteAttraction(id) {
 
 async function loadAttractionCategoryOptions() {
     try {
-        const response = await fetchWithAuth('/api/attractions/categories');
+        // Этот эндпоинт публичный, но используем fetchWithAuth для единообразия
+        // Если sessionId отсутствует, просто используем обычный fetch
+        const sessionId = localStorage.getItem('sessionId');
+        const response = sessionId 
+            ? await fetchWithAuth('/api/attractions/categories')
+            : await fetch('/api/attractions/categories');
         if (response.ok) {
             const categories = await response.json();
             const datalist = document.getElementById('attraction-categories');

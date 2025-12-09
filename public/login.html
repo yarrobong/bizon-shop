@@ -125,6 +125,12 @@
                     // Сохраняем sessionId для аутентификации API запросов
                     if (data.sessionId) {
                         localStorage.setItem('sessionId', data.sessionId);
+                        console.log('✅ sessionId сохранен:', data.sessionId.substring(0, 10) + '...');
+                    } else {
+                        console.error('❌ sessionId не получен от сервера!');
+                        errorMessage.textContent = 'Ошибка: sessionId не получен от сервера';
+                        errorMessage.style.display = 'block';
+                        return;
                     }
                     // Перенаправляем в админ-панель
                     window.location.href = 'admin.html'; 

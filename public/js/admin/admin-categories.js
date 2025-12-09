@@ -10,6 +10,9 @@ window.loadCategoriesTab = loadCategoriesTab;
 async function loadCategories() {
     try {
         console.log('Загрузка категорий...');
+        const sessionId = localStorage.getItem('sessionId');
+        console.log('sessionId для категорий:', sessionId ? 'найден' : 'НЕ НАЙДЕН');
+        
         const response = await fetchWithAuth('/api/categories');
         
         if (response.ok) {
@@ -18,6 +21,14 @@ async function loadCategories() {
             renderCategories(categories);
         } else {
             console.warn(`API категорий вернул ошибку ${response.status}`);
+            if (response.status === 401) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Детали ошибки 401:', errorData);
+                adminPanel.showMessage('Сессия истекла. Пожалуйста, войдите снова.', 'error');
+                setTimeout(() => {
+                    window.location.href = '../login.html';
+                }, 2000);
+            }
             renderCategories([]);
         }
     } catch (error) {

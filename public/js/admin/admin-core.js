@@ -8,6 +8,15 @@ if (localStorage.getItem('isAdmin') !== 'true') {
     }
 }
 
+// Проверка наличия sessionId при загрузке страницы
+if (localStorage.getItem('isAdmin') === 'true' && !localStorage.getItem('sessionId')) {
+    console.warn('⚠️ Пользователь помечен как админ, но sessionId отсутствует. Перенаправление на страницу входа.');
+    localStorage.removeItem('isAdmin');
+    if (!window.location.pathname.includes('login.html')) {
+        window.location.href = '../login.html';
+    }
+}
+
 // Функция для получения заголовков с аутентификацией
 function getAuthHeaders() {
     const headers = {
@@ -33,6 +42,15 @@ async function fetchWithAuth(url, options = {}) {
     // Всегда добавляем заголовок аутентификации
     if (sessionId) {
         headers['x-session-id'] = sessionId;
+    } else {
+        console.warn('⚠️ sessionId не найден в localStorage для запроса:', url);
+        // Если нет sessionId, но пользователь должен быть авторизован, перенаправляем на логин
+        if (localStorage.getItem('isAdmin') === 'true') {
+            console.error('❌ Пользователь помечен как админ, но sessionId отсутствует. Перенаправление на страницу входа.');
+            localStorage.removeItem('isAdmin');
+            window.location.href = '../login.html';
+            return Promise.reject(new Error('Session expired'));
+        }
     }
     
     // Объединяем пользовательские заголовки с заголовками аутентификации
