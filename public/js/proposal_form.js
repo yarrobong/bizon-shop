@@ -122,19 +122,23 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Создаем форму для отправки на сервер
-        const formData = new FormData();
-        formData.append('manager_name', document.getElementById('manager_name').value);
-        formData.append('manager_contact', document.getElementById('manager_contact').value);
-        formData.append('customer_name', document.getElementById('customer_name').value);
-        formData.append('proposal_title', document.getElementById('proposal_title').value);
-        formData.append('proposal_text', document.getElementById('proposal_text').value);
-        formData.append('selected_products', JSON.stringify(selectedProducts));
+        // Создаем объект данных для отправки на сервер
+        const requestData = {
+            manager_name: document.getElementById('manager_name').value,
+            manager_contact: document.getElementById('manager_contact').value,
+            customer_name: document.getElementById('customer_name').value,
+            proposal_title: document.getElementById('proposal_title').value,
+            proposal_text: document.getElementById('proposal_text').value,
+            selected_products: JSON.stringify(selectedProducts)
+        };
         
         // Отправляем на генерацию HTML страницы
         fetch('/generate_proposal', {
             method: 'POST',
-            body: formData
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
         })
         .then(response => {
             if (!response.ok) {
