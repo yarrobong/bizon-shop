@@ -111,6 +111,49 @@ document.addEventListener('DOMContentLoaded', function() {
         totalAmountSpan.textContent = formatPrice(total);
     }
 
+    // Обработчик отправки формы
+    const proposalForm = document.getElementById('proposal-form');
+    proposalForm.addEventListener('submit', function(e) {
+        e.preventDefault(); // Предотвращаем стандартную отправку формы
+        
+        // Проверяем, что есть выбранные товары
+        if (selectedProducts.length === 0) {
+            alert('Добавьте хотя бы один товар в коммерческое предложение.');
+            return;
+        }
+        
+        // Создаем форму для отправки на сервер
+        const formData = new FormData();
+        formData.append('manager_name', document.getElementById('manager_name').value);
+        formData.append('manager_contact', document.getElementById('manager_contact').value);
+        formData.append('customer_name', document.getElementById('customer_name').value);
+        formData.append('proposal_title', document.getElementById('proposal_title').value);
+        formData.append('proposal_text', document.getElementById('proposal_text').value);
+        formData.append('selected_products', JSON.stringify(selectedProducts));
+        
+        // Отправляем на генерацию HTML страницы
+        fetch('/generate_proposal', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Ошибка генерации КП');
+            }
+            return response.text();
+        })
+        .then(html => {
+            // Открываем HTML в новом окне
+            const newWindow = window.open('', '_blank');
+            newWindow.document.write(html);
+            newWindow.document.close();
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            alert('Ошибка при создании коммерческого предложения. Попробуйте еще раз.');
+        });
+    });
+
     // Инициализация
     calculateTotal();
 });
