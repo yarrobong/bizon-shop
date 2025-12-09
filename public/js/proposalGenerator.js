@@ -141,6 +141,14 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
                 padding: 0;
             }
             
+            html {
+                margin: 0;
+                padding: 0;
+                width: 210mm;
+                height: 297mm;
+                background-color: var(--bg-primary);
+            }
+            
             html, body {
                 margin: 0;
                 padding: 0;
@@ -170,11 +178,16 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
               position: fixed; /* Используем fixed для равномерного охвата при PDF */
               top: 0;
               left: 0;
-              width: 100%;
-              height: 100%;
+              right: 0;
+              bottom: 0;
+              width: 210mm; /* Точная ширина A4 */
+              height: 297mm; /* Точная высота A4 */
+              margin: 0;
+              padding: 0;
               pointer-events: none;
               z-index: -2; /* Поверх сетки, позади контента */
               overflow: hidden;
+              background-color: var(--bg-primary); /* Основной фон */
             }
 
             .pulse-1,
