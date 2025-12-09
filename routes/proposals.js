@@ -12,7 +12,7 @@ const generateProposalPdfRouter = express.Router();
  * POST /generate_proposal
  * Обработать форму и отобразить результат КП
  */
-generateProposalRouter.post('/', (req, res) => {
+generateProposalRouter.post('/', async (req, res) => {
   const { manager_name, manager_contact, customer_name, proposal_title, proposal_text, selected_products } = req.body;
 
   if (!manager_name || !manager_contact || !customer_name || !selected_products) {
@@ -37,8 +37,13 @@ generateProposalRouter.post('/', (req, res) => {
     total += itemPrice * itemQuantity;
   }
 
-  const proposalHTML = generateProposalHTML(manager_name, manager_contact, customer_name, proposal_title, proposal_text, selectedProductsArray, total);
-  res.send(proposalHTML);
+  try {
+    const proposalHTML = await generateProposalHTML(manager_name, manager_contact, customer_name, proposal_title, proposal_text, selectedProductsArray, total);
+    res.send(proposalHTML);
+  } catch (error) {
+    console.error('Ошибка при генерации HTML КП:', error);
+    res.status(500).json({ error: 'Ошибка при генерации коммерческого предложения' });
+  }
 });
 
 /**
