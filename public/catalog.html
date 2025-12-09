@@ -106,20 +106,140 @@
     </div>
 </header>
 
-  <main role="main">
-    <!-- Фильтры по категориям -->
-    <div class="tags"  aria-label="Фильтры по категориям">
-  <button class="tag-btn active" data-category="все">Все</button>
-  <button class="tag-btn" data-category="VR шлемы">VR шлемы</button>
-  <button class="tag-btn" data-category="Крепления">Крепления</button>
-  <button class="tag-btn" data-category="Аккамуляторы">Аккумуляторы</button>
-  <button class="tag-btn" data-category="Док станции">Док-станции</button>
-</div>
-
-    <!-- Список товаров -->
-    <div id="products" class="products" aria-live="polite" aria-atomic="true">
-      <!-- Заполняется через JavaScript -->
+  <main role="main" class="catalog-main">
+    <!-- Контролы каталога (сортировка и мобильные фильтры) -->
+    <div class="catalog-controls">
+      <div class="catalog-header">
+        <div class="sort-container">
+          <label for="sort-select" class="sort-label">Сортировка:</label>
+          <select id="sort-select" class="sort-select" aria-label="Выбор сортировки товаров">
+            <option value="default">По умолчанию</option>
+            <option value="price-asc">Цена: по возрастанию</option>
+            <option value="price-desc">Цена: по убыванию</option>
+            <option value="name-asc">Название: А-Я</option>
+            <option value="name-desc">Название: Я-А</option>
+            <option value="newest">Сначала новинки</option>
+          </select>
+        </div>
+        <button class="mobile-filters-toggle" id="mobile-filters-toggle" aria-label="Показать фильтры">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18M7 12h10M11 18h2"/>
+          </svg>
+          <span>Фильтры</span>
+        </button>
+      </div>
     </div>
+
+    <!-- Контейнер каталога с фильтрами и товарами -->
+    <div class="catalog-container">
+      <!-- Боковая панель фильтров -->
+      <aside class="filters-sidebar" id="filters-sidebar" aria-label="Фильтры товаров">
+        <div class="filters-header">
+          <h2>Фильтры</h2>
+          <button class="filters-close" id="filters-close" aria-label="Закрыть фильтры">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div class="filters-content">
+          <!-- Фильтр по категориям -->
+          <div class="filter-group">
+            <h3 class="filter-title">Категория</h3>
+            <div class="filter-options">
+              <label class="filter-option">
+                <input type="radio" name="category" value="все" checked class="filter-input">
+                <span class="filter-checkbox"></span>
+                <span class="filter-label">Все</span>
+              </label>
+              <label class="filter-option">
+                <input type="radio" name="category" value="VR шлемы" class="filter-input">
+                <span class="filter-checkbox"></span>
+                <span class="filter-label">VR шлемы</span>
+              </label>
+              <label class="filter-option">
+                <input type="radio" name="category" value="Крепления" class="filter-input">
+                <span class="filter-checkbox"></span>
+                <span class="filter-label">Крепления</span>
+              </label>
+              <label class="filter-option">
+                <input type="radio" name="category" value="Аккумуляторы" class="filter-input">
+                <span class="filter-checkbox"></span>
+                <span class="filter-label">Аккумуляторы</span>
+              </label>
+              <label class="filter-option">
+                <input type="radio" name="category" value="Док станции" class="filter-input">
+                <span class="filter-checkbox"></span>
+                <span class="filter-label">Док-станции</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Фильтр по цене -->
+          <div class="filter-group">
+            <h3 class="filter-title">Цена</h3>
+            <div class="price-filter">
+              <div class="price-inputs">
+                <input type="number" id="price-min" class="price-input" placeholder="От" min="0">
+                <span class="price-separator">—</span>
+                <input type="number" id="price-max" class="price-input" placeholder="До" min="0">
+              </div>
+            </div>
+          </div>
+
+          <!-- Фильтр по брендам -->
+          <div class="filter-group">
+            <h3 class="filter-title">Бренд</h3>
+            <div class="filter-options" id="brand-filters">
+              <!-- Заполняется через JavaScript -->
+            </div>
+          </div>
+
+          <!-- Фильтр по тегам -->
+          <div class="filter-group">
+            <h3 class="filter-title">Особые предложения</h3>
+            <div class="filter-options">
+              <label class="filter-option">
+                <input type="checkbox" name="tag" value="новинка" class="filter-input">
+                <span class="filter-checkbox"></span>
+                <span class="filter-label">Новинки</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" name="tag" value="хит" class="filter-input">
+                <span class="filter-checkbox"></span>
+                <span class="filter-label">Хиты</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" name="tag" value="скидка" class="filter-input">
+                <span class="filter-checkbox"></span>
+                <span class="filter-label">Скидки</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" name="tag" value="акция" class="filter-input">
+                <span class="filter-checkbox"></span>
+                <span class="filter-label">Акции</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Кнопка сброса фильтров -->
+          <button class="reset-filters-btn" id="reset-filters">Сбросить фильтры</button>
+        </div>
+      </aside>
+
+      <!-- Основная область с товарами -->
+      <div class="catalog-content">
+        <!-- Список товаров -->
+        <div id="products" class="products" aria-live="polite" aria-atomic="true">
+          <!-- Заполняется через JavaScript -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Overlay для мобильных фильтров -->
+    <div class="filters-overlay" id="filters-overlay"></div>
   </main>
 
   <!-- Подвал -->
