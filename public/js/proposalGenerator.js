@@ -66,6 +66,17 @@ async function getFirstImageBase64(images) {
 }
 
 
+// Функция экранирования HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 // --- ОБНОВЛЕННАЯ функция генерации HTML (теперь асинхронная) ---
 async function generateProposalHTML(manager_name, manager_contact, customer_name, proposal_title, proposal_text, selectedProducts, total) {
     // Получаем base64 для логотипа
@@ -329,9 +340,27 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
                 z-index: 1; /* Поверх фона */
             }
 
-            /* Убираем кнопку печати */
-            .print-btn {
-                display: none; /* Скрываем кнопку */
+            /* Кнопка скачивания PDF */
+            .download-pdf-btn {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: var(--accent-electric-blue);
+                color: var(--bg-primary);
+                border: none;
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-weight: 600;
+                font-size: 14px;
+                cursor: pointer;
+                z-index: 1000;
+                box-shadow: 0 4px 12px rgba(0, 229, 255, 0.4);
+                transition: all 0.3s ease;
+            }
+            .download-pdf-btn:hover {
+                background: var(--accent-deep-blue);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(0, 229, 255, 0.6);
             }
 
         </style>
@@ -391,7 +420,57 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
             <p>© ${new Date().getFullYear()} BIZON — Все права защищены</p>
         </div>
 
-        <!-- Убрана кнопка печати -->
+        <!-- Кнопки печати/скачивания PDF -->
+        <button class="download-btn" onclick="downloadServerPDF()">Скачать PDF (сервер)</button>
+        <button class="print-btn" onclick="window.print()">Печать (браузер)</button>
+        
+        <!-- Скрытая форма для отправки на сервер для генерации PDF -->
+        <form id="pdf-form" method="POST" action="/generate_proposal_pdf" style="display: none;" target="_blank">
+            <input type="hidden" name="manager_name" value="${escapeHtml(manager_name)}">
+            <input type="hidden" name="manager_contact" value="${escapeHtml(manager_contact)}">
+            <input type="hidden" name="customer_name" value="${escapeHtml(customer_name)}">
+            <input type="hidden" name="proposal_title" value="${escapeHtml(proposal_title)}">
+            <input type="hidden" name="proposal_text" value="${escapeHtml(proposal_text)}">
+            <input type="hidden" name="selected_products" value="${escapeHtml(JSON.stringify(selectedProducts))}">
+        </form>
+        
+        <script>
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+            
+            function downloadServerPDF() {
+                const form = document.getElementById('pdf-form');
+                const formData = new FormData(form);
+                
+                fetch('/generate_proposal_pdf', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Ошибка генерации PDF');
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'kommercheskoe_predlozhenie_${escapeHtml(customer_name).replace(/[^a-zA-Zа-яА-Я0-9]/g, '_')}.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    alert('Ошибка при скачивании PDF. Попробуйте использовать кнопку "Печать (браузер)"');
+                });
+            }
+        </script>
 
     </body>
     </html>
