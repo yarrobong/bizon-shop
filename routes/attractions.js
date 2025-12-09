@@ -27,9 +27,15 @@ router.get('/yml', async (req, res) => {
     const BASE_URL = process.env.BASE_URL || 'https://bizon-business.ru';
 
     const makeAbsoluteUrl = (url) => {
+      if (!url || typeof url !== 'string') return null;
+      // Убираем пробелы
+      url = url.trim();
       if (!url) return null;
+      // Если уже абсолютный URL, возвращаем как есть
       if (/^https?:\/\//i.test(url)) return url;
+      // Если начинается со слеша, добавляем BASE_URL
       if (url.startsWith('/')) return `${BASE_URL}${url}`;
+      // Иначе добавляем BASE_URL и слеш
       return `${BASE_URL}/${url}`;
     };
 
@@ -81,35 +87,55 @@ router.get('/yml', async (req, res) => {
     ymlContent += `  </categories>\n  <offers>\n`;
 
     attractionsResult.rows.forEach(row => {
+      // Получаем все изображения и преобразуем в абсолютные URL
       const imagesForAttraction = (imagesMap[row.id] || []).map(makeAbsoluteUrl).filter(Boolean);
-      const primaryImage = imagesForAttraction.length > 0 ? imagesForAttraction[0] : makeAbsoluteUrl(row.image);
+      const primaryImage = imagesForAttraction.length > 0 
+        ? imagesForAttraction[0] 
+        : (row.image ? makeAbsoluteUrl(row.image) : null);
+      
+      // Пропускаем офферы без изображений (picture обязателен)
+      if (!primaryImage) {
+        console.warn(`⚠️ Аттракцион ID ${row.id} не имеет изображений, пропускаем из фида`);
+        return;
+      }
+      
       const category_id = categoryIdMap.get(row.category) || '';
 
-      const vendor = row.category ? row.category : 'BIZON';
-      const typePrefix = row.category ? row.category : 'VR-аттракцион';
+      // vendor и typePrefix обязательны - всегда заполняем
+      const vendor = (row.category && String(row.category).trim()) ? String(row.category).trim() : 'BIZON';
+      const typePrefix = (row.category && String(row.category).trim()) ? String(row.category).trim() : 'VR-аттракцион';
+
+      // Проверяем что vendor и typePrefix не пустые
+      if (!vendor || !typePrefix) {
+        console.warn(`⚠️ Аттракцион ID ${row.id} имеет пустые vendor/typePrefix, используем значения по умолчанию`);
+      }
 
       ymlContent += `   <offer id="${row.id}" type="vendor.model">\n`;
-      ymlContent += `    <name>${xmlEscape(row.title)}</name>\n`;
+      ymlContent += `    <name>${xmlEscape(row.title || '')}</name>\n`;
       ymlContent += `    <url>https://bizon-business.ru/attraction/${row.slug || row.id}</url>\n`;
-      ymlContent += `    <price>${parseFloat(row.price)}</price>\n`;
+      ymlContent += `    <price>${parseFloat(row.price) || 0}</price>\n`;
       ymlContent += `    <currencyId>RUR</currencyId>\n`;
       if (category_id) {
         ymlContent += `    <categoryId>${category_id}</categoryId>\n`;
       }
-      if (primaryImage) {
-        ymlContent += `    <picture>${xmlEscape(primaryImage)}</picture>\n`;
-      }
+      // picture обязателен - всегда добавляем
+      ymlContent += `    <picture>${xmlEscape(primaryImage)}</picture>\n`;
+      
+      // Дополнительные изображения
       if (imagesForAttraction.length > 1) {
         imagesForAttraction.slice(1).forEach(pic => {
-          ymlContent += `    <picture>${xmlEscape(pic)}</picture>\n`;
+          if (pic && pic.trim()) {
+            ymlContent += `    <picture>${xmlEscape(pic)}</picture>\n`;
+          }
         });
       }
       if (row.description) {
         ymlContent += `    <description>${xmlEscape(row.description)}</description>\n`;
       }
-      ymlContent += `    <vendor>${xmlEscape(vendor)}</vendor>\n`;
-      ymlContent += `    <typePrefix>${xmlEscape(typePrefix)}</typePrefix>\n`;
-      ymlContent += `    <model>${xmlEscape(row.title)}</model>\n`;
+      // vendor и typePrefix всегда должны быть заполнены и не пустые
+      ymlContent += `    <vendor>${xmlEscape(vendor || 'BIZON')}</vendor>\n`;
+      ymlContent += `    <typePrefix>${xmlEscape(typePrefix || 'VR-аттракцион')}</typePrefix>\n`;
+      ymlContent += `    <model>${xmlEscape(row.title || '')}</model>\n`;
 
       if (row["specs.places"]) ymlContent += `    <param name="Количество мест">${xmlEscape(row["specs.places"])}</param>\n`;
       if (row["specs.power"]) ymlContent += `    <param name="Потребляемая мощность">${xmlEscape(row["specs.power"])}</param>\n`;
