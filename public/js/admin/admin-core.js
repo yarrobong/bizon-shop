@@ -8,6 +8,48 @@ if (localStorage.getItem('isAdmin') !== 'true') {
     }
 }
 
+// Функция для получения заголовков с аутентификацией
+function getAuthHeaders() {
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    const sessionId = localStorage.getItem('sessionId');
+    if (sessionId) {
+        headers['x-session-id'] = sessionId;
+    }
+    return headers;
+}
+
+// Обертка для fetch с автоматическим добавлением заголовков аутентификации
+async function fetchWithAuth(url, options = {}) {
+    const sessionId = localStorage.getItem('sessionId');
+    const headers = {};
+    
+    // Для FormData не устанавливаем Content-Type (браузер установит автоматически с boundary)
+    if (!(options.body instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+    }
+    
+    // Всегда добавляем заголовок аутентификации
+    if (sessionId) {
+        headers['x-session-id'] = sessionId;
+    }
+    
+    // Объединяем пользовательские заголовки с заголовками аутентификации
+    const mergedHeaders = {
+        ...headers,
+        ...(options.headers || {})
+    };
+    
+    return fetch(url, {
+        ...options,
+        headers: mergedHeaders
+    });
+}
+
+// Делаем функцию доступной глобально
+window.fetchWithAuth = fetchWithAuth;
+
 class AdminPanel {
     constructor() {
         this.currentTab = 'products';
@@ -17,12 +59,8 @@ class AdminPanel {
 
     async init() {
         this.setupEventListeners();
-        // Инициализация основных компонентов будет вызываться отдельно
-        // await this.loadProducts(); // Вызывается из admin-products.js
-        // await this.loadAttractions(); // Вызывается из admin-attractions.js
-        // await this.loadCategories(); // Вызывается из admin-categories.js
-        // await this.loadOrders(); // Вызывается из admin-orders.js
-        // await this.loadSupplierCatalog(); // Вызывается из admin-supplier-catalog.js
+        // Данные для активной вкладки загружаются через DOMContentLoaded в каждом модуле
+        // и при переключении вкладок через switchTab
     }
 
     setupEventListeners() {
@@ -80,6 +118,7 @@ class AdminPanel {
 
     logout() {
         localStorage.removeItem('isAdmin');
+        localStorage.removeItem('sessionId');
         window.location.href = '../login.html'; // Предполагаем, что login.html находится на уровень выше
     }
 

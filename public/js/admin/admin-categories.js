@@ -4,10 +4,13 @@ async function loadCategoriesTab() {
     await loadCategories();
 }
 
+// Делаем функцию доступной глобально
+window.loadCategoriesTab = loadCategoriesTab;
+
 async function loadCategories() {
     try {
         console.log('Загрузка категорий...');
-        const response = await fetch('/api/categories');
+        const response = await fetchWithAuth('/api/categories');
         
         if (response.ok) {
             const categories = await response.json();
@@ -101,9 +104,8 @@ async function saveCategory() {
             return;
         }
 
-        const response = await fetch('/api/categories', {
+        const response = await fetchWithAuth('/api/categories', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: categoryName })
         });
 
@@ -131,7 +133,7 @@ async function deleteCategory(categoryId) {
     }
 
     try {
-        const response = await fetch(`/api/categories/${categoryId}`, {
+        const response = await fetchWithAuth(`/api/categories/${categoryId}`, {
             method: 'DELETE'
         });
 

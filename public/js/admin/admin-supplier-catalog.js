@@ -22,7 +22,7 @@ async function loadSupplierCatalog(searchTerm = '') {
     try {
         container.innerHTML = '<div class="empty">Загрузка товаров...</div>';
         
-        const response = await fetch('/api/products?admin=true');
+        const response = await fetchWithAuth('/api/products?admin=true');
         
         
         if (!response.ok) {

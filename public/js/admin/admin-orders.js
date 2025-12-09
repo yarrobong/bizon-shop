@@ -4,13 +4,17 @@ async function loadOrdersTab() {
     await loadOrders();
 }
 
+// Делаем функцию доступной глобально
+window.loadOrdersTab = loadOrdersTab;
+
 async function loadOrders() {
     try {
-        const response = await fetch('/api/orders');
+        const response = await fetch('/api/admin/orders');
         if (response.ok) {
             const orders = await response.json();
             renderOrders(orders);
         } else {
+            console.error('Ошибка загрузки заказов:', response.status, response.statusText);
             renderOrders([]);
         }
     } catch (error) {
@@ -118,9 +122,8 @@ function renderOrders(orders) {
             }
 
             try {
-                const response = await fetch(`/api/orders/${orderId}/status`, {
+                const response = await fetchWithAuth(`/api/orders/${orderId}/status`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ status: newStatus })
                 });
 
@@ -154,7 +157,7 @@ function renderOrders(orders) {
             }
 
             try {
-                const response = await fetch(`/api/orders/${orderId}`, {
+                const response = await fetchWithAuth(`/api/orders/${orderId}`, {
                     method: 'DELETE'
                 });
 

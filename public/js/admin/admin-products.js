@@ -13,12 +13,15 @@ async function loadProductsTab() {
     setupVariantsFunctionality();
 }
 
+// Делаем функцию доступной глобально
+window.loadProductsTab = loadProductsTab;
+
 // --- Функции для работы с товарами ---
 
 async function loadProducts() {
     try {
         console.log('Загрузка товаров...');
-        const response = await fetch('/api/products?admin=true');
+        const response = await fetchWithAuth('/api/products?admin=true');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -101,7 +104,7 @@ function openProductModal(productId = null) {
 
 async function loadProductForEdit(productId) {
     try {
-        const response = await fetch(`/api/products/${productId}`);
+        const response = await fetchWithAuth(`/api/products/${productId}`);
         if (response.ok) {
             const product = await response.json();
             const title = document.getElementById('modal-title');
@@ -208,7 +211,7 @@ async function handleProductFileSelect(files) {
                 const formData = new FormData();
                 formData.append('image', file);
 
-                const response = await fetch('/api/upload', {
+                const response = await fetchWithAuth('/api/upload', {
                     method: 'POST',
                     body: formData
                 });
@@ -413,7 +416,7 @@ function getProductImagesFromForm() {
 
 async function loadCategoriesForSelect() {
     try {
-        const response = await fetch('/api/categories');
+        const response = await fetchWithAuth('/api/categories');
         if (response.ok) {
             const categories = await response.json();
             const categorySelect = document.getElementById('product-category');
@@ -437,7 +440,7 @@ async function loadCategoriesForSelect() {
 async function loadAllProductsCache() {
     try {
         // Обновляем кэш, используя show_all=true
-        const response = await fetch('/api/products?admin=true&show_all=true');
+        const response = await fetchWithAuth('/api/products?admin=true&show_all=true');
         if (!response.ok) {
             console.warn('Не удалось загрузить полный список товаров для поиска вариантов.');
             allProductsCache = []; // Очищаем кэш в случае ошибки
@@ -456,7 +459,7 @@ async function loadAllProductsCache() {
 async function loadProducts() {
     try {
         console.log('Загрузка товаров...');
-        const response = await fetch('/api/products?admin=true&show_all=true'); // ← изменено
+        const response = await fetchWithAuth('/api/products?admin=true&show_all=true'); // ← изменено
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -649,9 +652,8 @@ async function saveProduct() {
         const method = isUpdate ? 'PUT' : 'POST';
         const url = isUpdate ? `/api/products/${productId.trim()}` : '/api/products';
 
-        const response = await fetch(url, {
+        const response = await fetchWithAuth(url, {
             method: method,
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(productData)
         });
 
@@ -670,9 +672,8 @@ async function saveProduct() {
         const savedProduct = await response.json();
 
         if (savedProduct && savedProduct.id) {
-            const variantLinkResponse = await fetch(`/api/products/${savedProduct.id}/variants`, {
+            const variantLinkResponse = await fetchWithAuth(`/api/products/${savedProduct.id}/variants`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ variantIds: selectedVariantIds })
             });
 
@@ -703,7 +704,7 @@ async function saveProduct() {
 async function deleteProduct(productId) {
     if (!confirm('Вы уверены, что хотите удалить этот товар?')) return;
     try {
-        const response = await fetch(`/api/products/${productId}`, { method: 'DELETE' });
+        const response = await fetchWithAuth(`/api/products/${productId}`, { method: 'DELETE' });
         if (response.ok) {
             await loadProducts();
             adminPanel.showMessage('Товар удален успешно!', 'success');

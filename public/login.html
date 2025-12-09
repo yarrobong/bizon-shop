@@ -122,6 +122,10 @@
                 if (data.success) {
                     // Сохраняем информацию о входе
                     localStorage.setItem('isAdmin', 'true');
+                    // Сохраняем sessionId для аутентификации API запросов
+                    if (data.sessionId) {
+                        localStorage.setItem('sessionId', data.sessionId);
+                    }
                     // Перенаправляем в админ-панель
                     window.location.href = 'admin.html'; 
                 } else {

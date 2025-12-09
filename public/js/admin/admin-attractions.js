@@ -10,13 +10,16 @@ async function loadAttractionsTab() {
     await loadAttractionCategoryOptions();
 }
 
+// Делаем функцию доступной глобально
+window.loadAttractionsTab = loadAttractionsTab;
+
 // --- Функции для работы с аттракционами ---
 
 async function loadAttractions() {
     try {
         console.log('Загрузка аттракционов... (админ)');
         // Возвращаем адрес API, который есть на сервере
-        const response = await fetch('/api/attractions/public'); // <-- Вот эту строку восстанавливаем
+        const response = await fetchWithAuth('/api/attractions/public'); // <-- Вот эту строку восстанавливаем
         
         if (response.ok) {
             const attractions = await response.json();
@@ -118,7 +121,7 @@ function openAttractionModal(attractionId = null) {
 // --- Функция загрузки аттракциона для редактирования ---
 async function loadAttractionForEdit(attractionId) {
     try {
-        const response = await fetch(`/api/attractions/${attractionId}`); // Используем существующий API
+        const response = await fetchWithAuth(`/api/attractions/${attractionId}`); // Используем существующий API
         if (response.ok) {
             const attraction = await response.json();
             const title = document.getElementById('attraction-modal-title');
@@ -336,7 +339,7 @@ async function handleAttractionFileSelect(files) {
                 const formData = new FormData();
                 formData.append('image', file);
 
-                const response = await fetch('/api/upload', {
+                const response = await fetchWithAuth('/api/upload', {
                     method: 'POST',
                     body: formData
                 });
@@ -601,15 +604,13 @@ async function saveAttraction() {
     try {
         let response;
         if (isEdit) {
-            response = await fetch(`/api/attractions/${id}`, {
+            response = await fetchWithAuth(`/api/attractions/${id}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(attractionData)
             });
         } else {
-            response = await fetch('/api/attractions', {
+            response = await fetchWithAuth('/api/attractions', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(attractionData)
             });
         }
@@ -635,7 +636,7 @@ document.getElementById('add-attraction-video-btn')?.addEventListener('click', (
 async function deleteAttraction(id) {
     if (!confirm('Вы уверены, что хотите удалить этот аттракцион?')) return;
     try {
-        const response = await fetch(`/api/attractions/${id}`, { method: 'DELETE' });
+        const response = await fetchWithAuth(`/api/attractions/${id}`, { method: 'DELETE' });
         if (response.ok) {
             console.log('Аттракцион удален');
             showMessage('Аттракцион удален успешно!', 'success');
@@ -654,7 +655,7 @@ async function deleteAttraction(id) {
 
 async function loadAttractionCategoryOptions() {
     try {
-        const response = await fetch('/api/attractions/categories');
+        const response = await fetchWithAuth('/api/attractions/categories');
         if (response.ok) {
             const categories = await response.json();
             const datalist = document.getElementById('attraction-categories');
