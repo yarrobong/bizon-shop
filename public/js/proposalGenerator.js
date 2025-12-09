@@ -135,7 +135,7 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
                 background-color: var(--bg-primary); /* Темный фон */
                 color: var(--text-secondary); /* Вторичный цвет текста */
                 margin: 0;
-                padding: 20mm; /* Отступы для PDF */
+                padding: 5mm; /* Минимальные отступы для PDF */
                 position: relative; /* Для позиционирования фона */
                 min-height: 297mm; /* Высота A4 */
                 width: 210mm; /* Ширина A4 */
