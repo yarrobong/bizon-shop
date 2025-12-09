@@ -42,15 +42,13 @@
         <button class="tab tab-lifted" data-tab="supplier-catalog">Каталог для заказа</button>
       </div>
     </nav>
-
-    <!-- Main Content -->
-    <main class="flex-1 p-6">
-      <!-- Товары (по умолчанию активна) -->
-      <section id="products-tab" class="tab-content">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-lg font-semibold">Управление товарами</h2>
-          <button id="add-product-btn" class="btn btn-primary btn-sm">Добавить товар</button>
-        </div>
+        <main class="admin-main">
+            <!-- Вкладка Товары -->
+            <section id="products-tab" class="tab-content active">
+                <div class="tab-header">
+                    <h2>Управление товарами</h2>
+                    <button id="add-product-btn" class="btn-primary">Добавить товар</button>
+                </div>
                 <div id="admin-products-grid" class="admin-grid">
                     <!-- Товары будут подгружаться сюда -->
                 </div>
