@@ -60,7 +60,7 @@ main {
 @media (min-width: 1024px) {
   .products {
     grid-template-columns: repeat(3, 1fr);
-    gap: 2.8rem;
+    
     padding: 2rem;
   }
 }
