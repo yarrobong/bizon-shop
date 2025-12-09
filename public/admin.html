@@ -1,347 +1,262 @@
 <!DOCTYPE html>
-<html lang="ru" data-bs-theme="dark">
+<html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Админ-панель</title>
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="/assets/icons/favicon/favicon-96x96.png" sizes="96x96" />
-  <link rel="icon" type="image/svg+xml" href="/assets/icons/favicon/favicon.svg" />
-  <link rel="shortcut icon" href="/assets/icons/favicon/favicon.ico" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/favicon/apple-touch-icon.png" />
-  <link rel="manifest" href="/assets/icons/favicon/site.webmanifest" />
-
-  <!-- Bootstrap 5.3.3 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-
-  <!-- Кастомные стили (ваш CSS будет переопределять Bootstrap при необходимости) -->
-  <link rel="stylesheet" href="css/pages/admin.css" />
-  <link rel="stylesheet" href="css/pages/attractions.css" />
-
-  <style>
-    /* Улучшаем внешний вид карточек и сетки */
-    .admin-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1.5rem;
-      padding: 1rem 0;
-    }
-
-    .card {
-      height: 100%;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-    .card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3);
-    }
-
-    .tab-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-    }
-
-    .images-section, .form-group {
-      margin-top: 1rem;
-    }
-
-    .cookie-consent-banner {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: rgba(33, 37, 41, 0.95);
-      color: #fff;
-      padding: 1rem;
-      z-index: 9999;
-    }
-    .cookie-consent-content {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-    }
-    .cookie-consent-text {
-      flex: 1;
-      min-width: 250px;
-    }
-    .cookie-consent-buttons {
-      display: flex;
-      gap: 0.5rem;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель</title>
+      <link rel="icon" type="image/png" href="/assets/icons/favicon/favicon-96x96.png" sizes="96x96" />
+<link rel="icon" type="image/svg+xml" href="/assets/icons/favicon/favicon.svg" />
+<link rel="shortcut icon" href="/assets/icons/favicon/favicon.ico" />
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/favicon/apple-touch-icon.png" />
+<link rel="manifest" href="/assets/icons/favicon/site.webmanifest" />
+    <link rel="stylesheet" href="css/pages/admin.css">
+    <link rel="stylesheet" href="css/pages/attractions.css">
+   
+ 
 </head>
 <body>
-  <div class="container-fluid admin-container">
-    <header class="d-flex justify-content-between align-items-center py-3 mb-4 border-bottom">
-      <h1 class="h3">Админ-панель</h1>
-      <button id="logout-btn" class="btn btn-outline-danger">Выйти</button>
-    </header>
+    <div class="admin-container">
+        <header class="admin-header">
+            <h1>Админ-панель</h1>
+            <button id="logout-btn" class="btn-danger">Выйти</button>
+        </header>
 
-    <nav class="mb-4">
-      <div class="btn-group" role="group" aria-label="Admin tabs">
-        <button class="btn btn-outline-primary nav-btn active" data-tab="products">Товары</button>
-        <button class="btn btn-outline-primary nav-btn" data-tab="attractions">Аттракционы</button>
-        <button class="btn btn-outline-primary nav-btn" data-tab="categories">Категории</button>
-        <button class="btn btn-outline-primary nav-btn" data-tab="orders">Заказы</button>
-        <button class="btn btn-outline-primary nav-btn" data-tab="supplier-catalog">Каталог для заказа</button>
-      </div>
-    </nav>
+        <nav class="admin-nav">
+            <button class="nav-btn active" data-tab="products">Товары</button>
+            <button class="nav-btn" data-tab="attractions">Аттракционы</button>
+            <button class="nav-btn" data-tab="categories">Категории</button>
+            <button class="nav-btn" data-tab="orders">Заказы</button>
+            <button class="nav-btn" data-tab="supplier-catalog">Каталог для заказа</button>
+        </nav>
 
-    <main>
-      <!-- Вкладка Товары -->
-      <section id="products-tab" class="tab-content active">
+        <main class="admin-main">
+            <!-- Вкладка Товары -->
+            <section id="products-tab" class="tab-content active">
+                <div class="tab-header">
+                    <h2>Управление товарами</h2>
+                    <button id="add-product-btn" class="btn-primary">Добавить товар</button>
+                </div>
+                <div id="admin-products-grid" class="admin-grid">
+                    <!-- Товары будут подгружаться сюда -->
+                </div>
+            </section>
+            <!-- Новая вкладка Аттракционы -->
+            <section id="attractions-tab" class="tab-content">
+                <div class="tab-header">
+                    <h2>Управление аттракционами</h2>
+                    <button id="add-attraction-btn" class="btn-primary">Добавить аттракцион</button>
+                </div>
+                <div id="admin-attractions-grid" class="admin-grid">
+                    <!-- Аттракционы будут подгружаться сюда -->
+                    <div class="empty">Загрузка аттракционов...</div>
+                </div>
+            </section>
+
+            <!-- Вкладка Категории -->
+            <section id="categories-tab" class="tab-content">
+                <div class="tab-header">
+                    <h2>Управление категориями</h2>
+                    <button id="add-category-btn" class="btn-primary">Добавить категорию</button>
+                </div>
+                <div id="categories-list" class="admin-list">
+                    <!-- Категории будут подгружаться сюда -->
+                </div>
+            </section>
+
+            <!-- Вкладка Заказы -->
+            <section id="orders-tab" class="tab-content">
+                <h2>Заказы</h2>
+                <div id="orders-list" class="admin-list">
+                    <!-- Заказы будут подгружаться сюда -->
+                </div>
+            </section>
+            <section id="supplier-catalog-tab" class="tab-content">
         <div class="tab-header">
-          <h2>Управление товарами</h2>
-          <button id="add-product-btn" class="btn btn-primary">Добавить товар</button>
-        </div>
-        <div id="admin-products-grid" class="admin-grid">
-          <!-- Товары будут подгружаться сюда -->
-        </div>
-      </section>
-
-      <!-- Вкладка Аттракционы -->
-      <section id="attractions-tab" class="tab-content d-none">
-        <div class="tab-header">
-          <h2>Управление аттракционами</h2>
-          <button id="add-attraction-btn" class="btn btn-primary">Добавить аттракцион</button>
-        </div>
-        <div id="admin-attractions-grid" class="admin-grid">
-          <div class="text-muted">Загрузка аттракционов...</div>
-        </div>
-      </section>
-
-      <!-- Вкладка Категории -->
-      <section id="categories-tab" class="tab-content d-none">
-        <div class="tab-header">
-          <h2>Управление категориями</h2>
-          <button id="add-category-btn" class="btn btn-primary">Добавить категорию</button>
-        </div>
-        <div id="categories-list" class="admin-list">
-          <!-- Категории будут подгружаться сюда -->
-        </div>
-      </section>
-
-      <!-- Вкладка Заказы -->
-      <section id="orders-tab" class="tab-content d-none">
-        <h2>Заказы</h2>
-        <div id="orders-list" class="admin-list">
-          <!-- Заказы будут подгружаться сюда -->
-        </div>
-      </section>
-
-      <!-- Вкладка Каталог поставщика -->
-      <section id="supplier-catalog-tab" class="tab-content d-none">
-        <div class="tab-header">
-          <h2>Каталог для заказа у поставщика</h2>
-          <div>
-            <input type="text" id="supplier-catalog-search" placeholder="Поиск по названию или ссылке..." class="form-control w-auto" />
-          </div>
+            <h2>Каталог для заказа у поставщика</h2>
+            <div>
+                <input type="text" id="supplier-catalog-search" placeholder="Поиск по названию или ссылке..." class="search-input">
+            </div>
         </div>
         <div id="supplier-catalog-grid" class="admin-grid">
-          <div class="text-muted">Загрузка товаров...</div>
+            <!-- Товары будут подгружаться сюда -->
+            <div class="empty">Загрузка товаров...</div>
         </div>
-      </section>
-    </main>
-  </div>
+    </section>
+        </main>
+    </div>
 
-  <!-- Модальное окно для товара -->
-  <div id="product-modal" class="modal fade" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 id="modal-title" class="modal-title">Добавить товар</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <!-- Модальное окно для товара -->
+<div id="product-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 id="modal-title">Добавить товар</h2>
+        <form id="product-form"> 
+            <input type="hidden" id="product-id" name="product-id">
+            
+            <label for="product-title">Название:</label>
+            <input type="text" id="product-title" name="product-title" required> 
+
+            <label for="product-description">Описание:</label>
+            <textarea id="product-description" name="product-description"></textarea> 
+
+            <label for="product-price">Цена (руб.):</label>
+            <input type="number" id="product-price" name="product-price" step="0.01" required> 
+
+            <label for="product-supplier-link">Ссылка на поставщика:</label>
+ <input type="text" id="product-supplier-link" name="product-supplier-link">
+
+ <label for="product-supplier-notes">Примечание к ссылке:</label>
+ <input type="text" id="product-supplier-notes" name="product-supplier-notes">
+
+            <label for="product-category">Категория:</label>
+            <select id="product-category" name="product-category" required> 
+                <!-- Опции будут загружены динамически -->
+            </select>
+
+            <!-- Управление изображениями -->
+            <div class="images-section">
+                <h3>Изображения товара</h3>
+                <div id="images-drop-zone" class="images-drop-zone">
+                    <div id="images-container" class="images-grid">
+                        <!-- Изображения будут добавлены сюда динамически -->
+                    </div>
+                    <div id="drop-hint" class="drop-hint">
+                        <p>Перетащите изображения сюда или нажмите "Добавить изображение"</p>
+                    </div>
+                </div>
+                <button type="button" id="add-image-btn" class="btn-secondary">Добавить изображение</button>
+            </div>
+
+            <label>
+                <input type="checkbox" id="product-available" name="product-available" checked> Доступен
+            </label>
+
+            <!-- Новый раздел: Варианты товара -->
+            <div class="variants-section">
+                <h3>Варианты товара</h3>
+                <p class="hint">Выберите товары, которые являются вариантами этого товара (например, разные цвета или объемы).</p>
+                
+                <!-- Список выбранных вариантов -->
+                <div id="selected-variants-list" class="selected-variants-list">
+                    <!-- Выбранные варианты будут отображаться здесь -->
+                </div>
+
+                <!-- Поле поиска для добавления вариантов -->
+                <div class="variant-search-container">
+                    <input type="text" id="variant-search" placeholder="Поиск товаров для добавления как варианты..." autocomplete="off">
+                    <div id="variant-search-results" class="variant-search-results hidden">
+                        <!-- Результаты поиска будут отображаться здесь -->
+                    </div>
+                </div>
+                <!-- Скрытое поле для хранения ID выбранных вариантов -->
+                <input type="hidden" id="selected-variant-ids" name="selected-variant-ids">
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" id="cancel-btn" class="btn-secondary">Отмена</button>
+                <button type="submit" class="btn-primary">Сохранить</button>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- Модальное окно для аттракциона -->
+<div id="attraction-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-attraction-modal close">&times;</span>
+        <h2 id="attraction-modal-title">Добавить аттракцион</h2>
+        <form id="attraction-form">
+            <input type="hidden" id="attraction-id" name="attraction-id">
+
+            <label for="attraction-title">Название:</label>
+            <input type="text" id="attraction-title" name="attraction-title" required>
+
+            <label for="attraction-description">Описание:</label>
+            <textarea id="attraction-description" name="attraction-description" required></textarea>
+
+            <label for="attraction-price">Цена (руб.):</label>
+            <input type="number" id="attraction-price" name="attraction-price" step="0.01" required>
+
+            <label for="attraction-category">Категория:</label>
+            <input type="text" id="attraction-category" name="attraction-category" list="attraction-categories" required>
+            <datalist id="attraction-categories">
+                <!-- Опции будут загружены динамически -->
+            </datalist>
+
+            <!-- НОВОЕ: Поле для произвольных характеристик -->
+            <div class="form-group">
+                <label for="attraction-specs">Характеристики (JSON):</label>
+                <textarea id="attraction-specs" name="attraction-specs" rows="4" placeholder='{"places": "1", "power": "500W", "custom_field": "value"}'></textarea>
+            </div>
+
+            <!-- Управление изображениями (ИСПРАВЛЕННЫЕ ID) -->
+            <div class="images-section">
+                <h3>Изображения аттракциона</h3>
+                <div id="attraction-images-drop-zone" class="images-drop-zone"> <!-- ИЗМЕНЕН ID -->
+                    <div id="attraction-images-container" class="images-grid"> <!-- ИЗМЕНЕН ID -->
+                        <!-- Изображения будут добавлены сюда динамически -->
+                    </div>
+                    <div id="attraction-drop-hint" class="drop-hint show"> <!-- ИЗМЕНЕН ID -->
+                        <p>Перетащите изображения сюда или нажмите "Добавить изображение"</p>
+                    </div>
+                </div>
+                <button type="button" id="add-attraction-image-btn" class="btn-secondary">Добавить изображение</button> <!-- ИЗМЕНЕН ID -->
+            </div>
+
+            <!-- НОВОЕ: Управление видео -->
+            <div class="form-group">
+                <h3>Видео аттракциона</h3>
+                <div id="attraction-videos-container" class="videos-container">
+                    <!-- Здесь будут добавляться поля для видео -->
+                </div>
+                <button type="button" id="add-attraction-video-btn" class="btn-secondary">Добавить видео</button>
+            </div>
+
+            <label>
+                <input type="checkbox" id="attraction-available" name="attraction-available" checked> Доступен
+            </label>
+
+            <div class="modal-actions">
+                <button type="button" id="cancel-attraction-btn" class="btn-secondary">Отмена</button>
+                <button type="submit" class="btn-primary">Сохранить</button>
+            </div>
+        </form>
+    </div>
+</div>
+    <!-- Модальное окно для категории -->
+    <div id="category-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-category-modal close">&times;</span>
+            <h2>Добавить категорию</h2>
+            <form id="category-form">
+                <label for="category-name">Название категории:</label>
+                <input type="text" id="category-name" required>
+                <div class="modal-actions">
+                    <button type="button" id="cancel-category-btn" class="btn-secondary">Отмена</button>
+                    <button type="submit" class="btn-primary">Добавить</button>
+                </div>
+            </form>
         </div>
-        <div class="modal-body">
-          <form id="product-form">
-            <input type="hidden" id="product-id" name="product-id" />
-            <div class="mb-3">
-              <label for="product-title" class="form-label">Название:</label>
-              <input type="text" class="form-control" id="product-title" name="product-title" required />
-            </div>
-            <div class="mb-3">
-              <label for="product-description" class="form-label">Описание:</label>
-              <textarea class="form-control" id="product-description" name="product-description"></textarea>
-            </div>
-            <div class="mb-3">
-              <label for="product-price" class="form-label">Цена (руб.):</label>
-              <input type="number" class="form-control" id="product-price" name="product-price" step="0.01" required />
-            </div>
-            <div class="mb-3">
-              <label for="product-supplier-link" class="form-label">Ссылка на поставщика:</label>
-              <input type="text" class="form-control" id="product-supplier-link" name="product-supplier-link" />
-            </div>
-            <div class="mb-3">
-              <label for="product-supplier-notes" class="form-label">Примечание к ссылке:</label>
-              <input type="text" class="form-control" id="product-supplier-notes" name="product-supplier-notes" />
-            </div>
-            <div class="mb-3">
-              <label for="product-category" class="form-label">Категория:</label>
-              <select class="form-select" id="product-category" name="product-category" required>
-                <!-- options loaded dynamically -->
-              </select>
-            </div>
+    </div>
+    <!-- Убедитесь, что admin-core.js подключен первым -->
+<script src="js/admin/admin-core.js"></script>
+<!-- Затем подключите остальные модули -->
+<script src="js/admin/admin-products.js"></script>
+<script src="js/admin/admin-attractions.js"></script>
+<script src="js/admin/admin-categories.js"></script>
+<script src="js/admin/admin-orders.js"></script>
+<script src="js/admin/admin-supplier-catalog.js"></script>
 
-            <!-- Изображения -->
-            <div class="mb-3 images-section">
-              <h6>Изображения товара</h6>
-              <div id="images-drop-zone" class="border rounded p-3 mb-2" style="min-height: 100px;">
-                <div id="images-container" class="d-flex flex-wrap gap-2"></div>
-                <div id="drop-hint" class="text-muted">Перетащите изображения сюда или нажмите "Добавить изображение"</div>
-              </div>
-              <button type="button" id="add-image-btn" class="btn btn-secondary">Добавить изображение</button>
-            </div>
-
-            <div class="form-check mb-3">
-              <input type="checkbox" class="form-check-input" id="product-available" name="product-available" checked />
-              <label class="form-check-label" for="product-available">Доступен</label>
-            </div>
-
-            <!-- Варианты товара -->
-            <div class="mb-3 variants-section">
-              <h6>Варианты товара</h6>
-              <p class="text-muted small">Выберите товары, которые являются вариантами этого товара.</p>
-              <div id="selected-variants-list" class="mb-2"></div>
-              <input type="text" id="variant-search" class="form-control" placeholder="Поиск товаров..." autocomplete="off" />
-              <div id="variant-search-results" class="list-group mt-2" style="max-height: 150px; overflow-y: auto;"></div>
-              <input type="hidden" id="selected-variant-ids" name="selected-variant-ids" />
-            </div>
-
-            <div class="modal-actions d-flex justify-content-end gap-2">
-              <button type="button" id="cancel-btn" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-              <button type="submit" class="btn btn-primary">Сохранить</button>
-            </div>
-          </form>
-        </div>
-      </div>
+ <!-- Cookie Consent Banner -->
+<div id="cookieConsent" class="cookie-consent-banner">
+  <div class="cookie-consent-content">
+    <div class="cookie-consent-text">
+      <p>Мы используем файлы cookie и аналогичные технологии для улучшения работы сайта, анализа трафика и персонализации контента. Продолжая использовать наш сайт, вы соглашаетесь с <a href="/privacy" target="_blank">Политикой конфиденциальности</a> и <a href="/cookie-policy" target="_blank">Политикой использования файлов cookie</a>.</p>
+    </div>
+    <div class="cookie-consent-buttons">
+      <button id="acceptCookies" class="btn-primary">Принимаю</button>
+      <button id="declineCookies" class="btn-secondary">Отклонить</button>
     </div>
   </div>
-
-  <!-- Модальное окно для аттракциона -->
-  <div id="attraction-modal" class="modal fade" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 id="attraction-modal-title" class="modal-title">Добавить аттракцион</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form id="attraction-form">
-            <input type="hidden" id="attraction-id" name="attraction-id" />
-            <div class="mb-3">
-              <label for="attraction-title" class="form-label">Название:</label>
-              <input type="text" class="form-control" id="attraction-title" name="attraction-title" required />
-            </div>
-            <div class="mb-3">
-              <label for="attraction-description" class="form-label">Описание:</label>
-              <textarea class="form-control" id="attraction-description" name="attraction-description" required></textarea>
-            </div>
-            <div class="mb-3">
-              <label for="attraction-price" class="form-label">Цена (руб.):</label>
-              <input type="number" class="form-control" id="attraction-price" name="attraction-price" step="0.01" required />
-            </div>
-            <div class="mb-3">
-              <label for="attraction-category" class="form-label">Категория:</label>
-              <input type="text" class="form-control" id="attraction-category" name="attraction-category" list="attraction-categories" required />
-              <datalist id="attraction-categories">
-                <!-- options loaded dynamically -->
-              </datalist>
-            </div>
-
-            <div class="mb-3">
-              <label for="attraction-specs" class="form-label">Характеристики (JSON):</label>
-              <textarea class="form-control" id="attraction-specs" name="attraction-specs" rows="4" placeholder='{"places": "1", "power": "500W"}'></textarea>
-            </div>
-
-            <!-- Изображения -->
-            <div class="mb-3 images-section">
-              <h6>Изображения аттракциона</h6>
-              <div id="attraction-images-drop-zone" class="border rounded p-3 mb-2" style="min-height: 100px;">
-                <div id="attraction-images-container" class="d-flex flex-wrap gap-2"></div>
-                <div id="attraction-drop-hint" class="text-muted">Перетащите изображения сюда или нажмите "Добавить изображение"</div>
-              </div>
-              <button type="button" id="add-attraction-image-btn" class="btn btn-secondary">Добавить изображение</button>
-            </div>
-
-            <!-- Видео -->
-            <div class="mb-3">
-              <h6>Видео аттракциона</h6>
-              <div id="attraction-videos-container" class="mb-2"></div>
-              <button type="button" id="add-attraction-video-btn" class="btn btn-secondary">Добавить видео</button>
-            </div>
-
-            <div class="form-check mb-3">
-              <input type="checkbox" class="form-check-input" id="attraction-available" name="attraction-available" checked />
-              <label class="form-check-label" for="attraction-available">Доступен</label>
-            </div>
-
-            <div class="modal-actions d-flex justify-content-end gap-2">
-              <button type="button" id="cancel-attraction-btn" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-              <button type="submit" class="btn btn-primary">Сохранить</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Модальное окно для категории -->
-  <div id="category-modal" class="modal fade" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Добавить категорию</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form id="category-form">
-            <div class="mb-3">
-              <label for="category-name" class="form-label">Название категории:</label>
-              <input type="text" class="form-control" id="category-name" required />
-            </div>
-            <div class="modal-actions d-flex justify-content-end gap-2">
-              <button type="button" id="cancel-category-btn" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-              <button type="submit" class="btn btn-primary">Добавить</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-  <!-- Ваши скрипты -->
-  <script src="js/admin/admin-core.js"></script>
-  <script src="js/admin/admin-products.js"></script>
-  <script src="js/admin/admin-attractions.js"></script>
-  <script src="js/admin/admin-categories.js"></script>
-  <script src="js/admin/admin-orders.js"></script>
-  <script src="js/admin/admin-supplier-catalog.js"></script>
-
-  <!-- Cookie Consent Banner -->
-  <div id="cookieConsent" class="cookie-consent-banner">
-    <div class="cookie-consent-content">
-      <div class="cookie-consent-text">
-        <p>
-          Мы используем файлы cookie и аналогичные технологии для улучшения работы сайта, анализа трафика и персонализации контента.
-          Продолжая использовать наш сайт, вы соглашаетесь с
-          <a href="/privacy" target="_blank">Политикой конфиденциальности</a> и
-          <a href="/cookie-policy" target="_blank">Политикой использования файлов cookie</a>.
-        </p>
-      </div>
-      <div class="cookie-consent-buttons">
-        <button id="acceptCookies" class="btn btn-primary">Принимаю</button>
-        <button id="declineCookies" class="btn btn-outline-light">Отклонить</button>
-      </div>
-    </div>
-  </div>
+</div>
 </body>
 </html>
