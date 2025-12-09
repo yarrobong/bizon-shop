@@ -204,7 +204,7 @@ body {
 }
 
 .modal-content {
-    background-color: #fefefe;
+    background-color: #21222E;
     margin: 5% auto;
     padding: 20px;
     border: 1px solid #888;
@@ -251,9 +251,10 @@ body {
 .modal-content select {
     padding: 10px;
     margin-top: 5px;
-    border: 1px solid #ccc;
+    border: 1px solid #5C5C5C;
     border-radius: 5px;
     font-size: 1em;
+    background: #5C5C5C;
 }
 
 .modal-actions {
