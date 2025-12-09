@@ -86,10 +86,10 @@ generateProposalPdfRouter.post('/', async (req, res) => {
       format: 'A4',
       printBackground: true,
       margin: {
-        top: '5mm',
-        bottom: '5mm',
-        left: '5mm',
-        right: '5mm'
+        top: '0mm',
+        bottom: '0mm',
+        left: '0mm',
+        right: '0mm'
       }
     });
 
