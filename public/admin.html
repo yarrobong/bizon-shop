@@ -4,28 +4,25 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Админ-панель</title>
-  
-  <!-- Favicon (оставим как есть) -->
+
+  <!-- Favicon -->
   <link rel="icon" type="image/png" href="/assets/icons/favicon/favicon-96x96.png" sizes="96x96" />
   <link rel="icon" type="image/svg+xml" href="/assets/icons/favicon/favicon.svg" />
   <link rel="shortcut icon" href="/assets/icons/favicon/favicon.ico" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/favicon/apple-touch-icon.png" />
   <link rel="manifest" href="/assets/icons/favicon/site.webmanifest" />
 
-  <!-- Tailwind CSS + DaisyUI (CDN) -->
+  <!-- Tailwind CSS + DaisyUI (без Heroicons!) -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.min.css" rel="stylesheet" />
   <script>
     tailwind.config = {
-      darkMode: 'class', // или 'media', но 'class' даёт больше контроля
+      darkMode: 'class',
       theme: {
         extend: {}
       }
     }
   </script>
-
-  <!-- Иконки (опционально, для кнопок) -->
-  <script src="https://unpkg.com/heroicons@2.0.16/dist/heroicons.min.js"></script>
 </head>
 <body class="bg-base-100 text-base-content min-h-screen">
   <div class="flex min-h-screen flex-col">
@@ -38,24 +35,25 @@
     <!-- Navigation -->
     <nav class="bg-base-200 px-6 py-2 border-b border-base-300">
       <div class="flex flex-wrap gap-2">
-        <button class="tab tab-bordered tab-lifted" data-tab="products">Товары</button>
-        <button class="tab tab-bordered tab-lifted" data-tab="attractions">Аттракционы</button>
-        <button class="tab tab-bordered tab-lifted" data-tab="categories">Категории</button>
-        <button class="tab tab-bordered tab-lifted" data-tab="orders">Заказы</button>
-        <button class="tab tab-bordered tab-lifted" data-tab="supplier-catalog">Каталог для заказа</button>
+        <button class="tab tab-lifted tab-active" data-tab="products">Товары</button>
+        <button class="tab tab-lifted" data-tab="attractions">Аттракционы</button>
+        <button class="tab tab-lifted" data-tab="categories">Категории</button>
+        <button class="tab tab-lifted" data-tab="orders">Заказы</button>
+        <button class="tab tab-lifted" data-tab="supplier-catalog">Каталог для заказа</button>
       </div>
     </nav>
 
     <!-- Main Content -->
     <main class="flex-1 p-6">
-      <!-- Товары -->
+      <!-- Товары (по умолчанию активна) -->
       <section id="products-tab" class="tab-content">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-lg font-semibold">Управление товарами</h2>
           <button id="add-product-btn" class="btn btn-primary btn-sm">Добавить товар</button>
         </div>
         <div id="admin-products-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div class="text-center text-base-content/60">Загрузка...</div>
+          <div class="card bg-base-200 p-4 text-center">Пример товара 1</div>
+          <div class="card bg-base-200 p-4 text-center">Пример товара 2</div>
         </div>
       </section>
 
@@ -66,7 +64,7 @@
           <button id="add-attraction-btn" class="btn btn-primary btn-sm">Добавить аттракцион</button>
         </div>
         <div id="admin-attractions-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div class="text-center text-base-content/60">Загрузка аттракционов...</div>
+          <div class="card bg-base-200 p-4 text-center">Аттракцион A</div>
         </div>
       </section>
 
@@ -77,7 +75,8 @@
           <button id="add-category-btn" class="btn btn-primary btn-sm">Добавить категорию</button>
         </div>
         <div id="categories-list" class="space-y-2">
-          <div class="text-base-content/60">Загрузка...</div>
+          <div class="card bg-base-200 p-3">VR-очки</div>
+          <div class="card bg-base-200 p-3">Аксессуары</div>
         </div>
       </section>
 
@@ -85,7 +84,7 @@
       <section id="orders-tab" class="tab-content hidden">
         <h2 class="text-lg font-semibold mb-4">Заказы</h2>
         <div id="orders-list" class="space-y-3">
-          <div class="text-base-content/60">Загрузка...</div>
+          <div class="card bg-base-200 p-3">Заказ #1001 — в обработке</div>
         </div>
       </section>
 
@@ -101,111 +100,22 @@
           />
         </div>
         <div id="supplier-catalog-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div class="text-center text-base-content/60">Загрузка товаров...</div>
+          <div class="card bg-base-200 p-4">Oculus Quest 3S — поставщик.ru/123</div>
         </div>
       </section>
     </main>
   </div>
 
-  <!-- Модальные окна (пример: товар) -->
-  <dialog id="product-modal" class="modal modal-bottom sm:modal-middle">
+  <!-- Пример модального окна (товар) -->
+  <dialog id="product-modal" class="modal">
     <div class="modal-box">
-      <h3 id="modal-title" class="font-bold text-lg">Добавить товар</h3>
-      <form id="product-form" class="mt-4 space-y-4">
-        <input type="hidden" id="product-id" />
-        <input type="text" id="product-title" placeholder="Название" class="input input-bordered w-full" required />
-        <textarea id="product-description" placeholder="Описание" class="textarea textarea-bordered w-full"></textarea>
-        <input type="number" id="product-price" placeholder="Цена (руб.)" step="0.01" class="input input-bordered w-full" required />
-        <input type="text" id="product-supplier-link" placeholder="Ссылка на поставщика" class="input input-bordered w-full" />
-        <input type="text" id="product-supplier-notes" placeholder="Примечание к ссылке" class="input input-bordered w-full" />
-        <select id="product-category" class="select select-bordered w-full" required></select>
-
-        <!-- Изображения -->
-        <div>
-          <h4 class="font-medium mb-2">Изображения</h4>
-          <div id="images-container" class="flex flex-wrap gap-2 mb-2"></div>
-          <button type="button" id="add-image-btn" class="btn btn-outline btn-sm">Добавить изображение</button>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <input type="checkbox" id="product-available" class="toggle toggle-primary" checked />
-          <label for="product-available">Доступен</label>
-        </div>
-
-        <!-- Варианты -->
-        <div>
-          <h4 class="font-medium mb-2">Варианты товара</h4>
-          <div id="selected-variants-list" class="space-y-1 mb-2"></div>
-          <input type="text" id="variant-search" placeholder="Поиск товаров..." class="input input-bordered w-full" />
-          <div id="variant-search-results" class="mt-1"></div>
-          <input type="hidden" id="selected-variant-ids" />
-        </div>
-
-        <div class="modal-action">
-          <button type="button" id="cancel-btn" class="btn">Отмена</button>
-          <button type="submit" class="btn btn-primary">Сохранить</button>
-        </div>
-      </form>
-    </div>
-  </dialog>
-
-  <!-- Модальное окно аттракциона (аналогично, с видео и JSON) -->
-  <dialog id="attraction-modal" class="modal modal-bottom sm:modal-middle">
-    <div class="modal-box">
-      <h3 id="attraction-modal-title" class="font-bold text-lg">Добавить аттракцион</h3>
-      <form id="attraction-form" class="mt-4 space-y-4">
-        <input type="hidden" id="attraction-id" />
-        <input type="text" id="attraction-title" placeholder="Название" class="input input-bordered w-full" required />
-        <textarea id="attraction-description" placeholder="Описание" class="textarea textarea-bordered w-full" required></textarea>
-        <input type="number" id="attraction-price" placeholder="Цена (руб.)" step="0.01" class="input input-bordered w-full" required />
-        <input list="attraction-categories" id="attraction-category" placeholder="Категория" class="input input-bordered w-full" required />
-        <datalist id="attraction-categories"></datalist>
-
-        <textarea
-          id="attraction-specs"
-          placeholder='{"places": "1", "power": "500W"}'
-          class="textarea textarea-bordered w-full font-mono text-sm"
-          rows="3"
-        ></textarea>
-
-        <!-- Изображения -->
-        <div>
-          <h4 class="font-medium mb-2">Изображения</h4>
-          <div id="attraction-images-container" class="flex flex-wrap gap-2 mb-2"></div>
-          <button type="button" id="add-attraction-image-btn" class="btn btn-outline btn-sm">Добавить изображение</button>
-        </div>
-
-        <!-- Видео -->
-        <div>
-          <h4 class="font-medium mb-2">Видео</h4>
-          <div id="attraction-videos-container" class="space-y-2 mb-2"></div>
-          <button type="button" id="add-attraction-video-btn" class="btn btn-outline btn-sm">Добавить видео</button>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <input type="checkbox" id="attraction-available" class="toggle toggle-primary" checked />
-          <label for="attraction-available">Доступен</label>
-        </div>
-
-        <div class="modal-action">
-          <button type="button" id="cancel-attraction-btn" class="btn">Отмена</button>
-          <button type="submit" class="btn btn-primary">Сохранить</button>
-        </div>
-      </form>
-    </div>
-  </dialog>
-
-  <!-- Модальное окно категории -->
-  <dialog id="category-modal" class="modal modal-bottom sm:modal-middle">
-    <div class="modal-box">
-      <h3 class="font-bold text-lg">Добавить категорию</h3>
-      <form id="category-form" class="mt-4 space-y-4">
-        <input type="text" id="category-name" placeholder="Название категории" class="input input-bordered w-full" required />
-        <div class="modal-action">
-          <button type="button" id="cancel-category-btn" class="btn">Отмена</button>
-          <button type="submit" class="btn btn-primary">Добавить</button>
-        </div>
-      </form>
+      <h3 class="font-bold text-lg">Добавить товар</h3>
+      <p class="py-4">Форма будет здесь. Пока демо.</p>
+      <div class="modal-action">
+        <form method="dialog">
+          <button class="btn">Закрыть</button>
+        </form>
+      </div>
     </div>
   </dialog>
 
@@ -225,7 +135,7 @@
     </div>
   </div>
 
-  <!-- Подключение скриптов -->
+  <!-- Ваши скрипты (оставьте как есть) -->
   <script src="js/admin/admin-core.js"></script>
   <script src="js/admin/admin-products.js"></script>
   <script src="js/admin/admin-attractions.js"></script>
@@ -233,19 +143,48 @@
   <script src="js/admin/admin-orders.js"></script>
   <script src="js/admin/admin-supplier-catalog.js"></script>
 
-  <!-- Простая логика переключения вкладок (для демонстрации) -->
+  <!-- Логика переключения вкладок -->
   <script>
-    document.querySelectorAll('.tab').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const tabId = btn.dataset.tab;
-        // Скрыть все
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-        // Показать нужную
-        document.getElementById(tabId + '-tab')?.classList.remove('hidden');
-        // Активный стиль
-        document.querySelectorAll('.tab').forEach(b => b.classList.remove('tab-active'));
-        btn.classList.add('tab-active');
+    document.querySelectorAll('[data-tab]').forEach(button => {
+      button.addEventListener('click', () => {
+        // Убираем активный класс у всех кнопок
+        document.querySelectorAll('[data-tab]').forEach(btn => btn.classList.remove('tab-active'));
+        // Добавляем активный текущей
+        button.classList.add('tab-active');
+
+        // Скрываем все секции
+        document.querySelectorAll('.tab-content').forEach(section => {
+          section.classList.add('hidden');
+        });
+
+        // Показываем нужную
+        const tabId = button.dataset.tab + '-tab';
+        const targetSection = document.getElementById(tabId);
+        if (targetSection) {
+          targetSection.classList.remove('hidden');
+        }
       });
+    });
+  </script>
+
+  <!-- Логика cookie banner -->
+  <script>
+    const cookieBanner = document.getElementById('cookieConsent');
+    const acceptBtn = document.getElementById('acceptCookies');
+    const declineBtn = document.getElementById('declineCookies');
+
+    // Показываем, если нет согласия
+    if (!localStorage.getItem('cookiesAccepted')) {
+      cookieBanner.style.display = 'block';
+    }
+
+    acceptBtn?.addEventListener('click', () => {
+      localStorage.setItem('cookiesAccepted', 'true');
+      cookieBanner.style.display = 'none';
+    });
+
+    declineBtn?.addEventListener('click', () => {
+      cookieBanner.style.display = 'none';
     });
   </script>
 </body>
