@@ -14,7 +14,7 @@ router.use(requireAuth);
 router.get('/', async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT id, title, price, tag, available, category, brand, compatibility,
+      SELECT id, title, description, price, tag, available, category, brand, compatibility,
         images_json, supplier_link, supplier_notes, slug
       FROM products
       ORDER BY category, id
