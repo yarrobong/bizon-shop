@@ -176,6 +176,7 @@ function updateMetaTags(product) {
 function displayProductImages(baseProduct, imagesToDisplay) {
     const mainImageElement = document.getElementById('product-page-main-image');
     const thumbnailsContainer = document.getElementById('product-page-thumbnails');
+    const imageContainer = document.querySelector('.product-page-image');
 
     if (!mainImageElement || !thumbnailsContainer) {
         console.error("Элементы изображений не найдены на странице.");
@@ -184,31 +185,178 @@ function displayProductImages(baseProduct, imagesToDisplay) {
 
     thumbnailsContainer.innerHTML = '';
     
+    // Сохраняем изображения в глобальной переменной для навигации
+    window.productImages = imagesToDisplay || [];
+    window.currentImageIndex = 0;
+    
     if (imagesToDisplay && imagesToDisplay.length > 0) {
-        mainImageElement.src = imagesToDisplay[0].url.trim();
-        mainImageElement.alt = baseProduct.title;
+        // Удаляем старые кнопки навигации, если они есть
+        const oldPrevBtn = document.querySelector('.product-image-nav.prev');
+        const oldNextBtn = document.querySelector('.product-image-nav.next');
+        if (oldPrevBtn) oldPrevBtn.remove();
+        if (oldNextBtn) oldNextBtn.remove();
+        
+        // Добавляем кнопки навигации, если изображений больше одного
+        if (imagesToDisplay.length > 1 && imageContainer) {
+            // Кнопка "Назад"
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'product-image-nav prev';
+            prevBtn.innerHTML = '‹';
+            prevBtn.setAttribute('aria-label', 'Предыдущее изображение');
+            prevBtn.addEventListener('click', () => navigateImage(-1));
+            
+            // Кнопка "Вперед"
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'product-image-nav next';
+            nextBtn.innerHTML = '›';
+            nextBtn.setAttribute('aria-label', 'Следующее изображение');
+            nextBtn.addEventListener('click', () => navigateImage(1));
+            
+            imageContainer.appendChild(prevBtn);
+            imageContainer.appendChild(nextBtn);
+            
+            // Инициализируем свайп для мобильных
+            initImageSwipe(imageContainer);
+            
+            // Добавляем поддержку клавиатуры для навигации
+            document.addEventListener('keydown', handleImageKeyboardNavigation);
+        }
+        
+        // Устанавливаем первое изображение
+        setMainImage(0);
 
         imagesToDisplay.forEach((img, index) => {
             const thumb = document.createElement('img');
             thumb.src = img.url.trim();
             thumb.alt = img.alt || `Миниатюра ${baseProduct.title}`;
-            thumb.className = 'thumbnail';
+            thumb.className = 'product-page-thumbnail';
             if (index === 0) thumb.classList.add('active');
             thumb.addEventListener('click', () => {
-                mainImageElement.src = img.url.trim();
-                document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
-                thumb.classList.add('active');
-                // Обновляем OG Image при смене главного изображения
-                document.querySelector('meta[property="og:image"]')?.setAttribute('content', img.url.trim());
+                setMainImage(index);
             });
             thumbnailsContainer.appendChild(thumb);
         });
-         // Обновляем OG Image на первое изображение
-         document.querySelector('meta[property="og:image"]')?.setAttribute('content', imagesToDisplay[0].url.trim());
+        
+        // Обновляем OG Image на первое изображение
+        document.querySelector('meta[property="og:image"]')?.setAttribute('content', imagesToDisplay[0].url.trim());
     } else {
         mainImageElement.src = '/assets/placeholder.png';
         mainImageElement.alt = baseProduct.title;
         document.querySelector('meta[property="og:image"]')?.setAttribute('content', '/assets/placeholder.png');
+    }
+    
+    updateNavigationButtons();
+}
+
+// Функция для установки главного изображения
+function setMainImage(index) {
+    const mainImageElement = document.getElementById('product-page-main-image');
+    const thumbnails = document.querySelectorAll('.product-page-thumbnail');
+    
+    if (!window.productImages || !window.productImages[index]) return;
+    
+    window.currentImageIndex = index;
+    const img = window.productImages[index];
+    
+    mainImageElement.src = img.url.trim();
+    mainImageElement.alt = img.alt || mainImageElement.alt || 'Изображение товара';
+    
+    // Обновляем активную миниатюру
+    thumbnails.forEach((thumb, i) => {
+        thumb.classList.toggle('active', i === index);
+    });
+    
+    // Обновляем OG Image
+    document.querySelector('meta[property="og:image"]')?.setAttribute('content', img.url.trim());
+    
+    updateNavigationButtons();
+}
+
+// Функция для навигации по изображениям
+function navigateImage(direction) {
+    if (!window.productImages || window.productImages.length === 0) return;
+    
+    let newIndex = window.currentImageIndex + direction;
+    
+    if (newIndex < 0) {
+        newIndex = window.productImages.length - 1;
+    } else if (newIndex >= window.productImages.length) {
+        newIndex = 0;
+    }
+    
+    setMainImage(newIndex);
+}
+
+// Обновление состояния кнопок навигации
+function updateNavigationButtons() {
+    const prevBtn = document.querySelector('.product-image-nav.prev');
+    const nextBtn = document.querySelector('.product-image-nav.next');
+    
+    if (!window.productImages || window.productImages.length <= 1) {
+        if (prevBtn) prevBtn.style.display = 'none';
+        if (nextBtn) nextBtn.style.display = 'none';
+        return;
+    }
+    
+    if (prevBtn) prevBtn.style.display = 'flex';
+    if (nextBtn) nextBtn.style.display = 'flex';
+}
+
+// Инициализация свайпа для мобильных устройств
+function initImageSwipe(container) {
+    if (!container) return;
+    
+    let touchStartX = 0;
+    let touchEndX = 0;
+    let isSwiping = false;
+    
+    container.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+        isSwiping = true;
+    }, { passive: true });
+    
+    container.addEventListener('touchmove', (e) => {
+        if (isSwiping) {
+            touchEndX = e.changedTouches[0].screenX;
+        }
+    }, { passive: true });
+    
+    container.addEventListener('touchend', () => {
+        if (!isSwiping) return;
+        
+        const swipeDistance = touchStartX - touchEndX;
+        const minSwipeDistance = 50; // Минимальное расстояние для свайпа
+        
+        if (Math.abs(swipeDistance) > minSwipeDistance) {
+            if (swipeDistance > 0) {
+                // Свайп влево - следующее изображение
+                navigateImage(1);
+            } else {
+                // Свайп вправо - предыдущее изображение
+                navigateImage(-1);
+            }
+        }
+        
+        isSwiping = false;
+        touchStartX = 0;
+        touchEndX = 0;
+    }, { passive: true });
+}
+
+// Обработка навигации с клавиатуры
+function handleImageKeyboardNavigation(e) {
+    // Проверяем, что мы на странице товара и есть изображения
+    if (!window.productImages || window.productImages.length <= 1) return;
+    
+    // Проверяем, что фокус не на input/textarea
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    
+    if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        navigateImage(-1);
+    } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        navigateImage(1);
     }
 }
 
