@@ -306,12 +306,13 @@ ${cart.map(item => `• ${item.product?.title || 'Неизвестный тов�
  * Обратная связь (публичный доступ)
  */
 router.post('/contact', publicRateLimit, async (req, res) => {
-  const { name, phone } = req.body;
+  const { name, phone, message } = req.body;
 
   if (!phone) {
     return res.status(400).json({ success: false, error: 'Не указан номер телефона' });
   }
 
+  // Для проверки дубликатов используем только имя и телефон (без сообщения)
   const requestHash = JSON.stringify({ name, phone });
   if (req.app.locals.lastContactRequest === requestHash) {
     return res.status(200).json({
@@ -343,12 +344,17 @@ router.post('/contact', publicRateLimit, async (req, res) => {
 
     const cleanPhone = phone.replace(/[^0-9+]/g, '');
 
-    const message = `
+    let telegramMessage = `
 📞 *Новая заявка на обратный звонок BIZON!*
 👤 *Имя:* ${name || 'не указано'}
 📱 *Телефон:* \`${cleanPhone}\`
-🕐 ${moscowTimeString}
 `.trim();
+
+    if (message && message.trim()) {
+      telegramMessage += `\n💬 *Сообщение:*\n${message.trim()}`;
+    }
+
+    telegramMessage += `\n🕐 ${moscowTimeString}`;
 
     const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
     const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
@@ -359,7 +365,7 @@ router.post('/contact', publicRateLimit, async (req, res) => {
           `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
           {
             chat_id: CHAT_ID,
-            text: message,
+            text: telegramMessage,
             parse_mode: 'Markdown',
             disable_web_page_preview: true
           }

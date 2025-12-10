@@ -86,6 +86,84 @@ main {
   text-align: center;
 }
 
+/* ==================== КОНТАКТНАЯ ИНФОРМАЦИЯ ==================== */
+.contact-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: rgba(11, 11, 38, 0.4);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 2px solid rgba(43, 83, 193, 0.5);
+  border-radius: 20px;
+  box-shadow: 
+    0 0 10px rgba(43, 83, 193, 0.4),
+    0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.contact-detail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.contact-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(59, 130, 246, 0.2);
+  border: 2px solid rgba(59, 130, 246, 0.5);
+  border-radius: 12px;
+  color: var(--accent);
+  transition: all 0.3s ease;
+}
+
+.contact-detail-item:hover .contact-icon {
+  background: rgba(59, 130, 246, 0.3);
+  border-color: rgba(59, 130, 246, 0.8);
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+}
+
+.contact-detail-content {
+  flex: 1;
+}
+
+.contact-detail-content h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.contact-detail-content a {
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 1.1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.contact-detail-content a:hover {
+  color: var(--accent);
+  transform: translateX(4px);
+}
+
+.contact-detail-content p {
+  color: var(--text-primary);
+  font-size: 1rem;
+  margin: 0;
+  line-height: 1.6;
+}
+
 /* ==================== ФОРМА ==================== */
 .callback-form {
 
@@ -123,7 +201,7 @@ label {
   font-weight: 500;
 }
 
-input, select {
+input, select, textarea {
   width: 100%;
   padding: 14px 16px;
   background: rgba(255, 255, 255, 0.08);
@@ -133,16 +211,23 @@ input, select {
   font-size: 1rem;
   transition: all 0.3s ease;
   box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+  resize: vertical;
 }
 
-input:focus, select:focus {
+textarea {
+  min-height: 100px;
+  line-height: 1.5;
+}
+
+input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.2);
   background: rgba(0, 229, 255, 0.08);
 }
 
-input.error, select.error {
+input.error, select.error, textarea.error {
   border-color: #ef4444 !important;
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
 }
@@ -515,6 +600,30 @@ input.error, select.error {
 }
 
 @media (max-width: 768px) {
+  .contact-details {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .contact-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .contact-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .contact-detail-content h3 {
+    font-size: 0.85rem;
+  }
+
+  .contact-detail-content a,
+  .contact-detail-content p {
+    font-size: 0.95rem;
+  }
+
   .contact-links-below-image {
     bottom: 15px;
     gap: 12px;

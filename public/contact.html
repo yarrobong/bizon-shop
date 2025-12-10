@@ -75,6 +75,47 @@
         <h2>НАШИ КОНТАКТЫ</h2>
         <p class="contact-subtitle">Оставьте заявку, мы свяжемся и ответим на ваши вопросы</p>
 
+        <!-- Контактная информация -->
+        <div class="contact-details">
+          <div class="contact-detail-item">
+            <div class="contact-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+              </svg>
+            </div>
+            <div class="contact-detail-content">
+              <h3>Телефон</h3>
+              <a href="tel:+79221233210">+7 (922) 123-32-10</a>
+            </div>
+          </div>
+
+          <div class="contact-detail-item">
+            <div class="contact-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+            </div>
+            <div class="contact-detail-content">
+              <h3>Email</h3>
+              <a href="mailto:info@bizon-business.ru">info@bizon-business.ru</a>
+            </div>
+          </div>
+
+          <div class="contact-detail-item">
+            <div class="contact-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <div class="contact-detail-content">
+              <h3>Время работы</h3>
+              <p>Пн-Пт: 9:00 - 18:00<br>Сб-Вс: Выходной</p>
+            </div>
+          </div>
+        </div>
+
         <!-- Форма -->
         <form id="callbackForm" class="callback-form" novalidate>
           <div class="form-group">
@@ -88,19 +129,24 @@
             <div class="error-message" id="phoneError"></div>
           </div>
 
+          <div class="form-group">
+            <label for="message">Сообщение (необязательно)</label>
+            <textarea id="message" name="message" rows="4" placeholder="Опишите ваш вопрос или оставьте комментарий"></textarea>
+          </div>
+
           <!-- Переключатель согласия -->
           <div class="consent-container">
-  <div class="consent-toggle">
-    <input type="checkbox" id="consent-toggle" class="consent-checkbox">
-    <label for="consent-toggle" class="consent-slider"></label>
-  </div>
-  <p class="consent-text">
-    Я даю согласие на обработку персональных данных.
-    <a href="/privacy.html">Подробнее</a>
-  </p>
-</div>
+            <div class="consent-toggle">
+              <input type="checkbox" id="consent-toggle" class="consent-checkbox">
+              <label for="consent-toggle" class="consent-slider"></label>
+            </div>
+            <p class="consent-text">
+              Я даю согласие на обработку персональных данных.
+              <a href="/privacy.html">Подробнее</a>
+            </p>
+          </div>
 
-          <button type="submit" class="submit-btn" id="submitBtn" disabled>Жду звонка</button>
+          <button type="submit" class="submit-btn" id="submitBtn" disabled>Отправить заявку</button>
         </form>
       </section>
 
@@ -201,7 +247,29 @@
   const phoneError = document.getElementById('phoneError');
   const form = document.getElementById('callbackForm');
 
-  
+  // Функция обновления состояния кнопки
+  function updateSubmitButton() {
+    const phone = phoneInput?.value || '';
+    const phoneDigits = phone.replace(/\D/g, '');
+    const hasValidPhone = phoneDigits.length >= 10;
+    const hasConsent = consentCheckbox?.checked || false;
+    
+    if (submitBtn) {
+      submitBtn.disabled = !(hasValidPhone && hasConsent);
+    }
+  }
+
+  // Обновление кнопки при изменении полей
+  if (consentCheckbox) {
+    consentCheckbox.addEventListener('change', updateSubmitButton);
+  }
+  if (phoneInput) {
+    phoneInput.addEventListener('input', updateSubmitButton);
+    phoneInput.addEventListener('blur', updateSubmitButton);
+  }
+
+  // Инициализация состояния кнопки
+  updateSubmitButton();
 
   // ==================== ВАЛИДАЦИЯ И ОТПРАВКА ====================
   if (submitBtn) {
@@ -219,47 +287,49 @@
       phoneError.textContent = '';
       phoneInput.classList.remove('error');
 
-      const phone = phoneInput.value;
-      const name = document.getElementById('name').value;
+        const phone = phoneInput.value;
+        const name = document.getElementById('name').value;
+        const message = document.getElementById('message').value;
 
-      // Проверка телефона
-      if (!phone || phone.replace(/\D/g, '').length < 10) {
-        phoneError.textContent = 'Введите номер телефона';
-        phoneInput.classList.add('error');
-        phoneInput.focus();
-        return;
-      }
+        // Проверка телефона
+        if (!phone || phone.replace(/\D/g, '').length < 10) {
+          phoneError.textContent = 'Введите номер телефона';
+          phoneInput.classList.add('error');
+          phoneInput.focus();
+          return;
+        }
 
-      const phoneDigits = phone.replace(/\D/g, '');
-      if (!/^\+?\d{10,}$/.test(phoneDigits)) {
-        phoneError.textContent = 'Проверьте формат номера';
-        phoneInput.classList.add('error');
-        phoneInput.focus();
-        return;
-      }
+        const phoneDigits = phone.replace(/\D/g, '');
+        if (!/^\+?\d{10,}$/.test(phoneDigits)) {
+          phoneError.textContent = 'Проверьте формат номера';
+          phoneInput.classList.add('error');
+          phoneInput.focus();
+          return;
+        }
 
-      // Проверка согласия
-      if (!consentCheckbox.checked) {
-         alert('Необходимо дать согласие на обработку персональных данных');
-         return;
-      }
+        // Проверка согласия
+        if (!consentCheckbox.checked) {
+           alert('Необходимо дать согласие на обработку персональных данных');
+           return;
+        }
 
-      try {
-        isSending = true;
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner"></span> Отправка...';
+        try {
+          isSending = true;
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<span class="spinner"></span> Отправка...';
 
-        // === ОТПРАВКА НА НОВЫЙ ENDPOINT ===
-        const response = await fetch('/api/contact', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            name: name, // Отправляем имя
-            phone: phone // Отправляем телефон
-          })
-        });
+          // === ОТПРАВКА НА НОВЫЙ ENDPOINT ===
+          const response = await fetch('/api/contact', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              name: name || 'Не указано', // Отправляем имя
+              phone: phone, // Отправляем телефон
+              message: message || '' // Отправляем сообщение (если есть)
+            })
+          });
 
         const result = await response.json();
         
@@ -274,12 +344,16 @@
           // Сброс формы
           form.reset();
           phoneError.textContent = '';
+          // Обновляем маску телефона после сброса
+          if ($(".phone_mask").length) {
+            $(".phone_mask").mask("+7 (999) 999-99-99");
+          }
           updateSubmitButton(); // Обновляем состояние кнопки после сброса
           
           // Возврат кнопки в исходное состояние
           setTimeout(() => {
              submitBtn.disabled = false;
-             submitBtn.innerHTML = 'Жду звонка';
+             submitBtn.innerHTML = 'Отправить заявку';
              isSending = false;
           }, 3000);
           
@@ -300,7 +374,7 @@
         
         // Возврат кнопки в исходное состояние
         submitBtn.disabled = false;
-        submitBtn.innerHTML = 'Жду звонка';
+        submitBtn.innerHTML = 'Отправить заявку';
         isSending = false;
       }
     });

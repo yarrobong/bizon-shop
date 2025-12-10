@@ -151,8 +151,20 @@ function applyFilters(products) {
 
     // Теги
     if (filters.tags.length > 0) {
-      const productTag = p.tag ? p.tag.toLowerCase() : '';
-      if (!filters.tags.some(tag => productTag.includes(tag.toLowerCase()))) return false;
+      const productTag = p.tag ? p.tag.toLowerCase().trim() : '';
+      if (!productTag) return false; // Если у товара нет тега, пропускаем при фильтрации по тегам
+      
+      // Проверяем, совпадает ли тег товара с выбранными фильтрами
+      const matches = filters.tags.some(filterTag => {
+        const normalizedFilterTag = filterTag.toLowerCase().trim();
+        // Точное совпадение
+        if (productTag === normalizedFilterTag) return true;
+        // Частичное совпадение (для случаев типа "скидка" и "акция")
+        if (productTag.includes(normalizedFilterTag) || normalizedFilterTag.includes(productTag)) return true;
+        return false;
+      });
+      
+      if (!matches) return false;
     }
 
     // Поиск
