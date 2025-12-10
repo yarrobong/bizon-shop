@@ -204,6 +204,12 @@
   align-self: flex-start;
   transition: all 0.3s ease;
   z-index: 5;
+  display: block;
+  position: relative;
+  left: auto;
+  top: auto;
+  height: auto;
+  max-height: none;
 }
 
 
@@ -490,7 +496,6 @@
     flex-direction: column;
     gap: 1rem;
   }
-}
 
   .filters-sidebar {
     position: fixed;
