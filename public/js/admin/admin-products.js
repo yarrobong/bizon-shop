@@ -121,6 +121,11 @@ async function loadProductForEdit(productId) {
                 categorySelect.value = product.category || '';
             }
 
+            const tagSelect = document.getElementById('product-tag');
+            if (tagSelect) {
+                tagSelect.value = product.tag || '';
+            }
+
             document.getElementById('product-available').checked = product.available !== false;
 
             loadProductImagesToForm(product.images || []);
@@ -609,6 +614,7 @@ async function saveProduct() {
         const rawPrice = formData.get('product-price');
         const price = rawPrice !== null && rawPrice !== '' ? parseFloat(rawPrice) : 0;
         const category = (formData.get('product-category') || '').toString().trim();
+        const tag = (formData.get('product-tag') || '').toString().trim();
         const available = formData.get('product-available') === 'on';
         const supplier_link = (formData.get('product-supplier-link') || '').toString().trim();
         const supplier_notes = (formData.get('product-supplier-notes') || '').toString().trim();
@@ -628,6 +634,7 @@ async function saveProduct() {
             description: description,
             price: price,
             category: category,
+            tag: tag || null,
             available: available,
             images: images,
             supplier_link: supplier_link,
