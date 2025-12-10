@@ -110,6 +110,18 @@
     <!-- Контролы каталога (только для мобильных) -->
     <div class="catalog-controls">
       <div class="catalog-header">
+        <div class="sort-wrapper-mobile">
+          <div class="sort-container">
+            <select id="sort-select" class="sort-select" aria-label="Выбор сортировки товаров">
+              <option value="default">По умолчанию</option>
+              <option value="price-asc">Цена: по возрастанию</option>
+              <option value="price-desc">Цена: по убыванию</option>
+              <option value="name-asc">Название: А-Я</option>
+              <option value="name-desc">Название: Я-А</option>
+              <option value="newest">Сначала новинки</option>
+            </select>
+          </div>
+        </div>
         <button class="mobile-filters-toggle" id="mobile-filters-toggle" aria-label="Показать фильтры">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 6h18M7 12h10M11 18h2"/>
@@ -223,7 +235,6 @@
         <!-- Сортировка -->
         <div class="sort-wrapper">
           <div class="sort-container">
-            <label for="sort-select" class="sort-label">Сортировка:</label>
             <select id="sort-select" class="sort-select" aria-label="Выбор сортировки товаров">
               <option value="default">По умолчанию</option>
               <option value="price-asc">Цена: по возрастанию</option>
