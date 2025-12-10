@@ -125,7 +125,10 @@ function getActiveFilters() {
 
 // Получение типа сортировки
 function getSortType() {
-  return document.getElementById('sort-select')?.value || 'default';
+  // Проверяем оба select (мобильный и десктопный)
+  const desktopSelect = document.getElementById('sort-select');
+  const mobileSelect = document.getElementById('sort-select-mobile');
+  return desktopSelect?.value || mobileSelect?.value || 'default';
 }
 
 // Применение фильтров
@@ -377,7 +380,9 @@ function resetFilters() {
 
   // Сбрасываем сортировку
   const sortSelect = document.getElementById('sort-select');
+  const sortSelectMobile = document.getElementById('sort-select-mobile');
   if (sortSelect) sortSelect.value = 'default';
+  if (sortSelectMobile) sortSelectMobile.value = 'default';
 
   renderProducts();
 }
@@ -437,10 +442,28 @@ function setupEventListeners() {
     input.addEventListener('change', renderProducts);
   });
 
-  // Обработчик для сортировки
+  // Обработчик для сортировки (десктоп и мобильная версия)
   const sortSelect = document.getElementById('sort-select');
+  const sortSelectMobile = document.getElementById('sort-select-mobile');
+  
   if (sortSelect) {
-    sortSelect.addEventListener('change', renderProducts);
+    sortSelect.addEventListener('change', () => {
+      // Синхронизируем значение с мобильной версией
+      if (sortSelectMobile) {
+        sortSelectMobile.value = sortSelect.value;
+      }
+      renderProducts();
+    });
+  }
+  
+  if (sortSelectMobile) {
+    sortSelectMobile.addEventListener('change', () => {
+      // Синхронизируем значение с десктопной версией
+      if (sortSelect) {
+        sortSelect.value = sortSelectMobile.value;
+      }
+      renderProducts();
+    });
   }
 
   // Обработчик для кнопки сброса фильтров
