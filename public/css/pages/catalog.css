@@ -107,9 +107,9 @@
   }
 
   .sort-wrapper-mobile .sort-container {
-    width: 100%;
+    width: 65%;
     max-width: 100%;
-    padding: 0.5rem 0.75rem;
+    
   }
 
   .sort-wrapper-mobile .sort-select {
@@ -530,7 +530,7 @@
 
 @media (max-width: 480px) {
   .catalog-main {
-    padding: 5rem 0.75rem 2rem;
+    padding: 4rem 0.4rem 2rem;
   }
 
   .catalog-header {
