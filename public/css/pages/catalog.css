@@ -188,11 +188,7 @@
     0 0 10px rgba(43, 83, 193, 0.8),
     0 0 25px rgba(43, 83, 193, 0.6),
     0 0 50px rgba(43, 83, 193, 0.4);
-  position: sticky;
-  top: 7rem;
   align-self: flex-start;
-  max-height: calc(100vh - 8rem);
-  overflow: visible;
   transition: all 0.3s ease;
   z-index: 5;
 }
@@ -386,9 +382,6 @@
 
 /* Обертка сортировки */
 .sort-wrapper {
-  position: sticky;
-  top: 7rem;
-  z-index: 4;
   margin-bottom: 0.5rem;
 }
 
@@ -456,18 +449,12 @@
   }
 
   .sort-wrapper {
-    position: static;
     margin-bottom: 1rem;
   }
 
   .sort-container {
     width: 100%;
     justify-content: space-between;
-  }
-
-  .sort-container {
-    flex: 1;
-    min-width: 200px;
   }
 
   .sort-select {
