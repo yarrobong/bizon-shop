@@ -133,15 +133,7 @@
   min-width: 180px;
 }
 
-.sort-select:hover {
-  border-color: rgba(59, 130, 246, 0.9);
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
-}
 
-.sort-select:focus {
-  border-color: rgba(59, 130, 246, 1);
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.8);
-}
 
 .sort-select option {
   background: rgba(11, 11, 38, 0.95);
