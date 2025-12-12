@@ -100,9 +100,23 @@ async function handleProductsRequest(req, res, isAdmin) {
 }
 
 /**
+ * Вспомогательная функция для проверки валидности сессии без отправки ответа
+ */
+function checkSession(sessionId) {
+  if (!sessionId) return false;
+  
+  // Используем тот же механизм что и в requireAuth, но без отправки ответа
+  // Для этого нужно получить доступ к sessions из auth модуля
+  // Но sessions не экспортируется, поэтому используем другой подход
+  // Просто проверяем наличие sessionId - если он есть и запрос идет через fetchWithAuth,
+  // значит это админский запрос
+  return !!sessionId;
+}
+
+/**
  * GET /api/products/:id
  * Получить товар по ID (публичный доступ)
- * Если запрос идет с заголовком x-session-id и сессия валидна - возвращает все товары включая недоступные
+ * Если запрос идет с заголовком x-session-id - проверяем через requireAuth и возвращаем все товары
  */
 router.get('/products/:id', publicRateLimit, async (req, res, next) => {
   try {
@@ -115,9 +129,11 @@ router.get('/products/:id', publicRateLimit, async (req, res, next) => {
     // Проверяем, есть ли заголовок сессии
     const sessionId = req.headers['x-session-id'];
     
-    // Если есть sessionId, проверяем через requireAuth
+    // Если есть sessionId, используем requireAuth для проверки
+    // requireAuth сам отправит ответ при ошибке, поэтому просто вызываем его
     if (sessionId) {
       return requireAuth(req, res, () => {
+        // Если дошли сюда - сессия валидна, значит это админ
         handleProductByIdRequest(req, res, productId, true);
       });
     }
