@@ -39,9 +39,11 @@ function rateLimit(options = {}) {
 
     // Проверяем лимит
     if (record.count > max) {
+      const remainingTime = Math.ceil((record.resetTime - now) / 1000 / 60); // минуты
       return res.status(429).json({
         success: false,
-        error: message
+        error: message,
+        retryAfter: remainingTime
       });
     }
 
@@ -59,5 +61,16 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000);
 
+/**
+ * Сброс rate limit для конкретного IP
+ * Используется после успешной авторизации
+ */
+function resetRateLimit(ip) {
+  if (ip && rateLimitMap.has(ip)) {
+    rateLimitMap.delete(ip);
+  }
+}
+
 module.exports = rateLimit;
+module.exports.resetRateLimit = resetRateLimit;
 

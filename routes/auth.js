@@ -2,11 +2,12 @@ const express = require('express');
 const router = express.Router();
 const { authenticate, logout } = require('../middleware/auth');
 const rateLimit = require('../middleware/rateLimit');
+const { resetRateLimit } = require('../middleware/rateLimit');
 
 // Rate limiting для логина (более строгий)
 const loginRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 минут
-  max: 5, // максимум 5 попыток
+  windowMs: 10 * 60 * 1000, // 10 минут
+  max: 15, // максимум 15 попыток
   message: 'Слишком много попыток входа, попробуйте позже'
 });
 
@@ -26,6 +27,10 @@ router.post('/login', loginRateLimit, async (req, res) => {
     }
 
     const { sessionId, user } = await authenticate(username, password);
+
+    // Сбрасываем rate limit при успешной авторизации
+    const clientIp = req.ip || req.connection.remoteAddress;
+    resetRateLimit(clientIp);
 
     res.json({ 
       success: true, 
