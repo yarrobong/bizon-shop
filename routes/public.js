@@ -102,13 +102,43 @@ async function handleProductsRequest(req, res, isAdmin) {
 /**
  * GET /api/products/:id
  * Получить товар по ID (публичный доступ)
+ * Если запрос идет с заголовком x-session-id и сессия валидна - возвращает все товары включая недоступные
  */
-router.get('/products/:id', publicRateLimit, async (req, res) => {
+router.get('/products/:id', publicRateLimit, async (req, res, next) => {
   try {
     const { validateId } = require('../middleware/validation');
     const productId = validateId(req.params.id);
     if (!productId) {
       return res.status(400).json({ error: 'Некорректный ID товара' });
+    }
+
+    // Проверяем, есть ли заголовок сессии
+    const sessionId = req.headers['x-session-id'];
+    
+    // Если есть sessionId, проверяем через requireAuth
+    if (sessionId) {
+      return requireAuth(req, res, () => {
+        handleProductByIdRequest(req, res, productId, true);
+      });
+    }
+
+    // Для публичного доступа
+    handleProductByIdRequest(req, res, productId, false);
+  } catch (err) {
+    console.error('Ошибка загрузки товара:', err);
+    res.status(500).json({ error: 'Ошибка сервера при загрузке товара.' });
+  }
+});
+
+/**
+ * Обработка запроса товара по ID
+ */
+async function handleProductByIdRequest(req, res, productId, isAdmin) {
+  try {
+    // Формируем WHERE условие
+    let whereClause = 'WHERE id = $1';
+    if (!isAdmin) {
+      whereClause = 'WHERE id = $1 AND available = true';
     }
 
     // Используем параметризованный запрос
@@ -117,7 +147,7 @@ router.get('/products/:id', publicRateLimit, async (req, res) => {
         id, title, description, price, tag, available, category,
         brand, compatibility, images_json, supplier_link, supplier_notes, slug
       FROM products
-      WHERE id = $1 AND available = true
+      ${whereClause}
     `, [productId]);
 
     if (productResult.rows.length === 0) {
@@ -148,7 +178,7 @@ router.get('/products/:id', publicRateLimit, async (req, res) => {
     console.error('Ошибка загрузки товара:', err);
     res.status(500).json({ error: 'Ошибка сервера при загрузке товара.' });
   }
-});
+}
 
 /**
  * GET /api/product-by-slug/:slug
