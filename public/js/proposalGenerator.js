@@ -195,6 +195,7 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
               pointer-events: none;
               z-index: -2; /* Поверх сетки, позади контента */
               overflow: hidden;
+              background: black;
             }
 
             .pulse-1,
