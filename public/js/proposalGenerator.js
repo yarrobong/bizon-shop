@@ -157,7 +157,6 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
                 padding: 0;
                 width: 210mm;
                 height: 297mm;
-                background-color: var(--bg-primary);
             }
             
             html, body {
@@ -170,7 +169,6 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
             
             body {
                 font-family: 'Inter', sans-serif;
-                background-color: var(--bg-primary); /* Темный фон */
                 color: var(--text-secondary); /* Вторичный цвет текста */
                 margin: 0;
                 padding: 15mm; /* Внутренние отступы для читаемости контента */
@@ -198,7 +196,6 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
               pointer-events: none;
               z-index: -2; /* Поверх сетки, позади контента */
               overflow: hidden;
-              background-color: var(--bg-primary); /* Основной фон */
             }
 
             .pulse-1,
