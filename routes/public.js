@@ -3,6 +3,7 @@ const router = express.Router();
 const pool = require('../config/db');
 const { parseImagesJson } = require('../utils/parseImages');
 const rateLimit = require('../middleware/rateLimit');
+const { requireAuth } = require('../middleware/auth');
 const axios = require('axios');
 
 // Rate limiting для публичных API
@@ -14,10 +15,41 @@ const publicRateLimit = rateLimit({
 /**
  * GET /api/products
  * Получить товары (публичный доступ, только доступные товары)
+ * Если передан параметр admin=true и пользователь аутентифицирован - возвращает все товары
  */
-router.get('/products', publicRateLimit, async (req, res) => {
+router.get('/products', publicRateLimit, async (req, res, next) => {
   try {
-    // Публичный доступ - только доступные товары
+    const isAdminRequest = req.query.admin === 'true';
+    
+    // Если это запрос от админа, проверяем аутентификацию через middleware
+    if (isAdminRequest) {
+      // Используем requireAuth как middleware
+      return requireAuth(req, res, () => {
+        handleProductsRequest(req, res, true);
+      });
+    }
+    
+    // Для публичного доступа
+    handleProductsRequest(req, res, false);
+  } catch (err) {
+    console.error('Ошибка загрузки товаров:', err);
+    res.status(500).json({ error: 'Ошибка сервера при загрузке товаров.' });
+  }
+});
+
+/**
+ * Обработка запроса товаров
+ */
+async function handleProductsRequest(req, res, isAdmin) {
+  try {
+    // Формируем WHERE условие
+    let whereClause = '';
+    if (!isAdmin) {
+      // Для публичного доступа - только доступные товары
+      whereClause = 'WHERE available = true';
+    }
+    // Для админа - все товары (whereClause остается пустым)
+    
     const query = `
       SELECT
         id,
@@ -34,7 +66,7 @@ router.get('/products', publicRateLimit, async (req, res) => {
         supplier_notes,
         slug
       FROM products
-      WHERE available = true
+      ${whereClause}
       ORDER BY id
     `;
 
@@ -65,7 +97,7 @@ router.get('/products', publicRateLimit, async (req, res) => {
     console.error('Ошибка загрузки товаров:', err);
     res.status(500).json({ error: 'Ошибка сервера при загрузке товаров.' });
   }
-});
+}
 
 /**
  * GET /api/products/:id
