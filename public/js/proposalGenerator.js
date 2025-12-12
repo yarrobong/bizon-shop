@@ -226,21 +226,21 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
             .pulse-5,
             .pulse-6 {
               position: absolute;
-              width: 80mm;
-              height: 80mm;
+              width: 100mm;
+              height: 100mm;
               border-radius: 9999px;
-              filter: blur(40px);
-              opacity: 0.8;
+              filter: blur(50px);
+              opacity: 1;
               pointer-events: none;
               animation: pulse 3s ease-in-out infinite;
             }
 
-            .pulse-1 { top: 0%; left: 70%; background: rgba(0, 4, 172, 0.9); }
-            .pulse-2 { top: 20%; right: 20%; background: rgba(0, 4, 172, 0.8); }
-            .pulse-3 { top: 50%; right: 10%; background: rgba(0, 4, 172, 0.8); }
-            .pulse-4 { top: 70%; right: 20%; background: rgba(0, 4, 172, 0.8); }
-            .pulse-5 { top: 85%; right: 0%; background: rgba(0, 4, 172, 0.7); }
-            .pulse-6 { top: 10%; left: 10%; background: rgba(0, 4, 172, 0.7); }
+            .pulse-1 { top: 0%; left: 70%; background: rgba(0, 4, 172, 1); }
+            .pulse-2 { top: 20%; left: 20%; background: rgba(0, 4, 172, 0.9); }
+            .pulse-3 { top: 50%; left: 90%; background: rgba(0, 4, 172, 0.9); }
+            .pulse-4 { top: 70%; left: 20%; background: rgba(0, 4, 172, 0.9); }
+            .pulse-5 { top: 85%; left: 0%; background: rgba(0, 4, 172, 0.8); }
+            .pulse-6 { top: 10%; left: 10%; background: rgba(0, 4, 172, 0.8); }
 
             @keyframes pulse {
               0%, 100% { transform: scale(1); opacity: 0.6; }

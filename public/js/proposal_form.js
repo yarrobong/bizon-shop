@@ -170,6 +170,56 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Обработчик кнопки "Скачать PDF"
+    const downloadPdfBtn = document.getElementById('download-pdf-btn');
+    downloadPdfBtn.addEventListener('click', function() {
+        // Проверяем, что есть выбранные товары
+        if (selectedProducts.length === 0) {
+            alert('Добавьте хотя бы один товар в коммерческое предложение.');
+            return;
+        }
+        
+        // Создаем объект данных для отправки на сервер
+        const requestData = {
+            manager_name: document.getElementById('manager_name').value,
+            manager_contact: document.getElementById('manager_contact').value,
+            customer_name: document.getElementById('customer_name').value,
+            proposal_title: document.getElementById('proposal_title').value,
+            proposal_text: document.getElementById('proposal_text').value,
+            selected_products: JSON.stringify(selectedProducts)
+        };
+        
+        // Отправляем на генерацию PDF
+        fetch('/generate_proposal_pdf', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Ошибка генерации PDF');
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const safeCustomerName = requestData.customer_name.replace(/[^a-zA-Zа-яА-Я0-9]/g, '_');
+            a.download = `kommercheskoe_predlozhenie_${safeCustomerName}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            alert('Ошибка при скачивании PDF. Попробуйте еще раз.');
+        });
+    });
+
     // Инициализация
     calculateTotal();
 });
