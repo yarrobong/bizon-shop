@@ -79,28 +79,13 @@ function escapeHtml(text) {
 
 // --- ОБНОВЛЕННАЯ функция генерации HTML (теперь асинхронная) ---
 async function generateProposalHTML(manager_name, manager_contact, customer_name, proposal_title, proposal_text, selectedProducts, total) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/js/proposalGenerator.js:81',message:'generateProposalHTML entry',data:{productsCount:selectedProducts?.length,total},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     // Получаем base64 для логотипа
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/js/proposalGenerator.js:83',message:'Before getLogoBase64',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     const logoBase64 = await getLogoBase64();
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/js/proposalGenerator.js:84',message:'After getLogoBase64',data:{logoBase64Length:logoBase64?.length,logoBase64Type:typeof logoBase64},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
 
     // Получаем base64 для изображений товаров
     const processedSelectedProducts = [];
     for (const item of selectedProducts) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/js/proposalGenerator.js:88',message:'Processing product image',data:{productId:item.product?.id,hasImages:!!item.product?.images,imagesType:Array.isArray(item.product?.images)?'array':typeof item.product?.images},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
         const imageBase64 = await getFirstImageBase64(item.product.images);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/js/proposalGenerator.js:89',message:'After getFirstImageBase64',data:{imageBase64Length:imageBase64?.length,imageBase64Type:typeof imageBase64},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
         processedSelectedProducts.push({
             ...item,
             product: {
@@ -144,9 +129,6 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
         `;
     }
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/js/proposalGenerator.js:132',message:'Before returning HTML',data:{processedProductsCount:processedSelectedProducts.length,tableRowsLength:tableRows?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     return `
     <!DOCTYPE html>
     <html lang="ru">

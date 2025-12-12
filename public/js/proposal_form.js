@@ -132,9 +132,6 @@ document.addEventListener('DOMContentLoaded', function() {
             selected_products: JSON.stringify(selectedProducts)
         };
         
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/js/proposal_form.js:136',message:'Before sending request',data:{selectedProductsCount:selectedProducts.length,hasManagerName:!!requestData.manager_name,hasCustomerName:!!requestData.customer_name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-        // #endregion
         // Отправляем на генерацию HTML страницы
         fetch('/generate_proposal', {
             method: 'POST',
@@ -144,27 +141,30 @@ document.addEventListener('DOMContentLoaded', function() {
             body: JSON.stringify(requestData)
         })
         .then(response => {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/js/proposal_form.js:144',message:'Response received',data:{ok:response.ok,status:response.status,statusText:response.statusText},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-            // #endregion
             if (!response.ok) {
                 throw new Error('Ошибка генерации КП');
             }
             return response.text();
         })
         .then(html => {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/js/proposal_form.js:150',message:'HTML received',data:{htmlLength:html?.length,htmlType:typeof html},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-            // #endregion
-            // Открываем HTML в новом окне
+            // Пытаемся открыть HTML в новом окне
             const newWindow = window.open('', '_blank');
-            newWindow.document.write(html);
-            newWindow.document.close();
+            
+            // Проверяем, не заблокировано ли всплывающее окно
+            if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                // Если всплывающее окно заблокировано, создаем blob URL и открываем в новой вкладке
+                const blob = new Blob([html], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                window.open(url, '_blank');
+                // Очищаем URL через некоторое время
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+            } else {
+                // Если окно открылось успешно, записываем HTML
+                newWindow.document.write(html);
+                newWindow.document.close();
+            }
         })
         .catch(error => {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/js/proposal_form.js:156',message:'Error in fetch',data:{error:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-            // #endregion
             console.error('Ошибка:', error);
             alert('Ошибка при создании коммерческого предложения. Попробуйте еще раз.');
         });
