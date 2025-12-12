@@ -76,8 +76,16 @@ generateProposalRouter.post('/', async (req, res) => {
  */
 generateProposalPdfRouter.post('/', async (req, res) => {
   // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'routes/proposals.js:77',message:'PDF generation route entry',data:{hasBody:!!req.body,bodyKeys:req.body?Object.keys(req.body):[]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+  fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'routes/proposals.js:77',message:'PDF generation route entry',data:{hasBody:!!req.body,bodyKeys:req.body?Object.keys(req.body):[],contentType:req.headers['content-type']},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
   // #endregion
+  
+  if (!req.body) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'routes/proposals.js:82',message:'req.body is undefined',data:{contentType:req.headers['content-type']},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
+    return res.status(400).json({ error: 'Тело запроса пустое или не распознано' });
+  }
+  
   const { manager_name, manager_contact, customer_name, proposal_title, proposal_text, selected_products } = req.body;
 
   if (!manager_name || !manager_contact || !customer_name || !selected_products) {

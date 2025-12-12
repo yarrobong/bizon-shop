@@ -461,11 +461,22 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
             
             function downloadServerPDF() {
                 const form = document.getElementById('pdf-form');
-                const formData = new FormData(form);
+                // Собираем данные из формы и преобразуем в JSON
+                const requestData = {
+                    manager_name: form.querySelector('input[name="manager_name"]').value,
+                    manager_contact: form.querySelector('input[name="manager_contact"]').value,
+                    customer_name: form.querySelector('input[name="customer_name"]').value,
+                    proposal_title: form.querySelector('input[name="proposal_title"]').value,
+                    proposal_text: form.querySelector('input[name="proposal_text"]').value,
+                    selected_products: form.querySelector('input[name="selected_products"]').value
+                };
                 
                 fetch('/generate_proposal_pdf', {
                     method: 'POST',
-                    body: formData
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
                 })
                 .then(response => {
                     if (!response.ok) {
