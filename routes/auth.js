@@ -28,6 +28,11 @@ router.post('/login', loginRateLimit, async (req, res) => {
 
     const { sessionId, user } = await authenticate(username, password);
 
+    console.log('[auth] Создана новая сессия:', {
+      sessionId: sessionId.substring(0, 8) + '...',
+      username: user.username
+    });
+
     // Сбрасываем rate limit при успешной авторизации
     const clientIp = req.ip || req.connection.remoteAddress;
     resetRateLimit(clientIp);

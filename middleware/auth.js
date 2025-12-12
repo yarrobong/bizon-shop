@@ -14,7 +14,15 @@ async function requireAuth(req, res, next) {
   try {
     const sessionId = req.headers['x-session-id'];
     
+    console.log('[requireAuth] Проверка сессии:', {
+      sessionId: sessionId ? `${sessionId.substring(0, 8)}...` : 'отсутствует',
+      url: req.url,
+      method: req.method,
+      totalSessions: sessions.size
+    });
+    
     if (!sessionId) {
+      console.log('[requireAuth] Сессия отсутствует');
       return res.status(401).json({ 
         success: false, 
         error: 'Требуется аутентификация' 
@@ -24,6 +32,8 @@ async function requireAuth(req, res, next) {
     const session = sessions.get(sessionId);
     
     if (!session) {
+      console.log('[requireAuth] Сессия не найдена в памяти. Всего сессий:', sessions.size);
+      console.log('[requireAuth] Существующие сессии:', Array.from(sessions.keys()).map(s => s.substring(0, 8) + '...'));
       return res.status(401).json({ 
         success: false, 
         error: 'Сессия недействительна' 
@@ -31,7 +41,9 @@ async function requireAuth(req, res, next) {
     }
 
     // Проверяем срок действия сессии
-    if (Date.now() - session.createdAt > SESSION_DURATION) {
+    const sessionAge = Date.now() - session.createdAt;
+    if (sessionAge > SESSION_DURATION) {
+      console.log('[requireAuth] Сессия истекла. Возраст:', Math.floor(sessionAge / 1000 / 60), 'минут');
       sessions.delete(sessionId);
       return res.status(401).json({ 
         success: false, 
@@ -42,6 +54,7 @@ async function requireAuth(req, res, next) {
     // Обновляем время последней активности
     session.lastActivity = Date.now();
     req.user = session.user;
+    console.log('[requireAuth] Сессия валидна, пользователь:', session.user.username);
     next();
   } catch (error) {
     console.error('Ошибка проверки аутентификации:', error);
