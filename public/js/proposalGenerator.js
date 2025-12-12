@@ -226,21 +226,21 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
             .pulse-5,
             .pulse-6 {
               position: absolute;
-              width: 24rem;
-              height: 24rem;
+              width: 80mm;
+              height: 80mm;
               border-radius: 9999px;
-              filter: blur(60px);
-              opacity: 0.6;
+              filter: blur(40px);
+              opacity: 0.8;
               pointer-events: none;
               animation: pulse 3s ease-in-out infinite;
             }
 
-            .pulse-1 { top: 0vh; left: 70vw; background: rgba(0, 4, 172, 0.9); }
-            .pulse-2 { top: 60vh; right: 80vw; background: rgba(0, 4, 172, 0.7); }
-            .pulse-3 { top: 160vh; right: 10vw; background: rgba(0, 4, 172, 0.7); }
-            .pulse-4 { top: 230vh; right: 80vw; background: rgba(0, 4, 172, 0.7); }
-            .pulse-5 { top: 300vh; right: 0vw; background: rgba(0, 4, 172, 0.7); }
-            .pulse-6 { top: 350vh; right: 80vw; background: rgba(0, 4, 172, 0.7); }
+            .pulse-1 { top: 0%; left: 70%; background: rgba(0, 4, 172, 0.9); }
+            .pulse-2 { top: 20%; right: 20%; background: rgba(0, 4, 172, 0.8); }
+            .pulse-3 { top: 50%; right: 10%; background: rgba(0, 4, 172, 0.8); }
+            .pulse-4 { top: 70%; right: 20%; background: rgba(0, 4, 172, 0.8); }
+            .pulse-5 { top: 85%; right: 0%; background: rgba(0, 4, 172, 0.7); }
+            .pulse-6 { top: 10%; left: 10%; background: rgba(0, 4, 172, 0.7); }
 
             @keyframes pulse {
               0%, 100% { transform: scale(1); opacity: 0.6; }
@@ -358,28 +358,6 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
                 z-index: 1; /* Поверх фона */
             }
 
-            /* Кнопка скачивания PDF */
-            .download-pdf-btn {
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: var(--accent-electric-blue);
-                color: var(--bg-primary);
-                border: none;
-                padding: 12px 24px;
-                border-radius: 8px;
-                font-weight: 600;
-                font-size: 14px;
-                cursor: pointer;
-                z-index: 1000;
-                box-shadow: 0 4px 12px rgba(0, 229, 255, 0.4);
-                transition: all 0.3s ease;
-            }
-            .download-pdf-btn:hover {
-                background: var(--accent-deep-blue);
-                transform: translateY(-2px);
-                box-shadow: 0 6px 16px rgba(0, 229, 255, 0.6);
-            }
 
         </style>
     </head>
@@ -437,69 +415,6 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
             <p>Данное коммерческое предложение является официальным и действует в течение 7 дней с даты составления.</p>
             <p>© ${new Date().getFullYear()} BIZON — Все права защищены</p>
         </div>
-
-        <!-- Кнопки печати/скачивания PDF -->
-        <button class="download-btn" onclick="downloadServerPDF()">Скачать PDF (сервер)</button>
-        <button class="print-btn" onclick="window.print()">Печать (браузер)</button>
-        
-        <!-- Скрытая форма для отправки на сервер для генерации PDF -->
-        <form id="pdf-form" method="POST" action="/generate_proposal_pdf" style="display: none;" target="_blank">
-            <input type="hidden" name="manager_name" value="${escapeHtml(manager_name)}">
-            <input type="hidden" name="manager_contact" value="${escapeHtml(manager_contact)}">
-            <input type="hidden" name="customer_name" value="${escapeHtml(customer_name)}">
-            <input type="hidden" name="proposal_title" value="${escapeHtml(proposal_title)}">
-            <input type="hidden" name="proposal_text" value="${escapeHtml(proposal_text)}">
-            <input type="hidden" name="selected_products" value="${escapeHtml(JSON.stringify(selectedProducts))}">
-        </form>
-        
-        <script>
-            function escapeHtml(text) {
-                const div = document.createElement('div');
-                div.textContent = text;
-                return div.innerHTML;
-            }
-            
-            function downloadServerPDF() {
-                const form = document.getElementById('pdf-form');
-                // Собираем данные из формы и преобразуем в JSON
-                const requestData = {
-                    manager_name: form.querySelector('input[name="manager_name"]').value,
-                    manager_contact: form.querySelector('input[name="manager_contact"]').value,
-                    customer_name: form.querySelector('input[name="customer_name"]').value,
-                    proposal_title: form.querySelector('input[name="proposal_title"]').value,
-                    proposal_text: form.querySelector('input[name="proposal_text"]').value,
-                    selected_products: form.querySelector('input[name="selected_products"]').value
-                };
-                
-                fetch('/generate_proposal_pdf', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(requestData)
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Ошибка генерации PDF');
-                    }
-                    return response.blob();
-                })
-                .then(blob => {
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'kommercheskoe_predlozhenie_${escapeHtml(customer_name).replace(/[^a-zA-Zа-яА-Я0-9]/g, '_')}.pdf';
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(a);
-                })
-                .catch(error => {
-                    console.error('Ошибка:', error);
-                    alert('Ошибка при скачивании PDF. Попробуйте использовать кнопку "Печать (браузер)"');
-                });
-            }
-        </script>
 
     </body>
     </html>
