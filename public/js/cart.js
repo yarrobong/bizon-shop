@@ -1,14 +1,19 @@
 // js/cart.js
 
 // DOM-элементы (теперь на странице cart.html)
-const cartItemsContainer = document.getElementById('cart-items');
-const cartTotalPriceElement = document.getElementById('cart-total-price');
-const phoneInput = document.getElementById('phone');
-const commentInput = document.getElementById('comment-input');
-const sendOrderBtn = document.getElementById('send-order');
-const successMessage = document.getElementById('success-message');
-const consentCheckbox = document.getElementById('consent-toggle');
-const clearCartBtn = document.getElementById('clear-cart-btn');
+// Получаем элементы только после загрузки DOM
+let cartItemsContainer, cartTotalPriceElement, phoneInput, commentInput, sendOrderBtn, successMessage, consentCheckbox, clearCartBtn;
+
+function initDOMElements() {
+  cartItemsContainer = document.getElementById('cart-items');
+  cartTotalPriceElement = document.getElementById('cart-total-price');
+  phoneInput = document.getElementById('phone');
+  commentInput = document.getElementById('comment-input');
+  sendOrderBtn = document.getElementById('send-order');
+  successMessage = document.getElementById('success-message');
+  consentCheckbox = document.getElementById('consent-toggle');
+  clearCartBtn = document.getElementById('clear-cart-btn');
+}
 
 
 
@@ -24,7 +29,9 @@ function renderCartItems() {
 
   if (cart.length === 0) {
     cartItemsContainer.innerHTML = '<div class="empty">Ваша корзина пуста</div>';
-    cartTotalPriceElement.textContent = formatPrice(0);
+    if (cartTotalPriceElement) {
+      cartTotalPriceElement.textContent = formatPrice(0);
+    }
     updateSendOrderButton(); // Обновим кнопку, так как корзина пуста
     return;
   }
@@ -71,7 +78,9 @@ function renderCartItems() {
   });
 
   // Обновляем итоговую цену
-  cartTotalPriceElement.textContent = formatPrice(total);
+  if (cartTotalPriceElement) {
+    cartTotalPriceElement.textContent = formatPrice(total);
+  }
   updateSendOrderButton(); // Обновим кнопку, так как цена могла измениться
 }
 
@@ -101,7 +110,12 @@ async function handleSendOrder() {
     return;
   }
 
-  const isConsentGiven = consentCheckbox ? consentCheckbox.checked : false;
+  if (!sendOrderBtn || !phoneInput || !consentCheckbox) {
+    console.error('Необходимые элементы не найдены');
+    return;
+  }
+
+  const isConsentGiven = consentCheckbox.checked;
 
   if (!isConsentGiven) {
     alert('Необходимо дать согласие на обработку персональных данных');
@@ -128,7 +142,7 @@ async function handleSendOrder() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         phone: phoneInput.value,
-        comment: commentInput.value || '',
+        comment: commentInput ? commentInput.value || '' : '',
         cart: getCart()
       })
     });
@@ -140,15 +154,16 @@ async function handleSendOrder() {
       clearCart();
       renderCartItems(); // Перерисовываем пустую корзину
       updateCartCount(); // Обновляем счетчик
-      phoneInput.value = '';
-      commentInput.value = '';
-      successMessage.style.display = 'block';
-
-      setTimeout(() => {
-        successMessage.style.display = 'none';
-        // Можно перенаправить на главную или другую страницу
-        // window.location.href = '/';
-      }, 3000);
+      if (phoneInput) phoneInput.value = '';
+      if (commentInput) commentInput.value = '';
+      if (successMessage) {
+        successMessage.style.display = 'block';
+        setTimeout(() => {
+          successMessage.style.display = 'none';
+          // Можно перенаправить на главную или другую страницу
+          // window.location.href = '/';
+        }, 3000);
+      }
     } else {
       throw new Error(result.error || 'Ошибка сервера');
     }
@@ -159,15 +174,17 @@ async function handleSendOrder() {
       clearCart();
       renderCartItems(); // Перерисовываем пустую корзину
       updateCartCount(); // Обновляем счетчик
-      phoneInput.value = '';
-      commentInput.value = '';
+      if (phoneInput) phoneInput.value = '';
+      if (commentInput) commentInput.value = '';
       message = 'Заказ уже обрабатывается.';
     }
     alert(message);
   } finally {
     handleSendOrder.isSending = false;
-    sendOrderBtn.disabled = false;
-    sendOrderBtn.textContent = 'Оформить заказ';
+    if (sendOrderBtn) {
+      sendOrderBtn.disabled = false;
+      sendOrderBtn.textContent = 'Оформить заказ';
+    }
   }
 }
 
@@ -188,6 +205,9 @@ function sanitizePhoneInput(event) {
 document.addEventListener('DOMContentLoaded', function () {
     console.log("Страница корзины загружена.");
     
+    // Инициализируем DOM элементы
+    initDOMElements();
+    
     // Проверяем, доступна ли функция getCart из state.js
     if (typeof window.getCart === 'function') {
         console.log("Функция getCart из state.js найдена.");
@@ -207,6 +227,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (typeof window.getCart === 'function') {
                     console.log("Функция getCart теперь доступна.");
                     clearInterval(checkForGetCart); // Останавливаем проверку
+                    initDOMElements(); // Инициализируем DOM элементы перед использованием
                     renderCartItems(); // Вызываем рендер
                     setupEventListeners(); // И настройку обработчиков
                 }
