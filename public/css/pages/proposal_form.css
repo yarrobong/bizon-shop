@@ -36,6 +36,7 @@ body {
   pointer-events: none;
   z-index: -2;
   overflow: hidden;
+  background: black;
 }
 
 .pulse-1, .pulse-2, .pulse-3, .pulse-4, .pulse-5, .pulse-6 {
