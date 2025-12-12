@@ -98,7 +98,6 @@ async function generateProposalHTML(manager_name, manager_contact, customer_name
     // CSS-переменные, взятые из вашего сайта
     const cssVariables = `
         :root {
-          --bg-primary: #0d0f17; /* Темный фон как на сайте */
           --accent-electric-blue: #00E5FF;
           --accent-deep-blue: #2B6CFF;
           --text-primary: #FFFFFF;
