@@ -354,13 +354,22 @@
                 // Используем правильный формат для очереди - массив аргументов
                 window.ym.a.push([104163309, 'reachGoal', 'contact_form_submit']);
                 console.log('[Yandex Metrika] Цель добавлена в очередь. Новый размер очереди:', window.ym.a.length);
-                // Также вызываем через функцию для надежности (она добавит в очередь автоматически)
-                try {
-                  window.ym(104163309, 'reachGoal', 'contact_form_submit');
-                  console.log('[Yandex Metrika] Цель также отправлена через функцию ym()');
-                } catch (e) {
-                  console.log('[Yandex Metrika] Ошибка при вызове через функцию (это нормально, если очередь обработана):', e.message);
-                }
+                
+                // Проверяем через 2 секунды, загрузилась ли библиотека и обработала ли очередь
+                setTimeout(function() {
+                  try {
+                    if (typeof ym === 'function' && typeof ym.a === 'undefined') {
+                      console.log('[Yandex Metrika] Библиотека загрузилась! Очередь должна быть обработана.');
+                      // Дополнительно отправляем цель напрямую для надежности
+                      ym(104163309, 'reachGoal', 'contact_form_submit');
+                      console.log('[Yandex Metrika] Цель отправлена напрямую после загрузки библиотеки');
+                    } else if (typeof window.ym === 'function' && Array.isArray(window.ym.a)) {
+                      console.log('[Yandex Metrika] Библиотека еще загружается. Размер очереди:', window.ym.a.length);
+                    }
+                  } catch (e) {
+                    console.log('[Yandex Metrika] Ошибка при проверке загрузки:', e.message);
+                  }
+                }, 2000);
               } else {
                 // Библиотека еще не загружена, используем стандартный формат очереди
                 console.log('[Yandex Metrika] Отправка цели: contact_form_submit (через стандартную очередь)');
