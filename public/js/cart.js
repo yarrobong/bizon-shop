@@ -156,6 +156,19 @@ async function handleSendOrder() {
       })
     });
 
+    // Проверяем статус ответа перед парсингом JSON
+    if (response.status === 429) {
+      const errorData = await response.json();
+      const retryAfter = errorData.retryAfter || 2;
+      alert(`Слишком много заказов. Пожалуйста, подождите ${retryAfter} ${retryAfter === 1 ? 'минуту' : 'минуты'} перед следующей попыткой.`);
+      handleSendOrder.isSending = false;
+      if (sendOrderBtn) {
+        sendOrderBtn.disabled = false;
+        sendOrderBtn.textContent = 'Оформить заказ';
+      }
+      return;
+    }
+
     const result = await response.json();
     console.log('Ответ сервера:', result);
 
@@ -394,6 +407,18 @@ function setupEventListeners() {
                     cart: window.getCart()
                   })
                 });
+                
+                // Проверяем статус ответа перед парсингом JSON
+                if (response.status === 429) {
+                  const errorData = await response.json();
+                  const retryAfter = errorData.retryAfter || 2;
+                  alert(`Слишком много заказов. Пожалуйста, подождите ${retryAfter} ${retryAfter === 1 ? 'минуту' : 'минуты'} перед следующей попыткой.`);
+                  sendOrderBtn.disabled = false;
+                  sendOrderBtn.textContent = 'Оформить заказ';
+                  isSending = false;
+                  return;
+                }
+                
                 const result = await response.json();
                 console.log('Ответ сервера:', result);
 

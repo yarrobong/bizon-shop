@@ -252,8 +252,8 @@ router.get('/product-by-slug/:slug', publicRateLimit, async (req, res) => {
  * Создать заказ (публичный доступ, но с защитой от спама)
  */
 const orderRateLimit = rateLimit({
-  windowMs: 60 * 1000, // 1 минута
-  max: 3, // максимум 3 заказа в минуту
+  windowMs: 2 * 60 * 1000, // 2 минуты
+  max: 5, // максимум 5 заказов за 2 минуты
   message: 'Слишком много заказов, попробуйте позже'
 });
 
