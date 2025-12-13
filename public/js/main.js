@@ -1,17 +1,23 @@
 // --- ФУНКЦИЯ ДЛЯ ОТЛОЖЕННОЙ ИНИЦИАЛИЗАЦИИ ЯНДЕКС.МЕТРИКИ ---
 function loadYandexMetrika() {
     // Проверяем, не была ли уже загружена библиотека ym
-    if (typeof ym === 'undefined') {
+    // ym может быть undefined (не инициализирована) или функцией (очередь или загружена)
+    if (typeof window.ym === 'undefined') {
+        // Стандартный код загрузки Яндекс.Метрики
         (function(m,e,t,r,i,k,a){
             m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
             m[i].l=1*new Date();
             // Проверяем, не загружается ли уже скрипт
-            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            for (var j = 0; j < document.scripts.length; j++) {
+                if (document.scripts[j].src && document.scripts[j].src.indexOf('mc.yandex.ru/metrika') !== -1) {
+                    return; // Скрипт уже загружается или загружен
+                }
+            }
             k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
         })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=104163309', 'ym');
 
-        // Инициализация метрики с вашими параметрами
-        ym(104163309, 'init', {
+        // Инициализация метрики с вашими параметрами (добавляется в очередь)
+        window.ym(104163309, 'init', {
             ssr: true,
             webvisor: true,
             clickmap: true,
@@ -19,10 +25,11 @@ function loadYandexMetrika() {
             accurateTrackBounce: true,
             trackLinks: true
         });
-    } else {
-        // Если библиотека уже загружена, можно выполнить дополнительные действия
-        // например, ym(104163309, 'hit', window.location.href); для отслеживания переходов
+    } else if (typeof window.ym === 'function' && typeof window.ym.a === 'undefined') {
+        // Библиотека уже полностью загружена и инициализирована
+        // Можно выполнить дополнительные действия, если нужно
     }
+    // Если ym уже существует как очередь, ничего не делаем - библиотека загружается
 }
 
 document.addEventListener('DOMContentLoaded', function() {
