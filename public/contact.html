@@ -350,7 +350,17 @@
               } else if (typeof window.ym === 'function' && Array.isArray(window.ym.a)) {
                 // Библиотека загружается, используем очередь через свойство a
                 console.log('[Yandex Metrika] Отправка цели: contact_form_submit (через очередь a)');
+                console.log('[Yandex Metrika] Состояние очереди:', window.ym.a.length, 'элементов');
+                // Используем правильный формат для очереди - массив аргументов
                 window.ym.a.push([104163309, 'reachGoal', 'contact_form_submit']);
+                console.log('[Yandex Metrika] Цель добавлена в очередь. Новый размер очереди:', window.ym.a.length);
+                // Также вызываем через функцию для надежности (она добавит в очередь автоматически)
+                try {
+                  window.ym(104163309, 'reachGoal', 'contact_form_submit');
+                  console.log('[Yandex Metrika] Цель также отправлена через функцию ym()');
+                } catch (e) {
+                  console.log('[Yandex Metrika] Ошибка при вызове через функцию (это нормально, если очередь обработана):', e.message);
+                }
               } else {
                 // Библиотека еще не загружена, используем стандартный формат очереди
                 console.log('[Yandex Metrika] Отправка цели: contact_form_submit (через стандартную очередь)');
