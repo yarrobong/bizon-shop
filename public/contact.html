@@ -338,94 +338,71 @@
           // Успешная отправка
           
           // Отправка цели в Яндекс Метрику
-          // Используем стандартный формат очереди Яндекс.Метрики
-          (function() {
+          // Используем универсальный подход для максимальной надежности
+          console.log('[Yandex Metrika] Начало отправки цели: contact_form_submit');
+          
+          // Функция для отправки цели
+          function sendGoal() {
             try {
-              // Проверяем, загружена ли библиотека полностью
-              // Если ym - функция без свойства a, значит библиотека загружена
+              // Способ 1: Прямой вызов через глобальную ym (если библиотека загружена)
               if (typeof ym === 'function' && typeof ym.a === 'undefined') {
-                // Библиотека загружена, отправляем сразу
-                console.log('[Yandex Metrika] Отправка цели: contact_form_submit (библиотека загружена)');
+                console.log('[Yandex Metrika] Способ 1: Прямой вызов через ym()');
                 ym(104163309, 'reachGoal', 'contact_form_submit');
-                console.log('[Yandex Metrika] Цель отправлена напрямую');
-              } else if (typeof window.ym === 'function') {
-                // window.ym существует как функция
-                if (Array.isArray(window.ym.a)) {
-                  // Библиотека загружается, используем очередь через свойство a
-                  console.log('[Yandex Metrika] Отправка цели: contact_form_submit (через очередь a)');
-                  console.log('[Yandex Metrika] Состояние очереди:', window.ym.a.length, 'элементов');
-                  // Используем правильный формат для очереди - массив аргументов
+                return true;
+              }
+              
+              // Способ 2: Через window.ym (если библиотека загружена)
+              if (typeof window.ym === 'function') {
+                if (typeof window.ym.a === 'undefined') {
+                  console.log('[Yandex Metrika] Способ 2: Вызов через window.ym()');
+                  window.ym(104163309, 'reachGoal', 'contact_form_submit');
+                  return true;
+                } else if (Array.isArray(window.ym.a)) {
+                  // Библиотека загружается, используем очередь
+                  console.log('[Yandex Metrika] Способ 3: Добавление в очередь через window.ym.a');
                   window.ym.a.push([104163309, 'reachGoal', 'contact_form_submit']);
-                  console.log('[Yandex Metrika] Цель добавлена в очередь. Новый размер очереди:', window.ym.a.length);
-                  
-                  // Также пытаемся вызвать через функцию (она добавит в очередь автоматически)
+                  // Также вызываем через функцию для надежности
                   try {
                     window.ym(104163309, 'reachGoal', 'contact_form_submit');
-                    console.log('[Yandex Metrika] Цель также отправлена через функцию window.ym()');
                   } catch (e) {
-                    console.log('[Yandex Metrika] Ошибка при вызове через функцию:', e.message);
+                    // Игнорируем ошибку, если очередь уже обработана
                   }
-                  
-                  // Проверяем через 2 секунды, загрузилась ли библиотека и обработала ли очередь
-                  setTimeout(function() {
-                    try {
-                      if (typeof ym === 'function' && typeof ym.a === 'undefined') {
-                        console.log('[Yandex Metrika] Библиотека загрузилась! Отправляем цель напрямую для надежности.');
-                        ym(104163309, 'reachGoal', 'contact_form_submit');
-                        console.log('[Yandex Metrika] Цель отправлена напрямую после загрузки библиотеки');
-                      } else if (typeof window.ym === 'function' && Array.isArray(window.ym.a)) {
-                        console.log('[Yandex Metrika] Библиотека еще загружается. Размер очереди:', window.ym.a.length);
-                      }
-                    } catch (e) {
-                      console.log('[Yandex Metrika] Ошибка при проверке загрузки:', e.message);
-                    }
-                  }, 2000);
-                } else {
-                  // window.ym - функция, но без очереди - возможно библиотека загружена
-                  console.log('[Yandex Metrika] window.ym - функция без очереди, пытаемся вызвать напрямую');
-                  try {
-                    window.ym(104163309, 'reachGoal', 'contact_form_submit');
-                    console.log('[Yandex Metrika] Цель отправлена через window.ym()');
-                  } catch (e) {
-                    console.log('[Yandex Metrika] Ошибка при вызове window.ym():', e.message);
-                    // Пытаемся через глобальную ym
-                    if (typeof ym === 'function') {
-                      ym(104163309, 'reachGoal', 'contact_form_submit');
-                      console.log('[Yandex Metrika] Цель отправлена через глобальную ym()');
-                    }
-                  }
+                  return true;
                 }
-              } else {
-                // Библиотека еще не загружена, используем стандартный формат очереди
-                console.log('[Yandex Metrika] Отправка цели: contact_form_submit (через стандартную очередь)');
-                // Инициализируем очередь, если её еще нет
-                if (typeof window.ym === 'undefined') {
-                  window.ym = [];
-                }
-                
-                // Если window.ym - массив, используем стандартный формат очереди
-                if (Array.isArray(window.ym)) {
-                  window.ym.push(function() {
-                    ym(104163309, 'reachGoal', 'contact_form_submit');
-                  });
-                } else if (typeof ym === 'function') {
-                  // Попытка вызвать напрямую, если библиотека загружена
+              }
+              
+              // Способ 4: Стандартная очередь (если библиотека еще не инициализирована)
+              console.log('[Yandex Metrika] Способ 4: Использование стандартной очереди');
+              window.ym = window.ym || [];
+              if (Array.isArray(window.ym)) {
+                window.ym.push(function() {
                   ym(104163309, 'reachGoal', 'contact_form_submit');
-                }
+                });
+                return true;
+              }
+              
+              return false;
+            } catch (e) {
+              console.error('[Yandex Metrika] Ошибка в sendGoal():', e);
+              return false;
+            }
+          }
+          
+          // Пытаемся отправить цель
+          var sent = sendGoal();
+          console.log('[Yandex Metrika] Результат отправки:', sent ? 'успешно' : 'не удалось');
+          
+          // Дополнительная проверка через 1 секунду для надежности
+          setTimeout(function() {
+            try {
+              if (typeof ym === 'function' && typeof ym.a === 'undefined') {
+                console.log('[Yandex Metrika] Повторная отправка через 1 сек (библиотека загрузилась)');
+                ym(104163309, 'reachGoal', 'contact_form_submit');
               }
             } catch (e) {
-              console.error('[Yandex Metrika] Ошибка отправки цели:', e);
-              // Последняя попытка - используем прямой вызов, если возможно
-              try {
-                if (typeof ym === 'function') {
-                  console.log('[Yandex Metrika] Fallback: попытка прямой отправки цели');
-                  ym(104163309, 'reachGoal', 'contact_form_submit');
-                }
-              } catch (e2) {
-                console.error('[Yandex Metrika] Критическая ошибка отправки цели:', e2);
-              }
+              // Игнорируем ошибки при повторной отправке
             }
-          })();
+          }, 1000);
           
           // Показать сообщение об успехе
           alert('Спасибо! Мы свяжемся с вами в ближайшее время.');
