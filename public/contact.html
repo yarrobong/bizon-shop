@@ -339,25 +339,48 @@
           
           // Отправка цели в Яндекс Метрику
           // Используем стандартный формат очереди Яндекс.Метрики
-          try {
-            // Проверяем, загружена ли библиотека (ym - функция без свойства a)
-            if (typeof ym === 'function' && typeof ym.a === 'undefined') {
-              // Библиотека загружена, отправляем сразу
-              ym(104163309, 'reachGoal', 'contact_form_submit');
-            } else {
-              // Библиотека еще не загружена, используем очередь
-              window.ym = window.ym || [];
-              window.ym.push(function() {
+          (function() {
+            try {
+              // Проверяем, загружена ли библиотека полностью
+              // Если ym - функция без свойства a, значит библиотека загружена
+              if (typeof ym === 'function' && typeof ym.a === 'undefined') {
+                // Библиотека загружена, отправляем сразу
                 ym(104163309, 'reachGoal', 'contact_form_submit');
-              });
+              } else {
+                // Библиотека еще не загружена или загружается
+                // Используем стандартный формат очереди Яндекс.Метрики
+                // Инициализируем очередь, если её еще нет
+                if (typeof window.ym === 'undefined') {
+                  window.ym = [];
+                }
+                
+                // Если window.ym - массив, используем стандартный формат очереди
+                if (Array.isArray(window.ym)) {
+                  window.ym.push(function() {
+                    ym(104163309, 'reachGoal', 'contact_form_submit');
+                  });
+                } else if (typeof window.ym === 'function' && Array.isArray(window.ym.a)) {
+                  // Если window.ym - функция с очередью, используем свойство a
+                  window.ym.a.push([104163309, 'reachGoal', 'contact_form_submit']);
+                } else {
+                  // Попытка вызвать напрямую, если библиотека загружена
+                  if (typeof ym === 'function') {
+                    ym(104163309, 'reachGoal', 'contact_form_submit');
+                  }
+                }
+              }
+            } catch (e) {
+              console.error('Ошибка отправки цели в Яндекс Метрику:', e);
+              // Последняя попытка - используем прямой вызов, если возможно
+              try {
+                if (typeof ym === 'function') {
+                  ym(104163309, 'reachGoal', 'contact_form_submit');
+                }
+              } catch (e2) {
+                // Игнорируем ошибку, если ничего не помогло
+              }
             }
-          } catch (e) {
-            // В случае ошибки используем очередь как fallback
-            window.ym = window.ym || [];
-            window.ym.push(function() {
-              ym(104163309, 'reachGoal', 'contact_form_submit');
-            });
-          }
+          })();
           
           // Показать сообщение об успехе
           alert('Спасибо! Мы свяжемся с вами в ближайшее время.');
