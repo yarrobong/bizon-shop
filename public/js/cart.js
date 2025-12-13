@@ -30,7 +30,7 @@ function renderCartItems() {
   if (cart.length === 0) {
     cartItemsContainer.innerHTML = '<div class="empty">Ваша корзина пуста</div>';
     if (cartTotalPriceElement) {
-      cartTotalPriceElement.textContent = formatPrice(0);
+    cartTotalPriceElement.textContent = formatPrice(0);
     }
     updateSendOrderButton(); // Обновим кнопку, так как корзина пуста
     return;
@@ -79,7 +79,7 @@ function renderCartItems() {
 
   // Обновляем итоговую цену
   if (cartTotalPriceElement) {
-    cartTotalPriceElement.textContent = formatPrice(total);
+  cartTotalPriceElement.textContent = formatPrice(total);
   }
   updateSendOrderButton(); // Обновим кнопку, так как цена могла измениться
 }
@@ -157,12 +157,12 @@ async function handleSendOrder() {
       if (phoneInput) phoneInput.value = '';
       if (commentInput) commentInput.value = '';
       if (successMessage) {
-        successMessage.style.display = 'block';
-        setTimeout(() => {
-          successMessage.style.display = 'none';
-          // Можно перенаправить на главную или другую страницу
-          // window.location.href = '/';
-        }, 3000);
+      successMessage.style.display = 'block';
+      setTimeout(() => {
+        successMessage.style.display = 'none';
+        // Можно перенаправить на главную или другую страницу
+        // window.location.href = '/';
+      }, 3000);
       }
     } else {
       throw new Error(result.error || 'Ошибка сервера');
@@ -182,8 +182,8 @@ async function handleSendOrder() {
   } finally {
     handleSendOrder.isSending = false;
     if (sendOrderBtn) {
-      sendOrderBtn.disabled = false;
-      sendOrderBtn.textContent = 'Оформить заказ';
+    sendOrderBtn.disabled = false;
+    sendOrderBtn.textContent = 'Оформить заказ';
     }
   }
 }
