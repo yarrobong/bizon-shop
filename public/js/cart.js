@@ -162,6 +162,50 @@ try {
             request.send(post_data); сt_сheck = false; ct_data = {};
 } catch (error) {console.log(error)}
 /*Calltouch requests*/
+      
+      // Отправка цели в Яндекс Метрику
+      (function() {
+        function sendGoal() {
+          try {
+            if (typeof ym === 'function' && typeof ym.a === 'undefined') {
+              ym(104163309, 'reachGoal', 'cart_order_submit');
+              return true;
+            }
+            if (typeof window.ym === 'function') {
+              if (typeof window.ym.a === 'undefined') {
+                window.ym(104163309, 'reachGoal', 'cart_order_submit');
+                return true;
+              } else if (Array.isArray(window.ym.a)) {
+                window.ym.a.push([104163309, 'reachGoal', 'cart_order_submit']);
+                try {
+                  window.ym(104163309, 'reachGoal', 'cart_order_submit');
+                } catch (e) {}
+                return true;
+              }
+            }
+            window.ym = window.ym || [];
+            if (Array.isArray(window.ym)) {
+              window.ym.push(function() {
+                ym(104163309, 'reachGoal', 'cart_order_submit');
+              });
+              return true;
+            }
+            return false;
+          } catch (e) {
+            console.error('[Yandex Metrika] Ошибка отправки цели:', e);
+            return false;
+          }
+        }
+        sendGoal();
+        setTimeout(function() {
+          try {
+            if (typeof ym === 'function' && typeof ym.a === 'undefined') {
+              ym(104163309, 'reachGoal', 'cart_order_submit');
+            }
+          } catch (e) {}
+        }, 1000);
+      })();
+      
       clearCart();
       renderCartItems(); // Перерисовываем пустую корзину
       updateCartCount(); // Обновляем счетчик
@@ -328,6 +372,49 @@ function setupEventListeners() {
                 console.log('Ответ сервера:', result);
 
                 if (result.success) {
+                  // Отправка цели в Яндекс Метрику
+                  (function() {
+                    function sendGoal() {
+                      try {
+                        if (typeof ym === 'function' && typeof ym.a === 'undefined') {
+                          ym(104163309, 'reachGoal', 'cart_order_submit');
+                          return true;
+                        }
+                        if (typeof window.ym === 'function') {
+                          if (typeof window.ym.a === 'undefined') {
+                            window.ym(104163309, 'reachGoal', 'cart_order_submit');
+                            return true;
+                          } else if (Array.isArray(window.ym.a)) {
+                            window.ym.a.push([104163309, 'reachGoal', 'cart_order_submit']);
+                            try {
+                              window.ym(104163309, 'reachGoal', 'cart_order_submit');
+                            } catch (e) {}
+                            return true;
+                          }
+                        }
+                        window.ym = window.ym || [];
+                        if (Array.isArray(window.ym)) {
+                          window.ym.push(function() {
+                            ym(104163309, 'reachGoal', 'cart_order_submit');
+                          });
+                          return true;
+                        }
+                        return false;
+                      } catch (e) {
+                        console.error('[Yandex Metrika] Ошибка отправки цели:', e);
+                        return false;
+                      }
+                    }
+                    sendGoal();
+                    setTimeout(function() {
+                      try {
+                        if (typeof ym === 'function' && typeof ym.a === 'undefined') {
+                          ym(104163309, 'reachGoal', 'cart_order_submit');
+                        }
+                      } catch (e) {}
+                    }, 1000);
+                  })();
+                  
                   // Используем clearCart из state.js
                   window.clearCart();
                   // Обновляем счётчик в хедере
