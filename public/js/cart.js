@@ -127,6 +127,15 @@ async function handleSendOrder() {
     return;
   }
 
+  // Валидация телефона
+  const phone = phoneInput.value;
+  const phoneDigits = phone.replace(/\D/g, '');
+  if (phoneDigits.length < 10) {
+    alert('Введите корректный номер телефона');
+    phoneInput.focus();
+    return;
+  }
+
   if (getCart().length === 0) {
     alert('Корзина пуста');
     return;
@@ -141,7 +150,7 @@ async function handleSendOrder() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        phone: phoneInput.value,
+        phone: phone,
         comment: commentInput ? commentInput.value || '' : '',
         cart: getCart()
       })
@@ -263,6 +272,13 @@ document.addEventListener('DOMContentLoaded', function () {
     // Инициализируем DOM элементы
     initDOMElements();
     
+    // Инициализация маски телефона
+    if (typeof $ !== 'undefined' && $.fn.mask) {
+        $(document).ready(function(){
+            $(".phone_mask").mask("+7 (999) 999-99-99");
+        });
+    }
+    
     // Проверяем, доступна ли функция getCart из state.js
     if (typeof window.getCart === 'function') {
         console.log("Функция getCart из state.js найдена.");
@@ -347,6 +363,16 @@ function setupEventListeners() {
                 alert('Укажите телефон');
                 return;
             }
+            
+            // Валидация телефона
+            const phone = phoneInput.value;
+            const phoneDigits = phone.replace(/\D/g, '');
+            if (phoneDigits.length < 10) {
+                alert('Введите корректный номер телефона');
+                phoneInput.focus();
+                return;
+            }
+            
             // Используем getCart из state.js
             if (window.getCart().length === 0) {
                 alert('Корзина пуста');
@@ -362,7 +388,7 @@ function setupEventListeners() {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    phone: phoneInput.value,
+                    phone: phone,
                     comment: document.getElementById('comment-input')?.value || '',
                     // Используем getCart из state.js
                     cart: window.getCart()
