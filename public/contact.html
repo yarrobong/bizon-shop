@@ -21,11 +21,11 @@
 
   <!-- Стили -->
 
-  <link rel="stylesheet" href="css/layout/header.css">
-  <link rel="stylesheet" href="css/components/background.css">
+  <link rel="stylesheet" href="/css/layout/header.css">
+  <link rel="stylesheet" href="/css/components/background.css">
  
-  <link rel="stylesheet" href="css/pages/index.css">
-  <link rel="stylesheet" href="css/pages/contact.css">
+  <link rel="stylesheet" href="/css/pages/index.css">
+  <link rel="stylesheet" href="/css/pages/contact.css">
   <style>
     
 
@@ -230,7 +230,7 @@
   </footer>
 
  <!-- Скрипты -->
-  <script defer src="js/state.js"></script>
+  <script defer src="/js/state.js"></script>
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
@@ -345,10 +345,15 @@
               // Если ym - функция без свойства a, значит библиотека загружена
               if (typeof ym === 'function' && typeof ym.a === 'undefined') {
                 // Библиотека загружена, отправляем сразу
+                console.log('[Yandex Metrika] Отправка цели: contact_form_submit (библиотека загружена)');
                 ym(104163309, 'reachGoal', 'contact_form_submit');
+              } else if (typeof window.ym === 'function' && Array.isArray(window.ym.a)) {
+                // Библиотека загружается, используем очередь через свойство a
+                console.log('[Yandex Metrika] Отправка цели: contact_form_submit (через очередь a)');
+                window.ym.a.push([104163309, 'reachGoal', 'contact_form_submit']);
               } else {
-                // Библиотека еще не загружена или загружается
-                // Используем стандартный формат очереди Яндекс.Метрики
+                // Библиотека еще не загружена, используем стандартный формат очереди
+                console.log('[Yandex Metrika] Отправка цели: contact_form_submit (через стандартную очередь)');
                 // Инициализируем очередь, если её еще нет
                 if (typeof window.ym === 'undefined') {
                   window.ym = [];
@@ -359,25 +364,21 @@
                   window.ym.push(function() {
                     ym(104163309, 'reachGoal', 'contact_form_submit');
                   });
-                } else if (typeof window.ym === 'function' && Array.isArray(window.ym.a)) {
-                  // Если window.ym - функция с очередью, используем свойство a
-                  window.ym.a.push([104163309, 'reachGoal', 'contact_form_submit']);
-                } else {
+                } else if (typeof ym === 'function') {
                   // Попытка вызвать напрямую, если библиотека загружена
-                  if (typeof ym === 'function') {
-                    ym(104163309, 'reachGoal', 'contact_form_submit');
-                  }
+                  ym(104163309, 'reachGoal', 'contact_form_submit');
                 }
               }
             } catch (e) {
-              console.error('Ошибка отправки цели в Яндекс Метрику:', e);
+              console.error('[Yandex Metrika] Ошибка отправки цели:', e);
               // Последняя попытка - используем прямой вызов, если возможно
               try {
                 if (typeof ym === 'function') {
+                  console.log('[Yandex Metrika] Fallback: попытка прямой отправки цели');
                   ym(104163309, 'reachGoal', 'contact_form_submit');
                 }
               } catch (e2) {
-                // Игнорируем ошибку, если ничего не помогло
+                console.error('[Yandex Metrika] Критическая ошибка отправки цели:', e2);
               }
             }
           })();
@@ -432,7 +433,7 @@
     });
   });
 </script>
-  <script defer src="js/main.js"></script>
+  <script defer src="/js/main.js"></script>
 
    <!-- Cookie Consent Banner -->
 <div id="cookieConsent" class="cookie-consent-banner">
