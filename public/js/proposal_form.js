@@ -9,28 +9,53 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedProducts = [];
     let allProducts = []; // Хранение всех продуктов, полученных с сервера
 
-    // Загрузка товаров из базы данных через AJAX (новый маршрут)
-    fetch('/api/products_for_proposal') // Используем новый маршрут
+    // Загрузка товаров и аттракционов из базы данных через AJAX
+    fetch('/api/products_for_proposal')
         .then(response => response.json())
         .then(data => {
             if (data.success && Array.isArray(data.products)) {
                 allProducts = data.products;
-                productSelect.innerHTML = '<option value="">Выберите товар</option>';
-                data.products.forEach(product => {
-                    const option = document.createElement('option');
-                    option.value = product.id;
-                    option.textContent = `${product.title} (${formatPrice(product.price)})`;
-                    
-                    productSelect.appendChild(option);
-                });
+                productSelect.innerHTML = '<option value="">Выберите товар или аттракцион</option>';
+
+                // Группируем по типам для лучшей организации
+                const products = data.products.filter(item => item.type === 'product');
+                const attractions = data.products.filter(item => item.type === 'attraction');
+
+                // Добавляем товары
+                if (products.length > 0) {
+                    const productGroup = document.createElement('optgroup');
+                    productGroup.label = 'Товары';
+                    products.forEach(product => {
+                        const option = document.createElement('option');
+                        option.value = product.id;
+                        option.textContent = `${product.title} (${formatPrice(product.price)})`;
+                        option.dataset.type = 'product';
+                        productGroup.appendChild(option);
+                    });
+                    productSelect.appendChild(productGroup);
+                }
+
+                // Добавляем аттракционы
+                if (attractions.length > 0) {
+                    const attractionGroup = document.createElement('optgroup');
+                    attractionGroup.label = 'Аттракционы';
+                    attractions.forEach(attraction => {
+                        const option = document.createElement('option');
+                        option.value = attraction.id;
+                        option.textContent = `${attraction.title} (${formatPrice(attraction.price)})`;
+                        option.dataset.type = 'attraction';
+                        attractionGroup.appendChild(option);
+                    });
+                    productSelect.appendChild(attractionGroup);
+                }
             } else {
-                productSelect.innerHTML = '<option value="">Ошибка загрузки товаров</option>';
-                console.error('Ошибка загрузки товаров:', data.error);
+                productSelect.innerHTML = '<option value="">Ошибка загрузки товаров и аттракционов</option>';
+                console.error('Ошибка загрузки товаров и аттракционов:', data.error);
             }
         })
         .catch(error => {
             console.error('Ошибка сети:', error);
-            productSelect.innerHTML = '<option value="">Ошибка загрузки товаров</option>';
+            productSelect.innerHTML = '<option value="">Ошибка загрузки товаров и аттракционов</option>';
         });
 
     // Форматирование цены
