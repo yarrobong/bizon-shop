@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test API</title>
+</head>
+<body>
+    <h1>Тест API /api/products_for_proposal</h1>
+    <div id="result"></div>
+    
+    <script>
+        fetch('/api/products_for_proposal')
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('result');
+                if (data.success) {
+                    resultDiv.innerHTML = '<h2>Успех! Найдено ' + data.products.length + ' позиций:</h2>';
+                    data.products.forEach(item => {
+                        const type = item.type === 'product' ? 'Товар' : 'Аттракцион';
+                        resultDiv.innerHTML += `<p><strong>${type}:</strong> ${item.title} - ${item.price} ₽</p>`;
+                    });
+                } else {
+                    resultDiv.innerHTML = '<p style="color: red;">Ошибка: ' + data.error + '</p>';
+                }
+            })
+            .catch(error => {
+                document.getElementById('result').innerHTML = '<p style="color: red;">Ошибка сети: ' + error + '</p>';
+            });
+    </script>
+</body>
+</html>
