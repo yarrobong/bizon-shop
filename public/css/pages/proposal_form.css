@@ -261,3 +261,139 @@ footer {
   gap: 10px;
   justify-content: flex-end;
 }
+
+/* Стили для кнопки добавления товара */
+button[id="add-product-btn"] {
+  transition: all 0.3s ease;
+}
+
+button[id="add-product-btn"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Кастомный селект с поиском */
+.searchable-select-container {
+  position: relative;
+  width: 100%;
+}
+
+#product_search {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+#product_search:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.1);
+}
+
+#product_search::placeholder {
+  color: var(--text-secondary);
+}
+
+.searchable-select-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.95);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  display: none;
+  box-shadow: var(--shadow);
+}
+
+.searchable-select-dropdown.show {
+  display: block;
+}
+
+.searchable-select-group {
+  padding: 8px 0;
+}
+
+.searchable-select-group-title {
+  padding: 4px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: rgba(0, 229, 255, 0.1);
+}
+
+.searchable-select-option {
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.searchable-select-option:last-child {
+  border-bottom: none;
+}
+
+.searchable-select-option:hover,
+.searchable-select-option.selected {
+  background: var(--accent);
+  color: #000;
+}
+
+.searchable-select-option .option-title {
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.searchable-select-option .option-price {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.searchable-select-option .option-type {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  margin-left: 8px;
+}
+
+/* Анимации */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.searchable-select-dropdown.show {
+  animation: fadeIn 0.2s ease;
+}
+
+/* Скроллбар для dropdown */
+.searchable-select-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.searchable-select-dropdown::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.searchable-select-dropdown::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 3px;
+}
+
+.searchable-select-dropdown::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-hover);
+}

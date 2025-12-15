@@ -1,6 +1,8 @@
 // proposal_form.js
 document.addEventListener('DOMContentLoaded', function() {
     const productSelect = document.getElementById('product_select');
+    const productSearch = document.getElementById('product_search');
+    const productDropdown = document.getElementById('product_dropdown');
     const addProductBtn = document.getElementById('add-product-btn');
     const productList = document.getElementById('product-list');
     const totalAmountSpan = document.getElementById('total-amount');
@@ -8,6 +10,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let selectedProducts = [];
     let allProducts = []; // Хранение всех продуктов, полученных с сервера
+    let selectedProduct = null; // Выбранный продукт
+    let isDropdownOpen = false;
 
     // Загрузка товаров и аттракционов из базы данных через AJAX
     fetch('/api/products_for_proposal')
@@ -15,48 +19,156 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success && Array.isArray(data.products)) {
                 allProducts = data.products;
-                productSelect.innerHTML = '<option value="">Выберите товар или аттракцион</option>';
-
-                // Группируем по типам для лучшей организации
-                const products = data.products.filter(item => item.type === 'product');
-                const attractions = data.products.filter(item => item.type === 'attraction');
-
-                // Добавляем товары
-                if (products.length > 0) {
-                    const productGroup = document.createElement('optgroup');
-                    productGroup.label = 'Товары';
-                    products.forEach(product => {
-                        const option = document.createElement('option');
-                        option.value = product.id;
-                        option.textContent = `${product.title} (${formatPrice(product.price)})`;
-                        option.dataset.type = 'product';
-                        productGroup.appendChild(option);
-                    });
-                    productSelect.appendChild(productGroup);
-                }
-
-                // Добавляем аттракционы
-                if (attractions.length > 0) {
-                    const attractionGroup = document.createElement('optgroup');
-                    attractionGroup.label = 'Аттракционы';
-                    attractions.forEach(attraction => {
-                        const option = document.createElement('option');
-                        option.value = attraction.id;
-                        option.textContent = `${attraction.title} (${formatPrice(attraction.price)})`;
-                        option.dataset.type = 'attraction';
-                        attractionGroup.appendChild(option);
-                    });
-                    productSelect.appendChild(attractionGroup);
-                }
+                productSearch.placeholder = `Найдено ${allProducts.length} товаров и аттракционов...`;
+                renderAllProducts();
             } else {
-                productSelect.innerHTML = '<option value="">Ошибка загрузки товаров и аттракционов</option>';
+                productSearch.placeholder = 'Ошибка загрузки товаров и аттракционов';
                 console.error('Ошибка загрузки товаров и аттракционов:', data.error);
             }
         })
         .catch(error => {
             console.error('Ошибка сети:', error);
-            productSelect.innerHTML = '<option value="">Ошибка загрузки товаров и аттракционов</option>';
+            productSearch.placeholder = 'Ошибка загрузки товаров и аттракционов';
         });
+
+    // Функция рендеринга всех продуктов в dropdown
+    function renderAllProducts() {
+        productDropdown.innerHTML = '';
+
+        const products = allProducts.filter(item => item.type === 'product');
+        const attractions = allProducts.filter(item => item.type === 'attraction');
+
+        // Добавляем товары
+        if (products.length > 0) {
+            const productGroup = document.createElement('div');
+            productGroup.className = 'searchable-select-group';
+            productGroup.innerHTML = '<div class="searchable-select-group-title">Товары</div>';
+
+            products.forEach(product => {
+                const option = document.createElement('div');
+                option.className = 'searchable-select-option';
+                option.dataset.id = product.id;
+                option.dataset.type = product.type;
+                option.innerHTML = `
+                    <div class="option-title">${product.title}</div>
+                    <div class="option-price">${formatPrice(product.price)} <span class="option-type">${product.type === 'product' ? 'Товар' : 'Аттракцион'}</span></div>
+                `;
+                option.addEventListener('click', () => selectProduct(product));
+                productGroup.appendChild(option);
+            });
+            productDropdown.appendChild(productGroup);
+        }
+
+        // Добавляем аттракционы
+        if (attractions.length > 0) {
+            const attractionGroup = document.createElement('div');
+            attractionGroup.className = 'searchable-select-group';
+            attractionGroup.innerHTML = '<div class="searchable-select-group-title">Аттракционы</div>';
+
+            attractions.forEach(attraction => {
+                const option = document.createElement('div');
+                option.className = 'searchable-select-option';
+                option.dataset.id = attraction.id;
+                option.dataset.type = attraction.type;
+                option.innerHTML = `
+                    <div class="option-title">${attraction.title}</div>
+                    <div class="option-price">${formatPrice(attraction.price)} <span class="option-type">${attraction.type === 'product' ? 'Товар' : 'Аттракцион'}</span></div>
+                `;
+                option.addEventListener('click', () => selectProduct(attraction));
+                attractionGroup.appendChild(option);
+            });
+            productDropdown.appendChild(attractionGroup);
+        }
+    }
+
+    // Функция фильтрации продуктов
+    function filterProducts(searchTerm) {
+        const term = searchTerm.toLowerCase();
+        const options = productDropdown.querySelectorAll('.searchable-select-option');
+
+        let visibleCount = 0;
+        options.forEach(option => {
+            const title = option.querySelector('.option-title').textContent.toLowerCase();
+            const isVisible = title.includes(term);
+            option.style.display = isVisible ? 'block' : 'none';
+            if (isVisible) visibleCount++;
+        });
+
+        // Показываем/скрываем группы
+        const groups = productDropdown.querySelectorAll('.searchable-select-group');
+        groups.forEach(group => {
+            const visibleOptions = group.querySelectorAll('.searchable-select-option[style*="block"]');
+            group.style.display = visibleOptions.length > 0 ? 'block' : 'none';
+        });
+
+        return visibleCount;
+    }
+
+    // Функция выбора продукта
+    function selectProduct(product) {
+        selectedProduct = product;
+        productSearch.value = product.title;
+        productSelect.value = product.id;
+        closeDropdown();
+        productSearch.blur();
+        updateAddButtonState();
+    }
+
+    // Функция обновления состояния кнопки "Добавить товар"
+    function updateAddButtonState() {
+        if (selectedProduct) {
+            addProductBtn.disabled = false;
+            addProductBtn.textContent = `Добавить "${selectedProduct.title}"`;
+        } else {
+            addProductBtn.disabled = true;
+            addProductBtn.textContent = 'Выберите товар';
+        }
+    }
+
+    // Функция открытия dropdown
+    function openDropdown() {
+        productDropdown.classList.add('show');
+        isDropdownOpen = true;
+    }
+
+    // Функция закрытия dropdown
+    function closeDropdown() {
+        productDropdown.classList.remove('show');
+        isDropdownOpen = false;
+    }
+
+    // Обработчики событий для поиска
+    productSearch.addEventListener('input', function(e) {
+        const searchTerm = e.target.value;
+        const visibleCount = filterProducts(searchTerm);
+
+        if (searchTerm.length > 0) {
+            openDropdown();
+        } else {
+            closeDropdown();
+        }
+    });
+
+    productSearch.addEventListener('focus', function() {
+        if (productSearch.value.length === 0) {
+            renderAllProducts();
+            openDropdown();
+        }
+    });
+
+    productSearch.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeDropdown();
+            productSearch.blur();
+        }
+    });
+
+    // Закрытие dropdown при клике вне
+    document.addEventListener('click', function(e) {
+        if (!productSearch.contains(e.target) && !productDropdown.contains(e.target)) {
+            closeDropdown();
+        }
+    });
 
     // Форматирование цены
     function formatPrice(price) {
@@ -70,36 +182,45 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Обработчик добавления товара
     addProductBtn.addEventListener('click', function() {
-        const selectedId = parseInt(productSelect.value);
-        const quantity = parseInt(document.getElementById('product_quantity').value) || 1;
-
-        if (isNaN(selectedId) || quantity <= 0) {
-            alert('Выберите товар и укажите корректное количество.');
+        if (!selectedProduct) {
+            alert('Выберите товар или аттракцион из списка.');
+            productSearch.focus();
             return;
         }
 
-        const product = allProducts.find(p => p.id === selectedId);
-        if (!product) {
-            alert('Товар не найден.');
+        const quantity = parseInt(document.getElementById('product_quantity').value) || 1;
+
+        if (quantity <= 0) {
+            alert('Укажите корректное количество.');
             return;
         }
 
         // Проверяем, есть ли уже такой товар в списке
-        const existingItemIndex = selectedProducts.findIndex(item => item.product.id === selectedId);
+        const existingItemIndex = selectedProducts.findIndex(item => item.product.id === selectedProduct.id);
         if (existingItemIndex > -1) {
             // Обновляем количество, если товар уже есть
             selectedProducts[existingItemIndex].quantity += quantity;
         } else {
             // Добавляем новый товар
             selectedProducts.push({
-                product: product,
+                product: selectedProduct,
                 quantity: quantity
             });
         }
 
         renderSelectedProducts();
         calculateTotal();
+
+        // Сбрасываем выбор
+        selectedProduct = null;
+        productSearch.value = '';
+        productSelect.value = '';
+        document.getElementById('product_quantity').value = '1';
+        updateAddButtonState();
     });
+
+    // Инициализация состояния кнопки
+    updateAddButtonState();
 
     // Рендер выбранных товаров
     function renderSelectedProducts() {
