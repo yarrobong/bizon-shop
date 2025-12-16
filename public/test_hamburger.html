@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест бургер меню</title>
+    <link rel="stylesheet" href="css/layout/header.css">
+    <style>
+        body { background: #000; color: white; padding: 20px; }
+        .test-container { max-width: 400px; margin: 0 auto; }
+        .hamburger { margin: 20px 0; }
+        .test-btn { 
+            background: #00e5ff; 
+            color: black; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Тест анимации бургер меню → крест</h1>
+        <p>Нажмите кнопку, чтобы увидеть анимацию</p>
+        
+        <div class="hamburger" id="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        
+        <button class="test-btn" onclick="toggleHamburger()">Переключить бургер</button>
+        
+        <p><strong>Ожидаемый результат:</strong></p>
+        <ul>
+            <li>☰ Три полоски превращаются в ✕ крест</li>
+            <li>Средняя полоска исчезает</li>
+            <li>Верхняя и нижняя полоски образуют крест</li>
+        </ul>
+    </div>
+
+    <script>
+        function toggleHamburger() {
+            const hamburger = document.getElementById('hamburger');
+            hamburger.classList.toggle('active');
+            console.log('Hamburger class:', hamburger.className);
+        }
+    </script>
+</body>
+</html>

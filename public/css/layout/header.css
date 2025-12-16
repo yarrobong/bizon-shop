@@ -102,9 +102,9 @@ header.scrolled {
   transform-origin: center;
 }
 
-/* Анимация гамбургера */
+/* Анимация гамбургера - превращение в крест */
 .hamburger.active span:nth-child(1) {
-  transform: translateY(11px) rotate(45deg);
+  transform: translateY(9px) rotate(45deg);
 }
 
 .hamburger.active span:nth-child(2) {
