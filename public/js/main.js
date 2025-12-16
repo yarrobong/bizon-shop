@@ -173,6 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
         hamburger.addEventListener('click', () => {
             hamburger.classList.toggle('active');
             nav.classList.toggle('active');
+            document.body.classList.toggle('menu-open');
         });
 
         // Закрытие меню при клике на ссылку
@@ -180,6 +181,7 @@ document.addEventListener('DOMContentLoaded', function() {
             link.addEventListener('click', () => {
                 hamburger.classList.remove('active');
                 nav.classList.remove('active');
+                document.body.classList.remove('menu-open');
             });
         });
     }

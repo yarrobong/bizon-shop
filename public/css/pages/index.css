@@ -271,6 +271,8 @@ section { scroll-snap-align: start; } */
   flex: 1;
   color: #FFFFFF;
   font-family: 'Inter', sans-serif;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .trade-in-text h2 {
@@ -673,7 +675,7 @@ section { scroll-snap-align: start; } */
   .trade-in-steps p,
   .cta-list p { font-size: 0.95rem; }
   
-  .trade-in-content { flex-direction: column; text-align: justify; }
+  .trade-in-content { flex-direction: column; text-align: left; }
   .trade-in-text { order: 2; }
   .trade-in-step { max-width: 500px; margin: 0 auto; margin-top: 30px;}
   .trade-in-image { order: 1; margin-bottom: 40px; display: none; }
