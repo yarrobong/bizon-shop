@@ -184,6 +184,7 @@ header.scrolled {
 
   .main-nav.active {
     left: 0;
+    display: flex !important;
   }
 
   .hamburger {
