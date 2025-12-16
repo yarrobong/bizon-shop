@@ -220,8 +220,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     // Мобильное меню
-    const hamburger = document.getElementById('hamburger');
-    const nav = document.getElementById('mainNav');
+    // hamburger и nav уже объявлены выше в блоке логирования
 
     // #region agent log
     fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:172',message:'Инициализация мобильного меню',data:{hamburgerExists:!!hamburger,navExists:!!nav,windowWidth:window.innerWidth},timestamp:Date.now(),sessionId:'debug-session',runId:'init',hypothesisId:'A'})}).catch(()=>{});
