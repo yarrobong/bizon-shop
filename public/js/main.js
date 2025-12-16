@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function() {
         class: child.className
     })) : [];
 
-    fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:142',message:'Структура DOM header',data:{headerChildren:headerChildren,windowWidth:window.innerWidth,isMobile:window.innerWidth <= 768},timestamp:Date.now(),sessionId:'debug-session',runId:'dom',hypothesisId:'J'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:142',message:'Структура DOM header',data:{headerChildren:headerChildren,windowWidth:window.innerWidth,isMobile:window.innerWidth <= 768,mediaQuery768:window.matchMedia('(max-width: 768px)').matches},timestamp:Date.now(),sessionId:'debug-session',runId:'dom',hypothesisId:'J'})}).catch(()=>{});
 
     if (header) {
         const computedStyle = window.getComputedStyle(header);
@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (nav) {
         const computedStyle = window.getComputedStyle(nav);
-        fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:167',message:'CSS свойства nav',data:{display:computedStyle.display,order:computedStyle.order},timestamp:Date.now(),sessionId:'debug-session',runId:'css',hypothesisId:'I'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:167',message:'CSS свойства nav',data:{display:computedStyle.display,order:computedStyle.order,position:computedStyle.position,left:computedStyle.left,top:computedStyle.top,width:computedStyle.width,height:computedStyle.height,zIndex:computedStyle.zIndex,background:computedStyle.background},timestamp:Date.now(),sessionId:'debug-session',runId:'css',hypothesisId:'I'})}).catch(()=>{});
     }
 
     if (cart) {
@@ -240,7 +240,7 @@ document.addEventListener('DOMContentLoaded', function() {
             nav.classList.toggle('active');
 
             // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:183',message:'После toggle классов',data:{hamburgerClassesAfter:hamburger.className,navClassesAfter:nav.className},timestamp:Date.now(),sessionId:'debug-session',runId:'click',hypothesisId:'C'})}).catch(()=>{});
+            fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:183',message:'После toggle классов',data:{hamburgerClassesAfter:hamburger.className,navClassesAfter:nav.className,navLeftAfter:window.getComputedStyle(nav).left,navDisplayAfter:window.getComputedStyle(nav).display,navPositionAfter:window.getComputedStyle(nav).position},timestamp:Date.now(),sessionId:'debug-session',runId:'click',hypothesisId:'C'})}).catch(()=>{});
             // #endregion
         });
 
