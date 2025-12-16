@@ -467,7 +467,7 @@
 
 @media (max-width: 768px) {
   .catalog-main {
-    padding: 6rem 1rem 3rem;
+    padding: 0.1rem 1rem 3rem;
   }
 
   .catalog-header {
@@ -539,7 +539,7 @@
 
 @media (max-width: 480px) {
   .catalog-main {
-    padding: 4rem 0.4rem 2rem;
+    padding: 0.1rem 0.4rem 2rem;
   }
 
   .catalog-header {
