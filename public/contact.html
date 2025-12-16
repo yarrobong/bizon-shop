@@ -43,6 +43,13 @@
 
    <!-- Шапка -->
     <header class="header" role="banner">
+        <!-- Гамбургер меню - слева -->
+        <div class="hamburger" id="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+
         <a href="https://bizon-business.ru" class="logo">
             <div class="logo-icon">
                 <img src="/assets/logo/logo-Photoroom.webp" alt="jkbbjb">
@@ -50,13 +57,7 @@
             <div class="logo-title">BIZON</div>
         </a>
 
-        <!-- Гамбургер меню -->
-        <div class="hamburger" id="hamburger">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-
+        <!-- Навигация для десктопа (скрывается на мобильных) -->
         <nav class="main-nav" id="mainNav" role="navigation" aria-label="Основная навигация">
   <ul class="nav-list">
     <li><a href="https://bizon-business.ru/" data-page="index">Главная</a></li>
@@ -65,6 +66,13 @@
 <li><a href="https://bizon-business.ru/contact" data-page="contact">Контакты</a></li>
   </ul>
 </nav>
+
+        <!-- Корзина -->
+        <button id="cart-btn" class="cart-btn" aria-label="Корзина">
+    <img src="/assets/icons/cart-icon-mobile.svg" alt="Корзина" class="cart-icon-mobile" />
+    <span class="cart-text-desktop">Корзина</span>
+    <span id="cart-count" class="cart-count">0</span>
+</button>
     </header>
 
   <main role="main">

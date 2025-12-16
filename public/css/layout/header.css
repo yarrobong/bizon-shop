@@ -364,13 +364,35 @@ header.scrolled {
   }
 }
 
-/* Адаптация для мобильных (576px) - Гамбургер меню */
-@media (max-width: 576px) {
+/* Адаптация для планшетов и мобильных (768px) - Гамбургер меню */
+@media (max-width: 768px) {
   header {
     margin: 0.5rem 0.5rem;
     padding: 0.5rem 0.75rem;
     border-radius: 10px;
     justify-content: space-between;
+    position: relative;
+  }
+
+  /* Перестраиваем порядок элементов для мобильных */
+  header > .hamburger {
+    order: 1; /* Бургер меню слева */
+  }
+
+  header > .logo {
+    order: 2; /* Логотип по центру */
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+  }
+
+  header > .main-nav {
+    order: 3; /* Навигация скрыта */
+  }
+
+  header > .header-actions {
+    order: 4; /* Действия (корзина) справа */
   }
   
   header.scrolled {
@@ -395,7 +417,11 @@ header.scrolled {
   .hamburger {
     display: flex;
   }
-  
+
+  .main-nav {
+    display: none; /* Скрываем основную навигацию на мобильных */
+  }
+
   .nav-list {
     flex-direction: column;
     align-items: center;
@@ -428,21 +454,21 @@ header.scrolled {
     height: 0.9rem;
   }
 
-  /* --- ИЗМЕНЕНИЯ ДЛЯ КНОПКИ КОРЗИНЫ НА МОБИЛЬНЫХ --- */
+  /* --- СТИЛИ ДЛЯ КНОПКИ КОРЗИНЫ НА МОБИЛЬНЫХ --- */
   .cart-btn {
-    /* Убираем фон, обводку, отступы и текст */
+    /* Компактная иконка без фона и текста */
     background: transparent !important;
     border: none !important;
-    padding: 0 !important;
-    font-size: 0 !important; /* Скрывает текст, если вдруг остался */
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    gap: 0 !important;
+    padding: 0.5rem !important;
+    border-radius: 8px !important;
+    gap: 0.25rem !important;
+    min-width: auto !important;
+    font-size: 0 !important; /* Скрываем текст */
   }
 
   .cart-btn:hover {
-    transform: scale(1.1); /* Лёгкий ховер-эффект */
-    box-shadow: none !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    transform: none;
   }
 
   .cart-btn:active {

@@ -42,6 +42,13 @@
 
   <!-- Шапка -->
   <header class="header" role="banner">
+    <!-- Гамбургер меню - слева -->
+    <div class="hamburger" id="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
     <a href="https://bizon-business.ru" class="logo">
       <div class="logo-icon">
         <picture>
@@ -51,6 +58,7 @@
       <div class="logo-title">BIZON</div>
     </a>
 
+    <!-- Навигация для десктопа (скрывается на мобильных) -->
     <nav class="main-nav" id="mainNav" role="navigation" aria-label="Основная навигация">
       <ul class="nav-list">
         <li><a href="https://bizon-business.ru/">Главная</a></li>
@@ -60,28 +68,12 @@
       </ul>
     </nav>
 
-    <div class="header-actions">
-        <!-- Поиск — показываем только на catalog.html -->
-        <div class="search" id="header-search" style="display: none;"> <!-- Скрыто на странице корзины -->
-            <svg 
-                class="search-icon" 
-                aria-hidden="true" 
-                focusable="false" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor" 
-                fill="none" 
-                stroke-width="2"
-            >
-                <path 
-                    stroke-linecap="round" 
-                    stroke-linejoin="round" 
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
-                />
-            </svg>
-            <input type="text" id="search-input" placeholder="Поиск по товарам..." />
-        </div>
-
-        <button id="cart-btn" class="cart-btn" aria-label="Корзина">
+    <!-- Корзина -->
+    <button id="cart-btn" class="cart-btn" aria-label="Корзина" style="display: none;">
+    <img src="/assets/icons/cart-icon-mobile.svg" alt="Корзина" class="cart-icon-mobile" />
+    <span class="cart-text-desktop">Корзина</span>
+    <span id="cart-count" class="cart-count">0</span>
+</button>
     <!-- Иконка корзины (только на мобильных) -->
     <img src="/assets/icons/cart-icon-mobile.svg" alt="Корзина" class="cart-icon-mobile" />
     <!-- Текст кнопки (только на десктопе) -->

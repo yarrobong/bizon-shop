@@ -57,6 +57,13 @@
 
   <!-- Шапка -->
   <header class="header" role="banner">
+    <!-- Гамбургер меню - слева -->
+    <div class="hamburger" id="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
     <a href="/" class="logo">
       <div class="logo-icon">
         <picture>
@@ -66,6 +73,7 @@
       <div class="logo-title">BIZON</div>
     </a>
 
+    <!-- Навигация для десктопа (скрывается на мобильных) -->
     <nav class="main-nav" id="mainNav" role="navigation" aria-label="Основная навигация">
       <ul class="nav-list">
         <li><a href="/" data-page="index">Главная</a></li>
@@ -75,16 +83,12 @@
       </ul>
     </nav>
 
-    <div class="header-actions">
-        <button id="cart-btn" class="cart-btn" aria-label="Корзина">
-    <!-- Иконка корзины (только на мобильных) -->
+    <!-- Корзина -->
+    <button id="cart-btn" class="cart-btn" aria-label="Корзина">
     <img src="/assets/icons/cart-icon-mobile.svg" alt="Корзина" class="cart-icon-mobile" />
-    <!-- Текст кнопки (только на десктопе) -->
     <span class="cart-text-desktop">Корзина</span>
-    <!-- Счетчик (всегда виден) -->
     <span id="cart-count" class="cart-count">0</span>
 </button>
-    </div>
 
     <div class="hamburger" id="hamburger">
         <span></span>
