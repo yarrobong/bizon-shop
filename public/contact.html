@@ -249,6 +249,8 @@
   // Инициализация маски телефона
   $(document).ready(function(){
      $(".phone_mask").mask("+7 (999) 999-99-99");
+     // Обновляем состояние кнопки после применения маски
+     setTimeout(updateSubmitButton, 200);
   });
 
   // ==================== УПРАВЛЕНИЕ КНОПКОЙ ОТПРАВКИ ====================
@@ -262,9 +264,10 @@
   function updateSubmitButton() {
     const phone = phoneInput?.value || '';
     const phoneDigits = phone.replace(/\D/g, '');
-    const hasValidPhone = phoneDigits.length >= 10;
+    // Строгая валидация: ровно 11 цифр для полного российского номера (+7XXXXXXXXXX)
+    const hasValidPhone = phoneDigits.length === 11;
     const hasConsent = consentCheckbox?.checked || false;
-    
+
     if (submitBtn) {
       submitBtn.disabled = !(hasValidPhone && hasConsent);
     }
@@ -273,14 +276,36 @@
   // Обновление кнопки при изменении полей
   if (consentCheckbox) {
     consentCheckbox.addEventListener('change', updateSubmitButton);
+    consentCheckbox.addEventListener('click', updateSubmitButton);
   }
   if (phoneInput) {
     phoneInput.addEventListener('input', updateSubmitButton);
     phoneInput.addEventListener('blur', updateSubmitButton);
+    phoneInput.addEventListener('keyup', updateSubmitButton);
+    phoneInput.addEventListener('keydown', updateSubmitButton);
+    phoneInput.addEventListener('change', updateSubmitButton);
+  }
+
+  // Также добавим обработчик для поля сообщения на всякий случай
+  const messageInput = document.getElementById('message');
+  if (messageInput) {
+    messageInput.addEventListener('input', updateSubmitButton);
+    messageInput.addEventListener('blur', updateSubmitButton);
+    messageInput.addEventListener('focus', updateSubmitButton);
+  }
+
+  // Также проверяем всю форму целиком
+  if (form) {
+    form.addEventListener('input', updateSubmitButton);
+    form.addEventListener('change', updateSubmitButton);
   }
 
   // Инициализация состояния кнопки
   updateSubmitButton();
+
+  // Дополнительная проверка через короткий интервал
+  setTimeout(updateSubmitButton, 500);
+  setTimeout(updateSubmitButton, 1000);
 
   // ==================== ВАЛИДАЦИЯ И ОТПРАВКА ====================
   if (submitBtn) {
