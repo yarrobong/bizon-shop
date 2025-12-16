@@ -33,6 +33,10 @@ function loadYandexMetrika() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:36',message:'DOMContentLoaded fired',data:{windowWidth:window.innerWidth,windowHeight:window.innerHeight},timestamp:Date.now(),sessionId:'debug-session',runId:'load',hypothesisId:'F'})}).catch(()=>{});
+    // #endregion
+
     // --- КОД ДЛЯ COOKIE BANNER (один раз за сессию) ---
     const consentBanner = document.getElementById('cookieConsent');
     const acceptBtn = document.getElementById('acceptCookies');
@@ -128,6 +132,10 @@ document.addEventListener('DOMContentLoaded', function() {
         pageKey = 'index';
     }
 
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:120',message:'Определена активная страница',data:{url:url,pageKey:pageKey,pathname:window.location.pathname},timestamp:Date.now(),sessionId:'debug-session',runId:'nav',hypothesisId:'G'})}).catch(()=>{});
+    // #endregion
+
     // Удаляем активный класс со всех ссылок
     document.querySelectorAll('.nav-list a').forEach(link => {
         link.classList.remove('active');
@@ -138,6 +146,52 @@ document.addEventListener('DOMContentLoaded', function() {
     if (activeLink && pageKey !== null) { // <-- Проверяем, что pageKey не null
         activeLink.classList.add('active');
     }
+
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:137',message:'Проверка структуры header элементов',data:{hamburgerExists:!!document.getElementById('hamburger'),logoExists:!!document.querySelector('.logo'),navExists:!!document.getElementById('mainNav'),cartExists:!!document.getElementById('cart-btn')},timestamp:Date.now(),sessionId:'debug-session',runId:'structure',hypothesisId:'H'})}).catch(()=>{});
+    // #endregion
+
+    // #region agent log
+    const header = document.querySelector('header');
+    const hamburger = document.getElementById('hamburger');
+    const logo = document.querySelector('.logo');
+    const nav = document.getElementById('mainNav');
+    const cart = document.getElementById('cart-btn');
+
+    // Проверка порядка элементов в DOM
+    const headerChildren = header ? Array.from(header.children).map(child => ({
+        tag: child.tagName,
+        id: child.id,
+        class: child.className
+    })) : [];
+
+    fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:142',message:'Структура DOM header',data:{headerChildren:headerChildren,windowWidth:window.innerWidth,isMobile:window.innerWidth <= 768},timestamp:Date.now(),sessionId:'debug-session',runId:'dom',hypothesisId:'J'})}).catch(()=>{});
+
+    if (header) {
+        const computedStyle = window.getComputedStyle(header);
+        fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:149',message:'CSS свойства header',data:{display:computedStyle.display,flexDirection:computedStyle.flexDirection,justifyContent:computedStyle.justifyContent},timestamp:Date.now(),sessionId:'debug-session',runId:'css',hypothesisId:'I'})}).catch(()=>{});
+    }
+
+    if (hamburger) {
+        const computedStyle = window.getComputedStyle(hamburger);
+        fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:155',message:'CSS свойства hamburger',data:{display:computedStyle.display,order:computedStyle.order,position:computedStyle.position},timestamp:Date.now(),sessionId:'debug-session',runId:'css',hypothesisId:'I'})}).catch(()=>{});
+    }
+
+    if (logo) {
+        const computedStyle = window.getComputedStyle(logo);
+        fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:161',message:'CSS свойства logo',data:{position:computedStyle.position,order:computedStyle.order,left:computedStyle.left,top:computedStyle.top,transform:computedStyle.transform},timestamp:Date.now(),sessionId:'debug-session',runId:'css',hypothesisId:'I'})}).catch(()=>{});
+    }
+
+    if (nav) {
+        const computedStyle = window.getComputedStyle(nav);
+        fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:167',message:'CSS свойства nav',data:{display:computedStyle.display,order:computedStyle.order},timestamp:Date.now(),sessionId:'debug-session',runId:'css',hypothesisId:'I'})}).catch(()=>{});
+    }
+
+    if (cart) {
+        const computedStyle = window.getComputedStyle(cart);
+        fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:173',message:'CSS свойства cart',data:{order:computedStyle.order,display:computedStyle.display,position:computedStyle.position},timestamp:Date.now(),sessionId:'debug-session',runId:'css',hypothesisId:'I'})}).catch(()=>{});
+    }
+    // #endregion
 
 
     // Аккордеон для FAQ
@@ -169,19 +223,43 @@ document.addEventListener('DOMContentLoaded', function() {
     const hamburger = document.getElementById('hamburger');
     const nav = document.getElementById('mainNav');
 
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:172',message:'Инициализация мобильного меню',data:{hamburgerExists:!!hamburger,navExists:!!nav,windowWidth:window.innerWidth},timestamp:Date.now(),sessionId:'debug-session',runId:'init',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+
     if (hamburger && nav) { // Проверка на существование элементов
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:175',message:'Добавление обработчика клика на бургер',data:{hamburgerClasses:hamburger.className,navClasses:nav.className},timestamp:Date.now(),sessionId:'debug-session',runId:'init',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
+
         hamburger.addEventListener('click', () => {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:177',message:'Клик на бургер меню',data:{hamburgerClassesBefore:hamburger.className,navClassesBefore:nav.className},timestamp:Date.now(),sessionId:'debug-session',runId:'click',hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
+
             hamburger.classList.toggle('active');
             nav.classList.toggle('active');
+
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:183',message:'После toggle классов',data:{hamburgerClassesAfter:hamburger.className,navClassesAfter:nav.className},timestamp:Date.now(),sessionId:'debug-session',runId:'click',hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
         });
 
         // Закрытие меню при клике на ссылку
         document.querySelectorAll('.nav-list a').forEach(link => {
             link.addEventListener('click', () => {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:190',message:'Закрытие меню по клику на ссылку',data:{linkHref:link.href},timestamp:Date.now(),sessionId:'debug-session',runId:'close',hypothesisId:'D'})}).catch(()=>{});
+                // #endregion
+
                 hamburger.classList.remove('active');
                 nav.classList.remove('active');
             });
         });
+    } else {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:200',message:'Элементы бургер меню не найдены',data:{hamburgerNull:hamburger===null,navNull:nav===null},timestamp:Date.now(),sessionId:'debug-session',runId:'error',hypothesisId:'E'})}).catch(()=>{});
+        // #endregion
     }
 
 

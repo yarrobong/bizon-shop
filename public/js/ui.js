@@ -486,8 +486,16 @@ function setupEventListeners() {
 
   // Добавляем обработчик для кнопки корзины
   const cartBtn = document.getElementById('cart-btn');
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ui.js:490',message:'Проверка cartBtn',data:{cartBtnExists:!!cartBtn,windowWidth:window.innerWidth},timestamp:Date.now(),sessionId:'debug-session',runId:'cart-init',hypothesisId:'K'})}).catch(()=>{});
+  // #endregion
+
   if (cartBtn) {
     cartBtn.addEventListener('click', () => {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/4d774403-cac7-4ac6-8987-7810186c8a1f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ui.js:493',message:'Клик на cartBtn',data:{currentLocation:window.location.href},timestamp:Date.now(),sessionId:'debug-session',runId:'cart-click',hypothesisId:'L'})}).catch(()=>{});
+      // #endregion
+
       window.location.href = '/cart';
     });
   }
