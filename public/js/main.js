@@ -41,23 +41,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Ключ для sessionStorage
     const SESSION_STORAGE_KEY = 'cookie_banner_seen';
 
+    // Загружаем Яндекс.Метрику сразу при входе на сайт
+    loadYandexMetrika();
+
     // Проверяем, был ли баннер уже показан в этой сессии
     if (sessionStorage.getItem(SESSION_STORAGE_KEY)) {
         // Баннер уже видели в этой сессии, не показываем
-        // Проверим, было ли дано согласие ранее (в прошлых сессиях)
-        const consentCookie = document.cookie
-            .split('; ')
-            .find(row => row.startsWith('cookie_consent='));
-        
-        if (consentCookie) {
-            const consentValue = consentCookie.split('=')[1];
-            if (consentValue === 'accepted') {
-                // Только если согласие было "accepted", запускаем метрику
-                loadYandexMetrika();
-            }
-        }
-        // Если согласие не было дано, но баннер уже видели в сессии, метрика не запускается
-        // и дальнейшая инициализация баннера не требуется.
+        // Метрика уже загружена выше
     } else {
         // Если баннер ещё не показывался в этой сессии, показываем его
         setTimeout(() => {
@@ -67,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 1000); // Показываем баннер через 1 секунду после загрузки
     }
 
-    // Обработчик кнопки "Принимаю"
+    // Обработчик кнопки "Ок"
     if (acceptBtn) {
         acceptBtn.addEventListener('click', () => {
             // Устанавливаем долгосрочный cookie согласия (например, на 1 год)
@@ -82,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (consentBanner) {
                 consentBanner.classList.remove('visible');
             }
-            loadYandexMetrika(); // Запускаем метрику только после согласия
+            // Метрика уже загружена при входе на сайт
         });
     }
 
@@ -101,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (consentBanner) {
                 consentBanner.classList.remove('visible');
             }
-            // Не загружаем метрику, если пользователь отказался
+            // Метрика уже загружена при входе на сайт
         });
     }
     // --- КОНЕЦ КОДА ДЛЯ COOKIE BANNER ---
