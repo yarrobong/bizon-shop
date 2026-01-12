@@ -68,6 +68,33 @@ function stopYandexMetrika() {
     }
 }
 
+// --- ФУНКЦИЯ ДЛЯ УДАЛЕНИЯ ВСЕХ КУКИ CALLTOUCH (должна быть доступна глобально) ---
+function deleteCalltouchCookies() {
+    // Полный список куки Calltouch (включая все варианты)
+    const calltouchCookies = [
+        '_ct', '_ct_client_global_id', '_ct_ids', '_ct_session_id', '_ct_site_id',
+        'ct_calltouch_id', 'ct_calltouch_uid', 'ct_calltouch_session', 
+        'ct_calltouch_visit', 'ct_calltouch_referrer', 'ct_calltouch_utm',
+        'ct', 'ct_client_global_id', 'ct_ids', 'ct_session_id', 'ct_site_id'
+    ];
+    
+    // Удаляем куки для всех возможных доменов
+    calltouchCookies.forEach(cookieName => {
+        // Текущий домен
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname};`;
+        // Домены Calltouch
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.calltouch.ru;`;
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.mod.calltouch.ru;`;
+        // Без домена (для всех поддоменов)
+        const hostnameParts = window.location.hostname.split('.');
+        if (hostnameParts.length > 1) {
+            const rootDomain = '.' + hostnameParts.slice(-2).join('.');
+            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${rootDomain};`;
+        }
+    });
+}
+
 // --- ФУНКЦИЯ ДЛЯ ЗАГРУЗКИ CALLTOUCH ---
 function loadCalltouch() {
     // Проверяем, не загружен ли уже Calltouch и не был ли он остановлен
@@ -150,21 +177,11 @@ function stopCalltouch() {
     window.ct_disabled = true;
     
     // Удаляем скрипты Calltouch из DOM
-    const scripts = document.querySelectorAll('script[src*="mod.calltouch.ru"]');
+    const scripts = document.querySelectorAll('script[src*="mod.calltouch.ru"], script[src*="calltouch"]');
     scripts.forEach(script => script.remove());
     
-    // Удаляем куки Calltouch
-    const calltouchCookies = [
-        'ct_calltouch_id', 'ct_calltouch_uid', 'ct_calltouch_session', 
-        'ct_calltouch_visit', 'ct_calltouch_referrer', 'ct_calltouch_utm'
-    ];
-    
-    // Удаляем куки для текущего домена
-    calltouchCookies.forEach(cookieName => {
-        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname};`;
-        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.calltouch.ru;`;
-    });
+    // Удаляем все куки Calltouch
+    deleteCalltouchCookies();
     
     // Очищаем объекты Calltouch
     if (window.CalltouchDataObject) {
@@ -180,6 +197,40 @@ function stopCalltouch() {
     // Удаляем обработчик форм
     window.ct_form_handler_initialized = false;
 }
+
+// Блокируем загрузку Calltouch до проверки согласия (выполняется сразу, до DOMContentLoaded)
+(function() {
+    // Проверяем согласие сразу при загрузке скрипта
+    const consentCookie = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('cookie_consent='));
+    
+    let consentValue = null;
+    if (consentCookie) {
+        consentValue = consentCookie.split('=')[1];
+    }
+    
+    // Если согласия нет, блокируем Calltouch и удаляем все его куки
+    if (consentValue !== 'accepted') {
+        window.ct_disabled = true;
+        // Удаляем куки Calltouch сразу, если они уже есть
+        if (document.cookie) {
+            deleteCalltouchCookies();
+        }
+        
+        // Периодически проверяем и удаляем куки Calltouch, если они появляются
+        setInterval(function() {
+            const currentConsent = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('cookie_consent='));
+            const currentValue = currentConsent ? currentConsent.split('=')[1] : null;
+            
+            if (currentValue !== 'accepted') {
+                deleteCalltouchCookies();
+            }
+        }, 1000); // Проверяем каждую секунду
+    }
+})();
 
 document.addEventListener('DOMContentLoaded', function() {
     // --- КОД ДЛЯ COOKIE BANNER (один раз за сессию) ---
@@ -198,6 +249,21 @@ document.addEventListener('DOMContentLoaded', function() {
     let consentValue = null;
     if (consentCookie) {
         consentValue = consentCookie.split('=')[1];
+    }
+    
+    // Если согласия нет, удаляем все куки Calltouch и Яндекс.Метрики
+    if (consentValue !== 'accepted') {
+        deleteCalltouchCookies();
+        // Также удаляем куки Яндекс.Метрики, если они есть
+        const metrikaCookies = [
+            'ym_d', 'ym_uid', 'device_id', 'fuid01', 'i', 'my', 'yabs-frequency', 
+            'yandex_gid', 'yandexuid', 'yp', 'ys', '_ym_hit', '_ym_ht', '_ym_sln', 
+            '_ym_ssl', '_ym_timer', 'yabs-sid', '_ym_fa'
+        ];
+        metrikaCookies.forEach(cookieName => {
+            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname};`;
+        });
     }
 
     // Загружаем сервисы только если было дано согласие ранее
