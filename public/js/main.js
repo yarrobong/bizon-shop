@@ -47,7 +47,7 @@ function stopYandexMetrika() {
     const metrikaCookies = [
         'ym_d', 'ym_uid', 'device_id', 'fuid01', 'i', 'my', 'yabs-frequency', 
         'yandex_gid', 'yandexuid', 'yp', 'ys', '_ym_hit', '_ym_ht', '_ym_sln', 
-        '_ym_ssl', '_ym_timer', 'yabs-sid', '_ym_fa'
+        '_ym_ssl', '_ym_timer', 'yabs-sid', '_ym_fa', '_ym_isad', '_ym_visorc'
     ];
     
     // Удаляем куки для текущего домена
@@ -75,7 +75,8 @@ function deleteCalltouchCookies() {
         '_ct', '_ct_client_global_id', '_ct_ids', '_ct_session_id', '_ct_site_id',
         'ct_calltouch_id', 'ct_calltouch_uid', 'ct_calltouch_session', 
         'ct_calltouch_visit', 'ct_calltouch_referrer', 'ct_calltouch_utm',
-        'ct', 'ct_client_global_id', 'ct_ids', 'ct_session_id', 'ct_site_id'
+        'ct', 'ct_client_global_id', 'ct_ids', 'ct_session_id', 'ct_site_id',
+        'call_s', 'cted'
     ];
     
     // Удаляем куки для всех возможных доменов
@@ -210,11 +211,18 @@ function stopCalltouch() {
         consentValue = consentCookie.split('=')[1];
     }
     
-    // Загружаем сервисы сразу, если не было отказа ранее
+    // Загружаем сервисы сразу, только если не было отказа ранее
     if (consentValue !== 'declined') {
         // Загружаем Яндекс.Метрику и Calltouch сразу при входе
         loadYandexMetrika();
         loadCalltouch();
+    } else {
+        // Если был отказ, блокируем загрузку
+        window.ct_disabled = true;
+        // Удаляем куки сразу при загрузке
+        if (typeof deleteCalltouchCookies === 'function') {
+            deleteCalltouchCookies();
+        }
     }
 })();
 
@@ -237,9 +245,31 @@ document.addEventListener('DOMContentLoaded', function() {
         consentValue = consentCookie.split('=')[1];
     }
     
-    // Если был отказ ранее, не загружаем сервисы
+    // Если был отказ ранее, удаляем все куки и не загружаем сервисы
     if (consentValue === 'declined') {
-        // Сервисы не загружены, так как был отказ
+        // Останавливаем сервисы, если они были загружены
+        stopYandexMetrika();
+        stopCalltouch();
+        // Удаляем все куки
+        deleteCalltouchCookies();
+        // Удаляем куки Яндекс.Метрики
+        const metrikaCookies = [
+            'ym_d', 'ym_uid', 'device_id', 'fuid01', 'i', 'my', 'yabs-frequency', 
+            'yandex_gid', 'yandexuid', 'yp', 'ys', '_ym_hit', '_ym_ht', '_ym_sln', 
+            '_ym_ssl', '_ym_timer', 'yabs-sid', '_ym_fa', '_ym_isad', '_ym_visorc'
+        ];
+        metrikaCookies.forEach(cookieName => {
+            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname};`;
+            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.yandex.ru;`;
+            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.mc.yandex.ru;`;
+        });
+        // Удаляем куки Calltouch
+        const calltouchCookies = ['call_s', 'cted'];
+        calltouchCookies.forEach(cookieName => {
+            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname};`;
+        });
     } else {
         // Если согласия нет или было дано - сервисы уже загружены выше
         // Дополнительно загружаем, если они еще не загружены
