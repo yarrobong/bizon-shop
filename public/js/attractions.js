@@ -148,9 +148,8 @@ function createAttractionCard(attraction) {
   if (detailsBtn) {
     detailsBtn.addEventListener('click', (event) => {
       event.stopPropagation(); // Останавливаем всплытие
-      // Переход на страницу товара. Здесь нужно указать путь к детальной странице.
-      // Предположим, что путь /product/:id
-      window.location.href = `/product/${attraction.id}`; // ЗАМЕНИТЕ НА ВАШ ФАКТИЧЕСКИЙ ПУТЬ
+      // Переход на страницу аттракциона по slug
+      window.location.href = `/attraction/${attraction.slug}`;
     });
   }
 
