@@ -32,6 +32,42 @@ function loadYandexMetrika() {
     // Если ym уже существует как очередь, ничего не делаем - библиотека загружается
 }
 
+// --- ФУНКЦИЯ ДЛЯ ОСТАНОВКИ ЯНДЕКС.МЕТРИКИ И УДАЛЕНИЯ КУКИ ---
+function stopYandexMetrika() {
+    // Останавливаем метрику, если она была инициализирована
+    if (typeof window.ym === 'function') {
+        try {
+            window.ym(104163309, 'destroy');
+        } catch(e) {
+            console.log('Метрика еще не инициализирована');
+        }
+    }
+    
+    // Удаляем куки Яндекс.Метрики
+    const metrikaCookies = [
+        'ym_d', 'ym_uid', 'device_id', 'fuid01', 'i', 'my', 'yabs-frequency', 
+        'yandex_gid', 'yandexuid', 'yp', 'ys', '_ym_hit', '_ym_ht', '_ym_sln', 
+        '_ym_ssl', '_ym_timer', 'yabs-sid', '_ym_fa'
+    ];
+    
+    // Удаляем куки для текущего домена
+    metrikaCookies.forEach(cookieName => {
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname};`;
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.yandex.ru;`;
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.mc.yandex.ru;`;
+    });
+    
+    // Удаляем скрипт метрики из DOM
+    const scripts = document.querySelectorAll('script[src*="mc.yandex.ru/metrika"]');
+    scripts.forEach(script => script.remove());
+    
+    // Очищаем объект ym
+    if (window.ym) {
+        delete window.ym;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // --- КОД ДЛЯ COOKIE BANNER (один раз за сессию) ---
     const consentBanner = document.getElementById('cookieConsent');
@@ -41,15 +77,26 @@ document.addEventListener('DOMContentLoaded', function() {
     // Ключ для sessionStorage
     const SESSION_STORAGE_KEY = 'cookie_banner_seen';
 
-    // Загружаем Яндекс.Метрику сразу при входе на сайт
-    loadYandexMetrika();
+    // Проверяем, было ли ранее отклонено согласие
+    const consentCookie = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('cookie_consent='));
+    
+    let consentValue = null;
+    if (consentCookie) {
+        consentValue = consentCookie.split('=')[1];
+    }
+
+    // Загружаем метрику сразу при входе, если не было отказа ранее
+    if (consentValue !== 'declined') {
+        loadYandexMetrika();
+    }
 
     // Проверяем, был ли баннер уже показан в этой сессии
-    if (sessionStorage.getItem(SESSION_STORAGE_KEY)) {
-        // Баннер уже видели в этой сессии, не показываем
-        // Метрика уже загружена выше
+    if (sessionStorage.getItem(SESSION_STORAGE_KEY) || consentValue) {
+        // Баннер уже видели в этой сессии или пользователь уже сделал выбор ранее, не показываем
     } else {
-        // Если баннер ещё не показывался в этой сессии, показываем его
+        // Если баннер ещё не показывался в этой сессии и пользователь не делал выбор, показываем его
         setTimeout(() => {
             if (consentBanner) { // Проверяем, существует ли элемент
                 consentBanner.classList.add('visible');
@@ -72,7 +119,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (consentBanner) {
                 consentBanner.classList.remove('visible');
             }
-            // Метрика уже загружена при входе на сайт
+            // Метрика уже загружена при входе, просто подтверждаем согласие
         });
     }
 
@@ -91,7 +138,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (consentBanner) {
                 consentBanner.classList.remove('visible');
             }
-            // Метрика уже загружена при входе на сайт
+            // Останавливаем метрику и удаляем куки, если пользователь отказался
+            stopYandexMetrika();
         });
     }
     // --- КОНЕЦ КОДА ДЛЯ COOKIE BANNER ---
