@@ -198,7 +198,7 @@ function stopCalltouch() {
     window.ct_form_handler_initialized = false;
 }
 
-// Блокируем загрузку Calltouch до проверки согласия (выполняется сразу, до DOMContentLoaded)
+// Загружаем сервисы сразу при заходе на сайт (выполняется сразу, до DOMContentLoaded)
 (function() {
     // Проверяем согласие сразу при загрузке скрипта
     const consentCookie = document.cookie
@@ -210,25 +210,11 @@ function stopCalltouch() {
         consentValue = consentCookie.split('=')[1];
     }
     
-    // Если согласия нет, блокируем Calltouch и удаляем все его куки
-    if (consentValue !== 'accepted') {
-        window.ct_disabled = true;
-        // Удаляем куки Calltouch сразу, если они уже есть
-        if (document.cookie) {
-            deleteCalltouchCookies();
-        }
-        
-        // Периодически проверяем и удаляем куки Calltouch, если они появляются
-        setInterval(function() {
-            const currentConsent = document.cookie
-                .split('; ')
-                .find(row => row.startsWith('cookie_consent='));
-            const currentValue = currentConsent ? currentConsent.split('=')[1] : null;
-            
-            if (currentValue !== 'accepted') {
-                deleteCalltouchCookies();
-            }
-        }, 1000); // Проверяем каждую секунду
+    // Загружаем сервисы сразу, если не было отказа ранее
+    if (consentValue !== 'declined') {
+        // Загружаем Яндекс.Метрику и Calltouch сразу при входе
+        loadYandexMetrika();
+        loadCalltouch();
     }
 })();
 
@@ -251,23 +237,12 @@ document.addEventListener('DOMContentLoaded', function() {
         consentValue = consentCookie.split('=')[1];
     }
     
-    // Если согласия нет, удаляем все куки Calltouch и Яндекс.Метрики
-    if (consentValue !== 'accepted') {
-        deleteCalltouchCookies();
-        // Также удаляем куки Яндекс.Метрики, если они есть
-        const metrikaCookies = [
-            'ym_d', 'ym_uid', 'device_id', 'fuid01', 'i', 'my', 'yabs-frequency', 
-            'yandex_gid', 'yandexuid', 'yp', 'ys', '_ym_hit', '_ym_ht', '_ym_sln', 
-            '_ym_ssl', '_ym_timer', 'yabs-sid', '_ym_fa'
-        ];
-        metrikaCookies.forEach(cookieName => {
-            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname};`;
-        });
-    }
-
-    // Загружаем сервисы только если было дано согласие ранее
-    if (consentValue === 'accepted') {
+    // Если был отказ ранее, не загружаем сервисы
+    if (consentValue === 'declined') {
+        // Сервисы не загружены, так как был отказ
+    } else {
+        // Если согласия нет или было дано - сервисы уже загружены выше
+        // Дополнительно загружаем, если они еще не загружены
         loadYandexMetrika();
         loadCalltouch();
     }
@@ -299,9 +274,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (consentBanner) {
                 consentBanner.classList.remove('visible');
             }
-            // Загружаем оба сервиса только после согласия
-            loadYandexMetrika();
-            loadCalltouch();
+            // Сервисы уже загружены при входе, просто подтверждаем согласие
         });
     }
 
