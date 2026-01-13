@@ -688,8 +688,13 @@ async function saveProduct() {
         console.log('Отправка данных товара:', {
             method,
             url,
-            productData: { ...productData, images: productData.images ? `${productData.images.length} изображений` : 'нет', images_json: productData.images_json ? 'есть' : 'нет' }
+            productData: JSON.parse(JSON.stringify({
+                ...productData,
+                images: productData.images ? `${productData.images.length} изображений` : 'нет',
+                images_json: productData.images_json ? 'есть' : 'нет'
+            }))
         });
+        console.log('Полные данные для отправки:', JSON.stringify(productData, null, 2));
 
         const response = await fetchWithAuth(url, {
             method: method,
@@ -701,13 +706,16 @@ async function saveProduct() {
 
         if (!response.ok) {
             let errorMessage = `Ошибка сохранения товара: ${response.status}`;
+            let errorDetails = null;
             try {
                 const errorData = await response.json();
                 errorMessage = errorData.message || errorData.error || errorMessage;
+                errorDetails = errorData.details || null;
             } catch (e) {
                 const errorText = await response.text().catch(() => '');
                 errorMessage = errorText || errorMessage;
             }
+            console.error('Детали ошибки от сервера:', { errorMessage, errorDetails, status: response.status });
             throw new Error(errorMessage);
         }
 

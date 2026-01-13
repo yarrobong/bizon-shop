@@ -117,11 +117,43 @@ router.put('/:id', async (req, res) => {
       imagesCount: images ? (Array.isArray(images) ? images.length : 'не массив') : 'нет'
     });
     
-    const images_json = images ? JSON.stringify(images) : null;
+    // Валидация и нормализация данных
+    if (!title || typeof title !== 'string' || title.trim() === '') {
+      return res.status(400).json({ error: 'Название товара обязательно' });
+    }
     
-    const queryParams = [title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json, id];
+    const normalizedPrice = typeof price === 'number' ? price : parseFloat(price) || 0;
+    const normalizedAvailable = available === true || available === 'true' || available === 1 || available === '1';
+    const normalizedTag = tag && tag.trim() !== '' ? tag.trim() : null;
+    const normalizedBrand = brand && brand.trim() !== '' ? brand.trim() : null;
+    const normalizedCompatibility = compatibility && compatibility.trim() !== '' ? compatibility.trim() : null;
+    const normalizedSupplierLink = supplier_link && supplier_link.trim() !== '' ? supplier_link.trim() : null;
+    const normalizedSupplierNotes = supplier_notes && supplier_notes.trim() !== '' ? supplier_notes.trim() : null;
+    
+    const images_json = images && Array.isArray(images) && images.length > 0 ? JSON.stringify(images) : null;
+    
+    const productId = parseInt(id, 10);
+    if (isNaN(productId)) {
+      return res.status(400).json({ error: 'Некорректный ID товара' });
+    }
+    
+    const queryParams = [
+      title.trim(),
+      description || '',
+      normalizedPrice,
+      normalizedTag,
+      normalizedAvailable,
+      category || '',
+      normalizedBrand,
+      normalizedCompatibility,
+      normalizedSupplierLink,
+      normalizedSupplierNotes,
+      images_json,
+      productId
+    ];
+    
     console.log('Параметры SQL запроса:', queryParams.map((p, i) => `$${i + 1}: ${typeof p} ${p === null ? 'null' : p === undefined ? 'undefined' : Array.isArray(p) ? `[массив ${p.length}]` : String(p).substring(0, 50)}`));
-
+    
     const result = await pool.query(`
       UPDATE products
       SET title = $1, description = $2, price = $3, tag = $4, available = $5, category = $6, brand = $7, compatibility = $8, supplier_link = $9, supplier_notes = $10, images_json = $11
