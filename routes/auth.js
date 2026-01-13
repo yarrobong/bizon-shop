@@ -59,11 +59,11 @@ router.post('/login', loginRateLimit, async (req, res) => {
  * POST /api/logout
  * Выход из системы
  */
-router.post('/logout', (req, res) => {
+router.post('/logout', async (req, res) => {
   try {
     const sessionId = req.headers['x-session-id'] || req.cookies?.sessionId;
     if (sessionId) {
-      logout(sessionId);
+      await logout(sessionId);
     }
     res.json({ success: true, message: 'Выход выполнен' });
   } catch (error) {

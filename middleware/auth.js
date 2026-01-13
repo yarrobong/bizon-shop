@@ -1,9 +1,6 @@
 const pool = require('../config/db');
 const bcrypt = require('bcryptjs');
 
-// Простая сессия в памяти (для продакшена лучше использовать Redis или JWT)
-const sessions = new Map();
-
 // Время жизни сессии (24 часа)
 const SESSION_DURATION = 24 * 60 * 60 * 1000;
 
@@ -17,8 +14,7 @@ async function requireAuth(req, res, next) {
     console.log('[requireAuth] Проверка сессии:', {
       sessionId: sessionId ? `${sessionId.substring(0, 8)}...` : 'отсутствует',
       url: req.url,
-      method: req.method,
-      totalSessions: sessions.size
+      method: req.method
     });
     
     if (!sessionId) {
@@ -29,32 +25,36 @@ async function requireAuth(req, res, next) {
       });
     }
 
-    const session = sessions.get(sessionId);
-    
-    if (!session) {
-      console.log('[requireAuth] Сессия не найдена в памяти. Всего сессий:', sessions.size);
-      console.log('[requireAuth] Существующие сессии:', Array.from(sessions.keys()).map(s => s.substring(0, 8) + '...'));
+    // Проверяем сессию в БД
+    const sessionResult = await pool.query(
+      `SELECT session_id, user_id, username, created_at, last_activity, expires_at 
+       FROM sessions 
+       WHERE session_id = $1 AND expires_at > NOW()`,
+      [sessionId]
+    );
+
+    if (sessionResult.rows.length === 0) {
+      console.log('[requireAuth] Сессия не найдена в БД или истекла');
       return res.status(401).json({ 
         success: false, 
-        error: 'Сессия недействительна' 
+        error: 'Сессия недействительна или истекла' 
       });
     }
 
-    // Проверяем срок действия сессии
-    const sessionAge = Date.now() - session.createdAt;
-    if (sessionAge > SESSION_DURATION) {
-      console.log('[requireAuth] Сессия истекла. Возраст:', Math.floor(sessionAge / 1000 / 60), 'минут');
-      sessions.delete(sessionId);
-      return res.status(401).json({ 
-        success: false, 
-        error: 'Сессия истекла' 
-      });
-    }
+    const session = sessionResult.rows[0];
 
     // Обновляем время последней активности
-    session.lastActivity = Date.now();
-    req.user = session.user;
-    console.log('[requireAuth] Сессия валидна, пользователь:', session.user.username);
+    await pool.query(
+      'UPDATE sessions SET last_activity = NOW() WHERE session_id = $1',
+      [sessionId]
+    );
+
+    req.user = {
+      id: session.user_id,
+      username: session.username
+    };
+
+    console.log('[requireAuth] Сессия валидна, пользователь:', session.username);
     next();
   } catch (error) {
     console.error('Ошибка проверки аутентификации:', error);
@@ -91,19 +91,25 @@ async function authenticate(username, password) {
       throw new Error('Неверный логин или пароль');
     }
 
-    // Создаем сессию
+    // Создаем сессию в БД
     const sessionId = generateSessionId();
-    sessions.set(sessionId, {
-      user: {
-        id: user.id,
-        username: user.username
-      },
-      createdAt: Date.now(),
-      lastActivity: Date.now()
+    const expiresAt = new Date(Date.now() + SESSION_DURATION);
+
+    await pool.query(
+      `INSERT INTO sessions (session_id, user_id, username, created_at, last_activity, expires_at)
+       VALUES ($1, $2, $3, NOW(), NOW(), $4)`,
+      [sessionId, user.id, user.username, expiresAt]
+    );
+
+    console.log('[authenticate] Создана новая сессия в БД:', {
+      sessionId: sessionId.substring(0, 8) + '...',
+      username: user.username,
+      expiresAt: expiresAt
     });
 
     return { sessionId, user: { id: user.id, username: user.username } };
   } catch (error) {
+    console.error('[authenticate] Ошибка создания сессии:', error);
     throw error;
   }
 }
@@ -111,8 +117,25 @@ async function authenticate(username, password) {
 /**
  * Выход из системы
  */
-function logout(sessionId) {
-  sessions.delete(sessionId);
+async function logout(sessionId) {
+  try {
+    if (!sessionId) {
+      return;
+    }
+
+    const result = await pool.query(
+      'DELETE FROM sessions WHERE session_id = $1',
+      [sessionId]
+    );
+
+    console.log('[logout] Сессия удалена из БД:', {
+      sessionId: sessionId.substring(0, 8) + '...',
+      deleted: result.rowCount > 0
+    });
+  } catch (error) {
+    console.error('[logout] Ошибка удаления сессии:', error);
+    // Не пробрасываем ошибку, чтобы не ломать процесс выхода
+  }
 }
 
 /**
@@ -125,17 +148,25 @@ function generateSessionId() {
 /**
  * Очистка истекших сессий (запускать периодически)
  */
-function cleanupExpiredSessions() {
-  const now = Date.now();
-  for (const [sessionId, session] of sessions.entries()) {
-    if (now - session.createdAt > SESSION_DURATION) {
-      sessions.delete(sessionId);
+async function cleanupExpiredSessions() {
+  try {
+    const result = await pool.query(
+      'DELETE FROM sessions WHERE expires_at < NOW()'
+    );
+
+    if (result.rowCount > 0) {
+      console.log(`[cleanupExpiredSessions] Удалено истекших сессий: ${result.rowCount}`);
     }
+  } catch (error) {
+    console.error('[cleanupExpiredSessions] Ошибка очистки сессий:', error);
   }
 }
 
 // Очистка каждые 30 минут
 setInterval(cleanupExpiredSessions, 30 * 60 * 1000);
+
+// Очистка при старте сервера
+cleanupExpiredSessions();
 
 module.exports = {
   requireAuth,
