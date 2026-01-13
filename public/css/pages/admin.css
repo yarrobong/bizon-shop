@@ -496,25 +496,44 @@ body::before {
 }
 
 .modal-content form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Контейнер для двух колонок */
+.form-columns {
     display: grid;
     grid-template-columns: 1fr;
     gap: 20px;
 }
 
-/* Двухколоночная компоновка для полей формы на широких экранах */
+/* Полноширинные поля */
+.form-field-full {
+    width: 100%;
+}
+
+/* Колонки формы */
+.form-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Двухколоночная компоновка на широких экранах */
 @media (min-width: 768px) {
-    .modal-content form {
+    .form-columns {
         grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
     }
-    
-    /* Полноширинные поля (занимают обе колонки) */
-    .modal-content form label[for="product-description"],
-    .modal-content form textarea,
-    .modal-content form .images-section,
-    .modal-content form .variants-section,
-    .modal-content form .modal-actions {
-        grid-column: 1 / -1;
-    }
+}
+
+/* Полноширинные секции (занимают обе колонки) */
+.images-section,
+.variants-section,
+.modal-actions {
+    width: 100%;
+    grid-column: 1 / -1;
 }
 
 .modal-content label {

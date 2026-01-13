@@ -93,45 +93,61 @@
         <form id="product-form"> 
             <input type="hidden" id="product-id" name="product-id">
             
-            <label for="product-title">Название:</label>
-            <input type="text" id="product-title" name="product-title" required> 
+            <!-- Полноширинные поля -->
+            <div class="form-field-full">
+                <label for="product-title">Название:</label>
+                <input type="text" id="product-title" name="product-title" required> 
+            </div>
 
-            <label for="product-description">Описание:</label>
-            <textarea id="product-description" name="product-description"></textarea> 
+            <div class="form-field-full">
+                <label for="product-description">Описание:</label>
+                <textarea id="product-description" name="product-description"></textarea> 
+            </div>
 
-            <label for="product-price">Цена (руб.):</label>
-            <input type="number" id="product-price" name="product-price" step="0.01" required> 
+            <!-- Две колонки -->
+            <div class="form-columns">
+                <div class="form-column">
+                    <label for="product-price">Цена (руб.):</label>
+                    <input type="number" id="product-price" name="product-price" step="0.01" required> 
 
-            <label for="product-supplier-link">Ссылка на поставщика:</label>
- <input type="text" id="product-supplier-link" name="product-supplier-link">
+                    <label for="product-category">Категория:</label>
+                    <input type="text" id="product-category" name="product-category" list="category-list" required placeholder="Выберите из списка или введите новую">
+                    <datalist id="category-list">
+                        <!-- Опции будут загружены динамически -->
+                    </datalist>
 
- <label for="product-supplier-notes">Примечание к ссылке:</label>
- <input type="text" id="product-supplier-notes" name="product-supplier-notes">
+                    <label for="product-brand">Бренд:</label>
+                    <input type="text" id="product-brand" name="product-brand" placeholder="Например: BOBOVR, Meta">
 
-            <label for="product-category">Категория:</label>
-            <input type="text" id="product-category" name="product-category" list="category-list" required placeholder="Выберите из списка или введите новую">
-            <datalist id="category-list">
-                <!-- Опции будут загружены динамически -->
-            </datalist>
+                    <label for="product-tag">Тег:</label>
+                    <select id="product-tag" name="product-tag">
+                        <option value="">Без тега</option>
+                        <option value="новинка">Новинка</option>
+                        <option value="хит">Хит</option>
+                        <option value="скидка">Скидка</option>
+                        <option value="акция">Акция</option>
+                        <option value="стандарт">Стандарт</option>
+                        <option value="премиум">Премиум</option>
+                        <option value="эксклюзив">Эксклюзив</option>
+                    </select>
+                </div>
 
-            <label for="product-brand">Бренд:</label>
-            <input type="text" id="product-brand" name="product-brand" placeholder="Например: BOBOVR, Meta">
+                <div class="form-column">
+                    <label for="product-compatibility">Совместимость (для креплений):</label>
+                    <input type="text" id="product-compatibility" name="product-compatibility" placeholder="Например: Quest 3, Pico 4">
+                    <small style="color: rgba(255,255,255,0.6); font-size: 0.85rem; display: block; margin-top: 0.25rem;">Укажите типы шлемов через запятую (например: Quest 3, Pico 4, Quest 2)</small>
 
-            <label for="product-tag">Тег:</label>
-            <select id="product-tag" name="product-tag">
-                <option value="">Без тега</option>
-                <option value="новинка">Новинка</option>
-                <option value="хит">Хит</option>
-                <option value="скидка">Скидка</option>
-                <option value="акция">Акция</option>
-                <option value="стандарт">Стандарт</option>
-                <option value="премиум">Премиум</option>
-                <option value="эксклюзив">Эксклюзив</option>
-            </select>
+                    <label for="product-supplier-link">Ссылка на поставщика:</label>
+                    <input type="text" id="product-supplier-link" name="product-supplier-link">
 
-            <label for="product-compatibility">Совместимость (для креплений):</label>
-            <input type="text" id="product-compatibility" name="product-compatibility" placeholder="Например: Quest 3, Pico 4">
-            <small style="color: rgba(255,255,255,0.6); font-size: 0.85rem; display: block; margin-top: 0.25rem;">Укажите типы шлемов через запятую (например: Quest 3, Pico 4, Quest 2)</small>
+                    <label for="product-supplier-notes">Примечание к ссылке:</label>
+                    <input type="text" id="product-supplier-notes" name="product-supplier-notes">
+
+                    <label style="margin-top: 16px;">
+                        <input type="checkbox" id="product-available" name="product-available" checked> Доступен
+                    </label>
+                </div>
+            </div>
 
             <!-- Управление изображениями -->
             <div class="images-section">
