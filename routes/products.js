@@ -155,7 +155,16 @@ router.put('/:id', async (req, res) => {
       productId
     ];
     
-    console.log('Параметры SQL запроса:', queryParams.map((p, i) => `$${i + 1}: ${typeof p} ${p === null ? 'null' : p === undefined ? 'undefined' : Array.isArray(p) ? `[массив ${p.length}]` : String(p).substring(0, 50)}`));
+    console.log('Параметры SQL запроса:', queryParams.map((p, i) => {
+      const paramName = ['title', 'description', 'price', 'tag', 'available', 'category', 'brand', 'compatibility', 'supplier_link', 'supplier_notes', 'images_json', 'id'][i];
+      const value = p === null ? 'null' : p === undefined ? 'undefined' : Array.isArray(p) ? `[массив ${p.length}]` : typeof p === 'string' ? `${p.substring(0, 50)}${p.length > 50 ? '...' : ''} (${p.length} символов)` : String(p);
+      return `$${i + 1} (${paramName}): ${typeof p} = ${value}`;
+    }));
+    
+    // Проверяем длину supplier_link
+    if (normalizedSupplierLink && normalizedSupplierLink.length > 1000) {
+      console.warn(`supplier_link очень длинный: ${normalizedSupplierLink.length} символов`);
+    }
     
     let result;
     try {
@@ -185,6 +194,13 @@ router.put('/:id', async (req, res) => {
         line: sqlError.line,
         routine: sqlError.routine
       });
+      
+      // Если ошибка связана с отсутствием колонки, предлагаем решение
+      if (sqlError.code === '42703' || sqlError.message.includes('column') || sqlError.message.includes('does not exist')) {
+        console.error('ВНИМАНИЕ: Возможно, колонка compatibility не существует в таблице products!');
+        console.error('Нужно выполнить миграцию: ALTER TABLE products ADD COLUMN IF NOT EXISTS compatibility TEXT;');
+      }
+      
       throw sqlError; // Пробрасываем ошибку дальше
     }
 
