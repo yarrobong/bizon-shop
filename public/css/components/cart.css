@@ -833,7 +833,7 @@ body {
 /* Стили для кнопки "В корзине" */
 .btn-cart.in-cart,
 #product-page-add-to-cart-btn.in-cart {
-  background: rgba(4, 9, 172, 0.8); /* Темно-синий фон под стиль сайта */
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(0, 0, 0, 0));
   border: 2px solid rgba(59, 130, 246, 0.6); /* Светлая синяя обводка */
   color: #fff;
   position: relative;
@@ -842,7 +842,7 @@ body {
 
 .btn-cart.in-cart:hover,
 #product-page-add-to-cart-btn.in-cart:hover {
-  background: rgba(4, 9, 172, 0.9);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(0, 0, 0, 0));
   border-color: rgba(59, 130, 246, 0.8);
   box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
 }
