@@ -50,7 +50,7 @@ main {
   border-radius: 50px; /* как в feature-card, вместо 1rem */
   /* Жидкое стекло — точно как в feature-card */
  
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+
   
   
 }
@@ -91,7 +91,7 @@ main {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  margin-bottom: 2rem;
+  margin-top: 2rem;
   padding: 1.5rem;
   background: rgba(11, 11, 38, 0.4);
   backdrop-filter: blur(20px) saturate(180%);
