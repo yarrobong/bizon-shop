@@ -58,17 +58,27 @@ router.put('/:id/variants', async (req, res) => {
         [productId, groupIdToUse]
       );
 
+      // Batch insert для вариантов товаров (оптимизация вместо N запросов)
       if (validatedVariantIds.length > 0) {
         const placeholders = validatedVariantIds.map((_, i) => `$${i + 1}`).join(', ');
         const checkVariantsQuery = `SELECT id FROM products WHERE id IN (${placeholders})`;
         const checkResult = await client.query(checkVariantsQuery, validatedVariantIds);
         const existingVariantIds = checkResult.rows.map(r => r.id);
 
-        for (const variantId of existingVariantIds) {
-          await client.query(
-            'INSERT INTO product_variants_link (product_id, group_id) VALUES ($1, $2)',
-            [variantId, groupIdToUse]
-          );
+        if (existingVariantIds.length > 0) {
+          // Batch insert всех вариантов одним запросом
+          const variantValues = existingVariantIds.map(variantId => [variantId, groupIdToUse]);
+          const variantPlaceholders = variantValues.map((_, idx) => {
+            const base = idx * 2;
+            return `($${base + 1}, $${base + 2})`;
+          }).join(', ');
+          
+          const variantInsertQuery = `
+            INSERT INTO product_variants_link (product_id, group_id)
+            VALUES ${variantPlaceholders};
+          `;
+          
+          await client.query(variantInsertQuery, variantValues.flat());
         }
       }
     } else {
