@@ -506,18 +506,29 @@ body::before {
     display: grid;
     grid-template-columns: 1fr;
     gap: 20px;
+    align-items: start;
 }
 
 /* Полноширинные поля */
 .form-field-full {
     width: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Колонки формы */
 .form-column {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
+}
+
+/* Группа поля (label + input) */
+.form-column label,
+.form-field-full label {
+    display: block;
+    margin-bottom: 6px;
+    min-height: 20px;
 }
 
 /* Двухколоночная компоновка на широких экранах */
@@ -525,6 +536,11 @@ body::before {
     .form-columns {
         grid-template-columns: repeat(2, 1fr);
         gap: 24px;
+        align-items: start;
+    }
+    
+    .form-column {
+        gap: 20px;
     }
 }
 
@@ -538,16 +554,20 @@ body::before {
 
 .modal-content label {
     margin-top: 0;
+    margin-bottom: 6px;
     font-weight: 500;
     color: var(--text-primary);
     font-size: 14px;
+    line-height: 1.4;
+    display: block;
 }
 
 .modal-content input,
 .modal-content textarea,
 .modal-content select {
     padding: 14px 18px;
-    margin-top: 8px;
+    margin-top: 0;
+    margin-bottom: 0;
     border: 2px solid rgba(96, 165, 250, 0.2);
     border-radius: var(--radius-md);
     font-size: 14px;
@@ -557,6 +577,20 @@ body::before {
     font-family: inherit;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 48px;
+    line-height: 1.4;
+}
+
+.modal-content textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.modal-content select {
+    min-height: 48px;
+    cursor: pointer;
 }
 
 .modal-content input:hover,
@@ -579,6 +613,30 @@ body::before {
 .modal-content input::placeholder,
 .modal-content textarea::placeholder {
     color: var(--text-muted);
+}
+
+/* Подсказки (small) */
+.modal-content small {
+    display: block;
+    margin-top: 4px;
+    margin-bottom: 0;
+    line-height: 1.4;
+}
+
+/* Чекбоксы */
+.modal-content label input[type="checkbox"] {
+    width: auto;
+    min-height: auto;
+    margin-right: 8px;
+    margin-top: 0;
+    cursor: pointer;
+}
+
+.modal-content label:has(input[type="checkbox"]) {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    margin-bottom: 0;
 }
 
 .modal-actions {
