@@ -202,6 +202,8 @@ async function handleSendOrder() {
     if (result.success) {
 /*Calltouch requests*/
 try {
+        var request = window.ActiveXObject ? new ActiveXObject("Microsoft.XMLHTTP") : new XMLHttpRequest();
+        var ct_data = {};
         ct_data.subject = 'Корзина с ' + location.hostname; ct_data.fio = ''; ct_data.phoneNumber = phoneInput.value; ct_data.email = ''; ct_data.comment = commentInput ? commentInput.value || '' : ''; ct_data.sessionId = window.call_value; 
         ct_data.requestUrl = location.href;
         var post_data = Object.keys(ct_data).reduce(function(a,k){if(!!ct_data[k]){a.push(k+'='+encodeURIComponent(ct_data[k]));}return a},[]).join('&');
@@ -502,6 +504,22 @@ function setupEventListeners() {
                 console.log('Ответ сервера:', result);
 
                 if (result.success) {
+/*Calltouch requests*/
+try {
+                    var request = window.ActiveXObject ? new ActiveXObject("Microsoft.XMLHTTP") : new XMLHttpRequest();
+                    var ct_data = {};
+                    ct_data.subject = 'Корзина с ' + location.hostname; ct_data.fio = ''; ct_data.phoneNumber = phoneInput.value; ct_data.email = ''; ct_data.comment = document.getElementById('comment-input')?.value || ''; ct_data.sessionId = window.call_value; 
+                    ct_data.requestUrl = location.href;
+                    var post_data = Object.keys(ct_data).reduce(function(a,k){if(!!ct_data[k]){a.push(k+'='+encodeURIComponent(ct_data[k]));}return a},[]).join('&');
+                    var CT_URL = 'https://api.calltouch.ru/calls-service/RestAPI/requests/78900/register/';
+                    console.log(ct_data);
+                    request.open("POST", CT_URL, true); request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                    request.send(post_data); сt_сheck = false; ct_data = {};
+} catch (error) {
+  console.error('[Calltouch] Ошибка отправки данных:', error);
+  // Не показываем ошибку пользователю, так как это не критично
+}
+/*Calltouch requests*/
                   // Отправка цели в Яндекс Метрику
                   (function() {
                     function sendGoal() {
