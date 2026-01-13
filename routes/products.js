@@ -126,21 +126,8 @@ router.put('/:id', async (req, res) => {
     const normalizedAvailable = available === true || available === 'true' || available === 1 || available === '1';
     const normalizedTag = tag && tag.trim() !== '' ? tag.trim() : null;
     const normalizedBrand = brand && brand.trim() !== '' ? brand.trim() : null;
-    // Преобразуем compatibility из строки в массив для PostgreSQL
-    // Если это строка с запятыми, разбиваем на массив
-    let normalizedCompatibility = null;
-    if (compatibility) {
-      const compatStr = compatibility.trim();
-      if (compatStr !== '') {
-        // Если это уже массив, используем его
-        if (Array.isArray(compatibility)) {
-          normalizedCompatibility = compatibility.filter(c => c && c.trim() !== '').map(c => c.trim());
-        } else {
-          // Если это строка, разбиваем по запятым
-          normalizedCompatibility = compatStr.split(',').map(c => c.trim()).filter(c => c !== '');
-        }
-      }
-    }
+    // Передаем compatibility как строку (не массив)
+    const normalizedCompatibility = compatibility ? compatibility.trim() : null;
     // Обрезаем supplier_link до 2000 символов, если он слишком длинный (обычно VARCHAR ограничен)
     let normalizedSupplierLink = supplier_link && supplier_link.trim() !== '' ? supplier_link.trim() : null;
     if (normalizedSupplierLink && normalizedSupplierLink.length > 2000) {
@@ -159,69 +146,26 @@ router.put('/:id', async (req, res) => {
     // Убеждаемся, что description не undefined
     const normalizedDescription = description || '';
     
-    // Сначала проверяем существование и тип колонки compatibility
-    let compatibilityColumnType = null;
+    // Проверяем существование колонки compatibility и создаем как TEXT, если не существует
     try {
       const checkColumn = await pool.query(`
-        SELECT column_name, data_type, udt_name
+        SELECT column_name
         FROM information_schema.columns 
         WHERE table_name = 'products' AND column_name = 'compatibility'
       `);
       
-      if (checkColumn.rows.length > 0) {
-        compatibilityColumnType = checkColumn.rows[0].data_type;
-        const udtName = checkColumn.rows[0].udt_name;
-        console.log('Колонка compatibility существует, тип:', compatibilityColumnType, 'udt_name:', udtName);
-        
-        // Если udt_name начинается с '_', это массив
-        if (udtName && udtName.startsWith('_')) {
-          compatibilityColumnType = 'ARRAY';
-          console.log('Определен тип ARRAY по udt_name:', udtName);
-        }
-        
-        // Если колонка имеет тип ARRAY, но мы хотим использовать TEXT, изменим тип
-        if (compatibilityColumnType === 'ARRAY' || udtName === '_text') {
-          console.log('Колонка compatibility имеет тип ARRAY, преобразуем строку в массив PostgreSQL');
-        }
-      } else {
+      if (checkColumn.rows.length === 0) {
         console.log('Колонка compatibility не существует, создаем как TEXT...');
         await pool.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS compatibility TEXT');
         console.log('Колонка compatibility создана как TEXT');
-        compatibilityColumnType = 'text';
       }
     } catch (checkError) {
       console.error('Ошибка при проверке/создании колонки compatibility:', checkError);
       // Продолжаем выполнение, возможно колонка уже существует
-      // Предполагаем, что это ARRAY, если не удалось определить
-      if (!compatibilityColumnType) {
-        compatibilityColumnType = 'ARRAY'; // По умолчанию предполагаем ARRAY
-        console.log('Не удалось определить тип колонки, предполагаем ARRAY');
-      }
     }
     
-    // Преобразуем compatibility в формат PostgreSQL массива, если колонка имеет тип ARRAY
-    let compatibilityForDB = normalizedCompatibility;
-    if (normalizedCompatibility) {
-      // normalizedCompatibility уже должен быть массивом после преобразования выше
-      if (!Array.isArray(normalizedCompatibility)) {
-        console.error('ОШИБКА: normalizedCompatibility не является массивом!', typeof normalizedCompatibility, normalizedCompatibility);
-        // Преобразуем в массив
-        normalizedCompatibility = [String(normalizedCompatibility)];
-      }
-      
-      if (compatibilityColumnType === 'ARRAY' || checkColumn.rows[0]?.udt_name === '_text' || compatibilityColumnType === null) {
-        // Если колонка ARRAY или тип не определен (предполагаем ARRAY), используем массив
-        // Библиотека pg автоматически преобразует JavaScript массив в PostgreSQL массив
-        compatibilityForDB = normalizedCompatibility;
-        console.log('Используем compatibility как массив для PostgreSQL ARRAY:', compatibilityForDB, 'тип:', typeof compatibilityForDB, 'isArray:', Array.isArray(compatibilityForDB));
-      } else {
-        // Если колонка TEXT, преобразуем массив в строку
-        compatibilityForDB = normalizedCompatibility.join(', ');
-        console.log('Используем compatibility как строку для TEXT колонки:', compatibilityForDB);
-      }
-    } else {
-      console.log('compatibility пустой, передаем null');
-    }
+    // Передаем compatibility как строку (не массив)
+    const compatibilityForDB = normalizedCompatibility;
     
     const queryParams = [
       title.trim(),
@@ -240,30 +184,9 @@ router.put('/:id', async (req, res) => {
     
     console.log('Параметры SQL запроса:', queryParams.map((p, i) => {
       const paramName = ['title', 'description', 'price', 'tag', 'available', 'category', 'brand', 'compatibility', 'supplier_link', 'supplier_notes', 'images_json', 'id'][i];
-      let value;
-      if (p === null) {
-        value = 'null';
-      } else if (p === undefined) {
-        value = 'undefined';
-      } else if (Array.isArray(p)) {
-        value = `[массив ${p.length} элементов: ${JSON.stringify(p)}]`;
-      } else if (typeof p === 'string') {
-        value = `${p.substring(0, 50)}${p.length > 50 ? '...' : ''} (${p.length} символов)`;
-      } else {
-        value = String(p);
-      }
+      const value = p === null ? 'null' : p === undefined ? 'undefined' : typeof p === 'string' ? `${p.substring(0, 50)}${p.length > 50 ? '...' : ''} (${p.length} символов)` : String(p);
       return `$${i + 1} (${paramName}): ${typeof p} = ${value}`;
     }));
-    
-    // Дополнительная проверка для compatibility
-    if (queryParams[7] !== null && queryParams[7] !== undefined) {
-      console.log('Проверка compatibility параметра:', {
-        значение: queryParams[7],
-        тип: typeof queryParams[7],
-        isArray: Array.isArray(queryParams[7]),
-        JSON: JSON.stringify(queryParams[7])
-      });
-    }
     
     // Проверяем длину supplier_link
     if (normalizedSupplierLink && normalizedSupplierLink.length > 1000) {
