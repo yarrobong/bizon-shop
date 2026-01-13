@@ -9,6 +9,9 @@
  * - Должен существовать тестовый пользователь в admin_users
  */
 
+// Загружаем переменные окружения
+require('dotenv').config();
+
 const pool = require('../config/db');
 const { authenticate, logout, requireAuth, cleanupExpiredSessions } = require('../middleware/auth');
 
