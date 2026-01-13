@@ -113,8 +113,9 @@ let useLocalData = false;
 
 // Получение активных фильтров
 function getActiveFilters() {
+  const checkedCategory = document.querySelector('input[name="category"]:checked');
   const filters = {
-    category: document.querySelector('input[name="category"]:checked')?.value || 'все',
+    category: checkedCategory ? checkedCategory.value : null, // null означает "все категории"
     priceMin: parseFloat(document.getElementById('price-min')?.value) || 0,
     priceMax: parseFloat(document.getElementById('price-max')?.value) || Infinity,
     brands: Array.from(document.querySelectorAll('input[name="brand"]:checked')).map(cb => cb.value),
@@ -140,8 +141,8 @@ function applyFilters(products) {
     // Доступность
     if (p.available === false) return false;
 
-    // Категория
-    if (filters.category !== 'все' && p.category !== filters.category) return false;
+    // Категория (если выбрана категория, фильтруем по ней, иначе показываем все)
+    if (filters.category && p.category !== filters.category) return false;
 
     // Цена
     if (p.price < filters.priceMin || p.price > filters.priceMax) return false;
@@ -267,6 +268,30 @@ function populateTagFilters(products) {
   });
 }
 
+function populateCategoryFilters(products) {
+  const categoryFiltersContainer = document.getElementById('category-filters');
+  if (!categoryFiltersContainer || categoryFiltersContainer.dataset.populated === 'true') return;
+
+  // Получаем только те категории, которые реально есть у товаров
+  const categories = [...new Set(products.map(p => p.category).filter(Boolean))].sort();
+  
+  categoryFiltersContainer.innerHTML = categories.map(category => `
+    <label class="filter-option">
+      <input type="radio" name="category" value="${category}" class="filter-input">
+      <span class="filter-checkbox"></span>
+      <span class="filter-label">${category}</span>
+    </label>
+  `).join('');
+
+  // Отмечаем, что фильтры заполнены
+  categoryFiltersContainer.dataset.populated = 'true';
+
+  // Добавляем обработчики для новых радиокнопок
+  categoryFiltersContainer.querySelectorAll('input[name="category"]').forEach(input => {
+    input.addEventListener('change', renderProducts);
+  });
+}
+
 // Асинхронная загрузка и рендеринг товаров
 async function renderProducts() {
   if (renderProductsTimeout) {
@@ -294,9 +319,10 @@ async function renderProducts() {
         useLocalData = true;
       }
 
-      // Заполняем фильтры по брендам и тегам после первой загрузки
+      // Заполняем фильтры по брендам, тегам и категориям после первой загрузки
       populateBrandFilters(ALL_PRODUCTS);
       populateTagFilters(ALL_PRODUCTS);
+      populateCategoryFilters(ALL_PRODUCTS);
     }
 
     // Применяем фильтры и сортировку
@@ -433,6 +459,10 @@ async function renderProducts() {
 
 // Сброс фильтров
 function resetFilters() {
+  // Сбрасываем категории (убираем checked со всех радиокнопок)
+  document.querySelectorAll('input[name="category"]').forEach(radio => {
+    radio.checked = false;
+  });
   // Сбрасываем категорию
   const allCategory = document.querySelector('input[name="category"][value="все"]');
   if (allCategory) allCategory.checked = true;

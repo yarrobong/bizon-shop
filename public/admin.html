@@ -109,9 +109,10 @@
  <input type="text" id="product-supplier-notes" name="product-supplier-notes">
 
             <label for="product-category">Категория:</label>
-            <select id="product-category" name="product-category" required> 
+            <input type="text" id="product-category" name="product-category" list="category-list" required placeholder="Выберите из списка или введите новую">
+            <datalist id="category-list">
                 <!-- Опции будут загружены динамически -->
-            </select>
+            </datalist>
 
             <label for="product-brand">Бренд:</label>
             <input type="text" id="product-brand" name="product-brand" placeholder="Например: BOBOVR, Meta">

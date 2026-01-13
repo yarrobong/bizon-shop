@@ -116,9 +116,9 @@ async function loadProductForEdit(productId) {
             document.getElementById('product-supplier-link').value = product.supplier_link || '';
             document.getElementById('product-supplier-notes').value = product.supplier_notes || '';
 
-            const categorySelect = document.getElementById('product-category');
-            if (categorySelect) {
-                categorySelect.value = product.category || '';
+            const categoryInput = document.getElementById('product-category');
+            if (categoryInput) {
+                categoryInput.value = product.category || '';
             }
 
             const brandInput = document.getElementById('product-brand');
@@ -441,19 +441,18 @@ async function loadCategoriesForSelect() {
         const response = await fetchWithAuth('/api/categories');
         if (response.ok) {
             const categories = await response.json();
-            const categorySelect = document.getElementById('product-category');
-            if (categorySelect) {
-                categorySelect.innerHTML = '<option value="">Выберите категорию...</option>';
+            const categoryDatalist = document.getElementById('category-list');
+            if (categoryDatalist) {
+                categoryDatalist.innerHTML = '';
                 categories.forEach(category => {
                     const option = document.createElement('option');
                     option.value = category.name;
-                    option.textContent = category.name;
-                    categorySelect.appendChild(option);
+                    categoryDatalist.appendChild(option);
                 });
             }
         }
     } catch (error) {
-        console.error('Ошибка загрузки категорий для селекта:', error);
+        console.error('Ошибка загрузки категорий для datalist:', error);
     }
 }
 
