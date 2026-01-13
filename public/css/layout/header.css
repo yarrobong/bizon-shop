@@ -352,7 +352,9 @@ header.scrolled {
     padding: 0.5rem 0.75rem;
     border-radius: 10px;
     justify-content: space-between;
-    position: relative;
+    position: sticky;
+    top: 0.5rem;
+    z-index: 1000;
   }
 
   /* Перестраиваем порядок элементов для мобильных */
@@ -512,6 +514,9 @@ header.scrolled {
     margin-bottom: 0.25rem;
     padding: 10px;
     border-radius: 0 0 24px 24px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
   }
   
   header.scrolled {
@@ -519,6 +524,8 @@ header.scrolled {
     margin-bottom: 0.125rem;
     padding: 8px;
     border-radius: 0 0 24px 24px;
+    position: sticky;
+    top: 0;
   }
 
   .logo-icon img {
