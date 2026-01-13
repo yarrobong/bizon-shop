@@ -159,48 +159,6 @@ router.put('/:id', async (req, res) => {
     // Убеждаемся, что description не undefined
     const normalizedDescription = description || '';
     
-    // Преобразуем compatibility в формат PostgreSQL массива, если колонка имеет тип ARRAY
-    let compatibilityForDB = normalizedCompatibility;
-    if (normalizedCompatibility && compatibilityColumnType === 'ARRAY') {
-      // PostgreSQL ожидает массив в формате ARRAY['value1', 'value2'] или '{value1,value2}'
-      // Используем массив JavaScript, pg автоматически преобразует его
-      compatibilityForDB = normalizedCompatibility;
-      console.log('Преобразуем compatibility в массив для PostgreSQL:', compatibilityForDB);
-    } else if (normalizedCompatibility && Array.isArray(normalizedCompatibility)) {
-      // Если это массив, но колонка TEXT, преобразуем в строку
-      compatibilityForDB = normalizedCompatibility.join(', ');
-      console.log('Преобразуем compatibility массив в строку для TEXT колонки:', compatibilityForDB);
-    } else if (normalizedCompatibility) {
-      // Если это строка, оставляем как есть
-      compatibilityForDB = normalizedCompatibility;
-    }
-    
-    const queryParams = [
-      title.trim(),
-      normalizedDescription,
-      normalizedPrice,
-      normalizedTag,
-      normalizedAvailable,
-      category || '',
-      normalizedBrand,
-      compatibilityForDB,
-      normalizedSupplierLink,
-      normalizedSupplierNotes,
-      images_json,
-      productId
-    ];
-    
-    console.log('Параметры SQL запроса:', queryParams.map((p, i) => {
-      const paramName = ['title', 'description', 'price', 'tag', 'available', 'category', 'brand', 'compatibility', 'supplier_link', 'supplier_notes', 'images_json', 'id'][i];
-      const value = p === null ? 'null' : p === undefined ? 'undefined' : Array.isArray(p) ? `[массив ${p.length}]` : typeof p === 'string' ? `${p.substring(0, 50)}${p.length > 50 ? '...' : ''} (${p.length} символов)` : String(p);
-      return `$${i + 1} (${paramName}): ${typeof p} = ${value}`;
-    }));
-    
-    // Проверяем длину supplier_link
-    if (normalizedSupplierLink && normalizedSupplierLink.length > 1000) {
-      console.warn(`supplier_link очень длинный: ${normalizedSupplierLink.length} символов`);
-    }
-    
     // Сначала проверяем существование и тип колонки compatibility
     let compatibilityColumnType = null;
     try {
@@ -227,6 +185,61 @@ router.put('/:id', async (req, res) => {
     } catch (checkError) {
       console.error('Ошибка при проверке/создании колонки compatibility:', checkError);
       // Продолжаем выполнение, возможно колонка уже существует
+      // Предполагаем, что это ARRAY, если не удалось определить
+      if (!compatibilityColumnType) {
+        compatibilityColumnType = 'ARRAY'; // По умолчанию предполагаем ARRAY
+        console.log('Не удалось определить тип колонки, предполагаем ARRAY');
+      }
+    }
+    
+    // Преобразуем compatibility в формат PostgreSQL массива, если колонка имеет тип ARRAY
+    let compatibilityForDB = normalizedCompatibility;
+    if (normalizedCompatibility) {
+      if (compatibilityColumnType === 'ARRAY' || compatibilityColumnType === null) {
+        // Если колонка ARRAY или тип не определен (предполагаем ARRAY), используем массив
+        // normalizedCompatibility уже должен быть массивом после преобразования выше
+        if (!Array.isArray(normalizedCompatibility)) {
+          // Если по какой-то причине это не массив, преобразуем
+          compatibilityForDB = [normalizedCompatibility];
+        } else {
+          compatibilityForDB = normalizedCompatibility;
+        }
+        console.log('Используем compatibility как массив для PostgreSQL ARRAY:', compatibilityForDB);
+      } else {
+        // Если колонка TEXT, преобразуем массив в строку
+        if (Array.isArray(normalizedCompatibility)) {
+          compatibilityForDB = normalizedCompatibility.join(', ');
+        } else {
+          compatibilityForDB = normalizedCompatibility;
+        }
+        console.log('Используем compatibility как строку для TEXT колонки:', compatibilityForDB);
+      }
+    }
+    
+    const queryParams = [
+      title.trim(),
+      normalizedDescription,
+      normalizedPrice,
+      normalizedTag,
+      normalizedAvailable,
+      category || '',
+      normalizedBrand,
+      compatibilityForDB,
+      normalizedSupplierLink,
+      normalizedSupplierNotes,
+      images_json,
+      productId
+    ];
+    
+    console.log('Параметры SQL запроса:', queryParams.map((p, i) => {
+      const paramName = ['title', 'description', 'price', 'tag', 'available', 'category', 'brand', 'compatibility', 'supplier_link', 'supplier_notes', 'images_json', 'id'][i];
+      const value = p === null ? 'null' : p === undefined ? 'undefined' : Array.isArray(p) ? `[массив ${p.length} элементов: ${p.join(', ')}]` : typeof p === 'string' ? `${p.substring(0, 50)}${p.length > 50 ? '...' : ''} (${p.length} символов)` : String(p);
+      return `$${i + 1} (${paramName}): ${typeof p} = ${value}`;
+    }));
+    
+    // Проверяем длину supplier_link
+    if (normalizedSupplierLink && normalizedSupplierLink.length > 1000) {
+      console.warn(`supplier_link очень длинный: ${normalizedSupplierLink.length} символов`);
     }
     
     let result;
