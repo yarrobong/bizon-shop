@@ -113,9 +113,8 @@ let useLocalData = false;
 
 // Получение активных фильтров
 function getActiveFilters() {
-  const checkedCategory = document.querySelector('input[name="category"]:checked');
   const filters = {
-    category: checkedCategory ? checkedCategory.value : null, // null означает "все категории"
+    categories: Array.from(document.querySelectorAll('input[name="category"]:checked')).map(cb => cb.value),
     priceMin: parseFloat(document.getElementById('price-min')?.value) || 0,
     priceMax: parseFloat(document.getElementById('price-max')?.value) || Infinity,
     brands: Array.from(document.querySelectorAll('input[name="brand"]:checked')).map(cb => cb.value),
@@ -141,8 +140,8 @@ function applyFilters(products) {
     // Доступность
     if (p.available === false) return false;
 
-    // Категория (если выбрана категория, фильтруем по ней, иначе показываем все)
-    if (filters.category && p.category !== filters.category) return false;
+    // Категория (если выбраны категории, фильтруем по ним, иначе показываем все)
+    if (filters.categories.length > 0 && (!p.category || !filters.categories.includes(p.category))) return false;
 
     // Цена
     if (p.price < filters.priceMin || p.price > filters.priceMax) return false;
@@ -277,7 +276,7 @@ function populateCategoryFilters(products) {
   
   categoryFiltersContainer.innerHTML = categories.map(category => `
     <label class="filter-option">
-      <input type="radio" name="category" value="${category}" class="filter-input">
+      <input type="checkbox" name="category" value="${category}" class="filter-input">
       <span class="filter-checkbox"></span>
       <span class="filter-label">${category}</span>
     </label>
@@ -286,7 +285,7 @@ function populateCategoryFilters(products) {
   // Отмечаем, что фильтры заполнены
   categoryFiltersContainer.dataset.populated = 'true';
 
-  // Добавляем обработчики для новых радиокнопок
+  // Добавляем обработчики для новых чекбоксов
   categoryFiltersContainer.querySelectorAll('input[name="category"]').forEach(input => {
     input.addEventListener('change', renderProducts);
   });
@@ -459,9 +458,9 @@ async function renderProducts() {
 
 // Сброс фильтров
 function resetFilters() {
-  // Сбрасываем категорию (убираем checked со всех радиокнопок - показываем все категории)
-  document.querySelectorAll('input[name="category"]').forEach(radio => {
-    radio.checked = false;
+  // Сбрасываем категории (убираем checked со всех чекбоксов - показываем все категории)
+  document.querySelectorAll('input[name="category"]').forEach(checkbox => {
+    checkbox.checked = false;
   });
 
   // Сбрасываем цену
