@@ -504,6 +504,22 @@ height: calc(1.3em * 2);
   transform: scale(1.05);
 }
 
+/* Стили для кнопки "В корзине" у аттракционов */
+.btn-cart.in-cart {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(0, 0, 0, 0));
+  border: 2px solid rgba(59, 130, 246, 0.6); /* Светлая синяя обводка */
+  color: #fff;
+  position: relative;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+}
+
+.btn-cart.in-cart:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(0, 0, 0, 0));
+  border-color: rgba(59, 130, 246, 0.8);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+  transform: scale(1.05);
+}
+
 /* === EMPTY STATE === */
 .empty {
   text-align: center;
