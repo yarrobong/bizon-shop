@@ -407,16 +407,22 @@ main {
 /* Адаптация кнопок */
 @media (max-width: 479px) {
   .product-actions button {
-    padding: 0.4rem 0.6rem;
-    font-size: 0.7rem;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.65rem;
     border-radius: 0.4rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 
 @media (max-width: 360px) {
   .product-actions button {
-    font-size: 0.65rem;
-    padding: 0.3rem 0.5rem;
+    font-size: 0.6rem;
+    padding: 0.3rem 0.4rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 
