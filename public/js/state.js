@@ -92,7 +92,7 @@ function showMiniCart() {
       ${cartItems.length === 0 
         ? '<div class="mini-cart-empty">Корзина пуста</div>'
         : cartItems.map(item => `
-          <div class="mini-cart-item">
+          <div class="mini-cart-item" data-product-id="${item.product.id}">
             <img src="${item.product.images[0]?.url?.trim() || '/assets/icons/placeholder1.webp'}" 
                  alt="${item.product.title}" />
             <div class="mini-cart-item-info">
@@ -102,6 +102,11 @@ function showMiniCart() {
                 <span class="mini-cart-item-price">${formatPrice(item.product.price * item.qty)}</span>
               </div>
             </div>
+            <button class="mini-cart-item-remove" data-product-id="${item.product.id}" aria-label="Удалить товар" title="Удалить из корзины">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
           </div>
         `).join('')
       }
@@ -112,7 +117,11 @@ function showMiniCart() {
         <span class="mini-cart-total-price">${formatPrice(totalPrice)}</span>
       </div>
       <div class="mini-cart-actions">
-        <a href="/cart" class="mini-cart-btn mini-cart-btn-primary">Перейти в корзину</a>
+        ${cartItems.length > 0 
+          ? `<button class="mini-cart-btn mini-cart-btn-secondary" id="mini-cart-clear-btn">Очистить корзину</button>
+             <a href="/cart" class="mini-cart-btn mini-cart-btn-primary">Перейти в корзину</a>`
+          : `<a href="/catalog" class="mini-cart-btn mini-cart-btn-primary">Перейти в каталог</a>`
+        }
       </div>
     </div>
   `;
@@ -137,6 +146,46 @@ function showMiniCart() {
     });
   } else {
     console.warn('[showMiniCart] Кнопка закрытия не найдена');
+  }
+  
+  // Обработчики удаления товаров
+  const removeButtons = miniCart.querySelectorAll('.mini-cart-item-remove');
+  removeButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const productId = parseInt(btn.dataset.productId);
+      console.log('[showMiniCart] Удаление товара из корзины:', productId);
+      
+      if (typeof window.removeFromCart === 'function') {
+        window.removeFromCart(productId);
+        // Обновляем мини-корзину
+        showMiniCart();
+        // Обновляем кнопки
+        if (typeof window.updateAllCartButtons === 'function') {
+          window.updateAllCartButtons();
+        }
+      }
+    });
+  });
+  
+  // Обработчик очистки корзины
+  const clearBtn = miniCart.querySelector('#mini-cart-clear-btn');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      console.log('[showMiniCart] Очистка корзины');
+      
+      if (confirm('Вы уверены, что хотите очистить корзину?')) {
+        if (typeof window.clearCart === 'function') {
+          window.clearCart();
+          // Обновляем мини-корзину
+          showMiniCart();
+          // Обновляем кнопки
+          if (typeof window.updateAllCartButtons === 'function') {
+            window.updateAllCartButtons();
+          }
+        }
+      }
+    });
   }
   
   // Автоматически скрываем через 5 секунд
@@ -233,8 +282,15 @@ function updateAllCartButtons() {
 }
 
 function removeFromCart(productId) {
+  console.log('[removeFromCart] Удаление товара из корзины:', productId);
   cart = cart.filter(item => item.product.id !== productId);
   saveCart();
+  updateCartCount();
+  
+  // Обновляем кнопки
+  if (typeof updateAllCartButtons === 'function') {
+    updateAllCartButtons();
+  }
 }
 
 function updateQuantity(productId, delta) {
@@ -276,8 +332,15 @@ function getCart() {
 
 // Очистить корзину (после оформления заказа)
 function clearCart() {
+  console.log('[clearCart] Очистка корзины');
   cart = [];
   saveCart();
+  updateCartCount();
+  
+  // Обновляем кнопки
+  if (typeof updateAllCartButtons === 'function') {
+    updateAllCartButtons();
+  }
 }
 
 // Установить/получить текущий тег (для фильтрации)

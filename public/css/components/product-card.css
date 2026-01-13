@@ -646,6 +646,7 @@ main {
   background: rgba(255, 255, 255, 0.03);
   margin-bottom: 0.75rem;
   transition: background 0.2s ease;
+  position: relative;
 }
 
 .mini-cart-item:hover {
@@ -654,6 +655,40 @@ main {
 
 .mini-cart-item:last-child {
   margin-bottom: 0;
+}
+
+.mini-cart-item-remove {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: rgba(239, 68, 68, 1);
+  transition: all 0.2s ease;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.mini-cart-item-remove:hover {
+  background: rgba(239, 68, 68, 0.4);
+  border-color: rgba(239, 68, 68, 0.6);
+  transform: scale(1.1);
+}
+
+.mini-cart-item-remove:active {
+  transform: scale(0.95);
+}
+
+.mini-cart-item-remove svg {
+  width: 16px;
+  height: 16px;
 }
 
 .mini-cart-item img {
@@ -722,6 +757,7 @@ main {
 .mini-cart-actions {
   display: flex;
   gap: 0.75rem;
+  flex-direction: column;
 }
 
 .mini-cart-btn {
@@ -736,6 +772,7 @@ main {
   border: none;
   cursor: pointer;
   display: inline-block;
+  width: 100%;
 }
 
 .mini-cart-btn-primary {
@@ -747,6 +784,20 @@ main {
 .mini-cart-btn-primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+}
+
+.mini-cart-btn-secondary {
+  background: rgba(239, 68, 68, 0.2);
+  color: rgba(239, 68, 68, 1);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+.mini-cart-btn-secondary:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
 /* Стили для кнопки "В корзине" */
