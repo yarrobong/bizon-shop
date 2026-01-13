@@ -436,10 +436,18 @@ async function renderProducts() {
         event.stopPropagation();
         const productId = parseInt(event.target.dataset.id);
         const product = ALL_PRODUCTS.find(p => p.id === productId);
-        if (product) {
-          // addToCart теперь автоматически показывает мини-корзину и обновляет кнопку
-          addToCart(product);
+        
+        if (!product) return;
+        
+        // Если товар уже в корзине, переходим на страницу корзины
+        if (button.classList.contains('in-cart')) {
+          window.location.href = '/cart';
+          return;
         }
+        
+        // Если товара нет в корзине, добавляем его
+        // addToCart теперь автоматически показывает мини-корзину и обновляет кнопку
+        addToCart(product);
       });
     });
     

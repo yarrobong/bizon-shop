@@ -138,6 +138,14 @@ function createAttractionCard(attraction) {
   if (addToCartBtn) {
     addToCartBtn.addEventListener('click', (event) => {
       event.stopPropagation(); // Останавливаем всплытие, чтобы не сработал обработчик клика по карточке
+      
+      // Если товар уже в корзине, переходим на страницу корзины
+      if (addToCartBtn.classList.contains('in-cart')) {
+        window.location.href = '/cart';
+        return;
+      }
+      
+      // Если товара нет в корзине, добавляем его
       // addToCart теперь автоматически показывает мини-корзину и обновляет кнопку
       addToCart(attraction);
     });

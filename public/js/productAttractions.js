@@ -368,6 +368,12 @@ function setupCartButtons(itemData) {
     // Добавить в корзину
     if (addToCartBtn) {
         addToCartBtn.addEventListener('click', () => {
+            // Если товар уже в корзине, переходим на страницу корзины
+            if (addToCartBtn.classList.contains('in-cart')) {
+                window.location.href = '/cart';
+                return;
+            }
+            
             const itemToAdd = window.currentDisplayedVariant || itemData;
             if (typeof window.addToCart === 'function') {
                 // addToCart теперь автоматически показывает мини-корзину и обновляет кнопку

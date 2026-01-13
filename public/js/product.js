@@ -513,6 +513,12 @@ function setupEventListeners(product) {
 
     if (addToCartBtn) {
         addToCartBtn.addEventListener('click', () => {
+            // Если товар уже в корзине, переходим на страницу корзины
+            if (addToCartBtn.classList.contains('in-cart')) {
+                window.location.href = '/cart';
+                return;
+            }
+            
             // Используем текущий отображаемый вариант, а не основной товар
             let itemToAdd = window.currentDisplayedVariant || product;
             console.log("Добавление в корзину (из state.js):", itemToAdd.id, itemToAdd.title);
