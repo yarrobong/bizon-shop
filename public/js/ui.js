@@ -229,6 +229,44 @@ function populateBrandFilters(products) {
   });
 }
 
+function populateTagFilters(products) {
+  const tagFiltersContainer = document.getElementById('tag-filters');
+  if (!tagFiltersContainer || tagFiltersContainer.dataset.populated === 'true') return;
+
+  // Получаем только те теги, которые реально есть у товаров
+  const tags = [...new Set(products.map(p => p.tag).filter(Boolean))].sort();
+  
+  // Маппинг тегов на читаемые названия
+  const tagLabels = {
+    'новинка': 'Новинка',
+    'хит': 'Хит',
+    'скидка': 'Скидка',
+    'акция': 'Акция',
+    'стандарт': 'Стандарт',
+    'премиум': 'Премиум',
+    'эксклюзив': 'Эксклюзив'
+  };
+  
+  tagFiltersContainer.innerHTML = tags.map(tag => {
+    const label = tagLabels[tag.toLowerCase()] || tag;
+    return `
+      <label class="filter-option">
+        <input type="checkbox" name="tag" value="${tag}" class="filter-input">
+        <span class="filter-checkbox"></span>
+        <span class="filter-label">${label}</span>
+      </label>
+    `;
+  }).join('');
+
+  // Отмечаем, что фильтры заполнены
+  tagFiltersContainer.dataset.populated = 'true';
+
+  // Добавляем обработчики для новых чекбоксов
+  tagFiltersContainer.querySelectorAll('input[name="tag"]').forEach(input => {
+    input.addEventListener('change', renderProducts);
+  });
+}
+
 // Асинхронная загрузка и рендеринг товаров
 async function renderProducts() {
   if (renderProductsTimeout) {
@@ -256,8 +294,9 @@ async function renderProducts() {
         useLocalData = true;
       }
 
-      // Заполняем фильтры по брендам после первой загрузки
+      // Заполняем фильтры по брендам и тегам после первой загрузки
       populateBrandFilters(ALL_PRODUCTS);
+      populateTagFilters(ALL_PRODUCTS);
     }
 
     // Применяем фильтры и сортировку
