@@ -350,19 +350,29 @@ ${cart.map(item => `• ${item.product?.title || 'Неизвестный тов�
 💰 *Итого:* ${total} ₽
 `.trim();
 
+        console.log('Отправка в Telegram. CHAT_ID:', CHAT_ID);
+        
         await axios.post(
           `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
           {
-            chat_id: CHAT_ID,
+            chat_id: String(CHAT_ID), // Убеждаемся, что это строка
             text: message,
             parse_mode: 'Markdown',
             disable_web_page_preview: true
           }
         );
         telegramSent = true;
+        console.log('Сообщение успешно отправлено в Telegram');
       } catch (telegramError) {
         console.error('Ошибка отправки в Telegram:', telegramError.message);
+        if (telegramError.response) {
+          console.error('Детали ошибки:', telegramError.response.data);
+        }
       }
+    } else {
+      console.error('TELEGRAM_BOT_TOKEN или TELEGRAM_CHAT_ID не установлены');
+      console.log('BOT_TOKEN:', BOT_TOKEN ? 'установлен' : 'не установлен');
+      console.log('CHAT_ID:', CHAT_ID || 'не установлен');
     }
 
     res.json({
@@ -439,19 +449,29 @@ router.post('/contact', publicRateLimit, async (req, res) => {
 
     if (BOT_TOKEN && CHAT_ID) {
       try {
+        console.log('Отправка заявки в Telegram. CHAT_ID:', CHAT_ID);
+        
         await axios.post(
           `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
           {
-            chat_id: CHAT_ID,
+            chat_id: String(CHAT_ID), // Убеждаемся, что это строка
             text: telegramMessage,
             parse_mode: 'Markdown',
             disable_web_page_preview: true
           }
         );
         telegramSent = true;
+        console.log('Заявка успешно отправлена в Telegram');
       } catch (telegramError) {
         console.error('Ошибка отправки в Telegram:', telegramError.message);
+        if (telegramError.response) {
+          console.error('Детали ошибки:', telegramError.response.data);
+        }
       }
+    } else {
+      console.error('TELEGRAM_BOT_TOKEN или TELEGRAM_CHAT_ID не установлены');
+      console.log('BOT_TOKEN:', BOT_TOKEN ? 'установлен' : 'не установлен');
+      console.log('CHAT_ID:', CHAT_ID || 'не установлен');
     }
 
     res.json({
