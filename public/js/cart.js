@@ -146,21 +146,45 @@ async function handleSendOrder() {
     sendOrderBtn.disabled = true;
     sendOrderBtn.textContent = 'Отправка...';
 
-    const response = await fetch('/api/order', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        phone: phone,
-        comment: commentInput ? commentInput.value || '' : '',
-        cart: getCart()
-      })
-    });
+    let response;
+    try {
+      response = await fetch('/api/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: phone,
+          comment: commentInput ? commentInput.value || '' : '',
+          cart: getCart()
+        })
+      });
+    } catch (networkError) {
+      // Обработка сетевых ошибок
+      const errorMessage = typeof handleFetchError === 'function' 
+        ? handleFetchError(networkError)
+        : 'Ошибка подключения к серверу. Проверьте интернет-соединение.';
+      
+      if (typeof showNotification === 'function') {
+        showNotification(errorMessage, 'error');
+      } else {
+        alert(errorMessage);
+      }
+      throw networkError;
+    }
 
     // Проверяем статус ответа перед парсингом JSON
     if (response.status === 429) {
-      const errorData = await response.json();
+      const errorData = typeof safeJsonParse === 'function' 
+        ? await safeJsonParse(response)
+        : await response.json().catch(() => ({ retryAfter: 2 }));
       const retryAfter = errorData.retryAfter || 2;
-      alert(`Слишком много заказов. Пожалуйста, подождите ${retryAfter} ${retryAfter === 1 ? 'минуту' : 'минуты'} перед следующей попыткой.`);
+      const message = `Слишком много заказов. Пожалуйста, подождите ${retryAfter} ${retryAfter === 1 ? 'минуту' : 'минуты'} перед следующей попыткой.`;
+      
+      if (typeof showNotification === 'function') {
+        showNotification(message, 'warning', 6000);
+      } else {
+        alert(message);
+      }
+      
       handleSendOrder.isSending = false;
       if (sendOrderBtn) {
         sendOrderBtn.disabled = false;
@@ -169,7 +193,10 @@ async function handleSendOrder() {
       return;
     }
 
-    const result = await response.json();
+    // Безопасный парсинг JSON
+    const result = typeof safeJsonParse === 'function' 
+      ? await safeJsonParse(response)
+      : await response.json();
     console.log('Ответ сервера:', result);
 
     if (result.success) {
@@ -182,7 +209,10 @@ try {
         console.log(ct_data);
             request.open("POST", CT_URL, true); request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
             request.send(post_data); сt_сheck = false; ct_data = {};
-} catch (error) {console.log(error)}
+} catch (error) {
+  console.error('[Calltouch] Ошибка отправки данных:', error);
+  // Не показываем ошибку пользователю, так как это не критично
+}
 /*Calltouch requests*/
       
       // Отправка цели в Яндекс Метрику
@@ -199,10 +229,12 @@ try {
                 return true;
               } else if (Array.isArray(window.ym.a)) {
                 window.ym.a.push([104163309, 'reachGoal', 'cart_order_submit']);
-                try {
-                  window.ym(104163309, 'reachGoal', 'cart_order_submit');
-                } catch (e) {}
-                return true;
+                            try {
+                              window.ym(104163309, 'reachGoal', 'cart_order_submit');
+                            } catch (e) {
+                              console.warn('[Yandex Metrika] Не удалось отправить цель:', e);
+                            }
+                            return true;
               }
             }
             window.ym = window.ym || [];
@@ -224,7 +256,9 @@ try {
             if (typeof ym === 'function' && typeof ym.a === 'undefined') {
               ym(104163309, 'reachGoal', 'cart_order_submit');
             }
-          } catch (e) {}
+          } catch (e) {
+            console.warn('[Yandex Metrika] Не удалось отправить цель (отложенная):', e);
+          }
         }, 1000);
       })();
       
@@ -247,6 +281,8 @@ try {
   } catch (error) {
     console.error('Ошибка отправки заказа:', error);
     let message = 'Не удалось отправить заказ. Пожалуйста, позвоните нам.';
+    
+    // Обработка различных типов ошибок
     if (error.message && error.message.includes('Заказ уже обрабатывается')) {
       clearCart();
       renderCartItems(); // Перерисовываем пустую корзину
@@ -254,8 +290,21 @@ try {
       if (phoneInput) phoneInput.value = '';
       if (commentInput) commentInput.value = '';
       message = 'Заказ уже обрабатывается.';
+    } else if (error instanceof TypeError && error.message.includes('fetch')) {
+      // Сетевая ошибка
+      message = typeof handleFetchError === 'function' 
+        ? handleFetchError(error)
+        : 'Ошибка подключения к серверу. Проверьте интернет-соединение.';
+    } else if (error.message) {
+      message = error.message;
     }
-    alert(message);
+    
+    // Показываем уведомление пользователю
+    if (typeof showNotification === 'function') {
+      showNotification(message, 'error');
+    } else {
+      alert(message);
+    }
   } finally {
     handleSendOrder.isSending = false;
     if (sendOrderBtn) {
@@ -397,29 +446,59 @@ function setupEventListeners() {
                 sendOrderBtn.disabled = true;
                 sendOrderBtn.textContent = 'Отправка...';
 
-                const response = await fetch('/api/order', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    phone: phone,
-                    comment: document.getElementById('comment-input')?.value || '',
-                    // Используем getCart из state.js
-                    cart: window.getCart()
-                  })
-                });
-                
-                // Проверяем статус ответа перед парсингом JSON
-                if (response.status === 429) {
-                  const errorData = await response.json();
-                  const retryAfter = errorData.retryAfter || 2;
-                  alert(`Слишком много заказов. Пожалуйста, подождите ${retryAfter} ${retryAfter === 1 ? 'минуту' : 'минуты'} перед следующей попыткой.`);
+                let response;
+                try {
+                  response = await fetch('/api/order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      phone: phone,
+                      comment: document.getElementById('comment-input')?.value || '',
+                      // Используем getCart из state.js
+                      cart: window.getCart()
+                    })
+                  });
+                } catch (networkError) {
+                  // Обработка сетевых ошибок
+                  const errorMessage = typeof handleFetchError === 'function' 
+                    ? handleFetchError(networkError)
+                    : 'Ошибка подключения к серверу. Проверьте интернет-соединение.';
+                  
+                  if (typeof showNotification === 'function') {
+                    showNotification(errorMessage, 'error');
+                  } else {
+                    alert(errorMessage);
+                  }
                   sendOrderBtn.disabled = false;
                   sendOrderBtn.textContent = 'Оформить заказ';
                   isSending = false;
                   return;
                 }
                 
-                const result = await response.json();
+                // Проверяем статус ответа перед парсингом JSON
+                if (response.status === 429) {
+                  const errorData = typeof safeJsonParse === 'function' 
+                    ? await safeJsonParse(response)
+                    : await response.json().catch(() => ({ retryAfter: 2 }));
+                  const retryAfter = errorData.retryAfter || 2;
+                  const message = `Слишком много заказов. Пожалуйста, подождите ${retryAfter} ${retryAfter === 1 ? 'минуту' : 'минуты'} перед следующей попыткой.`;
+                  
+                  if (typeof showNotification === 'function') {
+                    showNotification(message, 'warning', 6000);
+                  } else {
+                    alert(message);
+                  }
+                  
+                  sendOrderBtn.disabled = false;
+                  sendOrderBtn.textContent = 'Оформить заказ';
+                  isSending = false;
+                  return;
+                }
+                
+                // Безопасный парсинг JSON
+                const result = typeof safeJsonParse === 'function' 
+                  ? await safeJsonParse(response)
+                  : await response.json();
                 console.log('Ответ сервера:', result);
 
                 if (result.success) {
@@ -439,7 +518,9 @@ function setupEventListeners() {
                             window.ym.a.push([104163309, 'reachGoal', 'cart_order_submit']);
                             try {
                               window.ym(104163309, 'reachGoal', 'cart_order_submit');
-                            } catch (e) {}
+                            } catch (e) {
+                              console.warn('[Yandex Metrika] Не удалось отправить цель:', e);
+                            }
                             return true;
                           }
                         }
@@ -462,7 +543,9 @@ function setupEventListeners() {
                         if (typeof ym === 'function' && typeof ym.a === 'undefined') {
                           ym(104163309, 'reachGoal', 'cart_order_submit');
                         }
-                      } catch (e) {}
+                      } catch (e) {
+                        console.warn('[Yandex Metrika] Не удалось отправить цель (отложенная):', e);
+                      }
                     }, 1000);
                   })();
                   
@@ -495,6 +578,9 @@ function setupEventListeners() {
                 }
             } catch (error) {
                 console.error('Ошибка отправки заказа:', error);
+                let message = 'Не удалось отправить заказ. Пожалуйста, позвоните нам.';
+                
+                // Обработка различных типов ошибок
                 if (error.message && error.message.includes('Заказ уже обрабатывается')) {
                   // Используем clearCart из state.js
                   window.clearCart();
@@ -520,12 +606,26 @@ function setupEventListeners() {
                     sendOrderBtn.textContent = 'Оформить заказ';
                     isSending = false;
                   }, 3000);
-                } else {
-                  alert('Не удалось отправить заказ. Пожалуйста, позвоните нам.');
-                  sendOrderBtn.disabled = false;
-                  sendOrderBtn.textContent = 'Оформить заказ';
-                  isSending = false;
+                  message = 'Заказ уже обрабатывается.';
+                } else if (error instanceof TypeError && error.message.includes('fetch')) {
+                  // Сетевая ошибка
+                  message = typeof handleFetchError === 'function' 
+                    ? handleFetchError(error)
+                    : 'Ошибка подключения к серверу. Проверьте интернет-соединение.';
+                } else if (error.message) {
+                  message = error.message;
                 }
+                
+                // Показываем уведомление пользователю
+                if (typeof showNotification === 'function') {
+                  showNotification(message, 'error');
+                } else {
+                  alert(message);
+                }
+                
+                sendOrderBtn.disabled = false;
+                sendOrderBtn.textContent = 'Оформить заказ';
+                isSending = false;
             }
         });
     }
