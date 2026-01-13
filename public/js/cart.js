@@ -32,8 +32,17 @@ function renderCartItems() {
     if (cartTotalPriceElement) {
     cartTotalPriceElement.textContent = formatPrice(0);
     }
+    // Скрываем кнопку очистки корзины
+    if (clearCartBtn) {
+      clearCartBtn.style.display = 'none';
+    }
     updateSendOrderButton(); // Обновим кнопку, так как корзина пуста
     return;
+  }
+
+  // Показываем кнопку очистки корзины, если есть товары
+  if (clearCartBtn) {
+    clearCartBtn.style.display = 'flex';
   }
 
   cartItemsContainer.innerHTML = '';
@@ -41,6 +50,7 @@ function renderCartItems() {
   cart.forEach(item => {
     const row = document.createElement('div');
     row.className = 'cart-item';
+    row.setAttribute('data-product-id', item.product.id);
     row.innerHTML = `
       <img src="${item.product.images[0]?.url?.trim() || '/assets/icons/placeholder1.webp'}" alt="${item.product.title}" />
       <div class="cart-item-info">
@@ -53,6 +63,11 @@ function renderCartItems() {
         </div>
       </div>
       <div class="cart-item-total">${formatPrice(item.product.price * item.qty)}</div>
+      <button class="cart-item-remove" data-id="${item.product.id}" aria-label="Удалить товар" title="Удалить из корзины">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </button>
     `;
     cartItemsContainer.appendChild(row);
     total += item.product.price * item.qty;
@@ -74,6 +89,22 @@ function renderCartItems() {
       updateQuantity(id, 1);
       renderCartItems(); // Перерисовываем после изменения
       updateCartCount(); // Обновляем счетчик в шапке
+    });
+  });
+
+  // Обработчики удаления товаров
+  document.querySelectorAll('.cart-item-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = parseInt(btn.dataset.id);
+      if (confirm('Удалить товар из корзины?')) {
+        if (typeof window.removeFromCart === 'function') {
+          window.removeFromCart(id);
+        } else if (typeof removeFromCart === 'function') {
+          removeFromCart(id);
+        }
+        renderCartItems(); // Перерисовываем после удаления
+        updateCartCount(); // Обновляем счетчик в шапке
+      }
     });
   });
 
@@ -457,9 +488,24 @@ function formatPrice(price) {
 
 // --- Функция настройки обработчиков событий для корзины ---
 function setupEventListeners() {
-    // Обработчик отправки заказа
-    const sendOrderBtn = document.getElementById('send-order');
-    if (sendOrderBtn) {
+  // Обработчик очистки корзины
+  if (clearCartBtn) {
+    clearCartBtn.addEventListener('click', () => {
+      if (confirm('Вы уверены, что хотите очистить корзину?')) {
+        if (typeof window.clearCart === 'function') {
+          window.clearCart();
+        } else if (typeof clearCart === 'function') {
+          clearCart();
+        }
+        renderCartItems(); // Перерисовываем корзину
+        updateCartCount(); // Обновляем счетчик
+      }
+    });
+  }
+
+  // Обработчик отправки заказа
+  const sendOrderBtn = document.getElementById('send-order');
+  if (sendOrderBtn) {
         let isSending = false;
         sendOrderBtn.addEventListener('click', async () => {
             if (isSending) {

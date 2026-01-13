@@ -118,8 +118,7 @@ function showMiniCart() {
       </div>
       <div class="mini-cart-actions">
         ${cartItems.length > 0 
-          ? `<button class="mini-cart-btn mini-cart-btn-secondary" id="mini-cart-clear-btn">Очистить корзину</button>
-             <a href="/cart" class="mini-cart-btn mini-cart-btn-primary">Перейти в корзину</a>`
+          ? `<a href="/cart" class="mini-cart-btn mini-cart-btn-primary">Перейти в корзину</a>`
           : `<a href="/catalog" class="mini-cart-btn mini-cart-btn-primary">Перейти в каталог</a>`
         }
       </div>
@@ -167,26 +166,6 @@ function showMiniCart() {
       }
     });
   });
-  
-  // Обработчик очистки корзины
-  const clearBtn = miniCart.querySelector('#mini-cart-clear-btn');
-  if (clearBtn) {
-    clearBtn.addEventListener('click', () => {
-      console.log('[showMiniCart] Очистка корзины');
-      
-      if (confirm('Вы уверены, что хотите очистить корзину?')) {
-        if (typeof window.clearCart === 'function') {
-          window.clearCart();
-          // Обновляем мини-корзину
-          showMiniCart();
-          // Обновляем кнопки
-          if (typeof window.updateAllCartButtons === 'function') {
-            window.updateAllCartButtons();
-          }
-        }
-      }
-    });
-  }
   
   // Автоматически скрываем через 5 секунд
   clearTimeout(window.miniCartTimeout);

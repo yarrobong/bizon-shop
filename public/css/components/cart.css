@@ -112,6 +112,52 @@ body.modal-open {
   flex-direction: column;
 }
 
+/* Заголовок корзины с кнопкой очистки */
+.cart-items-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0 1rem;
+}
+
+.cart-items-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.clear-cart-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 8px;
+  color: rgba(239, 68, 68, 1);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-cart-btn:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.6);
+  transform: translateY(-1px);
+}
+
+.clear-cart-btn:active {
+  transform: translateY(0);
+}
+
+.clear-cart-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
 #cart-items {
   padding: 0;
   margin: 0;
@@ -150,10 +196,46 @@ body.modal-open {
   margin: 0.75rem 0; /* Отступы сверху и снизу */
   align-items: center;
   transition: background 0.2s ease;
+  position: relative;
 }
 
 .cart-item:hover {
   background: rgba(255, 255, 255, 0.12);
+}
+
+/* Кнопка удаления товара */
+.cart-item-remove {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: rgba(239, 68, 68, 1);
+  transition: all 0.2s ease;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.cart-item-remove:hover {
+  background: rgba(239, 68, 68, 0.4);
+  border-color: rgba(239, 68, 68, 0.6);
+  transform: scale(1.1);
+}
+
+.cart-item-remove:active {
+  transform: scale(0.95);
+}
+
+.cart-item-remove svg {
+  width: 18px;
+  height: 18px;
 }
 
 .cart-item img {
