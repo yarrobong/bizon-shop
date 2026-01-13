@@ -127,7 +127,12 @@ router.put('/:id', async (req, res) => {
     const normalizedTag = tag && tag.trim() !== '' ? tag.trim() : null;
     const normalizedBrand = brand && brand.trim() !== '' ? brand.trim() : null;
     const normalizedCompatibility = compatibility && compatibility.trim() !== '' ? compatibility.trim() : null;
-    const normalizedSupplierLink = supplier_link && supplier_link.trim() !== '' ? supplier_link.trim() : null;
+    // Обрезаем supplier_link до 2000 символов, если он слишком длинный (обычно VARCHAR ограничен)
+    let normalizedSupplierLink = supplier_link && supplier_link.trim() !== '' ? supplier_link.trim() : null;
+    if (normalizedSupplierLink && normalizedSupplierLink.length > 2000) {
+      console.warn(`supplier_link обрезан с ${normalizedSupplierLink.length} до 2000 символов`);
+      normalizedSupplierLink = normalizedSupplierLink.substring(0, 2000);
+    }
     const normalizedSupplierNotes = supplier_notes && supplier_notes.trim() !== '' ? supplier_notes.trim() : null;
     
     const images_json = images && Array.isArray(images) && images.length > 0 ? JSON.stringify(images) : null;
@@ -251,6 +256,8 @@ router.put('/:id', async (req, res) => {
     
   } catch (err) {
     console.error('Ошибка обновления товара:', err);
+    console.error('Тип ошибки:', typeof err);
+    console.error('Конструктор ошибки:', err.constructor?.name);
     console.error('Детали ошибки:', {
       message: err.message,
       code: err.code,
@@ -259,7 +266,7 @@ router.put('/:id', async (req, res) => {
       constraint: err.constraint,
       table: err.table,
       column: err.column,
-      stack: err.stack
+      stack: err.stack ? err.stack.substring(0, 500) : 'нет stack trace'
     });
     
     // Отправляем детальную информацию об ошибке клиенту для отладки
@@ -271,14 +278,24 @@ router.put('/:id', async (req, res) => {
       hint: err.hint || null,
       constraint: err.constraint || null,
       table: err.table || null,
-      column: err.column || null
+      column: err.column || null,
+      // Добавляем строковое представление ошибки для отладки
+      errorString: String(err),
+      errorName: err.name || null
     };
+    
+    console.error('Отправляемый ответ об ошибке:', JSON.stringify(errorResponse, null, 2));
     
     // Убеждаемся, что ответ еще не был отправлен
     if (!res.headersSent) {
-      res.status(500).json(errorResponse);
+      try {
+        res.status(500).json(errorResponse);
+        console.log('Ответ об ошибке успешно отправлен клиенту');
+      } catch (sendError) {
+        console.error('Ошибка при отправке ответа об ошибке:', sendError);
+      }
     } else {
-      console.error('Ответ уже был отправлен, не можем отправить детали ошибки');
+      console.error('Ответ уже был отправлен, не можем отправить детали ошибки. Headers sent:', res.headersSent);
     }
   }
 });
