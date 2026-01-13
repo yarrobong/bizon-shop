@@ -429,29 +429,41 @@ router.post('/', requireAuth, async (req, res) => {
       const result = await client.query(query, values);
       const newId = result.rows[0].id;
 
+      // Batch insert для изображений (оптимизация вместо N запросов)
       if (images && Array.isArray(images) && images.length > 0) {
-        const imageInsertQuery = `
-          INSERT INTO attraction_images (attraction_id, url, alt, sort_order)
-          VALUES ($1, $2, $3, $4);
-        `;
-        for (let i = 0; i < images.length; i++) {
-          const img = images[i];
-          if (img.url) {
-            await client.query(imageInsertQuery, [newId, img.url, img.alt || '', i]);
-          }
+        const validImages = images.filter(img => img.url);
+        if (validImages.length > 0) {
+          const imageValues = validImages.map((img, i) => [newId, img.url, img.alt || '', i]);
+          const imagePlaceholders = imageValues.map((_, idx) => {
+            const base = idx * 4;
+            return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4})`;
+          }).join(', ');
+          
+          const imageInsertQuery = `
+            INSERT INTO attraction_images (attraction_id, url, alt, sort_order)
+            VALUES ${imagePlaceholders};
+          `;
+          
+          await client.query(imageInsertQuery, imageValues.flat());
         }
       }
 
+      // Batch insert для видео (оптимизация вместо N запросов)
       if (videos && Array.isArray(videos) && videos.length > 0) {
-        const videoInsertQuery = `
-          INSERT INTO attraction_videos (attraction_id, url, alt, sort_order, is_primary)
-          VALUES ($1, $2, $3, $4, $5);
-        `;
-        for (let i = 0; i < videos.length; i++) {
-          const vid = videos[i];
-          if (vid.url) {
-            await client.query(videoInsertQuery, [newId, vid.url, vid.alt || '', i, vid.is_primary || false]);
-          }
+        const validVideos = videos.filter(vid => vid.url);
+        if (validVideos.length > 0) {
+          const videoValues = validVideos.map((vid, i) => [newId, vid.url, vid.alt || '', i, vid.is_primary || false]);
+          const videoPlaceholders = videoValues.map((_, idx) => {
+            const base = idx * 5;
+            return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5})`;
+          }).join(', ');
+          
+          const videoInsertQuery = `
+            INSERT INTO attraction_videos (attraction_id, url, alt, sort_order, is_primary)
+            VALUES ${videoPlaceholders};
+          `;
+          
+          await client.query(videoInsertQuery, videoValues.flat());
         }
       }
 
@@ -545,31 +557,43 @@ router.put('/:id', requireAuth, async (req, res) => {
 
       await client.query('DELETE FROM attraction_images WHERE attraction_id = $1', [attractionId]);
 
+      // Batch insert для изображений (оптимизация вместо N запросов)
       if (images && Array.isArray(images) && images.length > 0) {
-        const imageInsertQuery = `
-          INSERT INTO attraction_images (attraction_id, url, alt, sort_order)
-          VALUES ($1, $2, $3, $4);
-        `;
-        for (let i = 0; i < images.length; i++) {
-          const img = images[i];
-          if (img.url) {
-            await client.query(imageInsertQuery, [attractionId, img.url, img.alt || '', i]);
-          }
+        const validImages = images.filter(img => img.url);
+        if (validImages.length > 0) {
+          const imageValues = validImages.map((img, i) => [attractionId, img.url, img.alt || '', i]);
+          const imagePlaceholders = imageValues.map((_, idx) => {
+            const base = idx * 4;
+            return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4})`;
+          }).join(', ');
+          
+          const imageInsertQuery = `
+            INSERT INTO attraction_images (attraction_id, url, alt, sort_order)
+            VALUES ${imagePlaceholders};
+          `;
+          
+          await client.query(imageInsertQuery, imageValues.flat());
         }
       }
 
       await client.query('DELETE FROM attraction_videos WHERE attraction_id = $1', [attractionId]);
 
+      // Batch insert для видео (оптимизация вместо N запросов)
       if (videos && Array.isArray(videos) && videos.length > 0) {
-        const videoInsertQuery = `
-          INSERT INTO attraction_videos (attraction_id, url, alt, sort_order, is_primary)
-          VALUES ($1, $2, $3, $4, $5);
-        `;
-        for (let i = 0; i < videos.length; i++) {
-          const vid = videos[i];
-          if (vid.url) {
-            await client.query(videoInsertQuery, [attractionId, vid.url, vid.alt || '', i, vid.is_primary || false]);
-          }
+        const validVideos = videos.filter(vid => vid.url);
+        if (validVideos.length > 0) {
+          const videoValues = validVideos.map((vid, i) => [attractionId, vid.url, vid.alt || '', i, vid.is_primary || false]);
+          const videoPlaceholders = videoValues.map((_, idx) => {
+            const base = idx * 5;
+            return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5})`;
+          }).join(', ');
+          
+          const videoInsertQuery = `
+            INSERT INTO attraction_videos (attraction_id, url, alt, sort_order, is_primary)
+            VALUES ${videoPlaceholders};
+          `;
+          
+          await client.query(videoInsertQuery, videoValues.flat());
         }
       }
 
