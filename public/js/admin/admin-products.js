@@ -661,12 +661,15 @@ async function saveProduct() {
             compatibility: compatibility || null
         };
 
+        // Убеждаемся, что images всегда массив
+        const imagesArray = Array.isArray(images) ? images : [];
+        
         if (isUpdate) {
             // Для обновления отправляем images (сервер преобразует в images_json)
-            productData.images = images;
+            productData.images = imagesArray;
         } else {
             // Для создания отправляем images_json
-            productData.images_json = images ? JSON.stringify(images) : null;
+            productData.images_json = imagesArray.length > 0 ? JSON.stringify(imagesArray) : null;
         }
 
         if (!productData.title) {
@@ -682,8 +685,17 @@ async function saveProduct() {
             return;
         }
 
+        console.log('Отправка данных товара:', {
+            method,
+            url,
+            productData: { ...productData, images: productData.images ? `${productData.images.length} изображений` : 'нет', images_json: productData.images_json ? 'есть' : 'нет' }
+        });
+
         const response = await fetchWithAuth(url, {
             method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify(productData)
         });
 

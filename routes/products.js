@@ -102,14 +102,32 @@ router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images } = req.body;
+    
+    console.log('PUT /api/products/:id - Полученные данные:', {
+      id,
+      title,
+      price,
+      category,
+      tag,
+      available,
+      brand,
+      compatibility,
+      supplier_link,
+      supplier_notes,
+      imagesCount: images ? (Array.isArray(images) ? images.length : 'не массив') : 'нет'
+    });
+    
     const images_json = images ? JSON.stringify(images) : null;
+    
+    const queryParams = [title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json, id];
+    console.log('Параметры SQL запроса:', queryParams.map((p, i) => `$${i + 1}: ${typeof p} ${p === null ? 'null' : p === undefined ? 'undefined' : Array.isArray(p) ? `[массив ${p.length}]` : String(p).substring(0, 50)}`));
 
     const result = await pool.query(`
       UPDATE products
       SET title = $1, description = $2, price = $3, tag = $4, available = $5, category = $6, brand = $7, compatibility = $8, supplier_link = $9, supplier_notes = $10, images_json = $11
       WHERE id = $12
       RETURNING id, title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json
-    `, [title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json, id]);
+    `, queryParams);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Товар не найден' });
@@ -137,7 +155,14 @@ router.put('/:id', async (req, res) => {
     
   } catch (err) {
     console.error('Ошибка обновления товара:', err);
-    res.status(500).json({ error: 'Не удалось обновить товар' });
+    console.error('Детали ошибки:', {
+      message: err.message,
+      code: err.code,
+      detail: err.detail,
+      hint: err.hint,
+      stack: err.stack
+    });
+    res.status(500).json({ error: 'Не удалось обновить товар', details: err.message });
   }
 });
 
