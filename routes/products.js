@@ -103,20 +103,6 @@ router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const { title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images } = req.body;
     
-    console.log('PUT /api/products/:id - Полученные данные:', {
-      id,
-      title,
-      price,
-      category,
-      tag,
-      available,
-      brand,
-      compatibility,
-      supplier_link,
-      supplier_notes,
-      imagesCount: images ? (Array.isArray(images) ? images.length : 'не массив') : 'нет'
-    });
-    
     // Валидация и нормализация данных
     if (!title || typeof title !== 'string' || title.trim() === '') {
       return res.status(400).json({ error: 'Название товара обязательно' });
@@ -131,7 +117,6 @@ router.put('/:id', async (req, res) => {
     // Обрезаем supplier_link до 2000 символов, если он слишком длинный (обычно VARCHAR ограничен)
     let normalizedSupplierLink = supplier_link && supplier_link.trim() !== '' ? supplier_link.trim() : null;
     if (normalizedSupplierLink && normalizedSupplierLink.length > 2000) {
-      console.warn(`supplier_link обрезан с ${normalizedSupplierLink.length} до 2000 символов`);
       normalizedSupplierLink = normalizedSupplierLink.substring(0, 2000);
     }
     const normalizedSupplierNotes = supplier_notes && supplier_notes.trim() !== '' ? supplier_notes.trim() : null;
@@ -155,9 +140,7 @@ router.put('/:id', async (req, res) => {
       `);
       
       if (checkColumn.rows.length === 0) {
-        console.log('Колонка compatibility не существует, создаем как TEXT...');
         await pool.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS compatibility TEXT');
-        console.log('Колонка compatibility создана как TEXT');
       }
     } catch (checkError) {
       console.error('Ошибка при проверке/создании колонки compatibility:', checkError);
@@ -182,17 +165,6 @@ router.put('/:id', async (req, res) => {
       productId
     ];
     
-    console.log('Параметры SQL запроса:', queryParams.map((p, i) => {
-      const paramName = ['title', 'description', 'price', 'tag', 'available', 'category', 'brand', 'compatibility', 'supplier_link', 'supplier_notes', 'images_json', 'id'][i];
-      const value = p === null ? 'null' : p === undefined ? 'undefined' : typeof p === 'string' ? `${p.substring(0, 50)}${p.length > 50 ? '...' : ''} (${p.length} символов)` : String(p);
-      return `$${i + 1} (${paramName}): ${typeof p} = ${value}`;
-    }));
-    
-    // Проверяем длину supplier_link
-    if (normalizedSupplierLink && normalizedSupplierLink.length > 1000) {
-      console.warn(`supplier_link очень длинный: ${normalizedSupplierLink.length} символов`);
-    }
-    
     let result;
     try {
       result = await pool.query(`
@@ -201,33 +173,8 @@ router.put('/:id', async (req, res) => {
         WHERE id = $12
         RETURNING id, title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json
       `, queryParams);
-      console.log('SQL запрос выполнен успешно, обновлено строк:', result.rowCount);
     } catch (sqlError) {
-      console.error('Ошибка SQL запроса:', sqlError);
-      console.error('Детали SQL ошибки:', {
-        message: sqlError.message,
-        code: sqlError.code,
-        detail: sqlError.detail,
-        hint: sqlError.hint,
-        constraint: sqlError.constraint,
-        table: sqlError.table,
-        column: sqlError.column,
-        position: sqlError.position,
-        internalPosition: sqlError.internalPosition,
-        internalQuery: sqlError.internalQuery,
-        where: sqlError.where,
-        schema: sqlError.schema,
-        file: sqlError.file,
-        line: sqlError.line,
-        routine: sqlError.routine
-      });
-      
-      // Если ошибка связана с отсутствием колонки, предлагаем решение
-      if (sqlError.code === '42703' || sqlError.message.includes('column') || sqlError.message.includes('does not exist')) {
-        console.error('ВНИМАНИЕ: Возможно, колонка compatibility не существует в таблице products!');
-        console.error('Нужно выполнить миграцию: ALTER TABLE products ADD COLUMN IF NOT EXISTS compatibility TEXT;');
-      }
-      
+      console.error('Ошибка SQL запроса при обновлении товара:', sqlError.message);
       throw sqlError; // Пробрасываем ошибку дальше
     }
 
