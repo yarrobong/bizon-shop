@@ -62,12 +62,14 @@ function renderCartItems() {
           <button class="qty-plus" data-id="${item.product.id}">+</button>
         </div>
       </div>
-      <div class="cart-item-total">${formatPrice(item.product.price * item.qty)}</div>
-      <button class="cart-item-remove" data-id="${item.product.id}" aria-label="Удалить товар" title="Удалить из корзины">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M18 6L6 18M6 6l12 12"/>
-        </svg>
-      </button>
+      <div class="cart-item-right">
+        <div class="cart-item-total">${formatPrice(item.product.price * item.qty)}</div>
+        <button class="cart-item-remove" data-id="${item.product.id}" aria-label="Удалить товар" title="Удалить из корзины">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
     `;
     cartItemsContainer.appendChild(row);
     total += item.product.price * item.qty;

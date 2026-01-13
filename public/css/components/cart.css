@@ -205,10 +205,6 @@ body.modal-open {
 
 /* Кнопка удаления товара */
 .cart-item-remove {
-  position: absolute;
-  top: 50%;
-  right: 0.75rem;
-  transform: translateY(-50%);
   background: rgba(239, 68, 68, 0.2);
   border: 1px solid rgba(239, 68, 68, 0.4);
   border-radius: 6px;
@@ -227,11 +223,11 @@ body.modal-open {
 .cart-item-remove:hover {
   background: rgba(239, 68, 68, 0.4);
   border-color: rgba(239, 68, 68, 0.6);
-  transform: translateY(-50%) scale(1.1);
+  transform: scale(1.1);
 }
 
 .cart-item-remove:active {
-  transform: translateY(-50%) scale(0.95);
+  transform: scale(0.95);
 }
 
 .cart-item-remove svg {
@@ -306,12 +302,20 @@ body.modal-open {
   color: white;
 }
 
+/* Контейнер для цены и кнопки удаления справа */
+.cart-item-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-left: auto;
+  padding-right: 0.5rem;
+}
+
 .cart-item-total {
   font-weight: 600;
   color: #ffffffff;
   white-space: nowrap;
   font-size: 1.1rem;
-  margin: 10px;
 }
 
 .total-row {
