@@ -306,11 +306,16 @@ main {
 
 /* === PRODUCT COMPATIBILITY BADGES (плашки для креплений) === */
 .product-compatibility-badges {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
-  margin: 0.75rem 0;
-  padding: 0 0.25rem;
+  padding: 0.25rem;
+  z-index: 10;
+  max-width: calc(100% - 1rem);
+  justify-content: flex-end;
 }
 
 .compatibility-badge {
@@ -322,11 +327,12 @@ main {
   text-transform: uppercase;
   letter-spacing: 0.3px;
   color: #ffffff;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(43, 83, 193, 0.4));
-  border: 1px solid rgba(59, 130, 246, 0.5);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.85), rgba(43, 83, 193, 0.9));
+  border: 1px solid rgba(59, 130, 246, 0.7);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 10px rgba(59, 130, 246, 0.3);
   white-space: nowrap;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   transition: all 0.2s ease;
 }
 
@@ -340,8 +346,10 @@ main {
 /* Адаптация плашек на маленьких экранах */
 @media (max-width: 479px) {
   .product-compatibility-badges {
+    bottom: 0.4rem;
+    right: 0.4rem;
     gap: 0.3rem;
-    margin: 0.5rem 0;
+    padding: 0.2rem;
   }
   
   .compatibility-badge {
@@ -351,6 +359,12 @@ main {
 }
 
 @media (max-width: 360px) {
+  .product-compatibility-badges {
+    bottom: 0.3rem;
+    right: 0.3rem;
+    gap: 0.25rem;
+  }
+  
   .compatibility-badge {
     padding: 0.2rem 0.4rem;
     font-size: 0.6rem;

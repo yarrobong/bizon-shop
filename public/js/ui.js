@@ -311,8 +311,8 @@ async function renderProducts() {
           <div class="product-image">
             <img src="${product.images[0]?.url?.trim() || '/assets/icons/placeholder1.webp'}" alt="${product.title}" />
             ${product.tag ? `<div class="product-badge" data-tag="${product.tag.toLowerCase()}">${product.tag}</div>` : ''}
+            ${compatibilityBadges}
           </div>
-          ${compatibilityBadges}
           <div class="product-footer">
             <div class="product-price">${formatPrice(product.price)}</div>
             <div class="product-actions">
