@@ -642,6 +642,12 @@ async function saveProduct() {
             selectedVariantIds = [];
         }
 
+        const productId = formData.get('product-id');
+        const isUpdate = productId && productId.trim() !== '';
+        const method = isUpdate ? 'PUT' : 'POST';
+        const url = isUpdate ? `/api/products/${productId.trim()}` : '/api/products';
+
+        // Для PUT запроса отправляем images, для POST - images_json
         const productData = {
             title: title,
             description: description,
@@ -649,11 +655,19 @@ async function saveProduct() {
             category: category,
             tag: tag || null,
             available: available,
-            images: images,
+            brand: null, // Добавляем brand, так как сервер его ожидает
             supplier_link: supplier_link,
             supplier_notes: supplier_notes,
             compatibility: compatibility || null
         };
+
+        if (isUpdate) {
+            // Для обновления отправляем images (сервер преобразует в images_json)
+            productData.images = images;
+        } else {
+            // Для создания отправляем images_json
+            productData.images_json = images ? JSON.stringify(images) : null;
+        }
 
         if (!productData.title) {
             adminPanel.showMessage('Пожалуйста, укажите название товара', 'error');
@@ -667,11 +681,6 @@ async function saveProduct() {
             adminPanel.showMessage('Пожалуйста, выберите категорию', 'error');
             return;
         }
-
-        const productId = formData.get('product-id');
-        const isUpdate = productId && productId.trim() !== '';
-        const method = isUpdate ? 'PUT' : 'POST';
-        const url = isUpdate ? `/api/products/${productId.trim()}` : '/api/products';
 
         const response = await fetchWithAuth(url, {
             method: method,
