@@ -121,6 +121,11 @@ async function loadProductForEdit(productId) {
                 categorySelect.value = product.category || '';
             }
 
+            const brandInput = document.getElementById('product-brand');
+            if (brandInput) {
+                brandInput.value = product.brand || '';
+            }
+
             const tagSelect = document.getElementById('product-tag');
             if (tagSelect) {
                 tagSelect.value = product.tag || '';
@@ -626,6 +631,7 @@ async function saveProduct() {
         const rawPrice = formData.get('product-price');
         const price = rawPrice !== null && rawPrice !== '' ? parseFloat(rawPrice) : 0;
         const category = (formData.get('product-category') || '').toString().trim();
+        const brand = (formData.get('product-brand') || '').toString().trim();
         const tag = (formData.get('product-tag') || '').toString().trim();
         const available = formData.get('product-available') === 'on';
         const supplier_link = (formData.get('product-supplier-link') || '').toString().trim();
@@ -653,9 +659,9 @@ async function saveProduct() {
             description: description,
             price: price,
             category: category,
+            brand: brand || null,
             tag: tag || null,
             available: available,
-            brand: null, // Добавляем brand, так как сервер его ожидает
             supplier_link: supplier_link,
             supplier_notes: supplier_notes,
             compatibility: compatibility || null
