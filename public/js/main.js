@@ -184,7 +184,10 @@ function loadCalltouch() {
                     request.open("POST", CT_URL, true); request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
                     request.send(post_data);
                 }
-            } catch (e) { console.log(e); } }
+            } catch (e) { 
+              console.error('[Calltouch] Ошибка отправки данных:', e);
+              // Не показываем ошибку пользователю, так как это не критично для работы сайта
+            } }
         });
     }
 }
