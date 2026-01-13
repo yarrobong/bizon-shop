@@ -170,10 +170,17 @@ router.put('/:id', async (req, res) => {
       
       if (checkColumn.rows.length > 0) {
         compatibilityColumnType = checkColumn.rows[0].data_type;
-        console.log('Колонка compatibility существует, тип:', compatibilityColumnType, 'udt_name:', checkColumn.rows[0].udt_name);
+        const udtName = checkColumn.rows[0].udt_name;
+        console.log('Колонка compatibility существует, тип:', compatibilityColumnType, 'udt_name:', udtName);
+        
+        // Если udt_name начинается с '_', это массив
+        if (udtName && udtName.startsWith('_')) {
+          compatibilityColumnType = 'ARRAY';
+          console.log('Определен тип ARRAY по udt_name:', udtName);
+        }
         
         // Если колонка имеет тип ARRAY, но мы хотим использовать TEXT, изменим тип
-        if (compatibilityColumnType === 'ARRAY' || checkColumn.rows[0].udt_name === '_text') {
+        if (compatibilityColumnType === 'ARRAY' || udtName === '_text') {
           console.log('Колонка compatibility имеет тип ARRAY, преобразуем строку в массив PostgreSQL');
         }
       } else {
@@ -195,25 +202,25 @@ router.put('/:id', async (req, res) => {
     // Преобразуем compatibility в формат PostgreSQL массива, если колонка имеет тип ARRAY
     let compatibilityForDB = normalizedCompatibility;
     if (normalizedCompatibility) {
-      if (compatibilityColumnType === 'ARRAY' || compatibilityColumnType === null) {
+      // normalizedCompatibility уже должен быть массивом после преобразования выше
+      if (!Array.isArray(normalizedCompatibility)) {
+        console.error('ОШИБКА: normalizedCompatibility не является массивом!', typeof normalizedCompatibility, normalizedCompatibility);
+        // Преобразуем в массив
+        normalizedCompatibility = [String(normalizedCompatibility)];
+      }
+      
+      if (compatibilityColumnType === 'ARRAY' || checkColumn.rows[0]?.udt_name === '_text' || compatibilityColumnType === null) {
         // Если колонка ARRAY или тип не определен (предполагаем ARRAY), используем массив
-        // normalizedCompatibility уже должен быть массивом после преобразования выше
-        if (!Array.isArray(normalizedCompatibility)) {
-          // Если по какой-то причине это не массив, преобразуем
-          compatibilityForDB = [normalizedCompatibility];
-        } else {
-          compatibilityForDB = normalizedCompatibility;
-        }
-        console.log('Используем compatibility как массив для PostgreSQL ARRAY:', compatibilityForDB);
+        // Библиотека pg автоматически преобразует JavaScript массив в PostgreSQL массив
+        compatibilityForDB = normalizedCompatibility;
+        console.log('Используем compatibility как массив для PostgreSQL ARRAY:', compatibilityForDB, 'тип:', typeof compatibilityForDB, 'isArray:', Array.isArray(compatibilityForDB));
       } else {
         // Если колонка TEXT, преобразуем массив в строку
-        if (Array.isArray(normalizedCompatibility)) {
-          compatibilityForDB = normalizedCompatibility.join(', ');
-        } else {
-          compatibilityForDB = normalizedCompatibility;
-        }
+        compatibilityForDB = normalizedCompatibility.join(', ');
         console.log('Используем compatibility как строку для TEXT колонки:', compatibilityForDB);
       }
+    } else {
+      console.log('compatibility пустой, передаем null');
     }
     
     const queryParams = [
@@ -233,9 +240,30 @@ router.put('/:id', async (req, res) => {
     
     console.log('Параметры SQL запроса:', queryParams.map((p, i) => {
       const paramName = ['title', 'description', 'price', 'tag', 'available', 'category', 'brand', 'compatibility', 'supplier_link', 'supplier_notes', 'images_json', 'id'][i];
-      const value = p === null ? 'null' : p === undefined ? 'undefined' : Array.isArray(p) ? `[массив ${p.length} элементов: ${p.join(', ')}]` : typeof p === 'string' ? `${p.substring(0, 50)}${p.length > 50 ? '...' : ''} (${p.length} символов)` : String(p);
+      let value;
+      if (p === null) {
+        value = 'null';
+      } else if (p === undefined) {
+        value = 'undefined';
+      } else if (Array.isArray(p)) {
+        value = `[массив ${p.length} элементов: ${JSON.stringify(p)}]`;
+      } else if (typeof p === 'string') {
+        value = `${p.substring(0, 50)}${p.length > 50 ? '...' : ''} (${p.length} символов)`;
+      } else {
+        value = String(p);
+      }
       return `$${i + 1} (${paramName}): ${typeof p} = ${value}`;
     }));
+    
+    // Дополнительная проверка для compatibility
+    if (queryParams[7] !== null && queryParams[7] !== undefined) {
+      console.log('Проверка compatibility параметра:', {
+        значение: queryParams[7],
+        тип: typeof queryParams[7],
+        isArray: Array.isArray(queryParams[7]),
+        JSON: JSON.stringify(queryParams[7])
+      });
+    }
     
     // Проверяем длину supplier_link
     if (normalizedSupplierLink && normalizedSupplierLink.length > 1000) {
