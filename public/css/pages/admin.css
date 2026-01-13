@@ -482,16 +482,39 @@ body::before {
 
 .modal-content h2 {
     margin-top: 0;
-    margin-bottom: 24px;
+    margin-bottom: 32px;
     color: var(--text-primary);
-    font-size: 24px;
-    font-weight: 600;
+    font-size: 28px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 30px rgba(96, 165, 250, 0.2);
+    padding-bottom: 12px;
+    border-bottom: 2px solid rgba(96, 165, 250, 0.2);
 }
 
 .modal-content form {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+/* Двухколоночная компоновка для полей формы на широких экранах */
+@media (min-width: 768px) {
+    .modal-content form {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    /* Полноширинные поля (занимают обе колонки) */
+    .modal-content form label[for="product-description"],
+    .modal-content form textarea,
+    .modal-content form .images-section,
+    .modal-content form .variants-section,
+    .modal-content form .modal-actions {
+        grid-column: 1 / -1;
+    }
 }
 
 .modal-content label {
@@ -504,15 +527,24 @@ body::before {
 .modal-content input,
 .modal-content textarea,
 .modal-content select {
-    padding: 12px 16px;
+    padding: 14px 18px;
     margin-top: 8px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
+    border: 2px solid rgba(96, 165, 250, 0.2);
+    border-radius: var(--radius-md);
     font-size: 14px;
-    background: var(--bg-tertiary);
+    background: rgba(30, 39, 66, 0.6);
     color: var(--text-primary);
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     font-family: inherit;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.modal-content input:hover,
+.modal-content textarea:hover,
+.modal-content select:hover {
+    border-color: rgba(96, 165, 250, 0.4);
+    background: rgba(30, 39, 66, 0.8);
 }
 
 .modal-content input:focus,
@@ -520,8 +552,9 @@ body::before {
 .modal-content select:focus {
     outline: none;
     border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.1);
-    background: var(--bg-secondary);
+    box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.2), 0 0 20px rgba(96, 165, 250, 0.3);
+    background: rgba(42, 53, 88, 0.8);
+    transform: translateY(-1px);
 }
 
 .modal-content input::placeholder,
