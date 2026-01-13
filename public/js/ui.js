@@ -57,8 +57,18 @@ function getCart() {
 }
 
 // Добавление в корзину (использует ключ 'cart')
+// Если доступна глобальная функция из state.js, используем её
 function addToCart(product) {
-  console.log("ui.js: Добавляем в корзину:", product.id, product.title); // <-- Новый лог
+  console.log("ui.js: Вызов addToCart для товара:", product.id, product.title);
+  
+  // Если доступна глобальная функция из state.js, используем её
+  if (typeof window.addToCart === 'function' && window.addToCart !== addToCart) {
+    console.log("ui.js: Используем глобальную функцию addToCart из state.js");
+    return window.addToCart(product);
+  }
+  
+  // Fallback: локальная реализация (для обратной совместимости)
+  console.log("ui.js: Используем локальную реализацию addToCart");
   const cart = getCart();
   const existingItem = cart.find(item => item.product.id === product.id);
 
@@ -68,8 +78,16 @@ function addToCart(product) {
     cart.push({ product, qty: 1 });
   }
 
-  localStorage.setItem('cart', JSON.stringify(cart)); // <-- Используем ключ 'cart'
-  updateCartCount(); // Обновляем счётчик
+  localStorage.setItem('cart', JSON.stringify(cart));
+  updateCartCount();
+  
+  // Пытаемся вызвать функции из state.js, если они доступны
+  if (typeof window.showMiniCart === 'function') {
+    window.showMiniCart();
+  }
+  if (typeof window.updateCartButton === 'function') {
+    window.updateCartButton(product.id);
+  }
 }
 
 // Обновление количества в корзине (использует ключ 'cart')

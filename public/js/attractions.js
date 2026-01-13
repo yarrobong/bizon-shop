@@ -291,19 +291,37 @@ function createAttractionCard(attraction) {
   }
 
   // Добавление в корзину (использует ключ 'cart')
+  // Если доступна глобальная функция из state.js, используем её
   function addToCart(product) {
-    console.log("attractions.js: Добавляем в корзину:", product.id, product.title); // <-- Исправлен лог
+    console.log("attractions.js: Вызов addToCart для товара:", product.id, product.title);
+    
+    // Если доступна глобальная функция из state.js, используем её
+    if (typeof window.addToCart === 'function' && window.addToCart !== addToCart) {
+      console.log("attractions.js: Используем глобальную функцию addToCart из state.js");
+      return window.addToCart(product);
+    }
+    
+    // Fallback: локальная реализация (для обратной совместимости)
+    console.log("attractions.js: Используем локальную реализацию addToCart");
     const cart = getCart();
-    const existingItem = cart.find(item => item.product.id === product.id); // Исправлено: было attractions.id
+    const existingItem = cart.find(item => item.product.id === product.id);
 
     if (existingItem) {
       existingItem.qty += 1;
     } else {
-      cart.push({ product, qty: 1 }); // Добавляем объект {product, qty}
+      cart.push({ product, qty: 1 });
     }
 
-    localStorage.setItem('cart', JSON.stringify(cart)); // <-- Используем ключ 'cart'
-    updateCartCount(); // Обновляем счётчик
+    localStorage.setItem('cart', JSON.stringify(cart));
+    updateCartCount();
+    
+    // Пытаемся вызвать функции из state.js, если они доступны
+    if (typeof window.showMiniCart === 'function') {
+      window.showMiniCart();
+    }
+    if (typeof window.updateCartButton === 'function') {
+      window.updateCartButton(product.id);
+    }
   }
 
   // Обновление количества в корзине (использует ключ 'cart')

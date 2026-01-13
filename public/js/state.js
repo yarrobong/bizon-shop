@@ -11,36 +11,65 @@ let currentTag = 'все';
 // === Функции корзины ===
 
 function addToCart(product) {
+  console.log('[addToCart] Вызвана функция addToCart для товара:', product);
+  
+  if (!product || !product.id) {
+    console.error('[addToCart] Ошибка: товар не передан или отсутствует id');
+    return;
+  }
+  
   const existing = cart.find(item => item.product.id === product.id);
   if (existing) {
     existing.qty += 1;
+    console.log('[addToCart] Увеличено количество товара в корзине:', existing.qty);
   } else {
     cart.push({ product, qty: 1 });
+    console.log('[addToCart] Товар добавлен в корзину');
   }
   saveCart(); // Сохраняем в localStorage
   updateCartCount();
   
   // Показываем мини-корзину и обновляем кнопку
-  showMiniCart();
-  updateCartButton(product.id);
+  console.log('[addToCart] Вызываем showMiniCart и updateCartButton');
+  try {
+    showMiniCart();
+    updateCartButton(product.id);
+  } catch (error) {
+    console.error('[addToCart] Ошибка при показе мини-корзины:', error);
+  }
 }
 
 // Показать мини-корзину
 function showMiniCart() {
+  console.log('[showMiniCart] Функция вызвана');
+  
+  if (typeof document === 'undefined' || !document.body) {
+    console.error('[showMiniCart] Ошибка: document или document.body недоступны');
+    return;
+  }
+  
   // Создаем или получаем элемент мини-корзины
   let miniCart = document.getElementById('mini-cart');
   
   if (!miniCart) {
+    console.log('[showMiniCart] Создаем новый элемент мини-корзины');
     miniCart = document.createElement('div');
     miniCart.id = 'mini-cart';
     miniCart.className = 'mini-cart';
     document.body.appendChild(miniCart);
+    console.log('[showMiniCart] Элемент добавлен в DOM');
+  } else {
+    console.log('[showMiniCart] Используем существующий элемент');
   }
   
   // Получаем корзину
   const cartItems = getCart();
+  console.log('[showMiniCart] Товаров в корзине:', cartItems.length);
+  
   const totalItems = cartItems.reduce((sum, item) => sum + item.qty, 0);
   const totalPrice = cartItems.reduce((sum, item) => sum + (item.product.price * item.qty), 0);
+  
+  console.log('[showMiniCart] Итого товаров:', totalItems, 'Итого цена:', totalPrice);
   
   // Форматируем цену
   const formatPrice = (price) => {
@@ -53,6 +82,7 @@ function showMiniCart() {
   };
   
   // Рендерим содержимое мини-корзины
+  console.log('[showMiniCart] Рендерим содержимое мини-корзины');
   miniCart.innerHTML = `
     <div class="mini-cart-header">
       <h3>Корзина</h3>
@@ -88,19 +118,31 @@ function showMiniCart() {
   `;
   
   // Показываем мини-корзину с анимацией
+  console.log('[showMiniCart] Добавляем класс show');
   miniCart.classList.add('show');
+  
+  // Проверяем, что класс добавлен
+  setTimeout(() => {
+    console.log('[showMiniCart] Проверка: класс show добавлен?', miniCart.classList.contains('show'));
+    console.log('[showMiniCart] Стили элемента:', window.getComputedStyle(miniCart).display);
+    console.log('[showMiniCart] Позиция элемента:', miniCart.getBoundingClientRect());
+  }, 100);
   
   // Обработчик закрытия
   const closeBtn = miniCart.querySelector('.mini-cart-close');
   if (closeBtn) {
     closeBtn.addEventListener('click', () => {
+      console.log('[showMiniCart] Закрытие мини-корзины по клику');
       hideMiniCart();
     });
+  } else {
+    console.warn('[showMiniCart] Кнопка закрытия не найдена');
   }
   
   // Автоматически скрываем через 5 секунд
   clearTimeout(window.miniCartTimeout);
   window.miniCartTimeout = setTimeout(() => {
+    console.log('[showMiniCart] Автоматическое закрытие мини-корзины');
     hideMiniCart();
   }, 5000);
 }
@@ -120,29 +162,41 @@ function hideMiniCart() {
 
 // Обновить кнопку "В корзину" на "В корзине"
 function updateCartButton(productId) {
+  console.log('[updateCartButton] Обновление кнопки для товара:', productId);
+  
   const cart = getCart();
   const item = cart.find(item => item.product.id === productId);
   
   if (item) {
+    console.log('[updateCartButton] Товар найден в корзине, обновляем кнопки');
+    
     // Обновляем кнопки в карточках товаров
     const cardButtons = document.querySelectorAll(`.btn-cart[data-id="${productId}"]`);
+    console.log('[updateCartButton] Найдено кнопок в карточках:', cardButtons.length);
     cardButtons.forEach(button => {
       button.textContent = 'В корзине';
       button.classList.add('in-cart');
       button.disabled = false;
+      console.log('[updateCartButton] Кнопка обновлена:', button);
     });
     
     // Обновляем кнопку на странице товара (проверяем по data-id или по текущему товару)
     const productPageBtn = document.getElementById('product-page-add-to-cart-btn');
     if (productPageBtn) {
       const btnProductId = parseInt(productPageBtn.dataset.id);
+      console.log('[updateCartButton] Кнопка на странице товара найдена, data-id:', btnProductId);
       // Если кнопка соответствует текущему товару или data-id не установлен (значит это текущий товар)
       if (!btnProductId || btnProductId === productId) {
         productPageBtn.textContent = 'В корзине';
         productPageBtn.classList.add('in-cart');
         productPageBtn.disabled = false;
+        console.log('[updateCartButton] Кнопка на странице товара обновлена');
       }
+    } else {
+      console.log('[updateCartButton] Кнопка на странице товара не найдена');
     }
+  } else {
+    console.warn('[updateCartButton] Товар не найден в корзине');
   }
 }
 
