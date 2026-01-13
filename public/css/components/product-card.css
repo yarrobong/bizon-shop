@@ -304,6 +304,59 @@ main {
   background: linear-gradient(135deg, #ec4899, #db2777);
 }
 
+/* === PRODUCT COMPATIBILITY BADGES (плашки для креплений) === */
+.product-compatibility-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.75rem 0;
+  padding: 0 0.25rem;
+}
+
+.compatibility-badge {
+  display: inline-block;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #ffffff;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(43, 83, 193, 0.4));
+  border: 1px solid rgba(59, 130, 246, 0.5);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+  transition: all 0.2s ease;
+}
+
+.compatibility-badge:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.5), rgba(43, 83, 193, 0.6));
+  border-color: rgba(59, 130, 246, 0.8);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+}
+
+/* Адаптация плашек на маленьких экранах */
+@media (max-width: 479px) {
+  .product-compatibility-badges {
+    gap: 0.3rem;
+    margin: 0.5rem 0;
+  }
+  
+  .compatibility-badge {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.65rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .compatibility-badge {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.6rem;
+  }
+}
+
 /* === PRODUCT FOOTER === */
 .product-footer {
   margin-top: auto;

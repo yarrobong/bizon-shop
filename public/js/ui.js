@@ -285,6 +285,26 @@ async function renderProducts() {
     filtered.forEach((product) => {
       const card = document.createElement('div');
       card.className = 'product-card';
+      
+      // Формируем плашки для совместимости (креплений)
+      let compatibilityBadges = '';
+      if (product.compatibility) {
+        // Если compatibility - это строка, разбиваем по запятой или используем как есть
+        const compatibilities = typeof product.compatibility === 'string' 
+          ? product.compatibility.split(',').map(c => c.trim()).filter(c => c)
+          : Array.isArray(product.compatibility) 
+            ? product.compatibility 
+            : [];
+        
+        if (compatibilities.length > 0) {
+          compatibilityBadges = '<div class="product-compatibility-badges">' +
+            compatibilities.map(comp => 
+              `<span class="compatibility-badge" data-helmet="${comp.toLowerCase()}">${comp}</span>`
+            ).join('') +
+            '</div>';
+        }
+      }
+      
       card.innerHTML = `
         <div class="product-content">
           <h3 class="product-title">${product.title}</h3>
@@ -292,6 +312,7 @@ async function renderProducts() {
             <img src="${product.images[0]?.url?.trim() || '/assets/icons/placeholder1.webp'}" alt="${product.title}" />
             ${product.tag ? `<div class="product-badge" data-tag="${product.tag.toLowerCase()}">${product.tag}</div>` : ''}
           </div>
+          ${compatibilityBadges}
           <div class="product-footer">
             <div class="product-price">${formatPrice(product.price)}</div>
             <div class="product-actions">
