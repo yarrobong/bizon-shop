@@ -372,22 +372,27 @@ header.scrolled {
     order: 3; /* Навигация скрыта */
   }
 
-  header > .header-actions {
+  header > .header-actions,
+  header > .cart-btn {
     order: 4; /* Действия (корзина) справа */
   }
 
   /* Специальные стили для страницы контактов - бургер слева, корзина справа */
   body:has(.contact-layout) header > .hamburger {
-    order: 1; /* Бургер меню слева */
+    order: 1 !important; /* Бургер меню слева */
   }
 
   body:has(.contact-layout) header > .logo {
-    order: 2; /* Логотип по центру */
+    order: 2 !important; /* Логотип по центру */
+  }
+
+  body:has(.contact-layout) header > .main-nav {
+    order: 3 !important; /* Навигация скрыта */
   }
 
   body:has(.contact-layout) header > .header-actions,
   body:has(.contact-layout) header > .cart-btn {
-    order: 4; /* Корзина справа */
+    order: 4 !important; /* Корзина справа */
   }
   
   header.scrolled {
