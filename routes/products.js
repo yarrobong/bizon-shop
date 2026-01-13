@@ -126,7 +126,21 @@ router.put('/:id', async (req, res) => {
     const normalizedAvailable = available === true || available === 'true' || available === 1 || available === '1';
     const normalizedTag = tag && tag.trim() !== '' ? tag.trim() : null;
     const normalizedBrand = brand && brand.trim() !== '' ? brand.trim() : null;
-    const normalizedCompatibility = compatibility && compatibility.trim() !== '' ? compatibility.trim() : null;
+    // Преобразуем compatibility из строки в массив для PostgreSQL
+    // Если это строка с запятыми, разбиваем на массив
+    let normalizedCompatibility = null;
+    if (compatibility) {
+      const compatStr = compatibility.trim();
+      if (compatStr !== '') {
+        // Если это уже массив, используем его
+        if (Array.isArray(compatibility)) {
+          normalizedCompatibility = compatibility.filter(c => c && c.trim() !== '').map(c => c.trim());
+        } else {
+          // Если это строка, разбиваем по запятым
+          normalizedCompatibility = compatStr.split(',').map(c => c.trim()).filter(c => c !== '');
+        }
+      }
+    }
     // Обрезаем supplier_link до 2000 символов, если он слишком длинный (обычно VARCHAR ограничен)
     let normalizedSupplierLink = supplier_link && supplier_link.trim() !== '' ? supplier_link.trim() : null;
     if (normalizedSupplierLink && normalizedSupplierLink.length > 2000) {
@@ -145,6 +159,22 @@ router.put('/:id', async (req, res) => {
     // Убеждаемся, что description не undefined
     const normalizedDescription = description || '';
     
+    // Преобразуем compatibility в формат PostgreSQL массива, если колонка имеет тип ARRAY
+    let compatibilityForDB = normalizedCompatibility;
+    if (normalizedCompatibility && compatibilityColumnType === 'ARRAY') {
+      // PostgreSQL ожидает массив в формате ARRAY['value1', 'value2'] или '{value1,value2}'
+      // Используем массив JavaScript, pg автоматически преобразует его
+      compatibilityForDB = normalizedCompatibility;
+      console.log('Преобразуем compatibility в массив для PostgreSQL:', compatibilityForDB);
+    } else if (normalizedCompatibility && Array.isArray(normalizedCompatibility)) {
+      // Если это массив, но колонка TEXT, преобразуем в строку
+      compatibilityForDB = normalizedCompatibility.join(', ');
+      console.log('Преобразуем compatibility массив в строку для TEXT колонки:', compatibilityForDB);
+    } else if (normalizedCompatibility) {
+      // Если это строка, оставляем как есть
+      compatibilityForDB = normalizedCompatibility;
+    }
+    
     const queryParams = [
       title.trim(),
       normalizedDescription,
@@ -153,7 +183,7 @@ router.put('/:id', async (req, res) => {
       normalizedAvailable,
       category || '',
       normalizedBrand,
-      normalizedCompatibility,
+      compatibilityForDB,
       normalizedSupplierLink,
       normalizedSupplierNotes,
       images_json,
@@ -171,21 +201,28 @@ router.put('/:id', async (req, res) => {
       console.warn(`supplier_link очень длинный: ${normalizedSupplierLink.length} символов`);
     }
     
-    // Сначала проверяем существование колонки compatibility
-    let compatibilityColumnExists = true;
+    // Сначала проверяем существование и тип колонки compatibility
+    let compatibilityColumnType = null;
     try {
       const checkColumn = await pool.query(`
-        SELECT column_name 
+        SELECT column_name, data_type, udt_name
         FROM information_schema.columns 
         WHERE table_name = 'products' AND column_name = 'compatibility'
       `);
-      compatibilityColumnExists = checkColumn.rows.length > 0;
-      console.log('Колонка compatibility существует:', compatibilityColumnExists);
       
-      if (!compatibilityColumnExists) {
-        console.log('Создаем колонку compatibility...');
+      if (checkColumn.rows.length > 0) {
+        compatibilityColumnType = checkColumn.rows[0].data_type;
+        console.log('Колонка compatibility существует, тип:', compatibilityColumnType, 'udt_name:', checkColumn.rows[0].udt_name);
+        
+        // Если колонка имеет тип ARRAY, но мы хотим использовать TEXT, изменим тип
+        if (compatibilityColumnType === 'ARRAY' || checkColumn.rows[0].udt_name === '_text') {
+          console.log('Колонка compatibility имеет тип ARRAY, преобразуем строку в массив PostgreSQL');
+        }
+      } else {
+        console.log('Колонка compatibility не существует, создаем как TEXT...');
         await pool.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS compatibility TEXT');
-        console.log('Колонка compatibility создана');
+        console.log('Колонка compatibility создана как TEXT');
+        compatibilityColumnType = 'text';
       }
     } catch (checkError) {
       console.error('Ошибка при проверке/создании колонки compatibility:', checkError);
