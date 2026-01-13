@@ -685,17 +685,6 @@ async function saveProduct() {
             return;
         }
 
-        console.log('Отправка данных товара:', {
-            method,
-            url,
-            productData: JSON.parse(JSON.stringify({
-                ...productData,
-                images: productData.images ? `${productData.images.length} изображений` : 'нет',
-                images_json: productData.images_json ? 'есть' : 'нет'
-            }))
-        });
-        console.log('Полные данные для отправки:', JSON.stringify(productData, null, 2));
-
         const response = await fetchWithAuth(url, {
             method: method,
             headers: {
@@ -712,19 +701,10 @@ async function saveProduct() {
                 const errorData = await response.json();
                 errorMessage = errorData.message || errorData.error || errorMessage;
                 errorDetails = errorData.details || errorData.detail || null;
-                errorCode = errorData.code || null;
-                console.error('Полный ответ об ошибке от сервера:', errorData);
             } catch (e) {
                 const errorText = await response.text().catch(() => '');
                 errorMessage = errorText || errorMessage;
-                console.error('Не удалось распарсить JSON ответ об ошибке:', e);
             }
-            console.error('Детали ошибки от сервера:', { 
-                errorMessage, 
-                errorDetails, 
-                errorCode,
-                status: response.status 
-            });
             throw new Error(errorMessage + (errorDetails ? `: ${errorDetails}` : ''));
         }
 
