@@ -115,31 +115,74 @@ async function handleSendOrder() {
     return;
   }
 
-  const isConsentGiven = consentCheckbox.checked;
-
-  if (!isConsentGiven) {
-    alert('Необходимо дать согласие на обработку персональных данных');
-    return;
+  // Валидация формы
+  let isValid = true;
+  
+  // Очищаем предыдущие ошибки
+  if (typeof clearFieldError === 'function') {
+    clearFieldError(phoneInput);
   }
 
-  if (!phoneInput.value.trim()) {
-    alert('Укажите телефон');
+  // Проверка согласия
+  const isConsentGiven = consentCheckbox.checked;
+  if (!isConsentGiven) {
+    if (typeof showNotification === 'function') {
+      showNotification('Необходимо дать согласие на обработку персональных данных', 'warning');
+    } else {
+      alert('Необходимо дать согласие на обработку персональных данных');
+    }
+    consentCheckbox.focus();
     return;
   }
 
   // Валидация телефона
-  const phone = phoneInput.value;
-  const phoneDigits = phone.replace(/\D/g, '');
-  if (phoneDigits.length < 10) {
-    alert('Введите корректный номер телефона');
-    phoneInput.focus();
+  if (typeof validatePhone === 'function') {
+    const phoneValidation = validatePhone(phoneInput.value);
+    if (!phoneValidation.valid) {
+      if (typeof showFieldError === 'function') {
+        showFieldError(phoneInput, phoneValidation.message);
+      } else {
+        alert(phoneValidation.message);
+      }
+      isValid = false;
+    }
+  } else {
+    // Fallback валидация
+    if (!phoneInput.value.trim()) {
+      if (typeof showFieldError === 'function') {
+        showFieldError(phoneInput, 'Укажите номер телефона');
+      } else {
+        alert('Укажите телефон');
+      }
+      isValid = false;
+    } else {
+      const phoneDigits = phoneInput.value.replace(/\D/g, '');
+      if (phoneDigits.length < 10) {
+        if (typeof showFieldError === 'function') {
+          showFieldError(phoneInput, 'Номер телефона должен содержать минимум 10 цифр');
+        } else {
+          alert('Введите корректный номер телефона');
+        }
+        isValid = false;
+      }
+    }
+  }
+
+  // Проверка корзины
+  if (getCart().length === 0) {
+    if (typeof showNotification === 'function') {
+      showNotification('Корзина пуста. Добавьте товары перед оформлением заказа', 'warning');
+    } else {
+      alert('Корзина пуста');
+    }
+    isValid = false;
+  }
+
+  if (!isValid) {
     return;
   }
 
-  if (getCart().length === 0) {
-    alert('Корзина пуста');
-    return;
-  }
+  const phone = phoneInput.value;
 
   try {
     handleSendOrder.isSending = true;
@@ -336,6 +379,15 @@ document.addEventListener('DOMContentLoaded', function () {
     // Инициализируем DOM элементы
     initDOMElements();
     
+    // Инициализация валидации в реальном времени для телефона
+    if (phoneInput && typeof initRealtimeValidation === 'function') {
+        initRealtimeValidation(phoneInput, {
+            type: 'phone',
+            required: true,
+            label: 'Номер телефона'
+        });
+    }
+    
     // Инициализация маски телефона
     if (typeof $ !== 'undefined' && $.fn.mask) {
         $(document).ready(function(){
@@ -419,29 +471,81 @@ function setupEventListeners() {
             const isConsentGiven = consentCheckbox ? consentCheckbox.checked : false;
             const phoneInput = document.getElementById('phone');
 
+            // Валидация формы
+            let isValid = true;
+            
+            // Очищаем предыдущие ошибки
+            if (phoneInput && typeof clearFieldError === 'function') {
+                clearFieldError(phoneInput);
+            }
+
             if (!isConsentGiven) {
-                alert('Необходимо дать согласие на обработку персональных данных');
+                if (typeof showNotification === 'function') {
+                    showNotification('Необходимо дать согласие на обработку персональных данных', 'warning');
+                } else {
+                    alert('Необходимо дать согласие на обработку персональных данных');
+                }
+                if (consentCheckbox) consentCheckbox.focus();
                 return;
             }
-            if (!phoneInput || !phoneInput.value.trim()) {
-                alert('Укажите телефон');
+            
+            if (!phoneInput) {
+                if (typeof showNotification === 'function') {
+                    showNotification('Поле телефона не найдено', 'error');
+                } else {
+                    alert('Ошибка: поле телефона не найдено');
+                }
                 return;
             }
             
             // Валидация телефона
-            const phone = phoneInput.value;
-            const phoneDigits = phone.replace(/\D/g, '');
-            if (phoneDigits.length < 10) {
-                alert('Введите корректный номер телефона');
-                phoneInput.focus();
-                return;
+            if (typeof validatePhone === 'function') {
+                const phoneValidation = validatePhone(phoneInput.value);
+                if (!phoneValidation.valid) {
+                    if (typeof showFieldError === 'function') {
+                        showFieldError(phoneInput, phoneValidation.message);
+                    } else {
+                        alert(phoneValidation.message);
+                    }
+                    isValid = false;
+                }
+            } else {
+                // Fallback валидация
+                if (!phoneInput.value.trim()) {
+                    if (typeof showFieldError === 'function') {
+                        showFieldError(phoneInput, 'Укажите номер телефона');
+                    } else {
+                        alert('Укажите телефон');
+                    }
+                    isValid = false;
+                } else {
+                    const phoneDigits = phoneInput.value.replace(/\D/g, '');
+                    if (phoneDigits.length < 10) {
+                        if (typeof showFieldError === 'function') {
+                            showFieldError(phoneInput, 'Номер телефона должен содержать минимум 10 цифр');
+                        } else {
+                            alert('Введите корректный номер телефона');
+                        }
+                        isValid = false;
+                    }
+                }
             }
             
-            // Используем getCart из state.js
+            // Проверка корзины
             if (window.getCart().length === 0) {
-                alert('Корзина пуста');
+                if (typeof showNotification === 'function') {
+                    showNotification('Корзина пуста. Добавьте товары перед оформлением заказа', 'warning');
+                } else {
+                    alert('Корзина пуста');
+                }
+                isValid = false;
+            }
+
+            if (!isValid) {
                 return;
             }
+
+            const phone = phoneInput.value;
 
             try {
                 isSending = true;

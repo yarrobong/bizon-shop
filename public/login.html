@@ -94,17 +94,99 @@
         <div id="loading" class="loading">Проверка данных...</div>
     </div>
 
+    <script defer src="/js/utils.js"></script>
     <script>
-        document.getElementById('login-form').addEventListener('submit', async function(e) {
+        const loginForm = document.getElementById('login-form');
+        const usernameField = document.getElementById('username');
+        const passwordField = document.getElementById('password');
+        const errorMessage = document.getElementById('error-message');
+        const loading = document.getElementById('loading');
+
+        // Инициализация валидации в реальном времени
+        if (typeof initRealtimeValidation === 'function') {
+            if (usernameField) {
+                initRealtimeValidation(usernameField, {
+                    required: true,
+                    label: 'Логин',
+                    minLength: 3
+                });
+            }
+            if (passwordField) {
+                initRealtimeValidation(passwordField, {
+                    required: true,
+                    label: 'Пароль',
+                    minLength: 6
+                });
+            }
+        }
+
+        loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const errorMessage = document.getElementById('error-message');
-            const loading = document.getElementById('loading');
-            
-            // Скрываем предыдущие ошибки
+            // Очищаем предыдущие ошибки
+            if (typeof clearFieldError === 'function') {
+                if (usernameField) clearFieldError(usernameField);
+                if (passwordField) clearFieldError(passwordField);
+            }
             errorMessage.style.display = 'none';
+            
+            // Валидация формы
+            let isValid = true;
+            const username = usernameField.value;
+            const password = passwordField.value;
+            
+            // Валидация логина
+            if (typeof validateRequired === 'function') {
+                const usernameCheck = validateRequired(usernameField, 'Логин');
+                if (!usernameCheck.valid) {
+                    if (typeof showFieldError === 'function') {
+                        showFieldError(usernameField, usernameCheck.message);
+                    }
+                    isValid = false;
+                }
+            } else if (!username || !username.trim()) {
+                if (typeof showFieldError === 'function') {
+                    showFieldError(usernameField, 'Введите логин');
+                }
+                isValid = false;
+            }
+            
+            // Валидация пароля
+            if (typeof validateRequired === 'function') {
+                const passwordCheck = validateRequired(passwordField, 'Пароль');
+                if (!passwordCheck.valid) {
+                    if (typeof showFieldError === 'function') {
+                        showFieldError(passwordField, passwordCheck.message);
+                    }
+                    isValid = false;
+                }
+            } else if (!password || !password.trim()) {
+                if (typeof showFieldError === 'function') {
+                    showFieldError(passwordField, 'Введите пароль');
+                }
+                isValid = false;
+            }
+            
+            // Проверка минимальной длины
+            if (isValid && typeof validateLength === 'function') {
+                if (username.trim().length < 3) {
+                    if (typeof showFieldError === 'function') {
+                        showFieldError(usernameField, 'Логин должен содержать минимум 3 символа');
+                    }
+                    isValid = false;
+                }
+                if (password.length < 6) {
+                    if (typeof showFieldError === 'function') {
+                        showFieldError(passwordField, 'Пароль должен содержать минимум 6 символов');
+                    }
+                    isValid = false;
+                }
+            }
+            
+            if (!isValid) {
+                return;
+            }
+            
             loading.style.display = 'block';
             
             try {
@@ -120,6 +202,12 @@
                 loading.style.display = 'none';
                 
                 if (data.success) {
+                    // Очищаем ошибки при успешном входе
+                    if (typeof clearFieldError === 'function') {
+                        if (usernameField) clearFieldError(usernameField);
+                        if (passwordField) clearFieldError(passwordField);
+                    }
+                    
                     // Сохраняем информацию о входе
                     localStorage.setItem('isAdmin', 'true');
                     // Сохраняем sessionId для аутентификации API запросов

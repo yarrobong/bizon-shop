@@ -113,6 +113,373 @@ async function safeJsonParse(response) {
   }
 }
 
+/**
+ * Система валидации форм с визуальной обратной связью
+ */
+
+/**
+ * Показывает ошибку валидации под полем
+ * @param {HTMLElement} field - Поле ввода
+ * @param {string} message - Сообщение об ошибке
+ */
+function showFieldError(field, message) {
+  // Удаляем предыдущую ошибку, если есть
+  clearFieldError(field);
+  
+  // Добавляем класс ошибки к полю
+  field.classList.add('error');
+  
+  // Создаем элемент с сообщением об ошибке
+  const errorElement = document.createElement('div');
+  errorElement.className = 'field-error-message';
+  errorElement.textContent = message;
+  errorElement.setAttribute('role', 'alert');
+  errorElement.setAttribute('aria-live', 'polite');
+  
+  // Вставляем после поля
+  field.parentNode.insertBefore(errorElement, field.nextSibling);
+  
+  // Фокус на поле с ошибкой
+  field.focus();
+  
+  return errorElement;
+}
+
+/**
+ * Очищает ошибку валидации поля
+ * @param {HTMLElement} field - Поле ввода
+ */
+function clearFieldError(field) {
+  field.classList.remove('error');
+  
+  // Удаляем сообщение об ошибке
+  const errorElement = field.parentNode.querySelector('.field-error-message');
+  if (errorElement) {
+    errorElement.remove();
+  }
+}
+
+/**
+ * Валидация телефона
+ * @param {string} phone - Номер телефона
+ * @returns {Object} - {valid: boolean, message: string}
+ */
+function validatePhone(phone) {
+  if (!phone || !phone.trim()) {
+    return { valid: false, message: 'Укажите номер телефона' };
+  }
+  
+  const phoneDigits = phone.replace(/\D/g, '');
+  
+  if (phoneDigits.length < 10) {
+    return { valid: false, message: 'Номер телефона должен содержать минимум 10 цифр' };
+  }
+  
+  if (phoneDigits.length > 15) {
+    return { valid: false, message: 'Номер телефона слишком длинный' };
+  }
+  
+  // Проверка формата российского номера
+  if (phoneDigits.startsWith('7') && phoneDigits.length !== 11) {
+    return { valid: false, message: 'Неверный формат номера телефона' };
+  }
+  
+  return { valid: true, message: '' };
+}
+
+/**
+ * Валидация email
+ * @param {string} email - Email адрес
+ * @returns {Object} - {valid: boolean, message: string}
+ */
+function validateEmail(email) {
+  if (!email || !email.trim()) {
+    return { valid: false, message: 'Укажите email адрес' };
+  }
+  
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  
+  if (!emailRegex.test(email)) {
+    return { valid: false, message: 'Введите корректный email адрес' };
+  }
+  
+  if (email.length > 255) {
+    return { valid: false, message: 'Email адрес слишком длинный' };
+  }
+  
+  return { valid: true, message: '' };
+}
+
+/**
+ * Валидация обязательного поля
+ * @param {HTMLElement} field - Поле ввода
+ * @param {string} fieldName - Название поля для сообщения
+ * @returns {Object} - {valid: boolean, message: string}
+ */
+function validateRequired(field, fieldName = 'Поле') {
+  const value = field.value ? field.value.trim() : '';
+  
+  if (!value) {
+    return { valid: false, message: `${fieldName} обязательно для заполнения` };
+  }
+  
+  return { valid: true, message: '' };
+}
+
+/**
+ * Валидация длины текста
+ * @param {string} text - Текст
+ * @param {number} minLength - Минимальная длина
+ * @param {number} maxLength - Максимальная длина
+ * @param {string} fieldName - Название поля
+ * @returns {Object} - {valid: boolean, message: string}
+ */
+function validateLength(text, minLength, maxLength, fieldName = 'Поле') {
+  const length = text ? text.trim().length : 0;
+  
+  if (minLength && length < minLength) {
+    return { valid: false, message: `${fieldName} должно содержать минимум ${minLength} символов` };
+  }
+  
+  if (maxLength && length > maxLength) {
+    return { valid: false, message: `${fieldName} должно содержать максимум ${maxLength} символов` };
+  }
+  
+  return { valid: true, message: '' };
+}
+
+/**
+ * Валидация формы с визуальной обратной связью
+ * @param {HTMLFormElement} form - Форма для валидации
+ * @param {Object} rules - Правила валидации {fieldId: {validator: function, message: string}}
+ * @returns {boolean} - true если форма валидна
+ */
+function validateForm(form, rules) {
+  let isValid = true;
+  
+  // Очищаем все предыдущие ошибки
+  form.querySelectorAll('.error').forEach(field => {
+    clearFieldError(field);
+  });
+  
+  // Валидируем каждое поле
+  for (const [fieldId, rule] of Object.entries(rules)) {
+    const field = form.querySelector(`#${fieldId}`) || form.querySelector(`[name="${fieldId}"]`);
+    
+    if (!field) continue;
+    
+    let fieldValid = true;
+    let errorMessage = '';
+    
+    // Проверяем обязательность
+    if (rule.required) {
+      const requiredCheck = validateRequired(field, rule.label || fieldId);
+      if (!requiredCheck.valid) {
+        fieldValid = false;
+        errorMessage = requiredCheck.message;
+      }
+    }
+    
+    // Если поле не пустое или не обязательное, проверяем другие правила
+    if (fieldValid && field.value && field.value.trim()) {
+      // Валидация телефона
+      if (rule.type === 'phone') {
+        const phoneCheck = validatePhone(field.value);
+        if (!phoneCheck.valid) {
+          fieldValid = false;
+          errorMessage = phoneCheck.message;
+        }
+      }
+      
+      // Валидация email
+      if (rule.type === 'email') {
+        const emailCheck = validateEmail(field.value);
+        if (!emailCheck.valid) {
+          fieldValid = false;
+          errorMessage = emailCheck.message;
+        }
+      }
+      
+      // Валидация длины
+      if (rule.minLength || rule.maxLength) {
+        const lengthCheck = validateLength(
+          field.value,
+          rule.minLength,
+          rule.maxLength,
+          rule.label || fieldId
+        );
+        if (!lengthCheck.valid) {
+          fieldValid = false;
+          errorMessage = lengthCheck.message;
+        }
+      }
+      
+      // Кастомная валидация
+      if (rule.validator && typeof rule.validator === 'function') {
+        const customCheck = rule.validator(field.value, field);
+        if (customCheck && !customCheck.valid) {
+          fieldValid = false;
+          errorMessage = customCheck.message || rule.message || 'Неверное значение';
+        }
+      }
+    }
+    
+    // Показываем ошибку, если поле невалидно
+    if (!fieldValid) {
+      showFieldError(field, errorMessage);
+      isValid = false;
+    } else {
+      clearFieldError(field);
+    }
+  }
+  
+  return isValid;
+}
+
+/**
+ * Инициализация валидации в реальном времени
+ * @param {HTMLElement} field - Поле ввода
+ * @param {Object} rule - Правило валидации
+ */
+function initRealtimeValidation(field, rule) {
+  // Валидация при потере фокуса
+  field.addEventListener('blur', () => {
+    if (field.value && field.value.trim()) {
+      validateField(field, rule);
+    } else if (rule.required) {
+      validateField(field, rule);
+    }
+  });
+  
+  // Очистка ошибки при вводе
+  field.addEventListener('input', () => {
+    if (field.classList.contains('error')) {
+      clearFieldError(field);
+    }
+  });
+}
+
+/**
+ * Валидация одного поля
+ * @param {HTMLElement} field - Поле ввода
+ * @param {Object} rule - Правило валидации
+ * @returns {boolean} - true если поле валидно
+ */
+function validateField(field, rule) {
+  let isValid = true;
+  let errorMessage = '';
+  
+  // Проверка обязательности
+  if (rule.required) {
+    const requiredCheck = validateRequired(field, rule.label || field.name || field.id);
+    if (!requiredCheck.valid) {
+      isValid = false;
+      errorMessage = requiredCheck.message;
+    }
+  }
+  
+  // Дополнительные проверки, если поле не пустое
+  if (isValid && field.value && field.value.trim()) {
+    if (rule.type === 'phone') {
+      const phoneCheck = validatePhone(field.value);
+      if (!phoneCheck.valid) {
+        isValid = false;
+        errorMessage = phoneCheck.message;
+      }
+    }
+    
+    if (rule.type === 'email') {
+      const emailCheck = validateEmail(field.value);
+      if (!emailCheck.valid) {
+        isValid = false;
+        errorMessage = emailCheck.message;
+      }
+    }
+    
+    if (rule.minLength || rule.maxLength) {
+      const lengthCheck = validateLength(
+        field.value,
+        rule.minLength,
+        rule.maxLength,
+        rule.label || field.name || field.id
+      );
+      if (!lengthCheck.valid) {
+        isValid = false;
+        errorMessage = lengthCheck.message;
+      }
+    }
+    
+    if (rule.validator && typeof rule.validator === 'function') {
+      const customCheck = rule.validator(field.value, field);
+      if (customCheck && !customCheck.valid) {
+        isValid = false;
+        errorMessage = customCheck.message || rule.message || 'Неверное значение';
+      }
+    }
+  }
+  
+  // Показываем или очищаем ошибку
+  if (!isValid) {
+    showFieldError(field, errorMessage);
+  } else {
+    clearFieldError(field);
+  }
+  
+  return isValid;
+}
+
+// Добавляем CSS стили для валидации, если их еще нет
+if (!document.getElementById('validation-styles')) {
+  const style = document.createElement('style');
+  style.id = 'validation-styles';
+  style.textContent = `
+    /* Стили для полей с ошибками */
+    input.error,
+    textarea.error,
+    select.error {
+      border-color: #ef4444 !important;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+      background-color: rgba(239, 68, 68, 0.05) !important;
+    }
+    
+    input.error:focus,
+    textarea.error:focus,
+    select.error:focus {
+      border-color: #ef4444 !important;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3) !important;
+    }
+    
+    /* Сообщения об ошибках */
+    .field-error-message {
+      color: #ef4444;
+      font-size: 0.875rem;
+      margin-top: 6px;
+      display: block;
+      animation: slideDown 0.2s ease;
+      line-height: 1.4;
+    }
+    
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-5px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Успешная валидация */
+    input.valid,
+    textarea.valid,
+    select.valid {
+      border-color: #22c55e !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 // Добавляем CSS анимации для уведомлений, если их еще нет
 if (!document.getElementById('notification-styles')) {
   const style = document.createElement('style');
@@ -144,10 +511,33 @@ if (!document.getElementById('notification-styles')) {
 
 // Экспорт
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { formatPrice, showNotification, handleFetchError, safeJsonParse };
+  module.exports = { 
+    formatPrice, 
+    showNotification, 
+    handleFetchError, 
+    safeJsonParse,
+    showFieldError,
+    clearFieldError,
+    validatePhone,
+    validateEmail,
+    validateRequired,
+    validateLength,
+    validateForm,
+    validateField,
+    initRealtimeValidation
+  };
 } else {
   window.formatPrice = formatPrice;
   window.showNotification = showNotification;
   window.handleFetchError = handleFetchError;
   window.safeJsonParse = safeJsonParse;
+  window.showFieldError = showFieldError;
+  window.clearFieldError = clearFieldError;
+  window.validatePhone = validatePhone;
+  window.validateEmail = validateEmail;
+  window.validateRequired = validateRequired;
+  window.validateLength = validateLength;
+  window.validateForm = validateForm;
+  window.validateField = validateField;
+  window.initRealtimeValidation = initRealtimeValidation;
 }

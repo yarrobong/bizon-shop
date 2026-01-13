@@ -235,6 +235,7 @@
   </footer>
 
  <!-- Скрипты -->
+  <script defer src="/js/utils.js"></script>
   <script defer src="/js/state.js"></script>
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
@@ -305,6 +306,15 @@
   if (submitBtn) {
     let isSending = false;
 
+    // Инициализация валидации в реальном времени
+    if (phoneInput && typeof initRealtimeValidation === 'function') {
+      initRealtimeValidation(phoneInput, {
+        type: 'phone',
+        required: true,
+        label: 'Номер телефона'
+      });
+    }
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
@@ -314,8 +324,13 @@
         return;
       }
 
-      phoneError.textContent = '';
-      phoneInput.classList.remove('error');
+      // Очищаем предыдущие ошибки
+      if (typeof clearFieldError === 'function' && phoneInput) {
+        clearFieldError(phoneInput);
+      } else {
+        phoneError.textContent = '';
+        phoneInput.classList.remove('error');
+      }
 
         const phone = phoneInput.value;
         const name = document.getElementById('name').value;
