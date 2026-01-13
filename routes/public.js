@@ -336,8 +336,7 @@ router.post('/order', orderRateLimit, async (req, res) => {
 
     // Отправка в Telegram
     const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-    // ID группы "Заявки Бизон": -5201502692
-    const CHAT_ID = process.env.TELEGRAM_CHAT_ID || '-5201502692';
+    const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
     if (BOT_TOKEN && CHAT_ID) {
       try {
@@ -436,8 +435,7 @@ router.post('/contact', publicRateLimit, async (req, res) => {
     telegramMessage += `\n🕐 ${moscowTimeString}`;
 
     const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-    // ID группы "Заявки Бизон": -5201502692
-    const CHAT_ID = process.env.TELEGRAM_CHAT_ID || '-5201502692';
+    const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
     if (BOT_TOKEN && CHAT_ID) {
       try {
