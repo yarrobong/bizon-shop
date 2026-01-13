@@ -625,11 +625,16 @@ body::before {
 
 /* Чекбоксы */
 .modal-content label input[type="checkbox"] {
-    width: auto;
-    min-height: auto;
-    margin-right: 8px;
+    width: 20px;
+    height: 20px;
+    min-height: 20px;
+    margin-right: 12px;
     margin-top: 0;
+    margin-bottom: 0;
     cursor: pointer;
+    transform: scale(1.5);
+    accent-color: var(--accent-primary);
+    flex-shrink: 0;
 }
 
 .modal-content label:has(input[type="checkbox"]) {
@@ -637,6 +642,7 @@ body::before {
     align-items: center;
     flex-direction: row;
     margin-bottom: 0;
+    min-height: 48px;
 }
 
 .modal-actions {
