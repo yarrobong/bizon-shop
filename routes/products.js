@@ -166,6 +166,27 @@ router.put('/:id', async (req, res) => {
       console.warn(`supplier_link очень длинный: ${normalizedSupplierLink.length} символов`);
     }
     
+    // Сначала проверяем существование колонки compatibility
+    let compatibilityColumnExists = true;
+    try {
+      const checkColumn = await pool.query(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'products' AND column_name = 'compatibility'
+      `);
+      compatibilityColumnExists = checkColumn.rows.length > 0;
+      console.log('Колонка compatibility существует:', compatibilityColumnExists);
+      
+      if (!compatibilityColumnExists) {
+        console.log('Создаем колонку compatibility...');
+        await pool.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS compatibility TEXT');
+        console.log('Колонка compatibility создана');
+      }
+    } catch (checkError) {
+      console.error('Ошибка при проверке/создании колонки compatibility:', checkError);
+      // Продолжаем выполнение, возможно колонка уже существует
+    }
+    
     let result;
     try {
       result = await pool.query(`
