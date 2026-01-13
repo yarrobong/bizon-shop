@@ -370,10 +370,8 @@ function setupCartButtons(itemData) {
         addToCartBtn.addEventListener('click', () => {
             const itemToAdd = window.currentDisplayedVariant || itemData;
             if (typeof window.addToCart === 'function') {
+                // addToCart теперь автоматически показывает мини-корзину и обновляет кнопку
                 window.addToCart(itemToAdd);
-            }
-            if (typeof window.updateCartCount === 'function') {
-                window.updateCartCount();
             }
         });
     }

@@ -516,8 +516,8 @@ function setupEventListeners(product) {
             // Используем текущий отображаемый вариант, а не основной товар
             let itemToAdd = window.currentDisplayedVariant || product;
             console.log("Добавление в корзину (из state.js):", itemToAdd.id, itemToAdd.title);
-            window.addToCart(itemToAdd); // Вызываем функцию из state.js
-            window.updateCartCountLocal(); // Вызываем функцию из state.js
+            // addToCart теперь автоматически показывает мини-корзину и обновляет кнопку
+            window.addToCart(itemToAdd);
         });
     }
 

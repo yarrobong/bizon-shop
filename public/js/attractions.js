@@ -138,8 +138,8 @@ function createAttractionCard(attraction) {
   if (addToCartBtn) {
     addToCartBtn.addEventListener('click', (event) => {
       event.stopPropagation(); // Останавливаем всплытие, чтобы не сработал обработчик клика по карточке
-      addToCart(attraction); // Добавляем аттракцион в корзину
-      updateCartCount(); // Обновляем счётчик
+      // addToCart теперь автоматически показывает мини-корзину и обновляет кнопку
+      addToCart(attraction);
     });
   }
 

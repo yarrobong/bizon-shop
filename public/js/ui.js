@@ -419,11 +419,16 @@ async function renderProducts() {
         const productId = parseInt(event.target.dataset.id);
         const product = ALL_PRODUCTS.find(p => p.id === productId);
         if (product) {
+          // addToCart теперь автоматически показывает мини-корзину и обновляет кнопку
           addToCart(product);
-          updateCartCount();
         }
       });
     });
+    
+    // Обновляем все кнопки корзины при рендеринге товаров
+    if (typeof updateAllCartButtons === 'function') {
+      updateAllCartButtons();
+    }
 
     // Добавляем визуальный индикатор, если используются локальные данные
     if (useLocalData) {
