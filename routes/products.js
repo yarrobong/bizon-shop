@@ -203,47 +203,17 @@ router.put('/:id', async (req, res) => {
     });
     
   } catch (err) {
-    console.error('Ошибка обновления товара:', err);
-    console.error('Тип ошибки:', typeof err);
-    console.error('Конструктор ошибки:', err.constructor?.name);
-    console.error('Детали ошибки:', {
-      message: err.message,
-      code: err.code,
-      detail: err.detail,
-      hint: err.hint,
-      constraint: err.constraint,
-      table: err.table,
-      column: err.column,
-      stack: err.stack ? err.stack.substring(0, 500) : 'нет stack trace'
-    });
+    console.error('Ошибка обновления товара:', err.message);
     
-    // Отправляем детальную информацию об ошибке клиенту для отладки
+    // Отправляем информацию об ошибке клиенту
     const errorResponse = {
       error: 'Не удалось обновить товар',
-      details: err.message || 'Неизвестная ошибка',
-      code: err.code || null,
-      detail: err.detail || null,
-      hint: err.hint || null,
-      constraint: err.constraint || null,
-      table: err.table || null,
-      column: err.column || null,
-      // Добавляем строковое представление ошибки для отладки
-      errorString: String(err),
-      errorName: err.name || null
+      details: err.message || 'Неизвестная ошибка'
     };
-    
-    console.error('Отправляемый ответ об ошибке:', JSON.stringify(errorResponse, null, 2));
     
     // Убеждаемся, что ответ еще не был отправлен
     if (!res.headersSent) {
-      try {
-        res.status(500).json(errorResponse);
-        console.log('Ответ об ошибке успешно отправлен клиенту');
-      } catch (sendError) {
-        console.error('Ошибка при отправке ответа об ошибке:', sendError);
-      }
-    } else {
-      console.error('Ответ уже был отправлен, не можем отправить детали ошибки. Headers sent:', res.headersSent);
+      res.status(500).json(errorResponse);
     }
   }
 });
