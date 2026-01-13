@@ -463,9 +463,10 @@ function resetFilters() {
   document.querySelectorAll('input[name="category"]').forEach(radio => {
     radio.checked = false;
   });
-  // Сбрасываем категорию
-  const allCategory = document.querySelector('input[name="category"][value="все"]');
-  if (allCategory) allCategory.checked = true;
+  // Сбрасываем категорию (убираем checked со всех радиокнопок - показываем все категории)
+  document.querySelectorAll('input[name="category"]').forEach(radio => {
+    radio.checked = false;
+  });
 
   // Сбрасываем цену
   const priceMin = document.getElementById('price-min');
