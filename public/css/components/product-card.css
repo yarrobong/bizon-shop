@@ -91,13 +91,31 @@ main {
 }
 
 /* Подсветка при ховере — точно так же, как в feature-card */
-.product-card:hover {
-  transform: translateY(-6px); /* вместо scale(1.03) — для единства эффекта */
-  border-color: rgba(59, 130, 246, 0.9);
-  box-shadow: 
-    0 0 15px rgba(59, 130, 246, 1),
-    0 0 35px rgba(59, 130, 246, 0.8),
-    0 0 70px rgba(59, 130, 246, 0.6);
+@media (hover: hover) and (pointer: fine) {
+  .product-card:hover {
+    transform: translateY(-6px); /* вместо scale(1.03) — для единства эффекта */
+    border-color: rgba(59, 130, 246, 0.9);
+    box-shadow: 
+      0 0 15px rgba(59, 130, 246, 1),
+      0 0 35px rgba(59, 130, 246, 0.8),
+      0 0 70px rgba(59, 130, 246, 0.6);
+  }
+}
+
+/* Отключаем анимации и hover-эффекты на мобильных устройствах */
+@media (max-width: 900px) {
+  .product-card {
+    transition: none;
+  }
+  
+  .product-card:hover {
+    transform: none;
+    border-color: rgba(43, 83, 193, 0.7);
+    box-shadow: 
+      0 0 10px rgba(43, 83, 193, 0.8),
+      0 0 25px rgba(43, 83, 193, 0.6),
+      0 0 50px rgba(43, 83, 193, 0.4);
+  }
 }
 
 /* Доп. свечение внутри — градиент, как в feature-card */
