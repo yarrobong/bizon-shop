@@ -707,16 +707,25 @@ async function saveProduct() {
         if (!response.ok) {
             let errorMessage = `Ошибка сохранения товара: ${response.status}`;
             let errorDetails = null;
+            let errorCode = null;
             try {
                 const errorData = await response.json();
                 errorMessage = errorData.message || errorData.error || errorMessage;
-                errorDetails = errorData.details || null;
+                errorDetails = errorData.details || errorData.detail || null;
+                errorCode = errorData.code || null;
+                console.error('Полный ответ об ошибке от сервера:', errorData);
             } catch (e) {
                 const errorText = await response.text().catch(() => '');
                 errorMessage = errorText || errorMessage;
+                console.error('Не удалось распарсить JSON ответ об ошибке:', e);
             }
-            console.error('Детали ошибки от сервера:', { errorMessage, errorDetails, status: response.status });
-            throw new Error(errorMessage);
+            console.error('Детали ошибки от сервера:', { 
+                errorMessage, 
+                errorDetails, 
+                errorCode,
+                status: response.status 
+            });
+            throw new Error(errorMessage + (errorDetails ? `: ${errorDetails}` : ''));
         }
 
         const savedProduct = await response.json();

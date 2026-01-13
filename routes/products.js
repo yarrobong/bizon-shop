@@ -137,9 +137,12 @@ router.put('/:id', async (req, res) => {
       return res.status(400).json({ error: 'Некорректный ID товара' });
     }
     
+    // Убеждаемся, что description не undefined
+    const normalizedDescription = description || '';
+    
     const queryParams = [
       title.trim(),
-      description || '',
+      normalizedDescription,
       normalizedPrice,
       normalizedTag,
       normalizedAvailable,
@@ -192,9 +195,22 @@ router.put('/:id', async (req, res) => {
       code: err.code,
       detail: err.detail,
       hint: err.hint,
+      constraint: err.constraint,
+      table: err.table,
+      column: err.column,
       stack: err.stack
     });
-    res.status(500).json({ error: 'Не удалось обновить товар', details: err.message });
+    
+    // Отправляем детальную информацию об ошибке клиенту для отладки
+    const errorResponse = {
+      error: 'Не удалось обновить товар',
+      details: err.message,
+      code: err.code,
+      detail: err.detail,
+      hint: err.hint
+    };
+    
+    res.status(500).json(errorResponse);
   }
 });
 
