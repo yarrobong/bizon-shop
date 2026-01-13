@@ -332,31 +332,64 @@
         phoneInput.classList.remove('error');
       }
 
+      // Валидация формы
+      let isValid = true;
+
+      // Проверка согласия
+      if (!consentCheckbox.checked) {
+        if (typeof showNotification === 'function') {
+          showNotification('Необходимо дать согласие на обработку персональных данных', 'warning');
+        } else {
+          alert('Необходимо дать согласие на обработку персональных данных');
+        }
+        consentCheckbox.focus();
+        return;
+      }
+
+      // Валидация телефона
+      if (typeof validatePhone === 'function') {
+        const phoneValidation = validatePhone(phoneInput.value);
+        if (!phoneValidation.valid) {
+          if (typeof showFieldError === 'function') {
+            showFieldError(phoneInput, phoneValidation.message);
+          } else {
+            phoneError.textContent = phoneValidation.message;
+            phoneInput.classList.add('error');
+          }
+          isValid = false;
+        }
+      } else {
+        // Fallback валидация
         const phone = phoneInput.value;
-        const name = document.getElementById('name').value;
-        const message = document.getElementById('message').value;
-
-        // Проверка телефона
-        if (!phone || phone.replace(/\D/g, '').length < 10) {
-          phoneError.textContent = 'Введите номер телефона';
-          phoneInput.classList.add('error');
-          phoneInput.focus();
-          return;
-        }
-
         const phoneDigits = phone.replace(/\D/g, '');
-        if (!/^\+?\d{10,}$/.test(phoneDigits)) {
-          phoneError.textContent = 'Проверьте формат номера';
-          phoneInput.classList.add('error');
-          phoneInput.focus();
-          return;
+        if (!phone || phoneDigits.length < 10) {
+          const errorMsg = 'Введите номер телефона';
+          if (typeof showFieldError === 'function') {
+            showFieldError(phoneInput, errorMsg);
+          } else {
+            phoneError.textContent = errorMsg;
+            phoneInput.classList.add('error');
+          }
+          isValid = false;
+        } else if (!/^\+?\d{10,}$/.test(phoneDigits)) {
+          const errorMsg = 'Проверьте формат номера';
+          if (typeof showFieldError === 'function') {
+            showFieldError(phoneInput, errorMsg);
+          } else {
+            phoneError.textContent = errorMsg;
+            phoneInput.classList.add('error');
+          }
+          isValid = false;
         }
+      }
 
-        // Проверка согласия
-        if (!consentCheckbox.checked) {
-           alert('Необходимо дать согласие на обработку персональных данных');
-           return;
-        }
+      if (!isValid) {
+        return;
+      }
+
+      const phone = phoneInput.value;
+      const name = document.getElementById('name').value;
+      const message = document.getElementById('message').value;
 
         try {
           isSending = true;

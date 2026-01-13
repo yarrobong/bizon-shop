@@ -229,8 +229,20 @@
             } catch (err) {
                 loading.style.display = 'none';
                 console.error('Ошибка сети:', err);
-                errorMessage.textContent = 'Ошибка подключения к серверу';
+                const errorMsg = typeof handleFetchError === 'function' 
+                    ? handleFetchError(err)
+                    : 'Ошибка подключения к серверу';
+                
+                errorMessage.textContent = errorMsg;
                 errorMessage.style.display = 'block';
+                
+                if (typeof showNotification === 'function') {
+                    showNotification(errorMsg, 'error');
+                }
+                
+                if (typeof showFieldError === 'function') {
+                    showFieldError(passwordField, errorMsg);
+                }
             }
         });
     </script>
