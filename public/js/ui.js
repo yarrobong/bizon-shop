@@ -299,7 +299,7 @@ async function renderProducts() {
         if (compatibilities.length > 0) {
           const compatibilityText = compatibilities.join(', ');
           compatibilityBadges = '<div class="product-compatibility-badges">' +
-            `<span class="compatibility-badge">Для: ${compatibilityText}</span>` +
+            `<span class="compatibility-badge">Для ${compatibilityText}</span>` +
             '</div>';
         }
       }
