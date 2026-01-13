@@ -481,5 +481,19 @@ document.addEventListener('DOMContentLoaded', function() {
         yearElement.textContent = new Date().getFullYear();
     }
 
+    // Инициализация кнопки корзины (для всех страниц)
+    const cartBtn = document.getElementById('cart-btn');
+    if (cartBtn) {
+        cartBtn.addEventListener('click', () => {
+            window.location.href = '/cart';
+        });
+    }
+
+    // Обновление счетчика корзины при загрузке страницы
+    if (typeof window.updateCartCount === 'function') {
+        window.updateCartCount();
+    } else if (typeof updateCartCount === 'function') {
+        updateCartCount();
+    }
 
 });
