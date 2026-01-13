@@ -385,7 +385,8 @@ header.scrolled {
     order: 2; /* Логотип по центру */
   }
 
-  body:has(.contact-layout) header > .header-actions {
+  body:has(.contact-layout) header > .header-actions,
+  body:has(.contact-layout) header > .cart-btn {
     order: 4; /* Корзина справа */
   }
   
