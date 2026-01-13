@@ -375,15 +375,6 @@ header.scrolled {
   header > .header-actions {
     order: 4; /* Действия (корзина) справа */
   }
-
-  /* Специальные стили для страницы контактов - бургер справа, корзина слева */
-  body:has(.contact-layout) header > .hamburger {
-    order: 4; /* Бургер меню справа */
-  }
-
-  body:has(.contact-layout) header > .header-actions {
-    order: 1; /* Корзина слева */
-  }
   
   header.scrolled {
     margin: 0.25rem 0.5rem;
