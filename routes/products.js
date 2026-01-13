@@ -157,12 +157,36 @@ router.put('/:id', async (req, res) => {
     
     console.log('Параметры SQL запроса:', queryParams.map((p, i) => `$${i + 1}: ${typeof p} ${p === null ? 'null' : p === undefined ? 'undefined' : Array.isArray(p) ? `[массив ${p.length}]` : String(p).substring(0, 50)}`));
     
-    const result = await pool.query(`
-      UPDATE products
-      SET title = $1, description = $2, price = $3, tag = $4, available = $5, category = $6, brand = $7, compatibility = $8, supplier_link = $9, supplier_notes = $10, images_json = $11
-      WHERE id = $12
-      RETURNING id, title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json
-    `, queryParams);
+    let result;
+    try {
+      result = await pool.query(`
+        UPDATE products
+        SET title = $1, description = $2, price = $3, tag = $4, available = $5, category = $6, brand = $7, compatibility = $8, supplier_link = $9, supplier_notes = $10, images_json = $11
+        WHERE id = $12
+        RETURNING id, title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json
+      `, queryParams);
+      console.log('SQL запрос выполнен успешно, обновлено строк:', result.rowCount);
+    } catch (sqlError) {
+      console.error('Ошибка SQL запроса:', sqlError);
+      console.error('Детали SQL ошибки:', {
+        message: sqlError.message,
+        code: sqlError.code,
+        detail: sqlError.detail,
+        hint: sqlError.hint,
+        constraint: sqlError.constraint,
+        table: sqlError.table,
+        column: sqlError.column,
+        position: sqlError.position,
+        internalPosition: sqlError.internalPosition,
+        internalQuery: sqlError.internalQuery,
+        where: sqlError.where,
+        schema: sqlError.schema,
+        file: sqlError.file,
+        line: sqlError.line,
+        routine: sqlError.routine
+      });
+      throw sqlError; // Пробрасываем ошибку дальше
+    }
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Товар не найден' });
@@ -204,13 +228,21 @@ router.put('/:id', async (req, res) => {
     // Отправляем детальную информацию об ошибке клиенту для отладки
     const errorResponse = {
       error: 'Не удалось обновить товар',
-      details: err.message,
-      code: err.code,
-      detail: err.detail,
-      hint: err.hint
+      details: err.message || 'Неизвестная ошибка',
+      code: err.code || null,
+      detail: err.detail || null,
+      hint: err.hint || null,
+      constraint: err.constraint || null,
+      table: err.table || null,
+      column: err.column || null
     };
     
-    res.status(500).json(errorResponse);
+    // Убеждаемся, что ответ еще не был отправлен
+    if (!res.headersSent) {
+      res.status(500).json(errorResponse);
+    } else {
+      console.error('Ответ уже был отправлен, не можем отправить детали ошибки');
+    }
   }
 });
 
