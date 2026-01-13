@@ -8,14 +8,43 @@ if (localStorage.getItem('isAdmin') !== 'true') {
     }
 }
 
-// Проверка наличия sessionId при загрузке страницы
-if (localStorage.getItem('isAdmin') === 'true' && !localStorage.getItem('sessionId')) {
-    console.warn('⚠️ Пользователь помечен как админ, но sessionId отсутствует. Перенаправление на страницу входа.');
+// Функция для перенаправления на страницу входа (определяем раньше для использования)
+function redirectToLogin() {
+    console.warn('⚠️ Сессия истекла или недействительна. Перенаправление на страницу входа.');
     localStorage.removeItem('isAdmin');
+    localStorage.removeItem('sessionId');
     if (!window.location.pathname.includes('login.html')) {
         window.location.href = '../login.html';
     }
 }
+
+// Проверка наличия sessionId при загрузке страницы
+if (localStorage.getItem('isAdmin') === 'true' && !localStorage.getItem('sessionId')) {
+    redirectToLogin();
+}
+
+// Проверка валидности сессии при загрузке страницы (опциональная проверка с сервером)
+document.addEventListener('DOMContentLoaded', async () => {
+    if (localStorage.getItem('isAdmin') === 'true' && localStorage.getItem('sessionId')) {
+        try {
+            // Делаем легкий запрос для проверки валидности сессии
+            // Используем любой админский эндпоинт, который защищен requireAuth
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch('/api/admin/products?show_all=false', {
+                headers: {
+                    'x-session-id': sessionId
+                }
+            });
+            
+            if (response.status === 401) {
+                redirectToLogin();
+            }
+        } catch (error) {
+            // Игнорируем ошибки при проверке, основная проверка будет при реальных запросах
+            console.warn('Не удалось проверить сессию при загрузке:', error);
+        }
+    }
+});
 
 // Функция для получения заголовков с аутентификацией
 function getAuthHeaders() {
@@ -46,9 +75,7 @@ async function fetchWithAuth(url, options = {}) {
         console.warn('⚠️ sessionId не найден в localStorage для запроса:', url);
         // Если нет sessionId, но пользователь должен быть авторизован, перенаправляем на логин
         if (localStorage.getItem('isAdmin') === 'true') {
-            console.error('❌ Пользователь помечен как админ, но sessionId отсутствует. Перенаправление на страницу входа.');
-            localStorage.removeItem('isAdmin');
-            window.location.href = '../login.html';
+            redirectToLogin();
             return Promise.reject(new Error('Session expired'));
         }
     }
@@ -59,10 +86,18 @@ async function fetchWithAuth(url, options = {}) {
         ...(options.headers || {})
     };
     
-    return fetch(url, {
+    const response = await fetch(url, {
         ...options,
         headers: mergedHeaders
     });
+    
+    // Проверяем статус ответа - если 401 (Unauthorized), значит сессия истекла
+    if (response.status === 401) {
+        redirectToLogin();
+        return Promise.reject(new Error('Session expired or invalid'));
+    }
+    
+    return response;
 }
 
 // Делаем функцию доступной глобально
