@@ -268,11 +268,21 @@ main {
   backdrop-filter: blur(2px);
 }
 
+/* Адаптация бейджа на мобильных экранах */
+@media (max-width: 479px) {
+  .product-badge {
+    font-size: 0.5rem;
+    padding: 0.15rem 0.35rem;
+    top: 0.4rem;
+    right: 0.4rem;
+  }
+}
+
 /* Адаптация бейджа на очень маленьких экранах */
 @media (max-width: 360px) {
   .product-badge {
-    font-size: 0.55rem;
-    padding: 0.2rem 0.4rem;
+    font-size: 0.45rem;
+    padding: 0.12rem 0.3rem;
     top: 0.3rem;
     right: 0.3rem;
   }
@@ -326,9 +336,7 @@ main {
   backdrop-filter: blur(12px) saturate(180%);
   -webkit-backdrop-filter: blur(12px) saturate(180%);
   border: 1px solid rgba(43, 83, 193, 0.7);
-  box-shadow: 
-    0 0 8px rgba(43, 83, 193, 0.6),
-    0 0 15px rgba(59, 130, 246, 0.4);
+
   white-space: nowrap;
 }
 
@@ -341,7 +349,7 @@ main {
   
   .compatibility-badge {
     padding: 0.15rem 0.35rem;
-    font-size: 0.5rem;
+    font-size: 0.4rem;
   }
 }
 
@@ -353,7 +361,7 @@ main {
   
   .compatibility-badge {
     padding: 0.12rem 0.3rem;
-    font-size: 0.45rem;
+    font-size: 0.4rem;
   }
 }
 
