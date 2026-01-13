@@ -206,8 +206,9 @@ body.modal-open {
 /* Кнопка удаления товара */
 .cart-item-remove {
   position: absolute;
-  top: 0.75rem;
+  top: 50%;
   right: 0.75rem;
+  transform: translateY(-50%);
   background: rgba(239, 68, 68, 0.2);
   border: 1px solid rgba(239, 68, 68, 0.4);
   border-radius: 6px;
@@ -226,11 +227,11 @@ body.modal-open {
 .cart-item-remove:hover {
   background: rgba(239, 68, 68, 0.4);
   border-color: rgba(239, 68, 68, 0.6);
-  transform: scale(1.1);
+  transform: translateY(-50%) scale(1.1);
 }
 
 .cart-item-remove:active {
-  transform: scale(0.95);
+  transform: translateY(-50%) scale(0.95);
 }
 
 .cart-item-remove svg {
