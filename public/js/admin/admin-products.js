@@ -126,6 +126,18 @@ async function loadProductForEdit(productId) {
                 tagSelect.value = product.tag || '';
             }
 
+            const compatibilityInput = document.getElementById('product-compatibility');
+            if (compatibilityInput) {
+                // Если compatibility - массив, объединяем в строку через запятую
+                if (Array.isArray(product.compatibility)) {
+                    compatibilityInput.value = product.compatibility.join(', ');
+                } else if (product.compatibility) {
+                    compatibilityInput.value = product.compatibility;
+                } else {
+                    compatibilityInput.value = '';
+                }
+            }
+
             document.getElementById('product-available').checked = product.available !== false;
 
             loadProductImagesToForm(product.images || []);
@@ -618,6 +630,7 @@ async function saveProduct() {
         const available = formData.get('product-available') === 'on';
         const supplier_link = (formData.get('product-supplier-link') || '').toString().trim();
         const supplier_notes = (formData.get('product-supplier-notes') || '').toString().trim();
+        const compatibility = (formData.get('product-compatibility') || '').toString().trim();
         const images = getProductImagesFromForm();
 
         let selectedVariantIds = [];
@@ -638,7 +651,8 @@ async function saveProduct() {
             available: available,
             images: images,
             supplier_link: supplier_link,
-            supplier_notes: supplier_notes
+            supplier_notes: supplier_notes,
+            compatibility: compatibility || null
         };
 
         if (!productData.title) {
