@@ -307,8 +307,8 @@ main {
 /* === PRODUCT COMPATIBILITY BADGES (плашки для креплений) === */
 .product-compatibility-badges {
   position: absolute;
-  bottom: 0.5rem;
-  right: 0.5rem;
+  top: 0.5rem;
+  left: 0.5rem;
   z-index: 10;
   max-width: calc(100% - 1rem);
 }
@@ -335,8 +335,8 @@ main {
 /* Адаптация плашки на маленьких экранах */
 @media (max-width: 479px) {
   .product-compatibility-badges {
-    bottom: 0.4rem;
-    right: 0.4rem;
+    top: 0.4rem;
+    left: 0.4rem;
   }
   
   .compatibility-badge {
@@ -347,8 +347,8 @@ main {
 
 @media (max-width: 360px) {
   .product-compatibility-badges {
-    bottom: 0.3rem;
-    right: 0.3rem;
+    top: 0.3rem;
+    left: 0.3rem;
   }
   
   .compatibility-badge {
