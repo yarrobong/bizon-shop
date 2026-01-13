@@ -137,14 +137,15 @@ main {
   color: var(--text-primary);
 }
 
+@media (max-width: 768px) {
+  .tags {
+    padding: 20px 1.5rem 1.5rem 1.5rem;
+  }
+}
+
 @media (max-width: 360px) {
   .tags {
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-    padding-top: 2rem;
-    padding-bottom: 1.5rem;
-    margin-top: 1.5rem;
-    margin-bottom: 1.5rem;
+    padding: 20px 0.75rem 1.5rem 0.75rem;
   }
 }
 
