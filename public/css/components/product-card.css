@@ -311,8 +311,8 @@ main {
   right: 0.5rem;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
-  padding: 0.25rem;
+  gap: 0.25rem;
+  padding: 0.2rem;
   z-index: 10;
   max-width: calc(100% - 1rem);
   justify-content: flex-end;
@@ -320,12 +320,12 @@ main {
 
 .compatibility-badge {
   display: inline-block;
-  padding: 0.35rem 0.65rem;
-  border-radius: 0.5rem;
-  font-size: 0.7rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.4rem;
+  font-size: 0.55rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
   color: #ffffff;
   /* Стиль сайта: жидкое стекло */
   background: rgba(11, 11, 38, 0.5);
@@ -343,13 +343,13 @@ main {
   .product-compatibility-badges {
     bottom: 0.4rem;
     right: 0.4rem;
-    gap: 0.3rem;
-    padding: 0.2rem;
+    gap: 0.2rem;
+    padding: 0.15rem;
   }
   
   .compatibility-badge {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.65rem;
+    padding: 0.15rem 0.35rem;
+    font-size: 0.5rem;
   }
 }
 
@@ -357,12 +357,12 @@ main {
   .product-compatibility-badges {
     bottom: 0.3rem;
     right: 0.3rem;
-    gap: 0.25rem;
+    gap: 0.15rem;
   }
   
   .compatibility-badge {
-    padding: 0.2rem 0.4rem;
-    font-size: 0.6rem;
+    padding: 0.12rem 0.3rem;
+    font-size: 0.45rem;
   }
 }
 
