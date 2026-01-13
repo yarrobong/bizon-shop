@@ -297,10 +297,9 @@ async function renderProducts() {
             : [];
         
         if (compatibilities.length > 0) {
+          const compatibilityText = compatibilities.join(', ');
           compatibilityBadges = '<div class="product-compatibility-badges">' +
-            compatibilities.map(comp => 
-              `<span class="compatibility-badge" data-helmet="${comp.toLowerCase()}">${comp}</span>`
-            ).join('') +
+            `<span class="compatibility-badge">Для: ${compatibilityText}</span>` +
             '</div>';
         }
       }
