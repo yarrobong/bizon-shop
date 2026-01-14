@@ -790,7 +790,10 @@ function setupFilterAccordion() {
   const filterGroupHeaders = document.querySelectorAll('.filter-group-header');
   
   filterGroupHeaders.forEach(header => {
-    header.addEventListener('click', () => {
+    header.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
       const isExpanded = header.getAttribute('aria-expanded') === 'true';
       const content = header.nextElementSibling;
       

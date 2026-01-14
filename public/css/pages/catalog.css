@@ -267,6 +267,8 @@
   border-radius: 12px;
   padding: 1rem;
   transition: all 0.3s ease;
+  position: relative;
+  align-items: stretch;
 }
 
 .filter-group:hover {
@@ -294,7 +296,7 @@
 }
 
 .filter-group-header[aria-expanded="false"] + .filter-group-content {
-  display: none;
+  display: none !important;
 }
 
 .filter-group-header[aria-expanded="true"] .filter-arrow {
@@ -627,6 +629,14 @@
   .filter-group {
     width: 100%;
     min-width: 100%;
+  }
+  
+  .filter-group-content {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    margin-top: 0.5rem;
   }
 
   .filters-sidebar.active {
