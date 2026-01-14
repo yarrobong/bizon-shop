@@ -193,17 +193,9 @@ router.put('/:id', async (req, res) => {
     }
 
     const updatedProductFromDB = result.rows[0];
-    let processedImages = [];
     
-    if (updatedProductFromDB.images_json != null) {
-      if (Array.isArray(updatedProductFromDB.images_json)) {
-        processedImages = updatedProductFromDB.images_json;
-      } else if (typeof updatedProductFromDB.images_json === 'object') {
-        processedImages = [updatedProductFromDB.images_json];
-      } else {
-        processedImages = [];
-      }
-    }
+    // Используем утилиту parseImagesJson для парсинга изображений
+    const processedImages = parseImagesJson(updatedProductFromDB.images_json, productId);
 
     const { images_json: _, ...productWithoutImagesJson } = updatedProductFromDB;
     
