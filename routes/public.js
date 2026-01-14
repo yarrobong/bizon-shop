@@ -5,6 +5,7 @@ const { parseImagesJson } = require('../utils/parseImages');
 const rateLimit = require('../middleware/rateLimit');
 const { requireAuth } = require('../middleware/auth');
 const axios = require('axios');
+const cache = require('../utils/cache');
 
 // Rate limiting для публичных API
 const publicRateLimit = rateLimit({
@@ -42,6 +43,16 @@ router.get('/products', publicRateLimit, async (req, res, next) => {
  */
 async function handleProductsRequest(req, res, isAdmin) {
   try {
+    // Формируем ключ кэша в зависимости от типа запроса
+    const cacheKey = `products:${isAdmin ? 'admin' : 'public'}`;
+    
+    // Проверяем кэш
+    const cachedProducts = cache.get(cacheKey);
+    if (cachedProducts) {
+      console.log(`[Cache] Товары загружены из кэша (${isAdmin ? 'admin' : 'public'})`);
+      return res.json(cachedProducts);
+    }
+    
     // Формируем WHERE условие
     let whereClause = '';
     if (!isAdmin) {
@@ -91,6 +102,10 @@ async function handleProductsRequest(req, res, isAdmin) {
         slug: row.slug
       };
     });
+
+    // Сохраняем в кэш
+    cache.set(cacheKey, products);
+    console.log(`[Cache] Товары сохранены в кэш (${isAdmin ? 'admin' : 'public'})`);
 
     res.json(products);
   } catch (err) {

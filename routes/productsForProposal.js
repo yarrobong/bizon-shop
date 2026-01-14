@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
 const { parseImagesJson } = require('../utils/parseImages');
+const cache = require('../utils/cache');
 
 /**
  * GET /api/products_for_proposal
@@ -15,6 +16,15 @@ const { parseImagesJson } = require('../utils/parseImages');
  */
 router.get('/', async (req, res) => {
   try {
+    const cacheKey = 'products_for_proposal';
+    
+    // Проверяем кэш
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) {
+      console.log('[Cache] Товары и аттракционы для КП загружены из кэша');
+      return res.json(cachedData);
+    }
+    
     // Получаем товары
     const productsResult = await pool.query(`
       SELECT id, title, description, price, tag, available, category, brand, compatibility,
@@ -107,8 +117,14 @@ router.get('/', async (req, res) => {
 
     // Объединяем товары и аттракционы в один массив
     const allItems = [...products, ...attractions];
+    
+    const responseData = { success: true, products: allItems };
+    
+    // Сохраняем в кэш
+    cache.set(cacheKey, responseData);
+    console.log('[Cache] Товары и аттракционы для КП сохранены в кэш');
 
-    res.json({ success: true, products: allItems });
+    res.json(responseData);
   } catch (err) {
     console.error('Ошибка загрузки товаров и аттракционов для КП:', err);
     res.status(500).json({ success: false, error: 'Ошибка сервера при загрузке товаров и аттракционов для КП.' });

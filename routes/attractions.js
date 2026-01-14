@@ -4,6 +4,7 @@ const pool = require('../config/db');
 const { requireAuth } = require('../middleware/auth');
 const { generateAttractionSlug } = require('../utils/slug');
 const { xmlEscape } = require('../utils/xmlEscape');
+const cache = require('../utils/cache');
 
 // ========== ПУБЛИЧНЫЕ РОУТЫ (без аутентификации) ==========
 
@@ -470,6 +471,9 @@ router.post('/', requireAuth, async (req, res) => {
       await client.query('COMMIT');
       client.release();
 
+      // Инвалидируем кэш аттракционов после создания
+      cache.invalidateAttractions();
+
       res.status(201).json({ id: newId, message: 'Аттракцион создан' });
     } catch (err) {
       await client.query('ROLLBACK');
@@ -600,6 +604,9 @@ router.put('/:id', requireAuth, async (req, res) => {
       await client.query('COMMIT');
       client.release();
 
+      // Инвалидируем кэш аттракционов после обновления
+      cache.invalidateAttractions();
+      
       res.json({ message: 'Аттракцион обновлен' });
     } catch (err) {
       await client.query('ROLLBACK');
@@ -630,6 +637,9 @@ router.delete('/:id', requireAuth, async (req, res) => {
     }
 
     await pool.query('DELETE FROM attractions WHERE id = $1', [attractionId]);
+    // Инвалидируем кэш аттракционов после удаления
+    cache.invalidateAttractions();
+    
     res.json({ message: 'Аттракцион удален' });
   } catch (err) {
     console.error(`❌ Ошибка при удалении аттракциона с ID ${id}:`, err);

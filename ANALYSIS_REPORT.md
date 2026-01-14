@@ -97,16 +97,24 @@
 
 **Статус:** ✅ Исправлено
 
-### 7. Отсутствие кэширования
+### 7. ✅ Отсутствие кэширования (ИСПРАВЛЕНО)
 **Проблема:** Часто запрашиваемые данные (товары, категории) загружаются из БД при каждом запросе.
 
-**Решение:**
-```javascript
-const NodeCache = require('node-cache');
-const cache = new NodeCache({ stdTTL: 300 }); // 5 минут
-```
+**Решение:** ✅ Реализовано:
+- Установлен пакет `node-cache`
+- Создан модуль кэширования `utils/cache.js` с TTL 5 минут
+- Добавлено кэширование в:
+  - `routes/public.js` - GET /api/products (публичные и админские запросы)
+  - `routes/categories.js` - GET /api/categories
+  - `routes/admin.js` - GET /api/admin/products
+  - `routes/productsForProposal.js` - GET /api/products_for_proposal
+- Реализована инвалидация кэша при изменении данных:
+  - `routes/products.js` - POST, PUT, DELETE товаров и вариантов
+  - `routes/categories.js` - POST, DELETE категорий
+  - `routes/attractions.js` - POST, PUT, DELETE аттракционов
+- Разные ключи кэша для разных типов запросов (публичные/админские)
 
-**Приоритет:** Средний
+**Статус:** ✅ Исправлено
 
 ### 8. Отсутствие индексов в БД
 **Проблема:** Нет индексов на часто используемых полях.

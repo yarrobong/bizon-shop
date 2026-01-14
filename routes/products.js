@@ -4,6 +4,7 @@ const pool = require('../config/db');
 const { requireAuth } = require('../middleware/auth');
 const { parseImagesJson } = require('../utils/parseImages');
 const { generateSlug } = require('../utils/slug');
+const cache = require('../utils/cache');
 
 // Все маршруты требуют аутентификации
 router.use(requireAuth);
@@ -89,6 +90,10 @@ router.put('/:id/variants', async (req, res) => {
     }
 
     await client.query('COMMIT');
+    
+    // Инвалидируем кэш товаров после обновления вариантов
+    cache.invalidateProducts();
+    
     res.json({ success: true, message: 'Варианты товара обновлены', groupId: groupIdToUse });
 
   } catch (err) {
@@ -198,6 +203,9 @@ router.put('/:id', async (req, res) => {
     const processedImages = parseImagesJson(updatedProductFromDB.images_json, productId);
 
     const { images_json: _, ...productWithoutImagesJson } = updatedProductFromDB;
+    
+    // Инвалидируем кэш товаров после обновления
+    cache.invalidateProducts();
     
     res.json({
       ...productWithoutImagesJson,
@@ -337,6 +345,9 @@ router.post('/', async (req, res) => {
       [title, description, price, tag, available, category, brand, compatibility, supplier_link, supplier_notes, images_json, uniqueSlug]
     );
 
+    // Инвалидируем кэш товаров после создания
+    cache.invalidateProducts();
+
     res.status(201).json({ id: result.rows[0].id, message: 'Товар создан', slug: uniqueSlug });
   } catch (err) {
     console.error('Ошибка создания товара:', err);
@@ -355,6 +366,10 @@ router.delete('/:id', async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Товар не найден' });
     }
+    
+    // Инвалидируем кэш товаров после удаления
+    cache.invalidateProducts();
+    
     res.status(204).send();
   } catch (err) {
     console.error('Ошибка удаления товара:', err);

@@ -4,6 +4,7 @@ const pool = require('../config/db');
 const { requireAuth } = require('../middleware/auth');
 const { parseImagesJson } = require('../utils/parseImages');
 const { generateSlug, generateAttractionSlug } = require('../utils/slug');
+const cache = require('../utils/cache');
 
 // Все админские маршруты требуют аутентификации
 router.use(requireAuth);
@@ -15,6 +16,16 @@ router.use(requireAuth);
 router.get('/products', async (req, res) => {
   try {
     const showAll = req.query.show_all === 'true';
+    
+    // Формируем ключ кэша
+    const cacheKey = `admin:products:${showAll ? 'all' : 'available'}`;
+    
+    // Проверяем кэш
+    const cachedProducts = cache.get(cacheKey);
+    if (cachedProducts) {
+      console.log(`[Cache] Админские товары загружены из кэша (showAll: ${showAll})`);
+      return res.json(cachedProducts);
+    }
 
     let whereClause = '';
     if (!showAll) {
@@ -49,6 +60,10 @@ router.get('/products', async (req, res) => {
         slug: row.slug
       };
     });
+
+    // Сохраняем в кэш
+    cache.set(cacheKey, products);
+    console.log(`[Cache] Админские товары сохранены в кэш (showAll: ${showAll})`);
 
     res.json(products);
   } catch (err) {

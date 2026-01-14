@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
 const { requireAuth } = require('../middleware/auth');
+const cache = require('../utils/cache');
 
 // Все маршруты требуют аутентификации
 router.use(requireAuth);
@@ -12,7 +13,21 @@ router.use(requireAuth);
  */
 router.get('/', async (req, res) => {
   try {
+    const cacheKey = 'categories';
+    
+    // Проверяем кэш
+    const cachedCategories = cache.get(cacheKey);
+    if (cachedCategories) {
+      console.log('[Cache] Категории загружены из кэша');
+      return res.json(cachedCategories);
+    }
+    
     const result = await pool.query('SELECT id, name FROM categories ORDER BY name');
+    
+    // Сохраняем в кэш
+    cache.set(cacheKey, result.rows);
+    console.log('[Cache] Категории сохранены в кэш');
+    
     res.json(result.rows);
   } catch (err) {
     console.error('Ошибка загрузки категорий:', err);
@@ -35,6 +50,10 @@ router.post('/', async (req, res) => {
       'INSERT INTO categories (name) VALUES ($1) RETURNING id, name',
       [name]
     );
+    
+    // Инвалидируем кэш категорий
+    cache.invalidateCategories();
+    
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error('Ошибка создания категории:', err);
@@ -53,6 +72,10 @@ router.delete('/:id', async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Категория не найдена' });
     }
+    
+    // Инвалидируем кэш категорий
+    cache.invalidateCategories();
+    
     res.status(204).send();
   } catch (err) {
     console.error('Ошибка удаления категории:', err);
