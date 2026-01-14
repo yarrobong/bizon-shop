@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const pool = require('./config/db');
+const cookieParser = require('cookie-parser');
+const { csrfToken } = require('./middleware/csrf');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,8 +12,12 @@ const PORT = process.env.PORT || 3000;
 process.env.TZ = 'Europe/Moscow';
 
 // --- Middleware ---
+app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// CSRF токен для всех запросов (добавляет токен в res.locals и cookie)
+app.use(csrfToken);
 
 // Статические файлы
 app.use(express.static(path.join(__dirname, 'public')));

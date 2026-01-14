@@ -397,15 +397,27 @@
           submitBtn.innerHTML = '<span class="spinner"></span> Отправка...';
 
           // === ОТПРАВКА НА НОВЫЙ ENDPOINT ===
+          // Получаем CSRF токен
+          const csrfToken = typeof getCsrfToken === 'function' ? await getCsrfToken() : null;
+          if (!csrfToken) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Отправить';
+            isSending = false;
+            alert('Не удалось получить CSRF токен. Пожалуйста, обновите страницу.');
+            return;
+          }
+          
           const response = await fetch('/api/contact', {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': csrfToken
             },
             body: JSON.stringify({
               name: name || 'Не указано', // Отправляем имя
               phone: phone, // Отправляем телефон
-              message: message || '' // Отправляем сообщение (если есть)
+              message: message || '', // Отправляем сообщение (если есть)
+              _csrf: csrfToken // CSRF токен в теле для совместимости
             })
           });
 

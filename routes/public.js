@@ -4,6 +4,7 @@ const pool = require('../config/db');
 const { parseImagesJson } = require('../utils/parseImages');
 const rateLimit = require('../middleware/rateLimit');
 const { requireAuth } = require('../middleware/auth');
+const { csrfProtection, generateToken } = require('../middleware/csrf');
 const axios = require('axios');
 const cache = require('../utils/cache');
 
@@ -432,9 +433,9 @@ ${cart.map(item => `• ${item.product?.title || 'Неизвестный тов�
 
 /**
  * POST /api/contact
- * Обратная связь (публичный доступ)
+ * Обратная связь (публичный доступ, с CSRF защитой)
  */
-router.post('/contact', publicRateLimit, async (req, res) => {
+router.post('/contact', publicRateLimit, csrfProtection, async (req, res) => {
   const { name, phone, message } = req.body;
 
   if (!phone) {

@@ -222,15 +222,36 @@ async function handleSendOrder() {
     sendOrderBtn.disabled = true;
     sendOrderBtn.textContent = 'Отправка...';
 
+    // Получаем CSRF токен
+    const csrfToken = typeof getCsrfToken === 'function' ? await getCsrfToken() : null;
+    if (!csrfToken) {
+      const errorMsg = 'Не удалось получить CSRF токен. Пожалуйста, обновите страницу.';
+      if (typeof showNotification === 'function') {
+        showNotification(errorMsg, 'error');
+      } else {
+        alert(errorMsg);
+      }
+      handleSendOrder.isSending = false;
+      if (sendOrderBtn) {
+        sendOrderBtn.disabled = false;
+        sendOrderBtn.textContent = 'Оформить заказ';
+      }
+      return;
+    }
+
     let response;
     try {
       response = await fetch('/api/order', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken
+        },
         body: JSON.stringify({
           phone: phone,
           comment: commentInput ? commentInput.value || '' : '',
-          cart: getCart()
+          cart: getCart(),
+          _csrf: csrfToken // Также в теле для совместимости
         })
       });
     } catch (networkError) {
@@ -602,14 +623,24 @@ function setupEventListeners() {
 
                 let response;
                 try {
+                  // Получаем CSRF токен
+                  const csrfToken = typeof getCsrfToken === 'function' ? await getCsrfToken() : null;
+                  if (!csrfToken) {
+                    throw new Error('Не удалось получить CSRF токен');
+                  }
+                  
                   response = await fetch('/api/order', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                      'Content-Type': 'application/json',
+                      'X-CSRF-Token': csrfToken
+                    },
                     body: JSON.stringify({
                       phone: phone,
                       comment: document.getElementById('comment-input')?.value || '',
                       // Используем getCart из state.js
-                      cart: window.getCart()
+                      cart: window.getCart(),
+                      _csrf: csrfToken
                     })
                   });
                 } catch (networkError) {

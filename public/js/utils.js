@@ -5,6 +5,56 @@ function formatPrice(price) {
   return new Intl.NumberFormat('ru-RU').format(price) + ' ₽';
 }
 
+// CSRF токен (кэшируется)
+let csrfTokenCache = null;
+
+/**
+ * Получить CSRF токен (с кэшированием)
+ */
+async function getCsrfToken() {
+  // Если токен уже есть в кэше, возвращаем его
+  if (csrfTokenCache) {
+    return csrfTokenCache;
+  }
+  
+  // Пытаемся получить токен из cookie (если установлен сервером)
+  const cookieToken = getCookie('XSRF-TOKEN');
+  if (cookieToken) {
+    csrfTokenCache = cookieToken;
+    return cookieToken;
+  }
+  
+  // Если токена нет, запрашиваем с сервера
+  try {
+    const response = await fetch('/api/csrf-token');
+    if (response.ok) {
+      const data = await response.json();
+      csrfTokenCache = data.csrfToken;
+      return data.csrfToken;
+    }
+  } catch (error) {
+    console.error('Ошибка получения CSRF токена:', error);
+  }
+  
+  return null;
+}
+
+/**
+ * Получить значение cookie по имени
+ */
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}
+
+// Экспорт функций
+if (typeof window !== 'undefined') {
+  window.getCsrfToken = getCsrfToken;
+  window.getCookie = getCookie;
+}
+
 /**
  * Показывает уведомление об ошибке пользователю
  * @param {string} message - Текст сообщения

@@ -562,13 +562,27 @@ function setupEventListeners(product) {
                 isSending = true;
                 sendOrderBtn.disabled = true;
                 sendOrderBtn.textContent = 'Отправка...';
+                // Получаем CSRF токен
+                const csrfToken = typeof getCsrfToken === 'function' ? await getCsrfToken() : null;
+                if (!csrfToken) {
+                  sendOrderBtn.disabled = false;
+                  sendOrderBtn.textContent = 'Оформить заказ';
+                  isSending = false;
+                  alert('Не удалось получить CSRF токен. Пожалуйста, обновите страницу.');
+                  return;
+                }
+                
                 const response = await fetch('/api/order', {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken
+                  },
                   body: JSON.stringify({
                     phone: phoneInput.value,
                     comment: document.getElementById('comment-input')?.value || '',
-                    cart: window.getCart() // Используем функцию из state.js
+                    cart: window.getCart(), // Используем функцию из state.js
+                    _csrf: csrfToken
                   })
                 });
                 const result = await response.json();
