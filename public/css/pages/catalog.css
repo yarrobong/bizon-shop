@@ -269,6 +269,7 @@
   transition: all 0.3s ease;
   position: relative;
   align-items: stretch;
+  min-height: fit-content;
 }
 
 .filter-group:hover {
