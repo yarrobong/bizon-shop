@@ -344,7 +344,12 @@ async function loadProducts(page = 1, reset = false) {
       // Новый формат с пагинацией
       products = data.products;
       pagination = data.pagination;
-      hasMorePages = pagination.hasNextPage;
+      hasMorePages = pagination && pagination.hasNextPage === true;
+      
+      // Если загрузили меньше товаров, чем запросили - значит это последняя страница
+      if (products.length < PRODUCTS_PER_PAGE) {
+        hasMorePages = false;
+      }
     } else if (Array.isArray(data)) {
       // Старый формат (массив) - для обратной совместимости
       products = data;
@@ -369,6 +374,11 @@ async function loadProducts(page = 1, reset = false) {
     } else {
       ALL_PRODUCTS = [...ALL_PRODUCTS, ...products];
       currentPage = page;
+      
+      // Дополнительная проверка: если загрузили 0 товаров и это не первая страница - больше страниц нет
+      if (products.length === 0 && page > 1) {
+        hasMorePages = false;
+      }
     }
     
     // Заполняем фильтры только при первой загрузке
@@ -444,22 +454,30 @@ function createLoadMoreButton() {
 // Обновление кнопки "Загрузить еще"
 function updateLoadMoreButton() {
   const button = document.getElementById('load-more-btn');
-  if (!button) {
-    if (hasMorePages && !useLocalData) {
-      createLoadMoreButton();
+  
+  // Если товары закончились, скрываем кнопку
+  if (!hasMorePages || useLocalData) {
+    if (button) {
+      button.style.display = 'none';
     }
     return;
   }
   
+  // Если кнопки нет, но есть еще страницы - создаем её
+  if (!button) {
+    createLoadMoreButton();
+    return;
+  }
+  
+  // Обновляем состояние кнопки
   if (isLoading) {
     button.textContent = 'Загрузка...';
     button.disabled = true;
-  } else if (hasMorePages && !useLocalData) {
+    button.style.display = 'block';
+  } else {
     button.textContent = 'Загрузить еще';
     button.disabled = false;
     button.style.display = 'block';
-  } else {
-    button.style.display = 'none';
   }
 }
 
@@ -767,23 +785,33 @@ function setupEventListeners() {
 // Бесконечная прокрутка
 function setupInfiniteScroll() {
   let scrollTimeout;
+  let lastScrollCheck = 0;
   
   window.addEventListener('scroll', () => {
+    // Ограничиваем частоту проверок (не чаще раза в 200ms)
+    const now = Date.now();
+    if (now - lastScrollCheck < 200) {
+      return;
+    }
+    lastScrollCheck = now;
+    
     if (scrollTimeout) {
       clearTimeout(scrollTimeout);
     }
     
     scrollTimeout = setTimeout(() => {
+      // Если нет больше страниц или идет загрузка - не проверяем
+      if (!hasMorePages || isLoading || useLocalData) {
+        return;
+      }
+      
       // Проверяем, достигли ли мы конца страницы
       const scrollHeight = document.documentElement.scrollHeight;
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       const clientHeight = window.innerHeight;
       
       // Загружаем следующую страницу, если осталось менее 500px до конца
-      if (scrollHeight - scrollTop - clientHeight < 500 && 
-          hasMorePages && 
-          !isLoading && 
-          !useLocalData) {
+      if (scrollHeight - scrollTop - clientHeight < 500) {
         loadProducts(currentPage + 1);
       }
     }, 100);
