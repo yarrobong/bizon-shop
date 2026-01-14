@@ -780,6 +780,33 @@ function setupEventListeners() {
 
   // Настройка мобильных фильтров
   setupMobileFilters();
+  
+  // Настройка аккордеона для групп фильтров
+  setupFilterAccordion();
+}
+
+// Настройка аккордеона для групп фильтров
+function setupFilterAccordion() {
+  const filterGroupHeaders = document.querySelectorAll('.filter-group-header');
+  
+  filterGroupHeaders.forEach(header => {
+    header.addEventListener('click', () => {
+      const isExpanded = header.getAttribute('aria-expanded') === 'true';
+      const content = header.nextElementSibling;
+      
+      if (isExpanded) {
+        header.setAttribute('aria-expanded', 'false');
+        if (content) {
+          content.style.display = 'none';
+        }
+      } else {
+        header.setAttribute('aria-expanded', 'true');
+        if (content) {
+          content.style.display = 'block';
+        }
+      }
+    });
+  });
 }
 
 // Бесконечная прокрутка

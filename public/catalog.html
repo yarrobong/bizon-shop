@@ -153,37 +153,65 @@
           <div class="filters-content">
             <!-- Фильтр по категориям -->
             <div class="filter-group">
-              <h3 class="filter-title">Категории</h3>
-              <div class="filter-options" id="category-filters">
-                <!-- Фильтры по категориям будут заполнены динамически на основе реальных товаров -->
+              <button class="filter-group-header" aria-expanded="true">
+                <h3 class="filter-title">Категории</h3>
+                <svg class="filter-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
+              <div class="filter-group-content" id="category-filters-wrapper">
+                <div class="filter-options" id="category-filters">
+                  <!-- Фильтры по категориям будут заполнены динамически на основе реальных товаров -->
+                </div>
               </div>
             </div>
 
             <!-- Фильтр по цене -->
             <div class="filter-group">
-              <h3 class="filter-title">Цена</h3>
-              <div class="price-filter">
-                <div class="price-inputs">
-                  <input type="number" id="price-min" class="price-input" placeholder="От" min="0">
-                  <span class="price-separator">—</span>
-                  <input type="number" id="price-max" class="price-input" placeholder="До" min="0">
+              <button class="filter-group-header" aria-expanded="true">
+                <h3 class="filter-title">Цена</h3>
+                <svg class="filter-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
+              <div class="filter-group-content">
+                <div class="price-filter">
+                  <div class="price-inputs">
+                    <input type="number" id="price-min" class="price-input" placeholder="От" min="0">
+                    <span class="price-separator">—</span>
+                    <input type="number" id="price-max" class="price-input" placeholder="До" min="0">
+                  </div>
                 </div>
               </div>
             </div>
 
             <!-- Фильтр по брендам -->
             <div class="filter-group">
-              <h3 class="filter-title">Бренд</h3>
-              <div class="filter-options" id="brand-filters">
-                <!-- Заполняется через JavaScript -->
+              <button class="filter-group-header" aria-expanded="true">
+                <h3 class="filter-title">Бренд</h3>
+                <svg class="filter-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
+              <div class="filter-group-content" id="brand-filters-wrapper">
+                <div class="filter-options" id="brand-filters">
+                  <!-- Заполняется через JavaScript -->
+                </div>
               </div>
             </div>
 
             <!-- Фильтр по тегам -->
             <div class="filter-group">
-              <h3 class="filter-title">Особые предложения</h3>
-              <div class="filter-options" id="tag-filters">
-                <!-- Фильтры по тегам будут заполнены динамически на основе реальных товаров -->
+              <button class="filter-group-header" aria-expanded="true">
+                <h3 class="filter-title">Особые предложения</h3>
+                <svg class="filter-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
+              <div class="filter-group-content" id="tag-filters-wrapper">
+                <div class="filter-options" id="tag-filters">
+                  <!-- Фильтры по тегам будут заполнены динамически на основе реальных товаров -->
+                </div>
               </div>
             </div>
 
