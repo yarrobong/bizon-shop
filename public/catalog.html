@@ -136,62 +136,62 @@
 
     <!-- Контейнер каталога с фильтрами и товарами -->
     <div class="catalog-container">
-      <!-- Боковая панель фильтров -->
-      <aside class="filters-sidebar" id="filters-sidebar" aria-label="Фильтры товаров">
-        <div class="filters-header">
-          <h2>Фильтры</h2>
-          <button class="filters-close" id="filters-close" aria-label="Закрыть фильтры">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
-
-        <div class="filters-content">
-          <!-- Фильтр по категориям -->
-          <div class="filter-group">
-            <h3 class="filter-title">Категории</h3>
-            <div class="filter-options" id="category-filters">
-              <!-- Фильтры по категориям будут заполнены динамически на основе реальных товаров -->
-            </div>
-          </div>
-
-          <!-- Фильтр по цене -->
-          <div class="filter-group">
-            <h3 class="filter-title">Цена</h3>
-            <div class="price-filter">
-              <div class="price-inputs">
-                <input type="number" id="price-min" class="price-input" placeholder="От" min="0">
-                <span class="price-separator">—</span>
-                <input type="number" id="price-max" class="price-input" placeholder="До" min="0">
-              </div>
-            </div>
-          </div>
-
-          <!-- Фильтр по брендам -->
-          <div class="filter-group">
-            <h3 class="filter-title">Бренд</h3>
-            <div class="filter-options" id="brand-filters">
-              <!-- Заполняется через JavaScript -->
-            </div>
-          </div>
-
-          <!-- Фильтр по тегам -->
-          <div class="filter-group">
-            <h3 class="filter-title">Особые предложения</h3>
-            <div class="filter-options" id="tag-filters">
-              <!-- Фильтры по тегам будут заполнены динамически на основе реальных товаров -->
-            </div>
-          </div>
-
-          <!-- Кнопка сброса фильтров -->
-          <button class="reset-filters-btn" id="reset-filters">Сбросить фильтры</button>
-        </div>
-      </aside>
-
       <!-- Контейнер сортировки и товаров -->
       <div class="catalog-content-wrapper">
+        <!-- Боковая панель фильтров (теперь над сортировкой) -->
+        <aside class="filters-sidebar" id="filters-sidebar" aria-label="Фильтры товаров">
+          <div class="filters-header">
+            <h2>Фильтры</h2>
+            <button class="filters-close" id="filters-close" aria-label="Закрыть фильтры">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+
+          <div class="filters-content">
+            <!-- Фильтр по категориям -->
+            <div class="filter-group">
+              <h3 class="filter-title">Категории</h3>
+              <div class="filter-options" id="category-filters">
+                <!-- Фильтры по категориям будут заполнены динамически на основе реальных товаров -->
+              </div>
+            </div>
+
+            <!-- Фильтр по цене -->
+            <div class="filter-group">
+              <h3 class="filter-title">Цена</h3>
+              <div class="price-filter">
+                <div class="price-inputs">
+                  <input type="number" id="price-min" class="price-input" placeholder="От" min="0">
+                  <span class="price-separator">—</span>
+                  <input type="number" id="price-max" class="price-input" placeholder="До" min="0">
+                </div>
+              </div>
+            </div>
+
+            <!-- Фильтр по брендам -->
+            <div class="filter-group">
+              <h3 class="filter-title">Бренд</h3>
+              <div class="filter-options" id="brand-filters">
+                <!-- Заполняется через JavaScript -->
+              </div>
+            </div>
+
+            <!-- Фильтр по тегам -->
+            <div class="filter-group">
+              <h3 class="filter-title">Особые предложения</h3>
+              <div class="filter-options" id="tag-filters">
+                <!-- Фильтры по тегам будут заполнены динамически на основе реальных товаров -->
+              </div>
+            </div>
+
+            <!-- Кнопка сброса фильтров -->
+            <button class="reset-filters-btn" id="reset-filters">Сбросить фильтры</button>
+          </div>
+        </aside>
+
         <!-- Сортировка -->
         <div class="sort-wrapper">
           <div class="sort-container">
