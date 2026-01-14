@@ -797,6 +797,17 @@ function setupFilterAccordion() {
       const isExpanded = header.getAttribute('aria-expanded') === 'true';
       const content = header.nextElementSibling;
       
+      // Закрываем все остальные открытые фильтры
+      filterGroupHeaders.forEach(otherHeader => {
+        if (otherHeader !== header) {
+          const otherContent = otherHeader.nextElementSibling;
+          otherHeader.setAttribute('aria-expanded', 'false');
+          if (otherContent) {
+            otherContent.style.display = 'none';
+          }
+        }
+      });
+      
       if (isExpanded) {
         header.setAttribute('aria-expanded', 'false');
         if (content) {
@@ -809,6 +820,28 @@ function setupFilterAccordion() {
         }
       }
     });
+  });
+  
+  // Закрытие фильтров при клике вне их области
+  document.addEventListener('click', (e) => {
+    // Проверяем, был ли клик вне области фильтров
+    const clickedFilterGroup = e.target.closest('.filter-group');
+    const clickedFilterHeader = e.target.closest('.filter-group-header');
+    const clickedFilterContent = e.target.closest('.filter-group-content');
+    
+    // Если клик был не внутри группы фильтров, закрываем все открытые фильтры
+    if (!clickedFilterGroup && !clickedFilterHeader && !clickedFilterContent) {
+      filterGroupHeaders.forEach(header => {
+        const isExpanded = header.getAttribute('aria-expanded') === 'true';
+        if (isExpanded) {
+          header.setAttribute('aria-expanded', 'false');
+          const content = header.nextElementSibling;
+          if (content) {
+            content.style.display = 'none';
+          }
+        }
+      });
+    }
   });
 }
 
