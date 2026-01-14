@@ -39,18 +39,21 @@ router.get('/products', publicRateLimit, async (req, res, next) => {
 });
 
 /**
- * Обработка запроса товаров
+ * Обработка запроса товаров с поддержкой пагинации
  */
 async function handleProductsRequest(req, res, isAdmin) {
   try {
-    // Формируем ключ кэша в зависимости от типа запроса
-    const cacheKey = `products:${isAdmin ? 'admin' : 'public'}`;
+    // Параметры пагинации
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = (page - 1) * limit;
     
-    // Проверяем кэш
-    const cachedProducts = cache.get(cacheKey);
-    if (cachedProducts) {
-      console.log(`[Cache] Товары загружены из кэша (${isAdmin ? 'admin' : 'public'})`);
-      return res.json(cachedProducts);
+    // Валидация параметров
+    if (page < 1) {
+      return res.status(400).json({ error: 'Номер страницы должен быть больше 0' });
+    }
+    if (limit < 1 || limit > 100) {
+      return res.status(400).json({ error: 'Лимит должен быть от 1 до 100' });
     }
     
     // Формируем WHERE условие
@@ -61,6 +64,14 @@ async function handleProductsRequest(req, res, isAdmin) {
     }
     // Для админа - все товары (whereClause остается пустым)
     
+    // Запрос для получения общего количества товаров
+    const countQuery = `
+      SELECT COUNT(*) as total
+      FROM products
+      ${whereClause}
+    `;
+    
+    // Запрос для получения товаров с пагинацией
     const query = `
       SELECT
         id,
@@ -79,11 +90,19 @@ async function handleProductsRequest(req, res, isAdmin) {
       FROM products
       ${whereClause}
       ORDER BY id
+      LIMIT $1 OFFSET $2
     `;
 
-    const result = await pool.query(query);
+    // Выполняем оба запроса параллельно
+    const [countResult, productsResult] = await Promise.all([
+      pool.query(countQuery),
+      pool.query(query, [limit, offset])
+    ]);
 
-    const products = result.rows.map(row => {
+    const total = parseInt(countResult.rows[0].total);
+    const totalPages = Math.ceil(total / limit);
+
+    const products = productsResult.rows.map(row => {
       const images = parseImagesJson(row.images_json, row.id);
 
       return {
@@ -103,11 +122,18 @@ async function handleProductsRequest(req, res, isAdmin) {
       };
     });
 
-    // Сохраняем в кэш
-    cache.set(cacheKey, products);
-    console.log(`[Cache] Товары сохранены в кэш (${isAdmin ? 'admin' : 'public'})`);
-
-    res.json(products);
+    // Возвращаем данные с метаинформацией о пагинации
+    res.json({
+      products,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      }
+    });
   } catch (err) {
     console.error('Ошибка загрузки товаров:', err);
     res.status(500).json({ error: 'Ошибка сервера при загрузке товаров.' });
