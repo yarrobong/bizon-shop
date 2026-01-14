@@ -186,6 +186,7 @@
   gap: 2rem;
   align-items: flex-start;
   position: relative;
+  overflow: visible;
 }
 
 /* Боковая панель фильтров - теперь внутри catalog-content-wrapper, над сортировкой */
@@ -211,6 +212,7 @@
   height: auto;
   max-height: none;
   margin-bottom: 1rem;
+  overflow: visible;
 }
 
 
@@ -251,8 +253,10 @@
   gap: 1rem;
   overflow-x: auto;
   overflow-y: visible;
+  overflow: visible;
   padding-bottom: 0.5rem;
   flex-wrap: wrap;
+  position: relative;
 }
 
 /* Группа фильтров */
@@ -334,7 +338,7 @@
   border: 1px solid rgba(43, 83, 193, 0.5);
   border-radius: 12px;
   padding: 1rem;
-  z-index: 100;
+  z-index: 1000;
   box-shadow: 
     0 4px 20px rgba(0, 0, 0, 0.4),
     0 0 15px rgba(43, 83, 193, 0.5);
