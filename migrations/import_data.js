@@ -44,33 +44,40 @@ async function importTableData(tableName, data) {
     const columns = await getTableColumns(tableName);
     const columnNames = columns.map(c => c.column_name);
     
-    // Исключаем колонки с DEFAULT значениями (если нужно)
-    const insertColumns = columnNames.filter(col => 
-      col !== 'created_at' || tableName === 'orders' || tableName === 'sessions'
-    );
-    
     const client = await serverPool.connect();
     
     try {
       await client.query('BEGIN');
       
-      // Очищаем таблицу (опционально, можно закомментировать если нужно сохранить существующие данные)
-      // await client.query(`TRUNCATE TABLE ${tableName} CASCADE`);
-      
       let imported = 0;
+      let updated = 0;
       let skipped = 0;
       
       for (const row of data) {
         try {
-          // Формируем запрос INSERT
+          // Формируем запрос INSERT/UPDATE
           const values = [];
           const placeholders = [];
           const insertCols = [];
           
-          for (const col of insertColumns) {
+          // Обрабатываем все колонки, которые есть в данных
+          for (const col of columnNames) {
             if (row.hasOwnProperty(col)) {
               insertCols.push(col);
-              values.push(row[col]);
+              let value = row[col];
+              
+              // Обрабатываем специальные случаи
+              if (value === null || value === undefined) {
+                values.push(null);
+              } else if (value instanceof Date) {
+                values.push(value);
+              } else if (typeof value === 'object' && value !== null) {
+                // JSON объекты
+                values.push(JSON.stringify(value));
+              } else {
+                values.push(value);
+              }
+              
               placeholders.push(`$${values.length}`);
             }
           }
@@ -90,20 +97,29 @@ async function importTableData(tableName, data) {
             if (exists.rows.length > 0) {
               // Обновляем существующую запись
               const updateCols = insertCols.filter(c => c !== 'id');
-              const updateValues = updateCols.map((col, idx) => {
-                const valIdx = insertCols.indexOf(col);
-                return values[valIdx];
-              });
-              updateValues.push(row.id);
-              
-              const updateQuery = `
-                UPDATE ${tableName} 
-                SET ${updateCols.map((col, idx) => `${col} = $${idx + 1}`).join(', ')}
-                WHERE id = $${updateCols.length + 1}
-              `;
-              
-              await client.query(updateQuery, updateValues);
-              imported++;
+              if (updateCols.length > 0) {
+                const updateValues = [];
+                const updateSet = [];
+                
+                updateCols.forEach((col, idx) => {
+                  const valIdx = insertCols.indexOf(col);
+                  updateValues.push(values[valIdx]);
+                  updateSet.push(`${col} = $${idx + 1}`);
+                });
+                
+                updateValues.push(row.id);
+                
+                const updateQuery = `
+                  UPDATE ${tableName} 
+                  SET ${updateSet.join(', ')}
+                  WHERE id = $${updateCols.length + 1}
+                `;
+                
+                await client.query(updateQuery, updateValues);
+                updated++;
+              } else {
+                skipped++;
+              }
             } else {
               // Вставляем новую запись
               const insertQuery = `
@@ -115,7 +131,7 @@ async function importTableData(tableName, data) {
               imported++;
             }
           } else {
-            // Если нет id, просто вставляем
+            // Если нет id, просто вставляем (для таблиц без id или с auto-increment)
             const insertQuery = `
               INSERT INTO ${tableName} (${insertCols.join(', ')})
               VALUES (${placeholders.join(', ')})
@@ -125,13 +141,13 @@ async function importTableData(tableName, data) {
             imported++;
           }
         } catch (err) {
-          console.error(`   ⚠️  Ошибка при импорте записи:`, err.message);
+          console.error(`   ⚠️  Ошибка при импорте записи (id: ${row.id || 'N/A'}):`, err.message);
           skipped++;
         }
       }
       
       await client.query('COMMIT');
-      console.log(`   ✅ Импортировано: ${imported}, пропущено: ${skipped}`);
+      console.log(`   ✅ Импортировано: ${imported}, обновлено: ${updated}, пропущено: ${skipped}`);
       
     } catch (err) {
       await client.query('ROLLBACK');
