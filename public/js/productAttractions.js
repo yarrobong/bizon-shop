@@ -312,6 +312,58 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
+    // --- ДОПОЛНИТЕЛЬНО: Заполнение новых секций характеристик и видео ---
+    const specsContainerNew = document.getElementById('specs-container');
+    if (specsContainerNew && itemData.specs) {
+        const specsData = [
+            { label: 'Количество мест', key: 'places' },
+            { label: 'Мощность', key: 'power' },
+            { label: 'Количество игр', key: 'games' },
+            { label: 'Площадь', key: 'area' },
+            { label: 'Габариты', key: 'dimensions' }
+        ];
+
+        specsContainerNew.innerHTML = specsData
+            .filter(spec => itemData.specs[spec.key])
+            .map(spec => `
+                <div class="spec-item">
+                    <div class="spec-label">${spec.label}</div>
+                    <div class="spec-value">${itemData.specs[spec.key]}</div>
+                </div>
+            `).join('');
+    }
+
+    // --- Заполнение видео секции ---
+    const videosSectionNew = document.getElementById('videos-section');
+    const videosContainerNew = document.getElementById('videos-container');
+    
+    if (itemData.videos && itemData.videos.length > 0) {
+        if (videosSectionNew) {
+            videosSectionNew.style.display = 'block';
+        }
+        
+        if (videosContainerNew) {
+            videosContainerNew.innerHTML = itemData.videos.map((video, index) => `
+                <div class="video-item">
+                    <video controls preload="metadata" playsinline>
+                        <source src="${video.url}" type="video/mp4">
+                        Ваш браузер не поддерживает видео.
+                    </video>
+                    ${video.alt ? `<p style="margin-top: 0.5rem; text-align: center; color: rgba(255, 255, 255, 0.7); font-size: 0.875rem;">${video.alt}</p>` : ''}
+                </div>
+            `).join('');
+        }
+    }
+
+    // --- Инициализация аккордеона ---
+    const accordionHeadersNew = document.querySelectorAll('.accordion-header');
+    accordionHeadersNew.forEach(header => {
+        header.addEventListener('click', () => {
+            const isExpanded = header.getAttribute('aria-expanded') === 'true';
+            header.setAttribute('aria-expanded', !isExpanded);
+        });
+    });
+
     // --- Кнопки "Добавить в корзину" и "Купить" ---
     // Проверяем, доступен ли аттракцион для покупки
     const addToCartBtn = document.getElementById('product-page-add-to-cart-btn');
