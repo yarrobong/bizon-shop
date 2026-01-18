@@ -748,8 +748,9 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1rem;
-  margin-top: 2rem;
+  margin: 2rem auto;
   padding: 1.5rem;
+  max-width: 1200px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(43, 83, 193, 0.3);
   border-radius: 12px;
@@ -803,44 +804,6 @@
   font-weight: 700;
   color: white;
   margin-bottom: 1.5rem;
-}
-
-/* Характеристики */
-.specs-section {
-  margin-bottom: 3rem;
-}
-
-.specs-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-}
-
-.spec-item {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(43, 83, 193, 0.3);
-  border-radius: 12px;
-  padding: 1.25rem;
-  transition: all 0.3s ease;
-}
-
-.spec-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(43, 83, 193, 0.5);
-  transform: translateY(-2px);
-}
-
-.spec-label {
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.6);
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-}
-
-.spec-value {
-  font-size: 1.125rem;
-  color: white;
-  font-weight: 600;
 }
 
 /* Видео секция */
@@ -1034,10 +997,6 @@
   .product-payment-delivery-info {
     grid-template-columns: 1fr;
     padding: 1rem;
-  }
-
-  .specs-grid {
-    grid-template-columns: 1fr;
   }
 
   .videos-grid {
