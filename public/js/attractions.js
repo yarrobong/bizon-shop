@@ -280,7 +280,16 @@ function createAttractionCard(attraction) {
 
     // Фильтрация данных
     let filtered = ATTRACTIONS.filter(attraction => {
-      const matchesCategory = currentCategory === 'все' || attraction.category === currentCategory;
+      // Фильтр по категориям (поддержка множественного выбора)
+      let matchesCategory = false;
+      if (currentCategory === 'все') {
+        matchesCategory = true;
+      } else if (Array.isArray(currentCategory)) {
+        matchesCategory = currentCategory.includes(attraction.category);
+      } else {
+        matchesCategory = attraction.category === currentCategory;
+      }
+      
       const matchesSearch = !query ||
         (attraction.title && attraction.title.toLowerCase().includes(query)) ||
         (attraction.description && attraction.description.toLowerCase().includes(query));
