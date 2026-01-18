@@ -435,19 +435,26 @@ document.addEventListener('DOMContentLoaded', function() {
             const panel = item.querySelector('.accordion-panel');
             const icon = button.querySelector('.accordion-icon');
 
+            // Проверяем, что все необходимые элементы существуют
+            if (!panel) return;
+
             // Закрываем все другие (если нужно только один открыт)
             document.querySelectorAll('.accordion-item').forEach(i => {
                 if (i !== item) {
-                    i.querySelector('.accordion-panel').classList.remove('open');
-                    i.querySelector('.accordion-header').classList.remove('active');
-                    i.querySelector('.accordion-icon').textContent = '+';
+                    const otherPanel = i.querySelector('.accordion-panel');
+                    const otherHeader = i.querySelector('.accordion-header');
+                    const otherIcon = i.querySelector('.accordion-icon');
+                    
+                    if (otherPanel) otherPanel.classList.remove('open');
+                    if (otherHeader) otherHeader.classList.remove('active');
+                    if (otherIcon) otherIcon.textContent = '+';
                 }
             });
 
             // Переключаем текущий
             panel.classList.toggle('open');
             button.classList.toggle('active');
-            icon.textContent = panel.classList.contains('open') ? '−' : '+';
+            if (icon) icon.textContent = panel.classList.contains('open') ? '−' : '+';
         });
     });
 
