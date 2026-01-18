@@ -742,3 +742,313 @@
   border-color: #60a5fa;
   transform: translateY(-3px);
 }
+
+/* === Дополнительная информация об оплате и доставке === */
+.product-payment-delivery-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(43, 83, 193, 0.3);
+  border-radius: 12px;
+}
+
+.info-card {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.info-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 8px;
+}
+
+.info-icon svg {
+  color: rgba(59, 130, 246, 1);
+}
+
+.info-content h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+}
+
+.info-content p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+}
+
+/* === Подробная информация об аттракционе === */
+.attraction-detailed-info {
+  max-width: 1200px;
+  margin: 3rem auto;
+  padding: 0 1rem;
+}
+
+.attraction-detailed-info h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 1.5rem;
+}
+
+/* Характеристики */
+.specs-section {
+  margin-bottom: 3rem;
+}
+
+.specs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.spec-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(43, 83, 193, 0.3);
+  border-radius: 12px;
+  padding: 1.25rem;
+  transition: all 0.3s ease;
+}
+
+.spec-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(43, 83, 193, 0.5);
+  transform: translateY(-2px);
+}
+
+.spec-label {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.spec-value {
+  font-size: 1.125rem;
+  color: white;
+  font-weight: 600;
+}
+
+/* Видео секция */
+.videos-section {
+  margin-bottom: 3rem;
+}
+
+.videos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.video-item {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid rgba(43, 83, 193, 0.3);
+  transition: all 0.3s ease;
+}
+
+.video-item:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+.video-item video {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Комплектация */
+.package-section {
+  margin-bottom: 3rem;
+}
+
+.package-content {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(43, 83, 193, 0.3);
+  border-radius: 12px;
+  padding: 2rem;
+}
+
+#package-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#package-list li {
+  position: relative;
+  padding-left: 2rem;
+  margin-bottom: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+#package-list li:before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #3b82f6;
+  font-weight: bold;
+  font-size: 1.25rem;
+}
+
+/* Гарантии */
+.warranty-section {
+  margin-bottom: 3rem;
+}
+
+.warranty-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.warranty-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px solid rgba(43, 83, 193, 0.3);
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.warranty-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(59, 130, 246, 0.6);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);
+}
+
+.warranty-icon {
+  margin: 0 auto 1rem;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(59, 130, 246, 0.1);
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  border-radius: 50%;
+}
+
+.warranty-icon svg {
+  color: rgba(59, 130, 246, 1);
+}
+
+.warranty-card h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: white;
+  margin: 0 0 0.75rem 0;
+}
+
+.warranty-card p {
+  font-size: 0.9375rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Аккордеон с дополнительной информацией */
+.additional-info-section {
+  margin-bottom: 3rem;
+}
+
+.info-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.accordion-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(43, 83, 193, 0.3);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.accordion-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1.125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+}
+
+.accordion-header:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.accordion-header[aria-expanded="true"] {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.accordion-icon {
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+  color: rgba(59, 130, 246, 1);
+}
+
+.accordion-header[aria-expanded="true"] .accordion-icon {
+  transform: rotate(180deg);
+}
+
+.accordion-content {
+  display: none;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.7;
+  font-size: 0.9375rem;
+}
+
+.accordion-header[aria-expanded="true"] + .accordion-content {
+  display: block;
+}
+
+/* === Адаптивность для новых секций === */
+@media (max-width: 768px) {
+  .product-payment-delivery-info {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+
+  .specs-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .videos-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .warranty-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .attraction-detailed-info h2 {
+    font-size: 1.5rem;
+  }
+}
