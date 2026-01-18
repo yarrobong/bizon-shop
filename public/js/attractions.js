@@ -28,6 +28,7 @@
   document.addEventListener('DOMContentLoaded', async function () {
     console.log('Attractions page loaded');
     await loadAttractions(); // Загружаем данные
+    populateFilters(); // Заполняем фильтры
     renderAttractions(); // Рендерим карточки
     setupEventListeners(); // Навешиваем обработчики
     updateCartCount(); // Обновляем счетчик корзины
@@ -36,6 +37,39 @@
       yearSpan.textContent = new Date().getFullYear();
     }
   });
+
+  // --- Заполнение фильтров ---
+  function populateFilters() {
+    // Получаем уникальные категории
+    const categories = [...new Set(ATTRACTIONS.map(a => a.category))].filter(Boolean);
+    
+    const categoryFiltersContainer = document.getElementById('category-filters');
+    if (categoryFiltersContainer && categories.length > 0) {
+      categoryFiltersContainer.innerHTML = categories.map(category => `
+        <label class="filter-checkbox">
+          <input type="checkbox" name="category" value="${category}" />
+          <span>${category}</span>
+        </label>
+      `).join('');
+      
+      // Обработчик изменения чекбоксов категорий
+      categoryFiltersContainer.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+          const selectedCategories = Array.from(
+            categoryFiltersContainer.querySelectorAll('input[type="checkbox"]:checked')
+          ).map(cb => cb.value);
+          
+          if (selectedCategories.length === 0) {
+            currentCategory = 'все';
+          } else {
+            // Для множественного выбора создаем массив
+            currentCategory = selectedCategories;
+          }
+          renderAttractions();
+        });
+      });
+    }
+  }
 
   // --- Data Loading ---
   async function loadAttractions() {
