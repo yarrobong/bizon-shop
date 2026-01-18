@@ -512,12 +512,29 @@ function createAttractionCard(attraction) {
       });
     }
 
-    // Сортировка
+    // Сортировка (десктопная версия)
     const sortSelect = document.getElementById('sort-select');
+    const sortSelectMobile = document.getElementById('sort-select-mobile');
+    
+    // Функция для синхронизации сортировки
+    const handleSortChange = (value) => {
+      currentSort = value;
+      // Синхронизируем оба селекта
+      if (sortSelect) sortSelect.value = value;
+      if (sortSelectMobile) sortSelectMobile.value = value;
+      renderAttractions();
+    };
+    
     if (sortSelect) {
       sortSelect.addEventListener('change', (e) => {
-        currentSort = e.target.value;
-        renderAttractions();
+        handleSortChange(e.target.value);
+      });
+    }
+    
+    // Сортировка (мобильная версия)
+    if (sortSelectMobile) {
+      sortSelectMobile.addEventListener('change', (e) => {
+        handleSortChange(e.target.value);
       });
     }
 

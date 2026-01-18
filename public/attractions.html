@@ -109,12 +109,12 @@
     <div class="hamburger-overlay"></div>
 
   <main role="main" class="catalog-main">
-    <!-- Заголовок и сортировка -->
-      <div class="catalog-controls">
-        <div class="sort-container">
-          <label for="sort-select" class="sort-label">Сортировка:</label>
-          <div class="select-wrapper">
-            <select id="sort-select" class="sort-select" aria-label="Сортировка аттракционов">
+    <!-- Контролы каталога (только для мобильных) -->
+    <div class="catalog-controls">
+      <div class="catalog-header">
+        <div class="sort-wrapper-mobile">
+          <div class="sort-container">
+            <select id="sort-select-mobile" class="sort-select" aria-label="Сортировка аттракционов">
               <option value="default">По умолчанию</option>
               <option value="price-asc">Цена: по возрастанию</option>
               <option value="price-desc">Цена: по убыванию</option>
@@ -130,6 +130,7 @@
           <span>Фильтры</span>
         </button>
       </div>
+    </div>
 
     <!-- Контейнер каталога с фильтрами и аттракционами -->
     <div class="catalog-container">
@@ -187,9 +188,23 @@
           </div>
         </aside>
 
-        <!-- Основная сетка аттракционов -->
-        <div class="catalog-grid-wrapper">
-          <div id="attractions-container" class="products-grid">
+        <!-- Сортировка (десктопная версия) -->
+        <div class="sort-wrapper">
+          <div class="sort-container">
+            <select id="sort-select" class="sort-select" aria-label="Сортировка аттракционов">
+              <option value="default">По умолчанию</option>
+              <option value="price-asc">Цена: по возрастанию</option>
+              <option value="price-desc">Цена: по убыванию</option>
+              <option value="name-asc">Название: А-Я</option>
+              <option value="name-desc">Название: Я-А</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Основная область с аттракционами -->
+        <div class="catalog-content">
+          <!-- Список аттракционов -->
+          <div id="attractions-container" class="products" aria-live="polite" aria-atomic="true">
             <!-- Заполняется через attractions.js -->
           </div>
         </div>
