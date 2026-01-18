@@ -540,26 +540,38 @@ function createAttractionCard(attraction) {
     }
 
     // Аккордеон фильтров
-    const filterGroupHeaders = document.querySelectorAll('.filter-group-header');
-    filterGroupHeaders.forEach(header => {
-      header.addEventListener('click', () => {
+    const filterGroups = document.querySelectorAll('.filter-group');
+    filterGroups.forEach(group => {
+      group.addEventListener('click', (e) => {
+        // Проверяем, что клик был не внутри filter-group-content
+        // (чтобы не закрывать при клике на чекбоксы или инпуты)
+        const content = group.querySelector('.filter-group-content');
+        if (content && content.contains(e.target)) {
+          return; // Игнорируем клики внутри контента
+        }
+        
+        const header = group.querySelector('.filter-group-header');
+        if (!header) return;
+        
         const isExpanded = header.getAttribute('aria-expanded') === 'true';
         
         // Закрываем все другие фильтры
-        filterGroupHeaders.forEach(h => {
-          if (h !== header) {
-            h.setAttribute('aria-expanded', 'false');
-            const content = h.nextElementSibling;
-            if (content && content.classList.contains('filter-group-content')) {
-              content.style.display = 'none';
+        filterGroups.forEach(g => {
+          if (g !== group) {
+            const otherHeader = g.querySelector('.filter-group-header');
+            const otherContent = g.querySelector('.filter-group-content');
+            if (otherHeader) {
+              otherHeader.setAttribute('aria-expanded', 'false');
+            }
+            if (otherContent) {
+              otherContent.style.display = 'none';
             }
           }
         });
         
         // Переключаем текущий
         header.setAttribute('aria-expanded', !isExpanded);
-        const content = header.nextElementSibling;
-        if (content && content.classList.contains('filter-group-content')) {
+        if (content) {
           content.style.display = !isExpanded ? 'block' : 'none';
         }
       });
