@@ -787,37 +787,40 @@ function setupEventListeners() {
 
 // Настройка аккордеона для групп фильтров
 function setupFilterAccordion() {
-  const filterGroupHeaders = document.querySelectorAll('.filter-group-header');
+  const filterGroups = document.querySelectorAll('.filter-group');
   
-  filterGroupHeaders.forEach(header => {
-    header.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
+  filterGroups.forEach(group => {
+    group.addEventListener('click', (e) => {
+      // Проверяем, что клик был не внутри filter-group-content
+      // (чтобы не закрывать при клике на чекбоксы или инпуты)
+      const content = group.querySelector('.filter-group-content');
+      if (content && content.contains(e.target)) {
+        return; // Игнорируем клики внутри контента
+      }
+      
+      const header = group.querySelector('.filter-group-header');
+      if (!header) return;
       
       const isExpanded = header.getAttribute('aria-expanded') === 'true';
-      const content = header.nextElementSibling;
       
-      // Закрываем все остальные открытые фильтры
-      filterGroupHeaders.forEach(otherHeader => {
-        if (otherHeader !== header) {
-          const otherContent = otherHeader.nextElementSibling;
-          otherHeader.setAttribute('aria-expanded', 'false');
+      // Закрываем все другие фильтры
+      filterGroups.forEach(g => {
+        if (g !== group) {
+          const otherHeader = g.querySelector('.filter-group-header');
+          const otherContent = g.querySelector('.filter-group-content');
+          if (otherHeader) {
+            otherHeader.setAttribute('aria-expanded', 'false');
+          }
           if (otherContent) {
             otherContent.style.display = 'none';
           }
         }
       });
       
-      if (isExpanded) {
-        header.setAttribute('aria-expanded', 'false');
-        if (content) {
-          content.style.display = 'none';
-        }
-      } else {
-        header.setAttribute('aria-expanded', 'true');
-        if (content) {
-          content.style.display = 'block';
-        }
+      // Переключаем текущий
+      header.setAttribute('aria-expanded', !isExpanded);
+      if (content) {
+        content.style.display = !isExpanded ? 'block' : 'none';
       }
     });
   });
@@ -826,16 +829,14 @@ function setupFilterAccordion() {
   document.addEventListener('click', (e) => {
     // Проверяем, был ли клик вне области фильтров
     const clickedFilterGroup = e.target.closest('.filter-group');
-    const clickedFilterHeader = e.target.closest('.filter-group-header');
-    const clickedFilterContent = e.target.closest('.filter-group-content');
     
     // Если клик был не внутри группы фильтров, закрываем все открытые фильтры
-    if (!clickedFilterGroup && !clickedFilterHeader && !clickedFilterContent) {
-      filterGroupHeaders.forEach(header => {
-        const isExpanded = header.getAttribute('aria-expanded') === 'true';
-        if (isExpanded) {
+    if (!clickedFilterGroup) {
+      filterGroups.forEach(group => {
+        const header = group.querySelector('.filter-group-header');
+        const content = group.querySelector('.filter-group-content');
+        if (header && header.getAttribute('aria-expanded') === 'true') {
           header.setAttribute('aria-expanded', 'false');
-          const content = header.nextElementSibling;
           if (content) {
             content.style.display = 'none';
           }
