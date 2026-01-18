@@ -282,35 +282,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         categoryLink.textContent = itemData.category || 'Аттракционы';
     }
 
-    // --- НОВОЕ: Отображение характеристик ---
-    const infoSection = document.querySelector('.product-page-info'); // Контейнер, куда добавим характеристики
-    if (infoSection && isAttractionPage) { // Только для страницы аттракциона
-        const specsContainer = document.createElement('div');
-        specsContainer.className = 'attraction-specs';
-        specsContainer.innerHTML = '<h4>Характеристики:</h4>';
-
-        const specsList = document.createElement('ul');
-        specsList.className = 'specs-list';
-
-        // Предполагаем, что у вас есть поля specs_*
-        if (itemData.specs?.places) specsList.innerHTML += `<li><strong>Количество мест:</strong> ${itemData.specs.places}</li>`;
-        if (itemData.specs?.power) specsList.innerHTML += `<li><strong>Потребляемая мощность:</strong> ${itemData.specs.power}</li>`;
-        if (itemData.specs?.games) specsList.innerHTML += `<li><strong>Количество игр:</strong> ${itemData.specs.games}</li>`;
-        if (itemData.specs?.area) specsList.innerHTML += `<li><strong>Требуемая площадь:</strong> ${itemData.specs.area}</li>`;
-        if (itemData.specs?.dimensions) specsList.innerHTML += `<li><strong>Габариты:</strong> ${itemData.specs.dimensions}</li>`;
-
-        if (specsList.children.length > 0) {
-            specsContainer.appendChild(specsList);
-            // Вставляем перед кнопками действий или в конец секции info
-            const referenceElement = document.querySelector('.product-page-actions'); // Элемент, перед которым вставить
-            // Проверяем, существует ли referenceElement и является ли он потомком infoSection
-            if (referenceElement && infoSection.contains(referenceElement)) {
-                 infoSection.insertBefore(specsContainer, referenceElement); // Вставляем перед кнопками
-            } else {
-                 infoSection.appendChild(specsContainer); // Вставляем в конец, если кнопки не найдены или не в нужном месте
-            }
-        }
-    }
+    
 
     // --- Заполнение характеристик ---
     const specsContainer = document.getElementById('specs-container');
