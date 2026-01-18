@@ -312,27 +312,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    // --- Заполнение характеристик ---
-    const specsContainer = document.getElementById('specs-container');
-    if (specsContainer && itemData.specs) {
-        const specsData = [
-            { label: 'Количество мест', key: 'places' },
-            { label: 'Мощность', key: 'power' },
-            { label: 'Количество игр', key: 'games' },
-            { label: 'Площадь', key: 'area' },
-            { label: 'Габариты', key: 'dimensions' }
-        ];
-
-        specsContainer.innerHTML = specsData
-            .filter(spec => itemData.specs[spec.key])
-            .map(spec => `
-                <div class="spec-item">
-                    <span class="spec-label">${spec.label}:</span>
-                    <span class="spec-value">${itemData.specs[spec.key]}</span>
-                </div>
-            `).join('');
-    }
-
     // --- Заполнение видео секции ---
     const videosSectionNew = document.getElementById('videos-section');
     const videosContainerNew = document.getElementById('videos-container');
