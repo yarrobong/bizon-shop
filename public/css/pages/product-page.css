@@ -410,13 +410,14 @@
 .product-page-price {
   background-color: #28a745;
   color: white;
-  padding: 2px 8px;
-  border-radius: 0.75rem;
+  padding: 4px 12px;
+  border-radius: 0.5rem;
   display: inline-block;
   font-size: 1.5rem;
   font-weight: bold;
   text-align: center;
   margin-bottom: 1.5rem;
+  width: fit-content;
 }
 
 /* === ДОСТУПНОСТЬ === */
