@@ -743,14 +743,74 @@
   transform: translateY(-3px);
 }
 
+/* === Контейнер для характеристик и оплаты/доставки === */
+.attraction-info-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+/* === Характеристики аттракциона === */
+.attraction-specs {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(43, 83, 193, 0.3);
+  border-radius: 12px;
+}
+
+.attraction-specs h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 1rem 0;
+}
+
+.specs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.spec-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(43, 83, 193, 0.2);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.spec-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(43, 83, 193, 0.4);
+}
+
+.spec-label {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+}
+
+.spec-value {
+  font-size: 1rem;
+  color: white;
+  font-weight: 600;
+}
+
 /* === Дополнительная информация об оплате и доставке === */
 .product-payment-delivery-info {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  margin: 2rem 0 2rem 1rem;
   padding: 1.5rem;
-  max-width: 50%;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(43, 83, 193, 0.3);
   border-radius: 12px;
@@ -994,9 +1054,13 @@
 
 /* === Адаптивность для новых секций === */
 @media (max-width: 768px) {
+  .attraction-info-container {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .attraction-specs,
   .product-payment-delivery-info {
-    max-width: 100%;
-    margin: 2rem 1rem;
     padding: 1rem;
   }
 
