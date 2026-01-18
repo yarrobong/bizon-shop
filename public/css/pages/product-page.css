@@ -753,18 +753,8 @@
   padding: 0 1rem;
 }
 
-/* === Дополнительная информация об оплате и доставке === */
-.product-payment-delivery-info {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(43, 83, 193, 0.3);
-  border-radius: 12px;
-}
-
-/* === Характеристики аттракциона === */
+/* === Общие стили для блоков оплаты/доставки и характеристик === */
+.product-payment-delivery-info,
 .attraction-specs {
   display: flex;
   flex-direction: column;
@@ -775,6 +765,7 @@
   border-radius: 12px;
 }
 
+.product-payment-delivery-info h2,
 .attraction-specs h2 {
   font-size: 1.5rem;
   font-weight: 700;
@@ -782,12 +773,14 @@
   margin: 0 0 1rem 0;
 }
 
+.payment-delivery-list,
 .specs-list {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
+.info-card,
 .spec-item {
   display: flex;
   justify-content: space-between;
@@ -797,8 +790,10 @@
   border: 1px solid rgba(43, 83, 193, 0.2);
   border-radius: 8px;
   transition: all 0.3s ease;
+  gap: 1rem;
 }
 
+.info-card:hover,
 .spec-item:hover {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(43, 83, 193, 0.4);
