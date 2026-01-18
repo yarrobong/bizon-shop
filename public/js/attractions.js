@@ -580,13 +580,15 @@ function createAttractionCard(attraction) {
     // Закрытие фильтров при клике вне их
     document.addEventListener('click', (e) => {
       const clickedFilterGroup = e.target.closest('.filter-group');
-      const clickedFilterHeader = e.target.closest('.filter-group-header');
       
-      if (!clickedFilterGroup && !clickedFilterHeader) {
-        filterGroupHeaders.forEach(header => {
-          header.setAttribute('aria-expanded', 'false');
-          const content = header.nextElementSibling;
-          if (content && content.classList.contains('filter-group-content')) {
+      if (!clickedFilterGroup) {
+        filterGroups.forEach(group => {
+          const header = group.querySelector('.filter-group-header');
+          const content = group.querySelector('.filter-group-content');
+          if (header) {
+            header.setAttribute('aria-expanded', 'false');
+          }
+          if (content) {
             content.style.display = 'none';
           }
         });
