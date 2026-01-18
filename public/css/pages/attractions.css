@@ -104,49 +104,9 @@ main {
   }
 }
 
-/* === TAGS FILTER === */
+/* === СТАРЫЕ TAGS FILTER (СКРЫТЫ, используем новые фильтры) === */
 .tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  padding: 120px 1.5rem 1.5rem 1.5rem;
-  border-bottom: 3px solid var(--text-primary);
-}
-
-.tag-btn {
-  padding: 0.5rem 1.5rem;
-  border: 1px solid black;
-  border-radius: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.tag-btn.active {
-  background: rgba(0, 229, 255, 0.2);
-  border-color: var(--accent);
-  box-shadow: 0 6px 15px rgba(0, 229, 255, 0.4);
-  transform: translateY(-2px);
-  color: var(--text-primary);
-}
-
-.tag-btn:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.2);
-  color: var(--text-primary);
-}
-
-@media (max-width: 768px) {
-  .tags {
-    padding: 20px 1.5rem 1.5rem 1.5rem;
-  }
-}
-
-@media (max-width: 360px) {
-  .tags {
-    padding: 20px 0.75rem 1.5rem 0.75rem;
-  }
+  display: none !important; /* Скрываем старые кнопки фильтрации */
 }
 
 /* === PRODUCTS GRID (Mobile-first) === */
