@@ -20,6 +20,9 @@
   let currentCategory = 'все';
   let ATTRACTIONS = []; // Будет заполнен данными
   let renderProductsTimeout;
+  let currentSort = 'default';
+  let priceMin = null;
+  let priceMax = null;
 
   // --- Инициализация ---
   document.addEventListener('DOMContentLoaded', async function () {
@@ -242,14 +245,30 @@ function createAttractionCard(attraction) {
     // currentCategory определяется в handleCategoryClick и изначально 'все'
 
     // Фильтрация данных
-    const filtered = ATTRACTIONS.filter(attraction => {
+    let filtered = ATTRACTIONS.filter(attraction => {
       const matchesCategory = currentCategory === 'все' || attraction.category === currentCategory;
       const matchesSearch = !query ||
         (attraction.title && attraction.title.toLowerCase().includes(query)) ||
         (attraction.description && attraction.description.toLowerCase().includes(query));
+      
+      // Фильтр по цене
+      const price = parseFloat(attraction.price) || 0;
+      const matchesMinPrice = priceMin === null || price >= priceMin;
+      const matchesMaxPrice = priceMax === null || price <= priceMax;
 
-      return matchesCategory && matchesSearch;
+      return matchesCategory && matchesSearch && matchesMinPrice && matchesMaxPrice;
     });
+
+    // Сортировка
+    if (currentSort === 'price-asc') {
+      filtered.sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
+    } else if (currentSort === 'price-desc') {
+      filtered.sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0));
+    } else if (currentSort === 'name-asc') {
+      filtered.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+    } else if (currentSort === 'name-desc') {
+      filtered.sort((a, b) => (b.title || '').localeCompare(a.title || ''));
+    }
 
     // Отображение состояния "ничего не найдено"
     if (filtered.length === 0) {
@@ -438,7 +457,7 @@ function createAttractionCard(attraction) {
       });
     }
 
-    // Фильтрация по категориям
+    // Фильтрация по категориям (старые кнопки)
     if (categoryButtons.length > 0) {
       categoryButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -447,6 +466,117 @@ function createAttractionCard(attraction) {
           currentCategory = e.target.dataset.category || 'все';
           renderAttractions();
         });
+      });
+    }
+
+    // Сортировка
+    const sortSelect = document.getElementById('sort-select');
+    if (sortSelect) {
+      sortSelect.addEventListener('change', (e) => {
+        currentSort = e.target.value;
+        renderAttractions();
+      });
+    }
+
+    // Аккордеон фильтров
+    const filterGroupHeaders = document.querySelectorAll('.filter-group-header');
+    filterGroupHeaders.forEach(header => {
+      header.addEventListener('click', () => {
+        const isExpanded = header.getAttribute('aria-expanded') === 'true';
+        
+        // Закрываем все другие фильтры
+        filterGroupHeaders.forEach(h => {
+          if (h !== header) {
+            h.setAttribute('aria-expanded', 'false');
+            const content = h.nextElementSibling;
+            if (content && content.classList.contains('filter-group-content')) {
+              content.style.display = 'none';
+            }
+          }
+        });
+        
+        // Переключаем текущий
+        header.setAttribute('aria-expanded', !isExpanded);
+        const content = header.nextElementSibling;
+        if (content && content.classList.contains('filter-group-content')) {
+          content.style.display = !isExpanded ? 'block' : 'none';
+        }
+      });
+    });
+
+    // Закрытие фильтров при клике вне их
+    document.addEventListener('click', (e) => {
+      const clickedFilterGroup = e.target.closest('.filter-group');
+      const clickedFilterHeader = e.target.closest('.filter-group-header');
+      
+      if (!clickedFilterGroup && !clickedFilterHeader) {
+        filterGroupHeaders.forEach(header => {
+          header.setAttribute('aria-expanded', 'false');
+          const content = header.nextElementSibling;
+          if (content && content.classList.contains('filter-group-content')) {
+            content.style.display = 'none';
+          }
+        });
+      }
+    });
+
+    // Фильтр по цене
+    const priceMinInput = document.getElementById('price-min');
+    const priceMaxInput = document.getElementById('price-max');
+    
+    if (priceMinInput) {
+      priceMinInput.addEventListener('input', () => {
+        priceMin = priceMinInput.value ? parseFloat(priceMinInput.value) : null;
+        clearTimeout(renderProductsTimeout);
+        renderProductsTimeout = setTimeout(renderAttractions, 500);
+      });
+    }
+    
+    if (priceMaxInput) {
+      priceMaxInput.addEventListener('input', () => {
+        priceMax = priceMaxInput.value ? parseFloat(priceMaxInput.value) : null;
+        clearTimeout(renderProductsTimeout);
+        renderProductsTimeout = setTimeout(renderAttractions, 500);
+      });
+    }
+
+    // Кнопка сброса фильтров
+    const resetFiltersBtn = document.getElementById('reset-filters');
+    if (resetFiltersBtn) {
+      resetFiltersBtn.addEventListener('click', () => {
+        currentCategory = 'все';
+        currentSort = 'default';
+        priceMin = null;
+        priceMax = null;
+        
+        if (priceMinInput) priceMinInput.value = '';
+        if (priceMaxInput) priceMaxInput.value = '';
+        if (sortSelect) sortSelect.value = 'default';
+        if (searchInput) searchInput.value = '';
+        
+        // Сбрасываем чекбоксы категорий
+        document.querySelectorAll('#category-filters input[type="checkbox"]').forEach(cb => cb.checked = false);
+        
+        renderAttractions();
+      });
+    }
+
+    // Мобильные фильтры
+    const mobileFiltersToggle = document.getElementById('mobile-filters-toggle');
+    const filtersSidebar = document.getElementById('filters-sidebar');
+    const filtersClose = document.getElementById('filters-close');
+    
+    if (mobileFiltersToggle && filtersSidebar) {
+      mobileFiltersToggle.addEventListener('click', () => {
+        filtersSidebar.classList.add('open');
+        document.body.style.overflow = 'hidden';
+      });
+    }
+    
+    if (filtersClose && filtersSidebar) {
+      filtersClose.addEventListener('click', () => {
+        filtersSidebar.classList.remove('open');
+        document.body.style.overflow = '';
       });
     }
 
