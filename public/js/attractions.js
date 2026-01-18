@@ -46,9 +46,10 @@
     const categoryFiltersContainer = document.getElementById('category-filters');
     if (categoryFiltersContainer && categories.length > 0) {
       categoryFiltersContainer.innerHTML = categories.map(category => `
-        <label class="filter-checkbox">
-          <input type="checkbox" name="category" value="${category}" />
-          <span>${category}</span>
+        <label class="filter-option">
+          <input type="checkbox" class="filter-input" name="category" value="${category}" />
+          <div class="filter-checkbox"></div>
+          <span class="filter-label">${category}</span>
         </label>
       `).join('');
       
