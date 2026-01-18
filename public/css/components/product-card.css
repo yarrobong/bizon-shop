@@ -486,7 +486,6 @@ main {
 
 /* === БЛОК ХАРАКТЕРИСТИК === */
 .attraction-specs {
-  margin: 1.25rem 0;
   background: rgba(11, 11, 38, 0.35);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
