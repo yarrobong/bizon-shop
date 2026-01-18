@@ -782,21 +782,31 @@
 
 .info-card,
 .spec-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   padding: 0.75rem 1rem;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(43, 83, 193, 0.2);
   border-radius: 8px;
   transition: all 0.3s ease;
-  gap: 1rem;
 }
 
 .info-card:hover,
 .spec-item:hover {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(43, 83, 193, 0.4);
+}
+
+/* Для карточек с иконками (оплата/доставка) */
+.info-card {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+/* Для характеристик (пары ключ-значение) */
+.spec-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .spec-label {
