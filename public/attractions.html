@@ -22,7 +22,8 @@
   <link rel="stylesheet" href="css/layout/header.css">
   <link rel="stylesheet" href="css/components/background.css">
   <link rel="stylesheet" href="css/components/modal.css"> <!-- Будет использоваться общий -->
- 
+  <link rel="stylesheet" href="css/pages/catalog.css"> <!-- Стили фильтров и сортировки -->
+  <link rel="stylesheet" href="css/components/product-card.css"> <!-- Стили карточек -->
 
   <!-- Стили СТРОГО для этой страницы -->
   <link rel="stylesheet" href="css/pages/attractions.css">
@@ -107,22 +108,97 @@
     <!-- Оверлей размытия для гамбургер меню -->
     <div class="hamburger-overlay"></div>
 
-  <main role="main">
-  <!-- Фильтры по категориям аттракционов -->
-  <div class="tags" aria-label="Фильтры по категориям">
-    <button class="tag-btn active" data-category="все">Все</button>
-    <button class="tag-btn" data-category="VR-Simulator">VR-Симуляторы</button>
-    <button class="tag-btn" data-category="VR-Cinema">VR-Кинотеатры</button>
-    <button class="tag-btn" data-category="VR-Arcade">Аркадные VR-аттракционы</button>
-    <!-- Добавьте другие категории аттракционов -->
-  </div>
+  <main role="main" class="catalog-main">
+    <!-- Заголовок и сортировка -->
+    <div class="catalog-header">
+      <h1>VR Аттракционы</h1>
+      <div class="catalog-controls">
+        <div class="sort-container">
+          <label for="sort-select" class="sort-label">Сортировка:</label>
+          <div class="select-wrapper">
+            <select id="sort-select" class="sort-select" aria-label="Сортировка аттракционов">
+              <option value="default">По умолчанию</option>
+              <option value="price-asc">Цена: по возрастанию</option>
+              <option value="price-desc">Цена: по убыванию</option>
+              <option value="name-asc">Название: А-Я</option>
+              <option value="name-desc">Название: Я-А</option>
+            </select>
+          </div>
+        </div>
+        <button class="mobile-filters-toggle" id="mobile-filters-toggle" aria-label="Показать фильтры">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18M7 12h10M11 18h2"/>
+          </svg>
+          <span>Фильтры</span>
+        </button>
+      </div>
+    </div>
 
-  <!-- Контейнер для списка аттракционов ИЛИ детального просмотра -->
-  <div id="attractions-container" class="products-grid">
-    <!-- Заполняется через attractions.js -->
-    <!-- ИЛИ заменяется на детальный просмотр -->
-  </div>
-</main>
+    <!-- Контейнер каталога с фильтрами и аттракционами -->
+    <div class="catalog-container">
+      <!-- Контейнер сортировки и аттракционов -->
+      <div class="catalog-content-wrapper">
+        <!-- Боковая панель фильтров -->
+        <aside class="filters-sidebar" id="filters-sidebar" aria-label="Фильтры аттракционов">
+          <div class="filters-header">
+            <h2>Фильтры</h2>
+            <button class="filters-close" id="filters-close" aria-label="Закрыть фильтры">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+
+          <div class="filters-content">
+            <!-- Фильтр по категориям -->
+            <div class="filter-group">
+              <button class="filter-group-header" aria-expanded="false">
+                <h3 class="filter-title">Категории</h3>
+                <svg class="filter-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
+              <div class="filter-group-content" id="category-filters-wrapper" style="display: none;">
+                <div class="filter-options" id="category-filters">
+                  <!-- Фильтры по категориям будут заполнены динамически -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Фильтр по цене -->
+            <div class="filter-group">
+              <button class="filter-group-header" aria-expanded="false">
+                <h3 class="filter-title">Цена</h3>
+                <svg class="filter-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
+              <div class="filter-group-content" style="display: none;">
+                <div class="price-filter">
+                  <div class="price-inputs">
+                    <input type="number" id="price-min" class="price-input" placeholder="От" min="0">
+                    <span class="price-separator">—</span>
+                    <input type="number" id="price-max" class="price-input" placeholder="До" min="0">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Кнопка сброса фильтров -->
+            <button class="reset-filters-btn" id="reset-filters">Сбросить фильтры</button>
+          </div>
+        </aside>
+
+        <!-- Основная сетка аттракционов -->
+        <div class="catalog-grid-wrapper">
+          <div id="attractions-container" class="products-grid">
+            <!-- Заполняется через attractions.js -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
 
        
       
