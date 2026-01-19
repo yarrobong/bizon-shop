@@ -64,24 +64,7 @@ main {
   border: 0;
 }
 
-.contact-info h2 {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 2.2rem;
-  color: var(--text-primary);
-  margin-bottom: 16px;
-  background: white;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-align: center;
-}
-
-.contact-info p.contact-subtitle {
-  color: var(--text-secondary);
-  font-size: 1.05rem;
-  margin-bottom: 30px;
-  line-height: 1.6;
-  text-align: center;
-}
+/* Заголовки теперь в contact-details */
 
 /* ==================== ПРАВЫЙ БЛОК — КОНТАКТНАЯ ИНФОРМАЦИЯ ==================== */
 .contact-details {
@@ -101,6 +84,29 @@ main {
     0 2px 10px rgba(0, 0, 0, 0.2);
   min-height: 100%;
   justify-content: space-between;
+}
+
+.contact-details-header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.contact-details-header h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.2rem;
+  color: var(--text-primary);
+  margin: 0 0 16px 0;
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.contact-details-header .contact-subtitle {
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  margin: 0;
+  line-height: 1.6;
 }
 
 .contact-detail-item {
