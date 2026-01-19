@@ -42,17 +42,13 @@ main {
 
 /* ==================== ЛЕВЫЙ БЛОК — КОНТАКТЫ + ФОРМА ==================== */
 .contact-info {
-  flex: 1 1 400px;
+  flex: 1 1 calc(50% - 20px);
   display: flex;
   flex-direction: column;
   justify-content: center;
   padding: 40px 30px;
   border-radius: 50px; /* как в feature-card, вместо 1rem */
   /* Жидкое стекло — точно как в feature-card */
- 
-
-  
-  
 }
 
 /* Скрытие заголовка h1 для SEO */
@@ -86,13 +82,14 @@ main {
   text-align: center;
 }
 
-/* ==================== КОНТАКТНАЯ ИНФОРМАЦИЯ ==================== */
+/* ==================== ПРАВЫЙ БЛОК — КОНТАКТНАЯ ИНФОРМАЦИЯ ==================== */
 .contact-details {
+  flex: 1 1 calc(50% - 20px);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  margin-top: 2rem;
-  padding: 1.5rem;
+  margin-top: 0;
+  padding: 2rem;
   background: rgba(11, 11, 38, 0.4);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -419,47 +416,17 @@ input.error, select.error, textarea.error {
   }
 }
 
-/* ==================== ПРАВЫЙ БЛОК — ФОТО И КОНТАКТЫ ==================== */
-.contact-image-wrapper {
-  flex: 2 1 400px;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-}
+/* ==================== СТАРЫЕ СТИЛИ ДЛЯ contact-image-wrapper (УДАЛЕНО) ==================== */
+/* Блок .contact-image-wrapper был удален из HTML */
 
-.contact-image {
-  flex-grow: 1;
-  min-height: 400px;
-  background: url('/assets/Contacts/20250903_0614_Futuristic BIZON Reception_simple_compose_01k46j72ksejnvd6p4jce7g1ww.png') no-repeat center center;
-  background-size: cover;
-  position: relative;
-  border-radius: 50px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
-
-.contact-image::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  /* Градиент снизу вверх, затемняющий только нижнюю часть */
-  background: linear-gradient(0deg, rgba(15, 22, 41, 0.4) 0%, rgba(15, 22, 41, 0.2) 30%, transparent 60%);
-  z-index: 1;
-  border-radius: inherit; /* Наследует скругление от родителя */
-}
-
-/* ==================== ССЫЛКИ НА МЕССЕНДЖЕРЫ НА ФОТО ==================== */
-/* Абсолютное позиционирование внутри .contact-image-wrapper */
+/* ==================== ССЫЛКИ НА МЕССЕНДЖЕРЫ ==================== */
 .contact-links-below-image {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
   gap: 16px;
-  z-index: 2;
-  padding: 0 10px;
+  padding: 0;
   width: 100%;
   justify-content: center;
+  margin-top: auto;
 }
 
 /* Стили для ссылок на фото */
@@ -571,22 +538,10 @@ input.error, select.error, textarea.error {
   }
 
   .contact-info,
-  .contact-image-wrapper {
+  .contact-details {
     flex: 1 1 auto;
     width: 100%;
     max-width: 600px;
-  }
-
-  .contact-image {
-    display: none;
-  }
-
-  .contact-image-wrapper {
-    position: relative;
-  }
-
-  .contact-links-below-image {
-    position: absolute;
   }
 
   .clients h2 {
