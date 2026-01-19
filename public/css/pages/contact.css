@@ -168,7 +168,6 @@ main {
 /* ==================== ФОРМА ==================== */
 .callback-form {
   padding: 25px;
-  flex: 1 1 400px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -181,6 +180,7 @@ main {
     0 0 10px rgba(43, 83, 193, 0.8),
     0 0 25px rgba(43, 83, 193, 0.6),
     0 0 50px rgba(43, 83, 193, 0.4);
+  flex: 1; /* Растягивается на всю высоту родителя */
 }
 
 .form-title {
