@@ -45,7 +45,6 @@ main {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  padding: 40px 30px;
   border-radius: 50px;
   min-height: 700px; /* Минимальная высота для выравнивания */
 }
