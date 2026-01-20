@@ -168,7 +168,7 @@ main {
 
 /* ==================== ФОРМА ==================== */
 .callback-form {
-  padding: 25px;
+  padding: 2rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -198,9 +198,9 @@ main {
 
 .form-subtitle {
   color: var(--text-secondary);
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   margin: 0 0 25px 0;
-  line-height: 1.5;
+  line-height: 1.6;
   text-align: center;
 }
 
