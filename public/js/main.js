@@ -342,10 +342,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Проверяем, был ли баннер уже показан в этой сессии
-    if (sessionStorage.getItem(SESSION_STORAGE_KEY) || consentValue) {
-        // Баннер уже видели в этой сессии или пользователь уже сделал выбор ранее, не показываем
-    } else {
-        // Если баннер ещё не показывался в этой сессии и пользователь не делал выбор, показываем его
+    // Показываем баннер только если:
+    // 1. Не было показано в этой сессии И
+    // 2. (Нет cookie согласия ИЛИ пользователь дал согласие - тогда больше не показываем)
+    const shouldShowBanner = !sessionStorage.getItem(SESSION_STORAGE_KEY) && 
+                            (!consentValue || consentValue === 'declined');
+    
+    if (shouldShowBanner) {
+        // Показываем баннер
         setTimeout(() => {
             if (consentBanner) { // Проверяем, существует ли элемент
                 consentBanner.classList.add('visible');
@@ -375,9 +379,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Обработчик кнопки "Отклонить"
     if (declineBtn) {
         declineBtn.addEventListener('click', () => {
-            // Устанавливаем долгосрочный cookie отказа (например, на 1 год)
+            // Устанавливаем cookie отказа на 30 дней (будем спрашивать снова через месяц)
             const d = new Date();
-            d.setTime(d.getTime() + (365 * 24 * 60 * 60 * 1000));
+            d.setTime(d.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 дней вместо года
             const expires = "expires=" + d.toUTCString();
             document.cookie = `cookie_consent=declined;${expires};path=/;SameSite=Lax`;
 
