@@ -15,6 +15,15 @@ const publicRateLimit = rateLimit({
 });
 
 /**
+ * GET /api/csrf-token
+ * Получить CSRF токен для защищенных форм
+ */
+router.get('/csrf-token', (req, res) => {
+  const token = generateToken();
+  res.json({ csrfToken: token });
+});
+
+/**
  * GET /api/products
  * Получить товары (публичный доступ, только доступные товары)
  * Если передан параметр admin=true и пользователь аутентифицирован - возвращает все товары
