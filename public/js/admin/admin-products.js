@@ -25,7 +25,10 @@ async function loadProducts() {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const products = await response.json();
+        const data = await response.json();
+        
+        // API возвращает объект с полями products и pagination, извлекаем массив
+        const products = Array.isArray(data) ? data : (data.products || []);
         
         renderProducts(products);
     } catch (error) {
@@ -467,7 +470,9 @@ async function loadAllProductsCache() {
             allProductsCache = []; // Очищаем кэш в случае ошибки
             return;
         }
-        allProductsCache = await response.json();
+        const data = await response.json();
+        // API возвращает объект с полями products и pagination, извлекаем массив
+        allProductsCache = Array.isArray(data) ? data : (data.products || []);
         console.log(`Кэш товаров обновлён. Загружено ${allProductsCache.length} товаров.`);
     } catch (error) {
         console.error('Ошибка при загрузке кэша товаров:', error);
@@ -476,22 +481,6 @@ async function loadAllProductsCache() {
 }
 
 // --- Работа с вариантами товаров ---
-
-async function loadProducts() {
-    try {
-        console.log('Загрузка товаров...');
-        const response = await fetchWithAuth('/api/products?admin=true&show_all=true'); // ← изменено
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const products = await response.json();
-        
-        renderProducts(products);
-    } catch (error) {
-        console.error('Ошибка загрузки товаров:', error);
-        adminPanel.showMessage('Не удалось загрузить товары', 'error');
-    }
-}
 
 function setupVariantsFunctionality() {
     const searchInput = document.getElementById('variant-search');
