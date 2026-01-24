@@ -579,8 +579,21 @@ async function loadKits(container) {
                  if (contentHtml.includes('<li>') && !contentHtml.includes('kit-item-name')) {
                      contentHtml = contentHtml.replace(/<li>(.*?)<\/li>/g, '<li><span class="kit-item-name">$1</span></li>');
                  }
+            } else if (kit.description) {
+                // Если описание - просто текст, разбиваем по переносам строк
+                const lines = kit.description.split('\n').filter(line => line.trim() !== '');
+                
+                if (lines.length > 0) {
+                    contentHtml = '<ul class="kit-list">';
+                    lines.forEach(line => {
+                        contentHtml += `<li><span class="kit-item-name">${line.trim()}</span></li>`;
+                    });
+                    contentHtml += '</ul>';
+                } else {
+                    contentHtml = '';
+                }
             } else {
-                contentHtml = `<p>${kit.description || ''}</p>`;
+                contentHtml = '';
             }
 
             card.innerHTML = `
