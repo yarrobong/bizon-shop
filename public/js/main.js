@@ -524,8 +524,9 @@ async function loadKits(container) {
         }
         
         const data = await response.json();
-        // API теперь возвращает уже отфильтрованные товары
-        const kits = data.products || data;
+        // API должен возвращать отфильтрованные товары, но для надежности фильтруем и на клиенте
+        const loadedProducts = data.products || data;
+        const kits = loadedProducts.filter(p => p.category === 'Готовые комплекты');
         
         // Очищаем контейнер перед рендерингом (удаляем индикатор загрузки)
         container.innerHTML = '';
