@@ -23,6 +23,7 @@
 
         <nav class="admin-nav">
             <button class="nav-btn active" data-tab="products">Товары</button>
+            <button class="nav-btn" data-tab="kits">Комплекты</button>
             <button class="nav-btn" data-tab="attractions">Аттракционы</button>
             <button class="nav-btn" data-tab="categories">Категории</button>
             <button class="nav-btn" data-tab="orders">Заказы</button>
@@ -40,6 +41,19 @@
                     <!-- Товары будут подгружаться сюда -->
                 </div>
             </section>
+
+            <!-- Вкладка Комплекты -->
+            <section id="kits-tab" class="tab-content">
+                <div class="tab-header">
+                    <h2>Управление комплектами</h2>
+                    <button id="add-kit-btn" class="btn-primary">Добавить комплект</button>
+                </div>
+                <div id="admin-kits-grid" class="admin-grid">
+                    <!-- Комплекты будут подгружаться сюда -->
+                    <div class="empty">Загрузка комплектов...</div>
+                </div>
+            </section>
+
             <!-- Новая вкладка Аттракционы -->
             <section id="attractions-tab" class="tab-content">
                 <div class="tab-header">
@@ -272,10 +286,94 @@
             </form>
         </div>
     </div>
+    <!-- Модальное окно для комплекта -->
+    <div id="kit-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-kit-modal close">&times;</span>
+            <h2 id="kit-modal-title">Добавить комплект</h2>
+            <form id="kit-form">
+                <input type="hidden" id="kit-id" name="kit-id">
+                
+                <!-- Основная информация о комплекте -->
+                <div class="form-field-full">
+                    <label for="kit-title">Название комплекта:</label>
+                    <input type="text" id="kit-title" name="kit-title" required>
+                </div>
+
+                <div class="form-field-full">
+                    <label for="kit-description">Описание комплекта:</label>
+                    <textarea id="kit-description" name="kit-description" rows="4" placeholder="HTML описание комплекта"></textarea>
+                </div>
+
+                <div class="form-columns">
+                    <div class="form-column">
+                        <label for="kit-price">Цена комплекта (руб.):</label>
+                        <input type="number" id="kit-price" name="kit-price" step="0.01" required>
+
+                        <label for="kit-tag">Тег:</label>
+                        <select id="kit-tag" name="kit-tag">
+                            <option value="">Без тега</option>
+                            <option value="новинка">Новинка</option>
+                            <option value="хит">Хит</option>
+                            <option value="скидка">Скидка</option>
+                            <option value="акция">Акция</option>
+                        </select>
+                    </div>
+
+                    <div class="form-column">
+                        <label style="margin-top: 16px;">
+                            <input type="checkbox" id="kit-available" name="kit-available" checked> Доступен
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Управление изображениями комплекта -->
+                <div class="images-section">
+                    <h3>Изображения комплекта</h3>
+                    <div id="kit-images-drop-zone" class="images-drop-zone">
+                        <div id="kit-images-container" class="images-grid">
+                            <!-- Изображения будут добавлены сюда динамически -->
+                        </div>
+                        <div id="kit-drop-hint" class="drop-hint show">
+                            <p>Перетащите изображения сюда или нажмите "Добавить изображение"</p>
+                        </div>
+                    </div>
+                    <button type="button" id="add-kit-image-btn" class="btn-secondary">Добавить изображение</button>
+                </div>
+
+                <!-- Товары комплекта -->
+                <div class="kit-items-section">
+                    <h3>Товары комплекта</h3>
+                    <p class="hint">Добавьте товары, которые входят в этот комплект. Можно указать количество каждого товара.</p>
+                    
+                    <!-- Список товаров комплекта -->
+                    <div id="kit-items-list" class="kit-items-list">
+                        <!-- Товары комплекта будут отображаться здесь -->
+                    </div>
+
+                    <!-- Поле поиска для добавления товаров в комплект -->
+                    <div class="kit-item-search-container">
+                        <input type="text" id="kit-item-search" placeholder="Поиск товаров для добавления в комплект..." autocomplete="off">
+                        <div id="kit-item-search-results" class="kit-item-search-results hidden">
+                            <!-- Результаты поиска будут отображаться здесь -->
+                        </div>
+                    </div>
+                    <!-- Скрытое поле для хранения товаров комплекта -->
+                    <input type="hidden" id="kit-items-data" name="kit-items-data">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="cancel-kit-btn" class="btn-secondary">Отмена</button>
+                    <button type="submit" class="btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <!-- Убедитесь, что admin-core.js подключен первым -->
 <script src="js/admin/admin-core.js"></script>
 <!-- Затем подключите остальные модули -->
 <script src="js/admin/admin-products.js"></script>
+<script src="js/admin/admin-kits.js"></script>
 <script src="js/admin/admin-attractions.js"></script>
 <script src="js/admin/admin-categories.js"></script>
 <script src="js/admin/admin-orders.js"></script>

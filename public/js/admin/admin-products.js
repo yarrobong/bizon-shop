@@ -110,49 +110,10 @@ function openProductModal(productId = null) {
         document.body.classList.add('modal-open');
     }
     
-    // Добавляем обработчик изменения категории
-    const categoryInput = document.getElementById('product-category');
-    if (categoryInput) {
-        // Удаляем старый обработчик если есть
-        categoryInput.removeEventListener('input', handleCategoryChange);
-        categoryInput.removeEventListener('change', handleCategoryChange);
-        // Добавляем новый обработчик
-        categoryInput.addEventListener('input', handleCategoryChange);
-        categoryInput.addEventListener('change', handleCategoryChange);
-        
-        // Проверяем текущее значение категории при открытии модального окна
-        const currentCategory = categoryInput.value.trim();
-        if (currentCategory) {
-            updateKitItemsSectionVisibility(currentCategory);
-        }
-    }
-}
-
-// Функция для обновления видимости секции товаров комплекта
-function updateKitItemsSectionVisibility(category) {
+    // Скрываем секцию товаров комплекта - комплекты редактируются в отдельной вкладке
     const kitItemsSection = document.getElementById('kit-items-section');
-    if (!kitItemsSection) {
-        console.warn('Секция kit-items-section не найдена в DOM');
-        return;
-    }
-    
-    const normalizedCategory = (category || '').trim();
-    if (normalizedCategory === 'Готовые комплекты') {
-        kitItemsSection.style.display = 'block';
-    } else {
+    if (kitItemsSection) {
         kitItemsSection.style.display = 'none';
-    }
-}
-
-// Обработчик изменения категории
-function handleCategoryChange(e) {
-    const category = e.target.value.trim();
-    updateKitItemsSectionVisibility(category);
-    
-    // Если категория изменилась на не-комплект, очищаем товары комплекта
-    if (category !== 'Готовые комплекты') {
-        kitItems = [];
-        renderKitItems();
     }
 }
 
@@ -206,14 +167,10 @@ async function loadProductForEdit(productId) {
                 await loadLinkedVariants(product.id);
             }
 
-            // Если это комплект, загружаем товары комплекта
-            // Обновляем видимость секции после установки всех значений
-            updateKitItemsSectionVisibility(productCategory);
-            if (productCategory === 'Готовые комплекты') {
-                await loadKitItems(product.id);
-            } else {
-                kitItems = [];
-                renderKitItems();
+            // Скрываем секцию товаров комплекта - комплекты редактируются в отдельной вкладке
+            const kitItemsSection = document.getElementById('kit-items-section');
+            if (kitItemsSection) {
+                kitItemsSection.style.display = 'none';
             }
 
             const modal = document.getElementById('product-modal');
@@ -787,29 +744,7 @@ async function saveProduct() {
                 console.log('Связи с вариантами успешно сохранены.');
             }
 
-            // Если это комплект, сохраняем товары комплекта
-            if (category === 'Готовые комплекты') {
-                const kitItemsData = kitItems.map((item, index) => ({
-                    product_id: item.product.id,
-                    quantity: item.quantity || 1,
-                    display_order: index
-                }));
-
-                const kitItemsResponse = await fetchWithAuth(`/api/kits/${savedProduct.id}/items`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ items: kitItemsData })
-                });
-
-                if (!kitItemsResponse.ok) {
-                    console.error('Ошибка при сохранении товаров комплекта:', kitItemsResponse.statusText);
-                    adminPanel.showMessage('Товар сохранен, но возникла ошибка при сохранении товаров комплекта.', 'warning');
-                } else {
-                    console.log('Товары комплекта успешно сохранены.');
-                }
-            }
+            // Комплекты редактируются в отдельной вкладке, поэтому здесь не сохраняем товары комплекта
         } else {
             console.error('Не удалось получить ID сохраненного товара для установки вариантов.');
             adminPanel.showMessage('Товар сохранен, но не удалось обновить связи с вариантами.', 'warning');
