@@ -74,12 +74,14 @@
   window.addEventListener('unhandledrejection', function(event) {
     const reason = event.reason;
     const errorMessage = reason?.message || String(reason) || '';
+    const errorStack = reason?.stack || '';
     
     // Подавляем ошибки парсинга JSON от внешних скриптов
     if (
       errorMessage.includes('Unexpected end of JSON input') ||
       errorMessage.includes('Failed to execute \'json\'') ||
-      errorMessage.includes('SyntaxError: Failed to execute')
+      errorMessage.includes('SyntaxError: Failed to execute') ||
+      (errorStack.includes('index.') && errorStack.includes('.js') && errorMessage.includes('JSON'))
     ) {
       event.preventDefault();
       return false;

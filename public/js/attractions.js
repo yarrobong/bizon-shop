@@ -81,11 +81,16 @@
 
       if (!response.ok) {
         // Если статус не 2xx, генерируем ошибку
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = typeof window.safeJsonParse === 'function' 
+            ? await window.safeJsonParse(response, { defaultValue: {}, silent: true })
+            : await response.json().catch(() => ({}));
         throw new Error(`HTTP error! status: ${response.status}. ${errorData.error || ''} Details: ${errorData.details || ''}`);
       }
 
-      const data = await response.json();
+      // Используем безопасный парсинг JSON
+      const data = typeof window.safeJsonParse === 'function' 
+          ? await window.safeJsonParse(response, { defaultValue: [] })
+          : await response.json().catch(() => []);
       
       ATTRACTIONS = data; // Сохраняем полученные данные
 

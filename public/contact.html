@@ -435,8 +435,10 @@
             })
           });
 
-        const result = await response.json();
-        
+        // Используем безопасный парсинг JSON
+        const result = typeof window.safeJsonParse === 'function' 
+            ? await window.safeJsonParse(response, { defaultValue: { success: false, error: 'Ошибка обработки ответа' } })
+            : await response.json().catch(() => ({ success: false, error: 'Ошибка обработки ответа' }));
 
         if (result.success) {
           // Успешная отправка

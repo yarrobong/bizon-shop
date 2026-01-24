@@ -42,7 +42,10 @@ document.addEventListener('DOMContentLoaded', async function () {
                  throw new Error(`Ошибка загрузки товара: ${response.status}`);
             }
         }
-        requestedProductData = await response.json();
+        // Используем безопасный парсинг JSON
+        requestedProductData = typeof window.safeJsonParse === 'function' 
+            ? await window.safeJsonParse(response, { defaultValue: null })
+            : await response.json().catch(() => null);
         console.log('Данные товара (по slug):', requestedProductData);
     } catch (error) {
         console.error('Ошибка при загрузке данных товара по slug:', error);

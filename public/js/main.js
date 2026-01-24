@@ -523,7 +523,10 @@ async function loadKits(container) {
             throw new Error('Не удалось загрузить товары');
         }
         
-        const data = await response.json();
+        // Используем безопасный парсинг JSON
+        const data = typeof window.safeJsonParse === 'function' 
+            ? await window.safeJsonParse(response, { defaultValue: { products: [] } })
+            : await response.json().catch(() => ({ products: [] }));
         // API должен возвращать отфильтрованные товары, но для надежности фильтруем и на клиенте
         const loadedProducts = data.products || data;
         const kits = loadedProducts.filter(p => p.category === 'Готовые комплекты');

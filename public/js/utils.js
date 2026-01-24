@@ -28,7 +28,10 @@ async function getCsrfToken() {
   try {
     const response = await fetch('/api/csrf-token');
     if (response.ok) {
-      const data = await response.json();
+      // Используем безопасный парсинг JSON
+      const data = typeof window.safeJsonParse === 'function' 
+          ? await window.safeJsonParse(response, { defaultValue: { csrfToken: null } })
+          : await response.json().catch(() => ({ csrfToken: null }));
       csrfTokenCache = data.csrfToken;
       return data.csrfToken;
     }
@@ -144,22 +147,66 @@ function handleFetchError(error) {
 /**
  * Безопасный парсинг JSON ответа с обработкой ошибок
  * @param {Response} response - Объект Response от fetch
- * @returns {Promise<Object>} - Распарсенный JSON или пустой объект
+ * @param {Object} options - Опции парсинга {defaultValue: any, silent: boolean}
+ * @returns {Promise<Object>} - Распарсенный JSON или значение по умолчанию
  */
-async function safeJsonParse(response) {
+async function safeJsonParse(response, options = {}) {
+  const { defaultValue = null, silent = false } = options;
+  
   try {
-    if (!response.ok) {
-      const text = await response.text();
-      try {
-        return JSON.parse(text);
-      } catch {
-        return { error: `Ошибка ${response.status}: ${response.statusText}` };
+    // Проверяем Content-Type
+    const contentType = response.headers.get('content-type');
+    const isJson = contentType && contentType.includes('application/json');
+    
+    // Получаем текст ответа
+    const text = await response.text();
+    
+    // Если ответ пустой
+    if (!text || text.trim().length === 0) {
+      if (!silent) {
+        console.warn('Получен пустой ответ от сервера');
       }
+      return defaultValue;
     }
-    return await response.json();
+    
+    // Если это не JSON, но мы ожидаем JSON
+    if (!isJson && !silent) {
+      console.warn('Ответ не является JSON. Content-Type:', contentType);
+      // Пытаемся распарсить как JSON, если это возможно
+      if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
+        try {
+          return JSON.parse(text);
+        } catch {
+          return defaultValue;
+        }
+      }
+      return defaultValue;
+    }
+    
+    // Пытаемся распарсить JSON
+    try {
+      return JSON.parse(text);
+    } catch (parseError) {
+      if (!silent) {
+        console.error('Ошибка парсинга JSON:', parseError);
+        console.error('Текст ответа:', text.substring(0, 200));
+      }
+      
+      // Если это ошибка сервера, возвращаем информацию об ошибке
+      if (!response.ok) {
+        return { 
+          error: `Ошибка ${response.status}: ${response.statusText}`,
+          message: text.substring(0, 500)
+        };
+      }
+      
+      return defaultValue;
+    }
   } catch (error) {
-    console.error('Ошибка парсинга JSON:', error);
-    return { error: 'Ошибка обработки ответа сервера' };
+    if (!silent) {
+      console.error('Ошибка обработки ответа:', error);
+    }
+    return defaultValue || { error: 'Ошибка обработки ответа сервера' };
   }
 }
 

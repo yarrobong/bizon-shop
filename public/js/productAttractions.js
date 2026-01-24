@@ -25,7 +25,10 @@ document.addEventListener('DOMContentLoaded', async function () {
                 }
             }
 
-            itemData = await response.json();
+            // Используем безопасный парсинг JSON
+            itemData = typeof window.safeJsonParse === 'function' 
+                ? await window.safeJsonParse(response, { defaultValue: null })
+                : await response.json().catch(() => null);
             console.log('Данные аттракциона:', itemData);
 
         } catch (error) {

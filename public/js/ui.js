@@ -334,7 +334,10 @@ async function loadProducts(page = 1, reset = false) {
       throw new Error('Не удалось загрузить товары');
     }
     
-    const data = await res.json();
+    // Используем безопасный парсинг JSON
+    const data = typeof window.safeJsonParse === 'function' 
+        ? await window.safeJsonParse(res, { defaultValue: { products: [], total: 0 } })
+        : await res.json().catch(() => ({ products: [], total: 0 }));
     
     // Проверяем формат ответа (новый с пагинацией или старый массив)
     let products = [];
