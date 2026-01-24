@@ -249,16 +249,26 @@ function addAttractionVideoField(videoData = null) {
     const primaryCheckbox = videoItem.querySelector('.video-input-primary');
     if (primaryCheckbox) {
         primaryCheckbox.addEventListener('change', () => {
-            // Сбрасываем все остальные чекбоксы "Главное видео" в массиве
-            attractionVideos.forEach(v => {
-                if (v.id !== videoId) {
-                    v.is_primary = false;
+            if (primaryCheckbox.checked) {
+                // Сбрасываем все остальные чекбоксы "Главное видео" в DOM
+                const container = document.getElementById('attraction-videos-container');
+                if (container) {
+                    const allCheckboxes = container.querySelectorAll('.video-input-primary');
+                    allCheckboxes.forEach(cb => {
+                        if (cb !== primaryCheckbox) cb.checked = false;
+                    });
                 }
-            });
-            // Обновляем состояние текущего
-            const videoInArray = attractionVideos.find(v => v.id === videoId);
-            if (videoInArray) {
-                videoInArray.is_primary = primaryCheckbox.checked;
+
+                // Сбрасываем в массиве
+                attractionVideos.forEach(v => {
+                    v.is_primary = (v.id === videoId);
+                });
+            } else {
+                // Обновляем массив
+                const videoInArray = attractionVideos.find(v => v.id === videoId);
+                if (videoInArray) {
+                    videoInArray.is_primary = false;
+                }
             }
         });
     }
@@ -275,11 +285,27 @@ function deleteAttractionVideo(videoId) {
 
 // --- Функция получения видео из формы ---
 function getAttractionVideosFromForm() {
-    return attractionVideos.map(vid => ({
-        url: vid.url,
-        alt: vid.alt || '',
-        is_primary: vid.is_primary || false
-    })).filter(vid => vid.url); // Фильтруем пустые url
+    const container = document.getElementById('attraction-videos-container');
+    if (!container) return [];
+
+    const videoItems = container.querySelectorAll('.video-item');
+    const videos = [];
+
+    videoItems.forEach(item => {
+        const urlInput = item.querySelector('.video-input-url');
+        const altInput = item.querySelector('.video-input-alt');
+        const primaryInput = item.querySelector('.video-input-primary');
+
+        if (urlInput && urlInput.value.trim()) {
+            videos.push({
+                url: urlInput.value.trim(),
+                alt: altInput ? altInput.value.trim() : '',
+                is_primary: primaryInput ? primaryInput.checked : false
+            });
+        }
+    });
+
+    return videos;
 }
 
 // Обработчики событий формы
