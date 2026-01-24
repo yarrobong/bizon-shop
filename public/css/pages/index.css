@@ -147,6 +147,186 @@ section { scroll-snap-align: start; } */
   100% { transform: translateY(0px); }
 }
 
+/* ==================== ГОТОВЫЕ КОМПЛЕКТЫ ==================== */
+.kits {
+  padding: 60px 20px;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+
+.kits h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.8rem;
+  margin-bottom: 10px;
+  background: #ffffff;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.kits-subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 50px;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.kits-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.kit-card {
+  background: rgba(11, 11, 38, 0.4);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 24px;
+  border: 1px solid rgba(43, 83, 193, 0.3);
+  padding: 40px 30px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.kit-card:hover {
+  transform: translateY(-10px);
+  border-color: rgba(59, 130, 246, 0.6);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.kit-card.popular {
+  background: rgba(11, 11, 38, 0.6);
+  border: 1px solid rgba(59, 130, 246, 0.6);
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.15);
+  transform: scale(1.05);
+  z-index: 2;
+}
+
+.kit-card.popular:hover {
+  transform: scale(1.05) translateY(-10px);
+  box-shadow: 0 0 50px rgba(59, 130, 246, 0.3);
+}
+
+.kit-badge {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #3b82f6;
+  color: white;
+  padding: 8px 16px;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.kit-header {
+  margin-bottom: 30px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 20px;
+}
+
+.kit-header h3 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2rem;
+  color: white;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.kit-price {
+  font-size: 1.5rem;
+  color: #59DEFA;
+  font-weight: 600;
+}
+
+.kit-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.kit-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 30px 0;
+  text-align: left;
+  flex: 1;
+}
+
+.kit-list li {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding-left: 20px;
+}
+
+.kit-list li::before {
+  content: "•";
+  color: #3b82f6;
+  font-size: 1.5rem;
+  position: absolute;
+  left: 0;
+  top: -5px;
+}
+
+.kit-item-name {
+  color: #e2e8f0;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.kit-item-desc {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.kit-card .btn-primary,
+.kit-card .btn-outline {
+  width: 100%;
+  text-align: center;
+  margin-top: auto;
+}
+
+/* Адаптив для комплектов */
+@media (max-width: 1024px) {
+  .kits-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .kit-card.popular {
+    transform: none;
+    grid-column: span 2;
+  }
+  .kit-card.popular:hover {
+    transform: translateY(-10px);
+  }
+}
+
+@media (max-width: 768px) {
+  .kits-grid {
+    grid-template-columns: 1fr;
+    max-width: 500px;
+  }
+  .kit-card.popular {
+    grid-column: auto;
+  }
+  .kits h2 {
+    font-size: 2.2rem;
+  }
+}
+
 /* ==================== ПРЕИМУЩЕСТВА ==================== */
 .features {
   padding: 40px 0px;
