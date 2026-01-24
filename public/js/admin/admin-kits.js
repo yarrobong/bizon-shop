@@ -544,16 +544,23 @@ function kitsManagerUpdateItemQuantity(productId, quantity) {
 
 function kitsManagerCalculateTotalPrice() {
     const totalPrice = kitsManagerKitItems.reduce((sum, item) => {
-        // Учитываем, что цена может быть строкой с пробелами (например "23 990.00")
-        let price = item.product.price;
-        if (typeof price === 'string') {
-            price = parseFloat(price.replace(/\s/g, '').replace(',', '.'));
-        }
-        price = parseFloat(price) || 0;
+        // Получаем цену, конвертируем в строку для безопасности
+        let priceStr = String(item.product.price || '0');
         
+        // Удаляем все символы кроме цифр, точки и запятой
+        // Это уберет пробелы, неразрывные пробелы, символы валюты и т.д.
+        priceStr = priceStr.replace(/[^0-9.,]/g, '');
+        
+        // Заменяем запятую на точку для parseFloat
+        priceStr = priceStr.replace(',', '.');
+        
+        const price = parseFloat(priceStr) || 0;
         const quantity = parseInt(item.quantity) || 1;
+        
         return sum + (price * quantity);
     }, 0);
+    
+    console.log('Рассчитанная цена комплекта:', totalPrice);
     
     const priceInput = document.getElementById('kit-price');
     if (priceInput) {
@@ -635,11 +642,14 @@ async function kitsManagerLoadKitItems(kitId) {
         }
         kitsManagerRenderKitItems();
         kitsManagerUpdateItemsInput();
+        // Пересчитываем цену при загрузке товаров, чтобы она была актуальной
+        kitsManagerCalculateTotalPrice();
     } catch (error) {
         console.error('Ошибка при загрузке товаров комплекта:', error);
         kitsManagerKitItems = [];
         kitsManagerRenderKitItems();
         kitsManagerUpdateItemsInput();
+        kitsManagerCalculateTotalPrice();
     }
 }
 
