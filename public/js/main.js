@@ -328,20 +328,12 @@ function initCookieBanner() {
         shouldShowBanner = !sessionStorage.getItem(SESSION_STORAGE_KEY);
     }
     
-    if (shouldShowBanner) {
+    if (shouldShowBanner && consentBanner) {
         const showBanner = () => {
-            if (consentBanner) {
-                // Устанавливаем inline стили сразу для гарантии видимости
-                consentBanner.style.display = 'block';
-                consentBanner.style.visibility = 'visible';
-                // Добавляем класс для анимации
+            consentBanner.style.display = 'block';
+            setTimeout(() => {
                 consentBanner.classList.add('visible');
-                // Дополнительно устанавливаем стили через небольшую задержку для переопределения любых конфликтов
-                requestAnimationFrame(() => {
-                    consentBanner.style.opacity = '1';
-                    consentBanner.style.transform = 'translateY(0)';
-                });
-            }
+            }, 10);
         };
         setTimeout(showBanner, 500);
     }
@@ -355,6 +347,7 @@ function initCookieBanner() {
             sessionStorage.setItem(SESSION_STORAGE_KEY, 'true');
             if (consentBanner) {
                 consentBanner.classList.remove('visible');
+                consentBanner.style.display = 'none';
             }
         });
     }
@@ -368,6 +361,7 @@ function initCookieBanner() {
             sessionStorage.setItem(SESSION_STORAGE_KEY, 'true');
             if (consentBanner) {
                 consentBanner.classList.remove('visible');
+                consentBanner.style.display = 'none';
             }
             stopYandexMetrika();
             stopCalltouch();
