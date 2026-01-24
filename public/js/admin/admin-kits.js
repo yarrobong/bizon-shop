@@ -37,6 +37,14 @@ async function kitsManagerLoadKits() {
     }
 }
 
+function getImageUrl(images) {
+    if (!images || images.length === 0) return '/assets/icons/placeholder1.webp';
+    const firstImage = images[0];
+    if (typeof firstImage === 'string') return firstImage;
+    if (typeof firstImage === 'object' && firstImage.url) return firstImage.url;
+    return '/assets/icons/placeholder1.webp';
+}
+
 function kitsManagerRenderKits(kits) {
     const container = document.getElementById('admin-kits-grid');
     if (!container) {
@@ -55,7 +63,7 @@ function kitsManagerRenderKits(kits) {
         const card = document.createElement('div');
         card.className = 'product-card';
 
-        const imageUrl = kit.images && kit.images.length > 0 ? kit.images[0].url : '/assets/icons/placeholder1.webp';
+        const imageUrl = getImageUrl(kit.images);
 
         card.innerHTML = `
             <img src="${imageUrl}" alt="${adminPanel.escapeHtml(kit.title)}" onerror="this.src='/assets/icons/placeholder1.webp'">
@@ -99,6 +107,8 @@ function kitsManagerOpenModal(kitId = null) {
         title.textContent = 'Добавить комплект';
         document.getElementById('kit-id').value = '';
         document.getElementById('kit-available').checked = true;
+        // При создании нового комплекта цена 0
+        document.getElementById('kit-price').value = 0;
         modal.style.display = 'block';
         document.body.classList.add('modal-open');
     }
