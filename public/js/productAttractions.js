@@ -108,59 +108,25 @@ document.addEventListener('DOMContentLoaded', async function () {
          console.error('❌ Контейнер .product-page-image не найден в DOM');
     }
 
-    // --- НОВОЕ: Отображение миниатюр (изображений и видео) ---
-    const thumbnailsContainer = document.getElementById('product-page-thumbnails'); // Убедитесь, что ID правильный
+    // --- Отображение миниатюр (только изображения) ---
+    const thumbnailsContainer = document.getElementById('product-page-thumbnails');
     if (thumbnailsContainer) {
         thumbnailsContainer.innerHTML = ''; // Очищаем
 
-        // Объединяем изображения и видео для галереи
-        const allMedia = [];
-        if (itemData.images && itemData.images.length > 0) {
-            itemData.images.forEach(img => {
-                allMedia.push({ type: 'image', ...img });
-            });
-        }
-        if (itemData.videos && itemData.videos.length > 0) {
-            itemData.videos.forEach(vid => {
-                allMedia.push({ type: 'video', ...vid });
-            });
-        }
+        // Используем только изображения для галереи
+        const images = itemData.images && itemData.images.length > 0 ? itemData.images : [];
 
-        // Сортируем по sort_order, если поле есть, иначе порядок добавления
-        allMedia.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
-
-        allMedia.forEach((media, index) => {
+        images.forEach((img, index) => {
             const thumbDiv = document.createElement('div');
             thumbDiv.className = 'product-page-thumbnail';
             if (index === 0) thumbDiv.classList.add('active'); // Первая миниатюра активна
 
-            if (media.type === 'image') {
-                const thumbImg = document.createElement('img');
-                thumbImg.src = media.url;
-                thumbImg.alt = media.alt || 'Миниатюра';
-                thumbImg.dataset.index = index;
-                thumbImg.dataset.type = 'image';
-                thumbImg.dataset.src = media.url; // Для подстановки в главное окно
-                thumbDiv.appendChild(thumbImg);
-            } else if (media.type === 'video') {
-                // Для миниатюры видео можно использовать превью или просто иконку
-                // Пока используем превью из основного изображения или заглушку
-                const thumbImg = document.createElement('img');
-                // Используем poster видео или первое изображение аттракциона
-                const posterUrl = itemData.images && itemData.images.length > 0 ? itemData.images[0].url : '/assets/icons/placeholder1.webp';
-                thumbImg.src = posterUrl;
-                thumbImg.alt = media.alt || 'Миниатюра видео';
-                thumbImg.dataset.index = index;
-                thumbImg.dataset.type = 'video';
-                thumbImg.dataset.src = media.url; // URL видео для подстановки
-                thumbImg.dataset.isVideo = "true"; // Флаг для JS
-                // Добавим визуальный индикатор, что это видео
-                const videoIcon = document.createElement('div');
-                videoIcon.className = 'video-icon'; // Добавьте CSS для .video-icon
-                videoIcon.innerHTML = '▶'; // Или используйте SVG иконку
-                thumbDiv.appendChild(videoIcon);
-                thumbDiv.appendChild(thumbImg);
-            }
+            const thumbImg = document.createElement('img');
+            thumbImg.src = img.url;
+            thumbImg.alt = img.alt || 'Миниатюра';
+            thumbImg.dataset.index = index;
+            thumbImg.dataset.src = img.url; // Для подстановки в главное окно
+            thumbDiv.appendChild(thumbImg);
 
             thumbnailsContainer.appendChild(thumbDiv);
         });
@@ -171,29 +137,24 @@ document.addEventListener('DOMContentLoaded', async function () {
             const clickedThumb = e.target.closest('.product-page-thumbnail');
             if (!clickedThumb) return;
 
-            const index = parseInt(clickedThumb.querySelector('img').dataset.index);
-            const type = clickedThumb.querySelector('img').dataset.type;
-            const src = clickedThumb.querySelector('img').dataset.src;
-            const isVideo = clickedThumb.querySelector('img').dataset.isVideo === "true";
+            const img = clickedThumb.querySelector('img');
+            if (!img) return;
+
+            const src = img.dataset.src;
 
             // Обновляем активную миниатюру
             thumbnailsContainer.querySelectorAll('.product-page-thumbnail').forEach(t => t.classList.remove('active'));
             clickedThumb.classList.add('active');
 
-            // Обновляем главное окно (изображение или видео)
+            // Обновляем главное окно (только изображения)
             const mainImageContainer = document.querySelector('.product-page-image');
             if (mainImageContainer) {
                 mainImageContainer.innerHTML = ''; // Очищаем
 
-                let newMediaElement;
-                if (isVideo) {
-                    newMediaElement = createMediaElement(src, itemData.images && itemData.images.length > 0 ? itemData.images[0].url : null, itemData.title);
-                } else {
-                    newMediaElement = document.createElement('img');
-                    newMediaElement.src = src; // URL изображения
-                    newMediaElement.alt = itemData.images.find(i => i.url === src)?.alt || itemData.title || 'Изображение аттракциона';
-                    newMediaElement.onerror = () => { newMediaElement.src = '/assets/icons/placeholder1.webp'; };
-                }
+                const newMediaElement = document.createElement('img');
+                newMediaElement.src = src; // URL изображения
+                newMediaElement.alt = itemData.images.find(i => i.url === src)?.alt || itemData.title || 'Изображение аттракциона';
+                newMediaElement.onerror = () => { newMediaElement.src = '/assets/icons/placeholder1.webp'; };
                 mainImageContainer.appendChild(newMediaElement);
             }
         });
