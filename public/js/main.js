@@ -507,4 +507,88 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCartCount();
     }
 
+    // Загрузка комплектов на главной странице
+    const kitsGrid = document.getElementById('kits-grid');
+    if (kitsGrid) {
+        loadKits(kitsGrid);
+    }
 });
+
+// Функция загрузки комплектов
+async function loadKits(container) {
+    try {
+        // Загружаем товары (пока без фильтрации на сервере, фильтруем на клиенте)
+        // Запрашиваем больше товаров, чтобы наверняка получить комплекты
+        const response = await fetch('/api/products?limit=100'); 
+        if (!response.ok) {
+            throw new Error('Не удалось загрузить товары');
+        }
+        
+        const data = await response.json();
+        const products = data.products || data; // Поддержка обоих форматов ответа
+        
+        // Фильтруем только готовые комплекты
+        const kits = products.filter(p => p.category === 'Готовые комплекты');
+        
+        container.innerHTML = '';
+        
+        if (kits.length === 0) {
+            container.innerHTML = '<div class="empty-kits">Комплекты временно отсутствуют</div>';
+            return;
+        }
+        
+        kits.forEach(kit => {
+            const card = document.createElement('div');
+            card.className = 'kit-card';
+            // Добавляем класс popular, если это хит продаж (можно определять по тегу или ID)
+            if (kit.tag && kit.tag.toLowerCase().includes('хит')) {
+                card.classList.add('popular');
+            }
+            
+            // Форматируем цену
+            const formattedPrice = new Intl.NumberFormat('ru-RU', {
+                style: 'currency',
+                currency: 'RUB',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(kit.price);
+            
+            // Формируем список из описания
+            let contentHtml = '';
+            // Простая проверка, является ли описание HTML
+            if (kit.description && kit.description.trim().startsWith('<')) {
+                 // Заменяем класс kit-list, если он там есть, или просто оборачиваем
+                 contentHtml = `<div class="kit-description">${kit.description}</div>`;
+                 
+                 if (contentHtml.includes('<ul>') && !contentHtml.includes('class="kit-list"')) {
+                     contentHtml = contentHtml.replace('<ul>', '<ul class="kit-list">');
+                 }
+                 
+                 // Если элементы списка не обернуты в span class="kit-item-name", добавляем его
+                 if (contentHtml.includes('<li>') && !contentHtml.includes('kit-item-name')) {
+                     contentHtml = contentHtml.replace(/<li>(.*?)<\/li>/g, '<li><span class="kit-item-name">$1</span></li>');
+                 }
+            } else {
+                contentHtml = `<p>${kit.description || ''}</p>`;
+            }
+
+            card.innerHTML = `
+                ${card.classList.contains('popular') ? '<div class="kit-badge">ХИТ ПРОДАЖ</div>' : ''}
+                <div class="kit-header">
+                    <h3>${kit.title}</h3>
+                    <div class="kit-price">${formattedPrice}</div>
+                </div>
+                <div class="kit-content">
+                    ${contentHtml}
+                    <a href="/product/${kit.slug}" class="btn-primary">Подробнее</a>
+                </div>
+            `;
+            
+            container.appendChild(card);
+        });
+        
+    } catch (error) {
+        console.error('Ошибка загрузки комплектов:', error);
+        container.innerHTML = '<div class="error-kits">Ошибка загрузки комплектов</div>';
+    }
+}
