@@ -22,6 +22,23 @@
 
   <!-- Глобальный обработчик ошибок для подавления ошибок от внешних скриптов -->
   <!-- Должен загружаться ПЕРВЫМ, до всех других скриптов и ресурсов -->
+  <!-- Inline скрипт для немедленной инициализации -->
+  <script>
+    // Немедленная инициализация заглушки Ya
+    if (typeof window.Ya === 'undefined') {
+      window.Ya = { Metrika: { init: function() {}, reachGoal: function() {}, hit: function() {} }, Counter: function() { return { reachGoal: function() {}, hit: function() {} }; } };
+    }
+    // Немедленный перехват console.error
+    (function() {
+      var origError = console.error;
+      console.error = function() {
+        var msg = Array.prototype.slice.call(arguments).join(' ');
+        if (!/Ya is not defined|Init stat_api|index\.\w+\.js.*error|fetchActivities.*JSON/i.test(msg)) {
+          origError.apply(console, arguments);
+        }
+      };
+    })();
+  </script>
   <script src="/js/error-handler.js"></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
