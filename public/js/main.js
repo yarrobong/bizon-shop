@@ -260,6 +260,12 @@ function initCookieBanner() {
         setTimeout(initCookieBanner, 100);
         return;
     }
+    
+    // Проверяем, не был ли баннер уже инициализирован
+    if (consentBanner.dataset.initialized === 'true') {
+        return;
+    }
+    consentBanner.dataset.initialized = 'true';
 
     const SESSION_STORAGE_KEY = 'cookie_banner_seen';
     const consentCookie = document.cookie
@@ -328,13 +334,20 @@ function initCookieBanner() {
         shouldShowBanner = !sessionStorage.getItem(SESSION_STORAGE_KEY);
     }
     
-    if (shouldShowBanner && consentBanner) {
+    if (shouldShowBanner) {
         const showBanner = () => {
-            // Принудительно устанавливаем все стили через inline для гарантии видимости
-            consentBanner.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; transform: translateY(0) !important;';
-            // Добавляем класс для CSS анимации
-            consentBanner.classList.add('visible');
+            const banner = document.getElementById('cookieConsent');
+            if (banner) {
+                // Принудительно устанавливаем все стили через inline для гарантии видимости
+                banner.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; transform: translateY(0) !important;';
+                // Добавляем класс для CSS анимации
+                banner.classList.add('visible');
+            }
         };
+        // Показываем сразу
+        showBanner();
+        // Дополнительно через небольшую задержку для надежности
+        setTimeout(showBanner, 100);
         setTimeout(showBanner, 500);
     }
 
@@ -370,17 +383,20 @@ function initCookieBanner() {
 }
 
 function initCookieBannerWhenReady() {
-    if (document.getElementById('cookieConsent')) {
+    const banner = document.getElementById('cookieConsent');
+    if (banner) {
         initCookieBanner();
     } else {
         setTimeout(initCookieBannerWhenReady, 50);
     }
 }
 
+// Инициализируем при загрузке DOM
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initCookieBannerWhenReady);
 } else {
-    initCookieBannerWhenReady();
+    // DOM уже загружен, но даем небольшую задержку для гарантии
+    setTimeout(initCookieBannerWhenReady, 100);
 }
 
 document.addEventListener('DOMContentLoaded', function() {
