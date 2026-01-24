@@ -147,6 +147,7 @@ function createAttractionCard(attraction) {
   card.innerHTML = `
     <div class="attraction-card-content"> <!-- Обертка для внутреннего содержимого -->
       <h3 class="attraction-title">${attraction.title}</h3>
+      ${attraction.category === 'Готовые комплекты' ? '<div style="font-size: 0.8em; color: #888; margin-bottom: 5px;">Пак из 10 комплектов</div>' : ''}
       <div class="attraction-image-container">
         <img class="attraction-image" src="${imagesArray[0].url}" onerror="this.onerror=null; this.src='/assets/icons/placeholder1.webp';" alt="${imagesArray[0].alt || attraction.title}" />
       </div>

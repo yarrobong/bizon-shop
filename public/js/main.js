@@ -602,6 +602,7 @@ async function loadKits(container) {
                 <div class="kit-info">
                     <div class="kit-header">
                         <h3>${kit.title}</h3>
+                        <div class="kit-subtitle" style="font-size: 0.9em; color: #888; margin-bottom: 5px;">Пак из 10 комплектов</div>
                         <div class="kit-price">${formattedPrice}</div>
                     </div>
                     <div class="kit-content">

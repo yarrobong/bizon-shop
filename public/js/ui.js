@@ -555,6 +555,7 @@ async function renderProducts(resetPagination = false) {
       card.innerHTML = `
         <div class="product-content">
           <h3 class="product-title">${product.title}</h3>
+          ${product.category === 'Готовые комплекты' ? '<div class="product-subtitle" style="font-size: 0.8em; color: #888; margin-bottom: 5px;">Пак из 10 комплектов</div>' : ''}
           <div class="product-image">
             <img src="${product.images[0]?.url?.trim() || '/assets/icons/placeholder1.webp'}" alt="${product.title}" />
             ${product.tag ? `<div class="product-badge" data-tag="${product.tag.toLowerCase()}">${product.tag}</div>` : ''}

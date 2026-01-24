@@ -116,6 +116,27 @@ function displayProduct(product) {
 
         if (titleElement) titleElement.textContent = product.title;
 
+        // --- НОВОЕ: Подзаголовок для комплектов ---
+        let subtitleElement = document.getElementById('product-page-subtitle');
+        if (!subtitleElement && titleElement) {
+             subtitleElement = document.createElement('div');
+             subtitleElement.id = 'product-page-subtitle';
+             subtitleElement.className = 'product-page-subtitle';
+             subtitleElement.style.color = '#888';
+             subtitleElement.style.marginBottom = '10px';
+             // Вставляем после заголовка
+             titleElement.parentNode.insertBefore(subtitleElement, titleElement.nextSibling);
+        }
+
+        if (subtitleElement) {
+            if (product.category === 'Готовые комплекты') {
+                subtitleElement.textContent = 'Пак из 10 комплектов';
+                subtitleElement.style.display = 'block';
+            } else {
+                subtitleElement.style.display = 'none';
+            }
+        }
+
         // --- НОВОЕ: Отображение/Скрытие бренда ---
         if (brandElement && brandContainer) {
             if (product.brand) {
@@ -841,6 +862,7 @@ function renderKitItems(kit) {
             <a href="/product/${product.slug}" class="kit-item-link">
                 <img src="${mainImage}" alt="${product.title}" onerror="this.src='/assets/icons/placeholder1.webp'">
                 <h3>${product.title}</h3>
+                ${product.category === 'Готовые комплекты' ? '<div style="font-size: 0.8em; color: #888; margin-bottom: 5px;">Пак из 10 комплектов</div>' : ''}
                 ${item.quantity > 1 ? `<span class="kit-item-quantity-badge">×${item.quantity}</span>` : ''}
             </a>
         `;
@@ -879,6 +901,7 @@ function renderKitItems(kit) {
         detailCard.innerHTML = `
             <div class="kit-item-detail-header">
                 <h4>${product.title}${item.quantity > 1 ? ` (×${item.quantity})` : ''}</h4>
+                ${product.category === 'Готовые комплекты' ? '<div style="font-size: 0.9em; color: #888; margin-bottom: 5px;">Пак из 10 комплектов</div>' : ''}
                 <a href="/product/${product.slug}" class="btn-primary btn-sm">Подробнее</a>
             </div>
             <div class="kit-item-detail-images">
