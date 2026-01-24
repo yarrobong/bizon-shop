@@ -277,22 +277,34 @@
         }
       }) ||
       errorMessage.includes('Unexpected end of JSON input') ||
+      errorMessage.includes('Unexpected end of JSON') ||
       errorMessage.includes('Failed to execute \'json\'') ||
+      errorMessage.includes('Failed to execute "json"') ||
       errorMessage.includes('SyntaxError: Failed to execute') ||
       errorString.includes('Unexpected end of JSON input') ||
+      errorString.includes('Unexpected end of JSON') ||
       errorString.includes('Failed to execute \'json\'') ||
+      errorString.includes('Failed to execute "json"') ||
       (errorStack.includes('index.') && errorStack.includes('.js') && 
-       (errorMessage.includes('JSON') || errorString.includes('JSON') || errorMessage.includes('SyntaxError') || errorString.includes('SyntaxError'))) ||
+       (errorMessage.includes('JSON') || errorString.includes('JSON') || 
+        errorMessage.includes('SyntaxError') || errorString.includes('SyntaxError') ||
+        errorMessage.includes('Unexpected') || errorString.includes('Unexpected'))) ||
       (errorStack.includes('fetchActivities') && 
-       (errorMessage.includes('JSON') || errorString.includes('JSON') || errorMessage.includes('SyntaxError') || errorString.includes('SyntaxError') || errorMessage.includes('Unexpected') || errorString.includes('Unexpected'))) ||
+       (errorMessage.includes('JSON') || errorString.includes('JSON') || 
+        errorMessage.includes('SyntaxError') || errorString.includes('SyntaxError') || 
+        errorMessage.includes('Unexpected') || errorString.includes('Unexpected'))) ||
       (errorStack.includes('mM.fetchActivities') && 
-       (errorMessage.includes('JSON') || errorString.includes('JSON') || errorMessage.includes('SyntaxError') || errorString.includes('SyntaxError'))) ||
-      (errorStack.includes('index.') && errorStack.includes('.js') && errorStack.includes('fetchActivities'));
+       (errorMessage.includes('JSON') || errorString.includes('JSON') || 
+        errorMessage.includes('SyntaxError') || errorString.includes('SyntaxError'))) ||
+      (errorStack.includes('index.') && errorStack.includes('.js') && errorStack.includes('fetchActivities')) ||
+      (fullErrorText.includes('index.') && fullErrorText.includes('.js') && 
+       (fullErrorText.includes('JSON') || fullErrorText.includes('SyntaxError')));
     
     if (shouldSuppress) {
       event.preventDefault();
       event.stopPropagation();
+      event.stopImmediatePropagation();
       return false;
     }
-  });
+  }, false);
 })();

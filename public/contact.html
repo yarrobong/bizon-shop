@@ -35,12 +35,13 @@
       var reason = e.reason;
       var msg = (reason && reason.message) || String(reason) || '';
       var stack = (reason && reason.stack) || '';
-      if (/Unexpected end of JSON|Failed to execute.*json|fetchActivities|index\.\w+\.js/i.test(msg + ' ' + stack)) {
+      var fullText = msg + ' ' + stack;
+      if (/Unexpected end of JSON|Failed to execute.*json|SyntaxError.*json|fetchActivities|mM\.fetchActivities|index\.\w+\.js.*json|index\.\w+\.js.*SyntaxError/i.test(fullText)) {
         e.preventDefault();
         e.stopPropagation();
         return false;
       }
-    });
+    }, false);
     // Немедленный перехват глобальных ошибок
     window.addEventListener('error', function(e) {
       var msg = e.message || '';
