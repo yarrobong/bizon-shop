@@ -330,10 +330,10 @@ function initCookieBanner() {
     
     if (shouldShowBanner && consentBanner) {
         const showBanner = () => {
-            consentBanner.style.display = 'block';
-            setTimeout(() => {
-                consentBanner.classList.add('visible');
-            }, 10);
+            // Принудительно устанавливаем все стили через inline для гарантии видимости
+            consentBanner.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; transform: translateY(0) !important;';
+            // Добавляем класс для CSS анимации
+            consentBanner.classList.add('visible');
         };
         setTimeout(showBanner, 500);
     }
