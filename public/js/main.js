@@ -608,9 +608,9 @@ async function loadKits(container) {
                     </div>
                     <div class="kit-content">
                         ${contentHtml}
-                        <div class="kit-actions">
-                            <a href="/product/${kit.slug}" class="btn-outline">Подробнее</a>
-                        </div>
+                    </div>
+                    <div class="kit-actions">
+                        <a href="/product/${kit.slug}" class="btn-outline">Подробнее</a>
                     </div>
                 </div>
             `;
