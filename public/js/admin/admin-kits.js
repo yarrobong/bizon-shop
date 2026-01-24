@@ -544,7 +544,13 @@ function kitsManagerUpdateItemQuantity(productId, quantity) {
 
 function kitsManagerCalculateTotalPrice() {
     const totalPrice = kitsManagerKitItems.reduce((sum, item) => {
-        const price = parseFloat(item.product.price) || 0;
+        // Учитываем, что цена может быть строкой с пробелами (например "23 990.00")
+        let price = item.product.price;
+        if (typeof price === 'string') {
+            price = parseFloat(price.replace(/\s/g, '').replace(',', '.'));
+        }
+        price = parseFloat(price) || 0;
+        
         const quantity = parseInt(item.quantity) || 1;
         return sum + (price * quantity);
     }, 0);
