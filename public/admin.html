@@ -9,7 +9,7 @@
 <link rel="shortcut icon" href="/assets/icons/favicon/favicon.ico" />
 <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/favicon/apple-touch-icon.png" />
 <link rel="manifest" href="/assets/icons/favicon/site.webmanifest" />
-    <link rel="stylesheet" href="css/pages/admin.css?v=1.2">
+    <link rel="stylesheet" href="css/pages/admin.css?v=1.3">
     <link rel="stylesheet" href="css/pages/attractions.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,25 +20,36 @@
 <body>
     <div class="admin-container">
         <!-- Боковая панель навигации -->
-        <nav class="admin-nav">
+        <nav class="admin-nav" id="admin-nav">
             <div class="nav-header">
+                <img src="/assets/icons/favicon/favicon.svg" alt="Logo" class="nav-logo" style="width: 24px; height: 24px;">
                 <h1>Bizon Admin</h1>
             </div>
-            <button class="nav-btn active" data-tab="products">📦 Товары</button>
-            <button class="nav-btn" data-tab="kits">🎁 Комплекты</button>
-            <button class="nav-btn" data-tab="attractions">🎡 Аттракционы</button>
-            <button class="nav-btn" data-tab="categories">📂 Категории</button>
-            <button class="nav-btn" data-tab="orders">🛒 Заказы</button>
-            <button class="nav-btn" data-tab="supplier-catalog">📋 Каталог поставщика</button>
-            
+            <div class="nav-menu">
+                <button class="nav-btn active" data-tab="products">📦 Товары</button>
+                <button class="nav-btn" data-tab="kits">🎁 Комплекты</button>
+                <button class="nav-btn" data-tab="attractions">🎡 Аттракционы</button>
+                <button class="nav-btn" data-tab="categories">📂 Категории</button>
+                <button class="nav-btn" data-tab="orders">🛒 Заказы</button>
+                <button class="nav-btn" data-tab="supplier-catalog">📋 Каталог поставщика</button>
+            </div>
             <div class="nav-footer">
-                <button id="logout-btn" class="btn-danger" style="width: 100%;">Выйти</button>
+                <button id="logout-btn" class="btn-danger">
+                    <span>Выйти</span>
+                </button>
             </div>
         </nav>
+        
+        <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
         <main class="admin-main">
             <!-- Верхняя шапка (будет обновляться JS при переключении табов) -->
             <header class="admin-header">
+                <button id="mobile-menu-btn" class="mobile-menu-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 12h18M3 6h18M3 18h18" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
                 <h2 id="page-title">Управление товарами</h2>
             </header>
 

@@ -129,6 +129,33 @@ class AdminPanel {
             this.logout();
         });
 
+        // Мобильное меню
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const adminNav = document.getElementById('admin-nav');
+
+        if (mobileMenuBtn && sidebarOverlay && adminNav) {
+            mobileMenuBtn.addEventListener('click', () => {
+                adminNav.classList.add('open');
+                sidebarOverlay.classList.add('active');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                adminNav.classList.remove('open');
+                sidebarOverlay.classList.remove('active');
+            });
+            
+            // Закрывать меню при клике на кнопку навигации (на мобильных)
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (window.innerWidth <= 768) {
+                        adminNav.classList.remove('open');
+                        sidebarOverlay.classList.remove('active');
+                    }
+                });
+            });
+        }
+
         // Закрытие модальных окон по клику вне их
         window.addEventListener('click', (e) => {
             // Общая логика закрытия модальных окон может быть здесь
