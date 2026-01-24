@@ -623,6 +623,10 @@ section { scroll-snap-align: start; } */
 }
 
 @media (max-width: 900px) {
+  main {
+    padding-top: 1rem;
+  }
+  
   .kits-grid {
     gap: 60px;
   }
@@ -1218,6 +1222,10 @@ section { scroll-snap-align: start; } */
 
 /* Планшеты в альбомной ориентации (900px - 1023px) */
 @media (max-width: 1023px) and (min-width: 900px) {
+  main {
+    padding-top: 1rem;
+  }
+  
   .hero {
     padding: 10px 30px;
     gap: 50px;
