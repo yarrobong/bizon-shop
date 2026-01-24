@@ -37,9 +37,10 @@
   <!-- Специфичные стили для страницы товара (если потребуются) -->
   <link rel="stylesheet" href="/css/pages/product-page.css"> <!-- Создадим позже -->
 
-  
+  <!-- Глобальный обработчик ошибок для подавления ошибок от внешних скриптов -->
+  <!-- Должен загружаться первым, до всех других скриптов -->
+  <script src="/js/error-handler.js"></script>
 
-  
 </head>
 <body>
    
@@ -301,8 +302,6 @@
     © <span id="year"></span> BIZON — Все права защищены
   </footer>
 
-  <!-- Глобальный обработчик ошибок для подавления ошибок от внешних скриптов -->
-  <script src="/js/error-handler.js"></script>
   <script defer src="/js/utils.js"></script>
   <script defer src="/js/state.js"></script> <!-- Должен быть до product.js -->
   <!-- Скрипт для страницы товара -->

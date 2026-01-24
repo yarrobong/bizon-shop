@@ -1,5 +1,23 @@
 // Глобальный обработчик ошибок для подавления ошибок от внешних скриптов
 (function() {
+  // Создаем заглушку для объекта Ya (старое API Яндекс.Метрики)
+  // Это предотвратит ошибки "Ya is not defined" от внешних виджетов
+  if (typeof window.Ya === 'undefined') {
+    window.Ya = {
+      Metrika: {
+        init: function() {},
+        reachGoal: function() {},
+        hit: function() {}
+      },
+      Counter: function() {
+        return {
+          reachGoal: function() {},
+          hit: function() {}
+        };
+      }
+    };
+  }
+  
   // Сохраняем оригинальные обработчики
   const originalError = console.error;
   const originalWarn = console.warn;
@@ -13,7 +31,8 @@
     /Cannot read properties of undefined.*reachGoal/i,
     /Failed to execute 'json' on 'Response': Unexpected end of JSON input/i,
     /index\.\w+\.js.*error/i,
-    /SyntaxError: Failed to execute 'json'/i
+    /SyntaxError: Failed to execute 'json'/i,
+    /Understand this warning/i
   ];
   
   // Переопределяем console.error
@@ -43,7 +62,8 @@
     if (
       errorFilters.some(filter => filter.test(errorMessage)) ||
       errorSource.includes('yastatic.net') ||
-      (errorSource.includes('index.') && errorSource.includes('.js'))
+      (errorSource.includes('index.') && errorSource.includes('.js')) ||
+      errorMessage.includes('Ya is not defined')
     ) {
       event.preventDefault();
       return false;

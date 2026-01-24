@@ -26,6 +26,10 @@
   <link rel="stylesheet" href="css/components/product-card.css">
   <link rel="stylesheet" href="css/components/modal.css">
 
+  <!-- Глобальный обработчик ошибок для подавления ошибок от внешних скриптов -->
+  <!-- Должен загружаться первым, до всех других скриптов -->
+  <script src="js/error-handler.js"></script>
+
   
 
 
@@ -255,8 +259,6 @@
 
   <!-- Скрипты -->
 
-  <!-- Глобальный обработчик ошибок для подавления ошибок от внешних скриптов -->
-  <script src="js/error-handler.js"></script>
   <script defer src="js/utils.js"></script>
   <script defer src="js/state.js"></script>
   <script defer src="js/ui.js"></script>
