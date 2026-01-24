@@ -65,8 +65,8 @@ async function handleProductsRequest(req, res, isAdmin) {
       if (page < 1) {
         return res.status(400).json({ error: 'Номер страницы должен быть больше 0' });
       }
-      if (limit < 1 || limit > 1000) {
-        return res.status(400).json({ error: 'Лимит должен быть от 1 до 1000' });
+      if (limit < 1 || limit > 5000) {
+        return res.status(400).json({ error: 'Лимит должен быть от 1 до 5000' });
       }
     } else {
       // Для show_all сбрасываем лимиты
@@ -75,12 +75,21 @@ async function handleProductsRequest(req, res, isAdmin) {
     }
     
     // Формируем WHERE условие
-    let whereClause = '';
+    let whereConditions = [];
+    let whereParams = [];
+
     if (!isAdmin) {
       // Для публичного доступа - только доступные товары
-      whereClause = 'WHERE available = true';
+      whereConditions.push('available = true');
     }
-    // Для админа - все товары (whereClause остается пустым)
+    
+    // Фильтрация по категории
+    if (req.query.category) {
+      whereParams.push(req.query.category);
+      whereConditions.push(`category = $${whereParams.length}`);
+    }
+
+    const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
     
     // Запрос для получения общего количества товаров
     const countQuery = `
@@ -91,7 +100,7 @@ async function handleProductsRequest(req, res, isAdmin) {
     
     // Запрос для получения товаров
     let query;
-    let queryParams;
+    let queryParams = [...whereParams];
     
     if (showAll) {
       query = `
@@ -113,7 +122,6 @@ async function handleProductsRequest(req, res, isAdmin) {
         ${whereClause}
         ORDER BY id
       `;
-      queryParams = [];
     } else {
       query = `
         SELECT
@@ -133,14 +141,14 @@ async function handleProductsRequest(req, res, isAdmin) {
         FROM products
         ${whereClause}
         ORDER BY id
-        LIMIT $1 OFFSET $2
+        LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}
       `;
-      queryParams = [limit, offset];
+      queryParams.push(limit, offset);
     }
 
     // Выполняем оба запроса параллельно
     const [countResult, productsResult] = await Promise.all([
-      pool.query(countQuery),
+      pool.query(countQuery, whereParams),
       pool.query(query, queryParams)
     ]);
 
