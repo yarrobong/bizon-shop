@@ -331,13 +331,16 @@ function initCookieBanner() {
     if (shouldShowBanner) {
         const showBanner = () => {
             if (consentBanner) {
+                // Устанавливаем inline стили сразу для гарантии видимости
+                consentBanner.style.display = 'block';
+                consentBanner.style.visibility = 'visible';
+                // Добавляем класс для анимации
                 consentBanner.classList.add('visible');
-                setTimeout(() => {
+                // Дополнительно устанавливаем стили через небольшую задержку для переопределения любых конфликтов
+                requestAnimationFrame(() => {
                     consentBanner.style.opacity = '1';
-                    consentBanner.style.visibility = 'visible';
                     consentBanner.style.transform = 'translateY(0)';
-                    consentBanner.style.display = 'block';
-                }, 50);
+                });
             }
         };
         setTimeout(showBanner, 500);

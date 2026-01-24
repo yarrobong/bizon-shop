@@ -1548,13 +1548,15 @@ section { scroll-snap-align: start; } */
   transform: translateY(10px);
   opacity: 0;
   visibility: hidden;
-  transition: transform 0.4s ease, opacity 0.4s ease;
+  display: block;
+  transition: transform 0.4s ease, opacity 0.4s ease, visibility 0.4s ease;
 }
 
 .cookie-consent-banner.visible {
   transform: translateY(0);
   opacity: 1;
   visibility: visible;
+  display: block;
 }
 
 .cookie-consent-content {
