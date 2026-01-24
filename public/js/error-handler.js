@@ -35,6 +35,15 @@
     /Understand this warning/i
   ];
   
+  // Фильтруем предупреждения от внешних скриптов и браузера
+  const warningFilters = [
+    /preload.*not used/i,
+    /was preloaded using link preload but not used/i,
+    /yastatic\.net.*preload/i,
+    /partner-code-bundles.*preload/i,
+    /loader\.bundle\.js.*preload/i
+  ];
+  
   // Переопределяем console.error
   console.error = function(...args) {
     const message = args.join(' ');
@@ -48,8 +57,19 @@
   console.warn = function(...args) {
     const message = args.join(' ');
     // Пропускаем только предупреждения, которые не соответствуют фильтрам
-    if (!errorFilters.some(filter => filter.test(message))) {
+    if (!errorFilters.some(filter => filter.test(message)) && 
+        !warningFilters.some(filter => filter.test(message))) {
       originalWarn.apply(console, args);
+    }
+  };
+  
+  // Также переопределяем console.log для предупреждений о preload (некоторые браузеры используют log)
+  const originalLog = console.log;
+  console.log = function(...args) {
+    const message = args.join(' ');
+    // Пропускаем только сообщения, которые не соответствуют фильтрам предупреждений
+    if (!warningFilters.some(filter => filter.test(message))) {
+      originalLog.apply(console, args);
     }
   };
   
