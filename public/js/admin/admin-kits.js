@@ -501,6 +501,7 @@ function kitsManagerAddKitItem(product) {
     });
     kitsManagerRenderKitItems();
     kitsManagerUpdateItemsInput();
+    kitsManagerCalculateTotalPrice();
 }
 
 function kitsManagerRemoveKitItem(productId) {
@@ -510,6 +511,7 @@ function kitsManagerRemoveKitItem(productId) {
     });
     kitsManagerRenderKitItems();
     kitsManagerUpdateItemsInput();
+    kitsManagerCalculateTotalPrice();
 }
 
 function kitsManagerUpdateItemQuantity(productId, quantity) {
@@ -517,6 +519,20 @@ function kitsManagerUpdateItemQuantity(productId, quantity) {
     if (item) {
         item.quantity = Math.max(1, parseInt(quantity) || 1);
         kitsManagerUpdateItemsInput();
+        kitsManagerCalculateTotalPrice();
+    }
+}
+
+function kitsManagerCalculateTotalPrice() {
+    const totalPrice = kitsManagerKitItems.reduce((sum, item) => {
+        const price = parseFloat(item.product.price) || 0;
+        const quantity = parseInt(item.quantity) || 1;
+        return sum + (price * quantity);
+    }, 0);
+    
+    const priceInput = document.getElementById('kit-price');
+    if (priceInput) {
+        priceInput.value = totalPrice;
     }
 }
 
