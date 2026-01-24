@@ -134,7 +134,7 @@ router.put('/:id/items', async (req, res) => {
 
         if (validItems.length > 0) {
           const insertValues = validItems.map((item, idx) => {
-            const base = idx * 3;
+            const base = idx * 4;
             return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4})`;
           }).join(', ');
 
