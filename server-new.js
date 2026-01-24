@@ -43,6 +43,9 @@ app.use('/api/admin', require('./routes/admin'));
 // Админские операции с товарами
 app.use('/api/products', require('./routes/products'));
 
+// Комплекты (требуют аутентификации)
+app.use('/api/kits', require('./routes/kits'));
+
 // Товары для КП (публичный доступ)
 app.use('/api/products_for_proposal', require('./routes/productsForProposal'));
 

@@ -1036,3 +1036,184 @@
     font-size: 1.5rem;
   }
 }
+
+/* === Стили для товаров комплекта === */
+.kit-items-section {
+  margin-top: 4rem;
+  padding: 2rem;
+  background: rgba(26, 34, 56, 0.6);
+  border-radius: 16px;
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.kit-items-title {
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.kit-items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.kit-item-card {
+  position: relative;
+  background: rgba(20, 27, 45, 0.8);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  transition: all 0.3s ease;
+}
+
+.kit-item-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+}
+
+.kit-item-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  padding: 1rem;
+}
+
+.kit-item-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+}
+
+.kit-item-card h3 {
+  font-size: 1rem;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+}
+
+.kit-item-quantity-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(59, 130, 246, 0.9);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.kit-items-details {
+  margin-top: 3rem;
+}
+
+.kit-items-details h3 {
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.kit-item-detail-card {
+  background: rgba(20, 27, 45, 0.8);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.kit-item-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.kit-item-detail-header h4 {
+  font-size: 1.25rem;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.kit-item-detail-images {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.kit-item-detail-images img {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.kit-item-detail-info {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.kit-item-brand,
+.kit-item-compatibility,
+.kit-item-price {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9375rem;
+}
+
+.kit-item-brand strong,
+.kit-item-compatibility strong,
+.kit-item-price strong {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.kit-item-description {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(59, 130, 246, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.7;
+}
+
+@media (max-width: 768px) {
+  .kit-items-section {
+    padding: 1.5rem;
+    margin-top: 2rem;
+  }
+
+  .kit-items-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+
+  .kit-item-detail-card {
+    padding: 1.5rem;
+  }
+
+  .kit-item-detail-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .kit-item-detail-images img {
+    width: 100px;
+    height: 100px;
+  }
+}

@@ -144,6 +144,15 @@ function displayProduct(product) {
         // Варианты
         renderVariantsOnPage(product);
 
+        // Если это комплект, отображаем товары комплекта
+        if (product.category === 'Готовые комплекты' && product.items && product.items.length > 0) {
+            renderKitItems(product);
+        } else {
+            // Скрываем секцию товаров комплекта если она есть
+            const kitItemsSection = document.getElementById('kit-items-section');
+            if (kitItemsSection) kitItemsSection.style.display = 'none';
+        }
+
         // Инициализируем "текущий отображаемый вариант" как основной товар
         window.currentDisplayedVariant = product;
 
@@ -786,4 +795,105 @@ function updateQuantityLocal(productId, change) {
     }
     localStorage.setItem('cart', JSON.stringify(cart));
   }
+}
+
+// Отображение товаров комплекта
+function renderKitItems(kit) {
+    // Создаем или получаем секцию для товаров комплекта
+    let kitItemsSection = document.getElementById('kit-items-section');
+    if (!kitItemsSection) {
+        kitItemsSection = document.createElement('div');
+        kitItemsSection.id = 'kit-items-section';
+        kitItemsSection.className = 'kit-items-section';
+        
+        // Вставляем после основного контейнера товара
+        const productContainer = document.querySelector('.product-page-container');
+        if (productContainer && productContainer.parentNode) {
+            productContainer.parentNode.insertBefore(kitItemsSection, productContainer.nextSibling);
+        }
+    }
+    
+    kitItemsSection.style.display = 'block';
+    kitItemsSection.innerHTML = `
+        <h2 class="kit-items-title">Состав комплекта</h2>
+        <div class="kit-items-grid" id="kit-items-grid">
+            <!-- Товары комплекта будут добавлены сюда -->
+        </div>
+    `;
+    
+    const grid = document.getElementById('kit-items-grid');
+    if (!grid || !kit.items || kit.items.length === 0) {
+        kitItemsSection.innerHTML = '<p>Товары комплекта не найдены</p>';
+        return;
+    }
+    
+    // Отображаем главные фото товаров комплекта
+    kit.items.forEach((item, index) => {
+        const product = item.product;
+        const card = document.createElement('div');
+        card.className = 'kit-item-card';
+        
+        const mainImage = product.images && product.images.length > 0 
+            ? product.images[0].url 
+            : '/assets/icons/placeholder1.webp';
+        
+        card.innerHTML = `
+            <a href="/product/${product.slug}" class="kit-item-link">
+                <img src="${mainImage}" alt="${product.title}" onerror="this.src='/assets/icons/placeholder1.webp'">
+                <h3>${product.title}</h3>
+                ${item.quantity > 1 ? `<span class="kit-item-quantity-badge">×${item.quantity}</span>` : ''}
+            </a>
+        `;
+        
+        grid.appendChild(card);
+    });
+    
+    // Добавляем детальную информацию о каждом товаре ниже
+    const detailsSection = document.createElement('div');
+    detailsSection.className = 'kit-items-details';
+    detailsSection.innerHTML = '<h3>Подробная информация о товарах комплекта</h3>';
+    
+    kit.items.forEach((item) => {
+        const product = item.product;
+        const detailCard = document.createElement('div');
+        detailCard.className = 'kit-item-detail-card';
+        
+        const imagesHtml = product.images && product.images.length > 0
+            ? product.images.map(img => `<img src="${img.url}" alt="${product.title}" onerror="this.src='/assets/icons/placeholder1.webp'">`).join('')
+            : `<img src="/assets/icons/placeholder1.webp" alt="${product.title}">`;
+        
+        const descriptionHtml = product.description 
+            ? `<div class="kit-item-description">${product.description}</div>`
+            : '';
+        
+        const brandHtml = product.brand 
+            ? `<div class="kit-item-brand"><strong>Бренд:</strong> ${product.brand}</div>`
+            : '';
+        
+        const compatibilityHtml = product.compatibility
+            ? `<div class="kit-item-compatibility"><strong>Совместимость:</strong> ${product.compatibility}</div>`
+            : '';
+        
+        const priceHtml = `<div class="kit-item-price"><strong>Цена:</strong> ${formatPrice(product.price)}</div>`;
+        
+        detailCard.innerHTML = `
+            <div class="kit-item-detail-header">
+                <h4>${product.title}${item.quantity > 1 ? ` (×${item.quantity})` : ''}</h4>
+                <a href="/product/${product.slug}" class="btn-primary btn-sm">Подробнее</a>
+            </div>
+            <div class="kit-item-detail-images">
+                ${imagesHtml}
+            </div>
+            <div class="kit-item-detail-info">
+                ${brandHtml}
+                ${compatibilityHtml}
+                ${priceHtml}
+                ${descriptionHtml}
+            </div>
+        `;
+        
+        detailsSection.appendChild(detailCard);
+    });
+    
+    kitItemsSection.appendChild(detailsSection);
 }

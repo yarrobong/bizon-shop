@@ -291,6 +291,66 @@ router.get('/product-by-slug/:slug', publicRateLimit, async (req, res) => {
       slug: productRow.slug
     };
 
+    // Если это комплект, загружаем товары комплекта
+    if (productRow.category === 'Готовые комплекты') {
+      try {
+        const kitItemsResult = await pool.query(`
+          SELECT 
+            ki.id,
+            ki.kit_id,
+            ki.product_id,
+            ki.quantity,
+            ki.display_order,
+            p.id as product_id,
+            p.title,
+            p.description,
+            p.price,
+            p.tag,
+            p.available,
+            p.category,
+            p.brand,
+            p.compatibility,
+            p.images_json,
+            p.supplier_link,
+            p.supplier_notes,
+            p.slug
+          FROM kit_items ki
+          JOIN products p ON ki.product_id = p.id
+          WHERE ki.kit_id = $1 AND p.available = true
+          ORDER BY ki.display_order, ki.id
+        `, [productRow.id]);
+
+        product.items = kitItemsResult.rows.map(row => {
+          const itemImages = parseImagesJson(row.images_json, row.product_id);
+          return {
+            id: row.id,
+            kit_id: row.kit_id,
+            product_id: row.product_id,
+            quantity: row.quantity,
+            display_order: row.display_order,
+            product: {
+              id: row.product_id,
+              title: row.title,
+              description: row.description,
+              price: parseFloat(row.price),
+              tag: row.tag,
+              available: row.available !== false,
+              category: row.category,
+              brand: row.brand,
+              compatibility: row.compatibility,
+              images: itemImages,
+              supplier_link: row.supplier_link,
+              supplier_notes: row.supplier_notes,
+              slug: row.slug
+            }
+          };
+        });
+      } catch (kitErr) {
+        console.error('Ошибка загрузки товаров комплекта:', kitErr);
+        product.items = [];
+      }
+    }
+
     res.json(product);
   } catch (err) {
     console.error('Ошибка загрузки товара по slug:', err);

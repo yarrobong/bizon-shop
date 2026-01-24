@@ -287,11 +287,47 @@ section { scroll-snap-align: start; } */
   font-size: 0.9rem;
 }
 
+.kit-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
 .kit-card .btn-primary,
 .kit-card .btn-outline {
-  width: 100%;
+  flex: 1;
   text-align: center;
-  margin-top: auto;
+  margin-top: 0;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.kit-card .btn-outline {
+  background: transparent;
+  border: 2px solid rgba(59, 130, 246, 0.5);
+  color: rgba(59, 130, 246, 1);
+}
+
+.kit-card .btn-outline:hover {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.8);
+}
+
+.kit-card .btn-primary {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(0, 0, 0, 0));
+  border: 2px solid rgba(59, 130, 246, 1);
+  color: rgba(59, 130, 246, 1);
+}
+
+.kit-card .btn-primary:hover {
+  background: rgba(59, 130, 246, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 /* Адаптив для комплектов */

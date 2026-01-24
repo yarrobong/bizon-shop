@@ -580,9 +580,22 @@ async function loadKits(container) {
                 </div>
                 <div class="kit-content">
                     ${contentHtml}
-                    <a href="/product/${kit.slug}" class="btn-primary">Подробнее</a>
+                    <div class="kit-actions">
+                        <a href="/product/${kit.slug}" class="btn-outline">Подробнее</a>
+                        <button class="btn-primary kit-add-to-cart" data-id="${kit.id}" data-slug="${kit.slug}">В корзину</button>
+                    </div>
                 </div>
             `;
+            
+            // Добавляем обработчик для кнопки "В корзину"
+            const addToCartBtn = card.querySelector('.kit-add-to-cart');
+            if (addToCartBtn && typeof window.addToCart === 'function') {
+                addToCartBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.addToCart(kit);
+                });
+            }
             
             container.appendChild(card);
         });
