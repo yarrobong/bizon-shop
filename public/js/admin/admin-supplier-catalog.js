@@ -13,16 +13,16 @@ async function loadSupplierCatalogTab() {
 
 async function loadSupplierCatalog(searchTerm = '') {
     
-    const container = document.getElementById('supplier-catalog-grid');
+    const container = document.getElementById('supplier-catalog-list');
     if (!container) {
-        console.warn("Контейнер #supplier-catalog-grid не найден");
+        console.warn("Контейнер #supplier-catalog-list не найден");
         return;
     }
 
     try {
-        container.innerHTML = '<div class="empty">Загрузка товаров...</div>';
+        container.innerHTML = '<tr><td colspan="5" class="empty">Загрузка товаров...</td></tr>';
         
-        const response = await fetchWithAuth('/api/products?admin=true');
+        const response = await fetchWithAuth('/api/products?admin=true&show_all=true');
         
         
         if (!response.ok) {
@@ -31,7 +31,8 @@ async function loadSupplierCatalog(searchTerm = '') {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        const products = await response.json();
+        const data = await response.json();
+        const products = Array.isArray(data) ? data : (data.products || []);
         
 
         let filteredProducts = products;
@@ -52,95 +53,65 @@ async function loadSupplierCatalog(searchTerm = '') {
     }
 }
 
+// Вспомогательная функция для получения URL изображения
+function getSupplierImageUrl(images) {
+    if (!images || images.length === 0) return '/assets/icons/placeholder1.webp';
+    const firstImage = images[0];
+    if (typeof firstImage === 'string') return firstImage;
+    if (typeof firstImage === 'object' && firstImage.url) return firstImage.url;
+    return '/assets/icons/placeholder1.webp';
+}
+
 function renderSupplierCatalog(products) {
     
-    const container = document.getElementById('supplier-catalog-grid');
+    const container = document.getElementById('supplier-catalog-list');
     if (!container) {
-        console.warn("Элемент #supplier-catalog-grid не найден в renderSupplierCatalog");
+        console.warn("Элемент #supplier-catalog-list не найден в renderSupplierCatalog");
         return;
     }
 
     container.innerHTML = '';
 
     if (!products || products.length === 0) {
-        container.innerHTML = '<div class="empty">Нет товаров для отображения</div>';
+        container.innerHTML = '<tr><td colspan="5" class="empty">Нет товаров для отображения</td></tr>';
         return;
     }
 
     products.forEach(product => {
-        const card = document.createElement('div');
-        card.className = 'product-card';
+        const tr = document.createElement('tr');
 
-        const imageUrl = product.images && product.images.length > 0 ?
-            product.images[0].url : '/assets/icons/placeholder1.webp';
+        const imageUrl = getSupplierImageUrl(product.images);
 
-        let supplierContent = 'Информация отсутствует';
-        let displayLink = '';
-        let isUrl = false;
-
+        let supplierLinkDisplay = '—';
+        let supplierLinkFull = '';
         if (product.supplier_link) {
+            supplierLinkFull = product.supplier_link;
             try {
                 new URL(product.supplier_link);
-                isUrl = true;
-                displayLink = product.supplier_link.length > 50 ?
-                    product.supplier_link.substring(0, 47) + '...' :
-                    product.supplier_link;
-                supplierContent = `<a href="${product.supplier_link}" target="_blank" rel="noopener noreferrer">${adminPanel.escapeHtml(displayLink)}</a>`;
+                supplierLinkDisplay = `<a href="${product.supplier_link}" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: underline;">${product.supplier_link.length > 50 ? product.supplier_link.substring(0, 47) + '...' : product.supplier_link}</a>`;
             } catch (e) {
-                displayLink = product.supplier_link.length > 50 ?
-                    product.supplier_link.substring(0, 47) + '...' :
-                    product.supplier_link;
-                supplierContent = `<span class="supplier-truncated-text" title="${adminPanel.escapeHtml(product.supplier_link)}">${adminPanel.escapeHtml(displayLink)}</span>`;
+                supplierLinkDisplay = `<span title="${adminPanel.escapeHtml(product.supplier_link)}">${product.supplier_link.length > 50 ? product.supplier_link.substring(0, 47) + '...' : product.supplier_link}</span>`;
             }
         }
 
-        const copyText = product.supplier_link || '';
-
-        card.innerHTML = `
-            <div class="supplier-product-card">
-                <img src="${imageUrl}" alt="${adminPanel.escapeHtml(product.title)}" 
-                     class="supplier-product-image" 
-                     onerror="this.src='/assets/icons/placeholder1.webp'">
-                <div class="supplier-product-info">
-                    <h3 class="supplier-product-title">${adminPanel.escapeHtml(product.title)}</h3>
-                    <div class="supplier-link-section">
-                        <div class="supplier-link-label">Где купить:</div>
-                        <div class="supplier-link-content">
-                            ${supplierContent}
-                            ${product.supplier_link ? `<button class="supplier-copy-btn" data-copy-text="${adminPanel.escapeHtml(copyText)}" title="Копировать информацию о поставщике">Копировать</button>` : ''}
-                        </div>
-                        ${product.supplier_notes ?
-                    `<div class="supplier-notes">${adminPanel.escapeHtml(product.supplier_notes)}</div>` :
-                    ''
-                }
-                    </div>
+        tr.innerHTML = `
+            <td>
+                <img src="${imageUrl}" alt="${adminPanel.escapeHtml(product.title)}" class="product-thumb" onerror="this.src='/assets/icons/placeholder1.webp'">
+            </td>
+            <td><strong>${adminPanel.escapeHtml(product.title)}</strong></td>
+            <td>${supplierLinkDisplay}</td>
+            <td>${product.supplier_notes ? adminPanel.escapeHtml(product.supplier_notes) : '—'}</td>
+            <td>
+                <div class="action-buttons">
+                    ${supplierLinkFull ? `<button class="btn-icon" onclick="navigator.clipboard.writeText('${adminPanel.escapeHtml(supplierLinkFull)}').then(() => adminPanel.showMessage('Скопировано!', 'success')).catch(() => adminPanel.showMessage('Ошибка копирования', 'error'))" title="Копировать ссылку">📋</button>` : ''}
+                    <button onclick="openProductModal(${product.id})" class="btn-icon" title="Редактировать">
+                        ✏️
+                    </button>
                 </div>
-            </div>
+            </td>
         `;
 
-        container.appendChild(card);
-    });
-
-    // Добавляем обработчики событий для кнопок копирования
-    container.querySelectorAll('.supplier-copy-btn').forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            const textToCopy = button.getAttribute('data-copy-text');
-            if (textToCopy) {
-                navigator.clipboard.writeText(textToCopy).then(() => {
-                    const originalText = button.textContent;
-                    button.textContent = 'Скопировано!';
-                    button.classList.add('copied');
-                    setTimeout(() => {
-                        button.textContent = originalText;
-                        button.classList.remove('copied');
-                    }, 2000);
-                }).catch(err => {
-                    console.error('Ошибка копирования текста: ', err);
-                    adminPanel.showMessage('Не удалось скопировать текст', 'error');
-                });
-            }
-        });
+        container.appendChild(tr);
     });
 }
 // Инициализация после загрузки DOM

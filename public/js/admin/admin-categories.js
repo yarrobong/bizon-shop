@@ -40,29 +40,32 @@ async function loadCategories() {
 function renderCategories(categories) {
     const container = document.getElementById('categories-list');
     if (!container) {
-        console.error('Контейнер #categories-list не найден в DOM');
+        console.error('Контейнер таблицы категорий не найден');
         return;
     }
 
     container.innerHTML = '';
 
     if (!categories || !Array.isArray(categories) || categories.length === 0) {
-        container.innerHTML = '<div class="empty">Нет категорий</div>';
-        console.log('Нет категорий для отображения');
+        container.innerHTML = '<tr><td colspan="3" class="empty">Нет категорий</td></tr>';
         return;
     }
 
-    
-
     categories.forEach(category => {
         if (category.hasOwnProperty('id') && category.hasOwnProperty('name')) {
-            const item = document.createElement('div');
-            item.className = 'category-item';
-            item.innerHTML = `
-                <span>${adminPanel.escapeHtml(category.name)}</span>
-                <button onclick="deleteCategory(${category.id})" class="btn-danger">Удалить</button>
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${category.id}</td>
+                <td><strong>${adminPanel.escapeHtml(category.name)}</strong></td>
+                <td>
+                    <div class="action-buttons">
+                        <button onclick="deleteCategory(${category.id})" class="btn-icon delete" title="Удалить">
+                            🗑️
+                        </button>
+                    </div>
+                </td>
             `;
-            container.appendChild(item);
+            container.appendChild(tr);
         } else {
             console.warn('Некорректная структура категории:', category);
         }

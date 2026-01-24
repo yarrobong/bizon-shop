@@ -46,58 +46,61 @@ async function loadAttractions() {
     }
 }
 
+// Вспомогательная функция для получения URL изображения
+function getAttractionImageUrl(attraction) {
+    if (attraction.images && attraction.images.length > 0) {
+        const firstImage = attraction.images[0];
+        if (typeof firstImage === 'string') return firstImage;
+        if (typeof firstImage === 'object' && firstImage.url) return firstImage.url;
+    }
+    if (attraction.image) return attraction.image;
+    return '/assets/icons/placeholder1.webp';
+}
+
 function renderAttractions(attractions) {
-    const container = document.getElementById('admin-attractions-grid');
+    const container = document.getElementById('admin-attractions-list');
     if (!container) {
-        console.error('Контейнер для аттракционов не найден');
+        console.error('Контейнер таблицы аттракционов не найден');
         return;
     }
 
     container.innerHTML = '';
 
-    // --- НЕТ ФИЛЬТРАЦИИ ПО available ЗДЕСЬ ---
-    // НЕ ДОЛЖНО БЫТЬ ЧЕГО-ТО ТАКОГО:
-    // if (!attractions || attractions.length === 0 || !attractions.some(a => a.available)) {
-    //     container.innerHTML = '<div class="empty">Нет доступных аттракционов для отображения</div>';
-    //     return;
-    // }
-    // attractions = attractions.filter(a => a.available); // <-- ЭТО НЕ НУЖНО
-    // --- КОНЕЦ НЕПРАВИЛЬНОЙ ФИЛЬТРАЦИИ ---
-
-    // Должно быть просто проверка на пустой массив:
     if (!attractions || attractions.length === 0) {
-        container.innerHTML = '<div class="empty">Нет аттракционов для отображения</div>';
+        container.innerHTML = '<tr><td colspan="7" class="empty">Нет аттракционов для отображения</td></tr>';
         return;
     }
 
     attractions.forEach(attraction => {
-        // Используем первое изображение из массива images, если оно есть
-        const imageUrl = (attraction.images && attraction.images.length > 0) ?
-            attraction.images[0].url :
-            (attraction.image || '/assets/icons/placeholder1.webp');
+        const tr = document.createElement('tr');
+        
+        const imageUrl = getAttractionImageUrl(attraction);
+        
+        const statusClass = attraction.available !== false ? 'success' : 'error';
+        const statusText = attraction.available !== false ? 'В наличии' : 'Недоступен';
 
-        const card = document.createElement('div');
-        card.className = 'product-card';
-        
-        // Можно добавить визуальный индикатор доступности
-        if (attraction.available === false) {
-             card.classList.add('unavailable'); // Добавим класс для стилизации
-             // Или просто добавим информацию в HTML
-        }
-        
-        card.innerHTML = `
-            <img src="${imageUrl}" alt="${escapeHtml(attraction.title)}" onerror="this.src='/assets/icons/placeholder1.webp'">
-            <h3>${escapeHtml(attraction.title)}</h3>
-            <p>Цена: ${formatPrice(attraction.price)}</p>
-            <p>Категория: ${escapeHtml(attraction.category || 'Не указана')}</p>
-            <!-- Отображаем статус доступности -->
-            <p>Доступность: ${attraction.available !== false ? 'Да' : 'Нет (только в админке)'}</p> 
-            <div class="product-actions">
-                <button onclick="openAttractionModal(${attraction.id})" class="btn-primary">Редактировать</button>
-                <button onclick="deleteAttraction(${attraction.id})" class="btn-danger">Удалить</button>
-            </div>
+        tr.innerHTML = `
+            <td>
+                <img src="${imageUrl}" alt="${adminPanel.escapeHtml(attraction.title)}" class="product-thumb" onerror="this.src='/assets/icons/placeholder1.webp'">
+            </td>
+            <td>${attraction.id || '—'}</td>
+            <td><strong>${adminPanel.escapeHtml(attraction.title)}</strong></td>
+            <td>${adminPanel.escapeHtml(attraction.category || '—')}</td>
+            <td>${adminPanel.formatPrice(attraction.price)}</td>
+            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+            <td>
+                <div class="action-buttons">
+                    <button onclick="openAttractionModal(${attraction.id})" class="btn-icon" title="Редактировать">
+                        ✏️
+                    </button>
+                    <button onclick="deleteAttraction(${attraction.id})" class="btn-icon delete" title="Удалить">
+                        🗑️
+                    </button>
+                </div>
+            </td>
         `;
-        container.appendChild(card);
+
+        container.appendChild(tr);
     });
 }
 // --- Модальное окно аттракциона ---

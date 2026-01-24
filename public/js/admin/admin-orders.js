@@ -9,7 +9,7 @@ window.loadOrdersTab = loadOrdersTab;
 
 async function loadOrders() {
     try {
-        const response = await fetch('/api/admin/orders');
+        const response = await fetchWithAuth('/api/admin/orders');
         if (response.ok) {
             const orders = await response.json();
             renderOrders(orders);

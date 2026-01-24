@@ -98,42 +98,83 @@
                     <h3>Список аттракционов</h3>
                     <button id="add-attraction-btn" class="btn-primary">Добавить аттракцион</button>
                 </div>
-                <div id="admin-attractions-grid" class="admin-grid">
-                    <!-- Аттракционы пока оставляем плиткой или переделаем позже -->
-                    <div class="empty">Загрузка аттракционов...</div>
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Фото</th>
+                                <th>ID</th>
+                                <th>Название</th>
+                                <th>Категория</th>
+                                <th>Цена</th>
+                                <th>Статус</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-attractions-list">
+                            <!-- Аттракционы будут подгружаться сюда -->
+                        </tbody>
+                    </table>
                 </div>
             </section>
 
             <!-- Вкладка Категории -->
             <section id="categories-tab" class="tab-content">
                 <div class="tab-header">
-                    <h2>Управление категориями</h2>
+                    <h3>Управление категориями</h3>
                     <button id="add-category-btn" class="btn-primary">Добавить категорию</button>
                 </div>
-                <div id="categories-list" class="admin-list">
-                    <!-- Категории будут подгружаться сюда -->
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Название категории</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categories-list">
+                            <!-- Категории будут подгружаться сюда -->
+                        </tbody>
+                    </table>
                 </div>
             </section>
 
             <!-- Вкладка Заказы -->
             <section id="orders-tab" class="tab-content">
-                <h2>Заказы</h2>
+                <div class="tab-header">
+                    <h3>Управление заказами</h3>
+                </div>
                 <div id="orders-list" class="admin-list">
                     <!-- Заказы будут подгружаться сюда -->
                 </div>
             </section>
+            
+            <!-- Вкладка Каталог поставщика -->
             <section id="supplier-catalog-tab" class="tab-content">
-        <div class="tab-header">
-            <h2>Каталог для заказа у поставщика</h2>
-            <div>
-                <input type="text" id="supplier-catalog-search" placeholder="Поиск по названию или ссылке..." class="search-input">
-            </div>
-        </div>
-        <div id="supplier-catalog-grid" class="admin-grid">
-            <!-- Товары будут подгружаться сюда -->
-            <div class="empty">Загрузка товаров...</div>
-        </div>
-    </section>
+                <div class="tab-header">
+                    <h3>Каталог для заказа у поставщика</h3>
+                    <div>
+                        <input type="text" id="supplier-catalog-search" placeholder="Поиск по названию или ссылке..." class="search-input" style="padding: 0.75rem 1rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-family: 'Inter', sans-serif;">
+                    </div>
+                </div>
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Фото</th>
+                                <th>Название</th>
+                                <th>Ссылка поставщика</th>
+                                <th>Примечания</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="supplier-catalog-list">
+                            <!-- Товары будут подгружаться сюда -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </main>
     </div>
 
