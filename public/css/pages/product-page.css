@@ -155,6 +155,7 @@
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   position: relative;
+  background: #000;
 }
 
 .product-page-image img,
@@ -163,6 +164,16 @@
   height: 100%;
   object-fit: contain;
   display: block;
+}
+
+.product-page-image iframe {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: none;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 /* Кнопки навигации для фото */
@@ -843,6 +854,9 @@
   overflow: hidden;
   border: 2px solid rgba(43, 83, 193, 0.3);
   transition: all 0.3s ease;
+  position: relative;
+  background: #000;
+  aspect-ratio: 16 / 9;
 }
 
 .video-item:hover {
@@ -850,10 +864,15 @@
   box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
 }
 
-.video-item video {
+.video-item video,
+.video-item iframe {
   width: 100%;
-  height: auto;
+  height: 100%;
   display: block;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 /* Комплектация */

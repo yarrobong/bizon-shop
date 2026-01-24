@@ -388,8 +388,7 @@ function createMediaElement(url, posterUrl = null, title = 'Видео') {
         const iframe = document.createElement('iframe');
         iframe.src = `https://rutube.ru/play/embed/${videoId}`;
         iframe.width = '100%';
-        iframe.height = '100%'; // Контейнер должен контролировать высоту
-        iframe.style.aspectRatio = '16/9';
+        iframe.height = '100%';
         iframe.frameBorder = '0';
         iframe.allow = 'clipboard-write; autoplay';
         iframe.setAttribute('webkitAllowFullScreen', '');
@@ -406,7 +405,6 @@ function createMediaElement(url, posterUrl = null, title = 'Видео') {
         iframe.src = `https://www.youtube.com/embed/${videoId}?rel=0`;
         iframe.width = '100%';
         iframe.height = '100%';
-        iframe.style.aspectRatio = '16/9';
         iframe.frameBorder = '0';
         iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
         iframe.setAttribute('allowFullScreen', '');
