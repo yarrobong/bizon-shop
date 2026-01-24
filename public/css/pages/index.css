@@ -329,6 +329,28 @@ section { scroll-snap-align: start; } */
   color: #cbd5e1;
   font-size: 1.05rem;
   line-height: 1.6;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 8px; /* Отступ для скроллбара */
+}
+
+/* Стили для скроллбара в kit-content */
+.kit-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.kit-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.kit-content::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.3);
+  border-radius: 3px;
+}
+
+.kit-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.5);
 }
 
 .kit-list {
