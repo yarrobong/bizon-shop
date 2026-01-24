@@ -196,41 +196,52 @@ section { scroll-snap-align: start; } */
   overflow: visible;
   /* Для анимации */
   opacity: 0;
-  transform: translateY(50px);
   transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+/* Элементы с четными индексами (картинка справа) - выезжают слева направо */
+.kit-card:nth-child(even) {
+  transform: translateX(-100px);
+}
+
+/* Элементы с нечетными индексами (картинка слева) - выезжают справа налево */
+.kit-card:nth-child(odd) {
+  transform: translateX(100px);
 }
 
 .kit-card.visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateX(0);
 }
 
 .kit-card:hover {
-  transform: none; /* Убираем конфликт с анимацией появления, если карточка уже visible, то transform: translateY(0) приоритетнее, но hover может перебивать. */
-  /* Лучше использовать для hover трансформации дочерние элементы */
+  transform: none; /* Убираем конфликт с анимацией появления */
   box-shadow: none;
   border-color: transparent;
 }
-/* Восстанавливаем состояние visible при наведении, чтобы hover не ломал позицию */
+/* Восстанавливаем состояние visible при наведении */
 .kit-card.visible:hover {
-  transform: translateY(0); 
+  transform: translateX(0); 
 }
 
 .kit-card.popular {
   background: transparent;
   border: none;
   box-shadow: none;
-  transform: none; /* Для исходного состояния переопределяем в JS или через .visible */
+  /* Сброс трансформации не нужен, так как nth-child сработает */
 }
 
-/* Применяем начальное скрытое состояние и к popular */
-.kit-card.popular {
-  opacity: 0;
-  transform: translateY(50px);
+/* Специфичные стили для популярного товара в зависимости от позиции */
+.kit-card.popular:nth-child(even) {
+  transform: translateX(-100px);
 }
+.kit-card.popular:nth-child(odd) {
+  transform: translateX(100px);
+}
+
 .kit-card.popular.visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateX(0);
 }
 
 
@@ -385,11 +396,20 @@ section { scroll-snap-align: start; } */
     border-radius: 24px;
     padding: 30px;
     
-    /* Для анимации на мобильных можно уменьшить смещение */
-    transform: translateY(30px);
+    /* На мобильных лучше оставить анимацию снизу вверх, так как сбоку может выглядеть странно при 100% ширине */
+    transform: translateY(50px);
   }
   
-  .kit-card.visible {
+  /* Переопределяем боковую анимацию для мобильных */
+  .kit-card:nth-child(even),
+  .kit-card:nth-child(odd),
+  .kit-card.popular:nth-child(even),
+  .kit-card.popular:nth-child(odd) {
+      transform: translateY(50px);
+  }
+  
+  .kit-card.visible,
+  .kit-card.popular.visible {
       transform: translateY(0);
   }
   
