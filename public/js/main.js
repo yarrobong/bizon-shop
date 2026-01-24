@@ -588,15 +588,17 @@ async function loadKits(container) {
                 <div class="kit-image">
                     <img src="${imageUrl}" alt="${kit.title}" onerror="this.src='/assets/icons/placeholder1.webp'">
                 </div>
-                <div class="kit-header">
-                    <h3>${kit.title}</h3>
-                    <div class="kit-price">${formattedPrice}</div>
-                </div>
-                <div class="kit-content">
-                    ${contentHtml}
-                    <div class="kit-actions">
-                        <a href="/product/${kit.slug}" class="btn-outline">Подробнее</a>
-                        <button class="btn-primary kit-add-to-cart" data-id="${kit.id}" data-slug="${kit.slug}">В корзину</button>
+                <div class="kit-info">
+                    <div class="kit-header">
+                        <h3>${kit.title}</h3>
+                        <div class="kit-price">${formattedPrice}</div>
+                    </div>
+                    <div class="kit-content">
+                        ${contentHtml}
+                        <div class="kit-actions">
+                            <a href="/product/${kit.slug}" class="btn-outline">Подробнее</a>
+                            <button class="btn-primary kit-add-to-cart" data-id="${kit.id}" data-slug="${kit.slug}">В корзину</button>
+                        </div>
                     </div>
                 </div>
             `;

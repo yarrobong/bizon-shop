@@ -175,208 +175,237 @@ section { scroll-snap-align: start; } */
 }
 
 .kits-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 80px;
   max-width: 1200px;
   margin: 0 auto;
 }
 
 .kit-card {
-  background: rgba(11, 11, 38, 0.4);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-radius: 24px;
-  border: 1px solid rgba(43, 83, 193, 0.3);
-  padding: 40px 30px;
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+  background: transparent;
+  backdrop-filter: none;
+  border: none;
+  padding: 0;
+  box-shadow: none;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .kit-card:hover {
-  transform: translateY(-10px);
-  border-color: rgba(59, 130, 246, 0.6);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  transform: none;
+  box-shadow: none;
+  border-color: transparent;
 }
 
 .kit-card.popular {
-  background: rgba(11, 11, 38, 0.6);
-  border: 1px solid rgba(255, 140, 0, 0.6); /* Оранжевый акцент */
-  box-shadow: 0 0 30px rgba(255, 140, 0, 0.15);
-  transform: scale(1.05);
-  z-index: 2;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  transform: none;
 }
 
 .kit-card.popular:hover {
-  transform: scale(1.05) translateY(-10px);
-  box-shadow: 0 0 50px rgba(255, 140, 0, 0.3);
+  transform: none;
+  box-shadow: none;
 }
 
-.kit-badge {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #ff8c00; /* Оранжевый фон */
-  color: white;
-  padding: 8px 16px;
-  border-bottom-left-radius: 12px;
-  border-bottom-right-radius: 12px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  z-index: 10;
+/* Чередование сторон */
+.kit-card:nth-child(even) {
+  direction: rtl; /* Трюк для смены порядка колонок, но лучше grid-auto-flow или order */
 }
+
+/* Возвращаем направление текста внутри ячеек */
+.kit-card:nth-child(even) > * {
+  direction: ltr;
+}
+
+/* Фон для карточки (опционально, можно сделать подложку только под текст или картинку) */
+/* В данном дизайне "презентация" подразумевает отсутствие общей рамки */
 
 .kit-image {
   width: 100%;
-  height: 350px;
-  margin-bottom: 24px;
-  border-radius: 16px;
+  height: 400px; /* Фиксированная высота для единообразия */
+  border-radius: 24px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(11, 11, 38, 0.4); /* Фон только под картинкой */
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(43, 83, 193, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 0;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.kit-card:hover .kit-image {
+  transform: translateY(-10px);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), 0 0 30px rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.5);
 }
 
 .kit-image img {
-  width: 100%;
-  height: 100%;
+  width: 90%;
+  height: 90%;
   object-fit: contain;
-  transition: transform 0.3s ease;
+  transition: transform 0.4s ease;
 }
 
 .kit-card:hover .kit-image img {
   transform: scale(1.05);
 }
 
+.kit-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: left;
+}
+
 .kit-header {
-  margin-bottom: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding-bottom: 20px;
+  margin-bottom: 24px;
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 .kit-header h3 {
   font-family: 'Montserrat', sans-serif;
-  font-size: 2.2rem;
+  font-size: 2.6rem;
   color: white;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  line-height: 1.1;
+  background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .kit-price {
-  font-size: 1.8rem;
-  color: #ff8c00; /* Оранжевый цвет цены */
+  font-size: 2.2rem;
+  color: #59DEFA; /* Яркий голубой вместо оранжевого для футуристичности */
   font-weight: 700;
+  text-shadow: 0 0 20px rgba(89, 222, 250, 0.3);
 }
 
 .kit-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+  color: #cbd5e1;
+  font-size: 1.05rem;
+  line-height: 1.6;
 }
 
 .kit-list {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 30px 0;
-  text-align: left;
-  flex: 1;
+  margin-bottom: 30px;
 }
 
 .kit-list li {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 8px;
   margin-bottom: 12px;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  position: relative;
-  border-bottom: 1px dashed rgba(255,255,255,0.1);
-  padding-bottom: 4px;
 }
 
 .kit-item-name {
+  font-size: 1.1rem;
   color: #e2e8f0;
-  font-weight: 500;
-  font-size: 0.95rem;
-}
-
-.kit-item-val {
-  color: #94a3b8;
-  font-size: 0.9rem;
 }
 
 .kit-actions {
   display: flex;
-  gap: 0.75rem;
-  margin-top: 1rem;
+  gap: 20px;
+  margin-top: 30px;
+  justify-content: flex-start;
 }
 
 .kit-card .btn-primary,
 .kit-card .btn-outline {
-  flex: 1;
-  text-align: center;
-  margin-top: 0;
-  padding: 0.75rem 1rem;
-  text-decoration: none;
+  flex: 0 1 auto; /* Не растягивать на всю ширину */
+  min-width: 160px;
+  padding: 12px 24px;
+  font-size: 1rem;
+}
+
+.kit-badge {
+  top: 20px;
+  left: 20px;
+  transform: none;
   border-radius: 8px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  border: none;
-  cursor: pointer;
-}
-
-.kit-card .btn-outline {
-  background: transparent;
-  border: 2px solid rgba(59, 130, 246, 0.5);
-  color: rgba(59, 130, 246, 1);
-}
-
-.kit-card .btn-outline:hover {
-  background: rgba(59, 130, 246, 0.1);
-  border-color: rgba(59, 130, 246, 0.8);
-}
-
-.kit-card .btn-primary {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(0, 0, 0, 0));
-  border: 2px solid rgba(59, 130, 246, 1);
-  color: rgba(59, 130, 246, 1);
-}
-
-.kit-card .btn-primary:hover {
-  background: rgba(59, 130, 246, 0.25);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  box-shadow: 0 5px 15px rgba(255, 140, 0, 0.4);
 }
 
 /* Адаптив для комплектов */
 @media (max-width: 1024px) {
-  .kits-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .kit-card {
+    gap: 40px;
   }
-  .kit-card.popular {
-    transform: none;
-    grid-column: auto;
-  }
-  .kit-card.popular:hover {
-    transform: translateY(-10px);
+  .kit-header h3 {
+    font-size: 2.2rem;
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .kits-grid {
-    grid-template-columns: 1fr;
-    max-width: 500px;
+    gap: 60px;
   }
-  .kits h2 {
-    font-size: 2.2rem;
+
+  .kit-card {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    background: rgba(11, 11, 38, 0.4); /* Возвращаем фон на мобильных для читаемости */
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(43, 83, 193, 0.3);
+    border-radius: 24px;
+    padding: 30px;
+  }
+  
+  .kit-card:nth-child(even) {
+    direction: ltr; /* Сбрасываем направление */
+  }
+
+  .kit-image {
+    height: 300px;
+    background: transparent; /* Убираем фон картинки, так как есть фон карточки */
+    border: none;
+    box-shadow: none;
+    margin-bottom: 20px;
+  }
+  
+  .kit-card:hover .kit-image {
+    transform: none; /* Убираем ховер эффект на мобильных */
+    box-shadow: none;
+  }
+
+  .kit-header h3 {
+    font-size: 2rem;
+  }
+  
+  .kit-price {
+    font-size: 1.8rem;
+  }
+
+  .kit-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .kit-card .btn-primary,
+  .kit-card .btn-outline {
+    width: 100%;
+  }
+  
+  .kit-badge {
+    left: 50%;
+    transform: translateX(-50%);
+    top: 0;
+    border-radius: 0 0 12px 12px;
   }
 }
 
