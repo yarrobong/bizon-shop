@@ -53,17 +53,25 @@ router.get('/products', publicRateLimit, async (req, res, next) => {
  */
 async function handleProductsRequest(req, res, isAdmin) {
   try {
-    // Параметры пагинации
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
-    const offset = (page - 1) * limit;
+    const showAll = req.query.show_all === 'true' && isAdmin;
     
-    // Валидация параметров
-    if (page < 1) {
-      return res.status(400).json({ error: 'Номер страницы должен быть больше 0' });
-    }
-    if (limit < 1 || limit > 100) {
-      return res.status(400).json({ error: 'Лимит должен быть от 1 до 100' });
+    // Параметры пагинации
+    let page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 20;
+    let offset = (page - 1) * limit;
+    
+    // Валидация параметров (если не show_all)
+    if (!showAll) {
+      if (page < 1) {
+        return res.status(400).json({ error: 'Номер страницы должен быть больше 0' });
+      }
+      if (limit < 1 || limit > 100) {
+        return res.status(400).json({ error: 'Лимит должен быть от 1 до 100' });
+      }
+    } else {
+      // Для show_all сбрасываем лимиты
+      limit = null;
+      offset = 0;
     }
     
     // Формируем WHERE условие
@@ -81,32 +89,59 @@ async function handleProductsRequest(req, res, isAdmin) {
       ${whereClause}
     `;
     
-    // Запрос для получения товаров с пагинацией
-    const query = `
-      SELECT
-        id,
-        title,
-        description,
-        price,
-        tag,
-        available,
-        category,
-        brand,
-        compatibility,
-        images_json,
-        supplier_link,
-        supplier_notes,
-        slug
-      FROM products
-      ${whereClause}
-      ORDER BY id
-      LIMIT $1 OFFSET $2
-    `;
+    // Запрос для получения товаров
+    let query;
+    let queryParams;
+    
+    if (showAll) {
+      query = `
+        SELECT
+          id,
+          title,
+          description,
+          price,
+          tag,
+          available,
+          category,
+          brand,
+          compatibility,
+          images_json,
+          supplier_link,
+          supplier_notes,
+          slug
+        FROM products
+        ${whereClause}
+        ORDER BY id
+      `;
+      queryParams = [];
+    } else {
+      query = `
+        SELECT
+          id,
+          title,
+          description,
+          price,
+          tag,
+          available,
+          category,
+          brand,
+          compatibility,
+          images_json,
+          supplier_link,
+          supplier_notes,
+          slug
+        FROM products
+        ${whereClause}
+        ORDER BY id
+        LIMIT $1 OFFSET $2
+      `;
+      queryParams = [limit, offset];
+    }
 
     // Выполняем оба запроса параллельно
     const [countResult, productsResult] = await Promise.all([
       pool.query(countQuery),
-      pool.query(query, [limit, offset])
+      pool.query(query, queryParams)
     ]);
 
     const total = parseInt(countResult.rows[0].total);
