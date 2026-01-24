@@ -494,8 +494,7 @@ function kitsManagerPerformItemSearch(term, container) {
         const item = document.createElement('div');
         item.className = 'variant-search-item';
         item.dataset.productId = product.id;
-        const imageUrl = product.images && product.images.length > 0 ?
-            product.images[0].url : '/assets/icons/placeholder1.webp';
+        const imageUrl = getImageUrl(product.images);
         item.innerHTML = `
             <img src="${imageUrl}" alt="${adminPanel.escapeHtml(product.title)}" onerror="this.src='/assets/icons/placeholder1.webp'">
             <span class="variant-title">${adminPanel.escapeHtml(product.title)}</span>
@@ -569,8 +568,7 @@ function kitsManagerRenderKitItems() {
         const item = document.createElement('div');
         item.className = 'kit-item-row';
         item.dataset.productId = kitItem.product.id;
-        const imageUrl = kitItem.product.images && kitItem.product.images.length > 0 ?
-            kitItem.product.images[0].url : '/assets/icons/placeholder1.webp';
+        const imageUrl = getImageUrl(kitItem.product.images);
         item.innerHTML = `
             <div class="kit-item-info">
                 <img src="${imageUrl}" alt="${adminPanel.escapeHtml(kitItem.product.title)}" onerror="this.src='/assets/icons/placeholder1.webp'">
