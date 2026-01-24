@@ -343,10 +343,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Проверяем, был ли баннер уже показан в этой сессии
     // Показываем баннер только если:
-    // 1. Не было показано в этой сессии И
-    // 2. (Нет cookie согласия ИЛИ пользователь дал согласие - тогда больше не показываем)
-    const shouldShowBanner = !sessionStorage.getItem(SESSION_STORAGE_KEY) && 
-                            (!consentValue || consentValue === 'declined');
+    // 1. Нет cookie согласия (consentValue === null) - всегда показываем
+    // 2. ИЛИ cookie = 'declined' И не было показано в этой сессии
+    // 3. НЕ показываем, если cookie = 'accepted'
+    let shouldShowBanner = false;
+    
+    if (!consentValue) {
+        // Нет cookie согласия - показываем баннер (игнорируем sessionStorage)
+        // Очищаем sessionStorage, если он есть, чтобы гарантировать показ баннера
+        sessionStorage.removeItem(SESSION_STORAGE_KEY);
+        shouldShowBanner = true;
+    } else if (consentValue === 'declined') {
+        // Был отказ - показываем только если не было показано в этой сессии
+        shouldShowBanner = !sessionStorage.getItem(SESSION_STORAGE_KEY);
+    } else if (consentValue === 'accepted') {
+        // Согласие дано - не показываем
+        shouldShowBanner = false;
+    }
     
     if (shouldShowBanner) {
         // Показываем баннер
