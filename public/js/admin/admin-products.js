@@ -95,8 +95,7 @@ function openProductModal(productId = null) {
     updateSelectedVariantsInput();
     kitItems = [];
     renderKitItems();
-    const kitItemsSection = document.getElementById('kit-items-section');
-    if (kitItemsSection) kitItemsSection.style.display = 'none';
+    updateKitItemsSectionVisibility(''); // Скрываем секцию по умолчанию
 
     if (productId) {
         // Редактирование
@@ -106,8 +105,54 @@ function openProductModal(productId = null) {
         title.textContent = 'Добавить товар';
         document.getElementById('product-id').value = '';
         document.getElementById('product-available').checked = true;
+        updateKitItemsSectionVisibility(''); // Скрываем секцию по умолчанию
         modal.style.display = 'block';
         document.body.classList.add('modal-open');
+    }
+    
+    // Добавляем обработчик изменения категории
+    const categoryInput = document.getElementById('product-category');
+    if (categoryInput) {
+        // Удаляем старый обработчик если есть
+        categoryInput.removeEventListener('input', handleCategoryChange);
+        categoryInput.removeEventListener('change', handleCategoryChange);
+        // Добавляем новый обработчик
+        categoryInput.addEventListener('input', handleCategoryChange);
+        categoryInput.addEventListener('change', handleCategoryChange);
+        
+        // Проверяем текущее значение категории при открытии модального окна
+        const currentCategory = categoryInput.value.trim();
+        if (currentCategory) {
+            updateKitItemsSectionVisibility(currentCategory);
+        }
+    }
+}
+
+// Функция для обновления видимости секции товаров комплекта
+function updateKitItemsSectionVisibility(category) {
+    const kitItemsSection = document.getElementById('kit-items-section');
+    if (!kitItemsSection) {
+        console.warn('Секция kit-items-section не найдена в DOM');
+        return;
+    }
+    
+    const normalizedCategory = (category || '').trim();
+    if (normalizedCategory === 'Готовые комплекты') {
+        kitItemsSection.style.display = 'block';
+    } else {
+        kitItemsSection.style.display = 'none';
+    }
+}
+
+// Обработчик изменения категории
+function handleCategoryChange(e) {
+    const category = e.target.value.trim();
+    updateKitItemsSectionVisibility(category);
+    
+    // Если категория изменилась на не-комплект, очищаем товары комплекта
+    if (category !== 'Готовые комплекты') {
+        kitItems = [];
+        renderKitItems();
     }
 }
 
@@ -126,8 +171,9 @@ async function loadProductForEdit(productId) {
             document.getElementById('product-supplier-notes').value = product.supplier_notes || '';
 
             const categoryInput = document.getElementById('product-category');
+            const productCategory = product.category || '';
             if (categoryInput) {
-                categoryInput.value = product.category || '';
+                categoryInput.value = productCategory;
             }
 
             const brandInput = document.getElementById('product-brand');
@@ -161,12 +207,11 @@ async function loadProductForEdit(productId) {
             }
 
             // Если это комплект, загружаем товары комплекта
-            const kitItemsSection = document.getElementById('kit-items-section');
-            if (product.category === 'Готовые комплекты') {
-                if (kitItemsSection) kitItemsSection.style.display = 'block';
+            // Обновляем видимость секции после установки всех значений
+            updateKitItemsSectionVisibility(productCategory);
+            if (productCategory === 'Готовые комплекты') {
                 await loadKitItems(product.id);
             } else {
-                if (kitItemsSection) kitItemsSection.style.display = 'none';
                 kitItems = [];
                 renderKitItems();
             }
@@ -174,6 +219,14 @@ async function loadProductForEdit(productId) {
             const modal = document.getElementById('product-modal');
             modal.style.display = 'block';
             document.body.classList.add('modal-open');
+            
+            // Убеждаемся, что секция товаров комплекта видна если это комплект
+            setTimeout(() => {
+                const categoryInput = document.getElementById('product-category');
+                if (categoryInput && categoryInput.value.trim() === 'Готовые комплекты') {
+                    updateKitItemsSectionVisibility('Готовые комплекты');
+                }
+            }, 100);
         } else {
             throw new Error('Товар не найден');
         }
