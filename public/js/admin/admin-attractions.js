@@ -219,7 +219,7 @@ function addAttractionVideoField(videoData = null) {
     const isPrimary = videoData?.is_primary || false;
 
     videoItem.innerHTML = `
-        <input type="text" class="video-input-url" value="${videoUrl}" placeholder="Ссылка на видео (YouTube/Vimeo/...)">
+        <input type="text" class="video-input-url" value="${videoUrl}" placeholder="Ссылка на видео (Rutube/YouTube/MP4)">
         <input type="text" class="video-input-alt" value="${videoAlt}" placeholder="Описание видео (alt)">
         <label>
             <input type="checkbox" class="video-input-primary" ${isPrimary ? 'checked' : ''}> Главное видео

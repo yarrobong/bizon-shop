@@ -85,24 +85,9 @@ document.addEventListener('DOMContentLoaded', async function () {
         let mediaElement = null;
         // Проверяем, есть ли главное (primary) видео
         const primaryVideo = itemData.videos?.find(v => v.is_primary);
+        
         if (primaryVideo) {
-            // Создаем тег <video>
-            mediaElement = document.createElement('video');
-            mediaElement.controls = true; // Показываем элементы управления
-            mediaElement.preload = "metadata"; // Загружаем метаданные для отображения превью
-            mediaElement.playsInline = true; // Полезно для мобильных
-            // Устанавливаем превью (poster) на первое изображение, если оно есть
-            if (itemData.images && itemData.images.length > 0) {
-                mediaElement.poster = itemData.images[0].url;
-            } else {
-                mediaElement.poster = '/assets/icons/placeholder1.webp';
-            }
-            const source = document.createElement('source');
-            source.src = primaryVideo.url;
-            // Попробуйте определить тип на основе URL или храните тип в БД
-            // source.type = 'video/mp4'; // Укажите тип, соответствующий вашему формату, если известен
-            mediaElement.appendChild(source);
-            mediaElement.alt = primaryVideo.alt || itemData.title || 'Видео аттракциона';
+            mediaElement = createMediaElement(primaryVideo.url, itemData.images && itemData.images.length > 0 ? itemData.images[0].url : null, primaryVideo.alt || itemData.title);
         } else if (itemData.images && itemData.images.length > 0) {
             // Если видео нет, используем первое изображение
             mediaElement = document.createElement('img');
@@ -202,21 +187,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                 let newMediaElement;
                 if (isVideo) {
-                    newMediaElement = document.createElement('video');
-                    newMediaElement.controls = true;
-                    newMediaElement.preload = "metadata";
-                    newMediaElement.playsInline = true;
-                    // Используем тот же poster, что и для первой миниатюры
-                    if (itemData.images && itemData.images.length > 0) {
-                        newMediaElement.poster = itemData.images[0].url;
-                    } else {
-                        newMediaElement.poster = '/assets/icons/placeholder1.webp';
-                    }
-                    const source = document.createElement('source');
-                    source.src = src; // URL видео
-                    // source.type = 'video/mp4'; // Укажите, если нужно
-                    newMediaElement.appendChild(source);
-                    newMediaElement.alt = itemData.videos.find(v => v.url === src)?.alt || itemData.title || 'Видео аттракциона';
+                    newMediaElement = createMediaElement(src, itemData.images && itemData.images.length > 0 ? itemData.images[0].url : null, itemData.title);
                 } else {
                     newMediaElement = document.createElement('img');
                     newMediaElement.src = src; // URL изображения
@@ -315,15 +286,26 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
         
         if (videosContainerNew) {
-            videosContainerNew.innerHTML = itemData.videos.map((video, index) => `
-                <div class="video-item">
-                    <video controls preload="metadata" playsinline>
-                        <source src="${video.url}" type="video/mp4">
-                        Ваш браузер не поддерживает видео.
-                    </video>
-                    ${video.alt ? `<p style="margin-top: 0.5rem; text-align: center; color: rgba(255, 255, 255, 0.7); font-size: 0.875rem;">${video.alt}</p>` : ''}
-                </div>
-            `).join('');
+            videosContainerNew.innerHTML = '';
+            itemData.videos.forEach(video => {
+                const videoItem = document.createElement('div');
+                videoItem.className = 'video-item';
+                
+                const mediaEl = createMediaElement(video.url, null, video.alt);
+                videoItem.appendChild(mediaEl);
+                
+                if (video.alt) {
+                    const caption = document.createElement('p');
+                    caption.style.marginTop = '0.5rem';
+                    caption.style.textAlign = 'center';
+                    caption.style.color = 'rgba(255, 255, 255, 0.7)';
+                    caption.style.fontSize = '0.875rem';
+                    caption.textContent = video.alt;
+                    videoItem.appendChild(caption);
+                }
+                
+                videosContainerNew.appendChild(videoItem);
+            });
         }
     }
 
@@ -418,5 +400,72 @@ function setupCartButtons(itemData) {
             }
             window.location.href = '/cart';
         });
+    }
+}
+
+/**
+ * Вспомогательная функция для создания элемента медиа (видео или embed)
+ */
+function createMediaElement(url, posterUrl = null, title = 'Видео') {
+    if (!url) return null;
+
+    // Проверка на Rutube
+    // Форматы: 
+    // https://rutube.ru/video/ID/
+    // https://rutube.ru/play/embed/ID
+    const rutubeMatch = url.match(/rutube\.ru\/(?:video\/|play\/embed\/)([a-zA-Z0-9]+)/);
+    
+    // Проверка на YouTube
+    // Форматы:
+    // https://www.youtube.com/watch?v=ID
+    // https://youtu.be/ID
+    // https://www.youtube.com/embed/ID
+    const youtubeMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+
+    if (rutubeMatch) {
+        const videoId = rutubeMatch[1];
+        const iframe = document.createElement('iframe');
+        iframe.src = `https://rutube.ru/play/embed/${videoId}`;
+        iframe.width = '100%';
+        iframe.height = '100%'; // Контейнер должен контролировать высоту
+        iframe.style.aspectRatio = '16/9';
+        iframe.frameBorder = '0';
+        iframe.allow = 'clipboard-write; autoplay';
+        iframe.setAttribute('webkitAllowFullScreen', '');
+        iframe.setAttribute('mozallowfullscreen', '');
+        iframe.setAttribute('allowFullScreen', '');
+        return iframe;
+    } else if (youtubeMatch) {
+        const videoId = youtubeMatch[1];
+        const iframe = document.createElement('iframe');
+        iframe.src = `https://www.youtube.com/embed/${videoId}?rel=0`;
+        iframe.width = '100%';
+        iframe.height = '100%';
+        iframe.style.aspectRatio = '16/9';
+        iframe.frameBorder = '0';
+        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+        iframe.setAttribute('allowFullScreen', '');
+        return iframe;
+    } else {
+        // Обычное видео (MP4 и т.д.)
+        const video = document.createElement('video');
+        video.controls = true;
+        video.preload = "metadata";
+        video.playsInline = true;
+        video.style.width = '100%';
+        
+        if (posterUrl) {
+            video.poster = posterUrl;
+        } else {
+            video.poster = '/assets/icons/placeholder1.webp';
+        }
+
+        const source = document.createElement('source');
+        source.src = url;
+        // source.type = 'video/mp4'; // Не указываем жестко, пусть браузер определяет
+        video.appendChild(source);
+        
+        video.alt = title;
+        return video;
     }
 }
