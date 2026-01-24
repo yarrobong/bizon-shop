@@ -194,25 +194,45 @@ section { scroll-snap-align: start; } */
   box-shadow: none;
   position: relative;
   overflow: visible;
+  /* Для анимации */
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.kit-card.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .kit-card:hover {
-  transform: none;
+  transform: none; /* Убираем конфликт с анимацией появления, если карточка уже visible, то transform: translateY(0) приоритетнее, но hover может перебивать. */
+  /* Лучше использовать для hover трансформации дочерние элементы */
   box-shadow: none;
   border-color: transparent;
+}
+/* Восстанавливаем состояние visible при наведении, чтобы hover не ломал позицию */
+.kit-card.visible:hover {
+  transform: translateY(0); 
 }
 
 .kit-card.popular {
   background: transparent;
   border: none;
   box-shadow: none;
-  transform: none;
+  transform: none; /* Для исходного состояния переопределяем в JS или через .visible */
 }
 
-.kit-card.popular:hover {
-  transform: none;
-  box-shadow: none;
+/* Применяем начальное скрытое состояние и к popular */
+.kit-card.popular {
+  opacity: 0;
+  transform: translateY(50px);
 }
+.kit-card.popular.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 
 /* Чередование сторон */
 .kit-card:nth-child(even) {
@@ -364,6 +384,13 @@ section { scroll-snap-align: start; } */
     border: 1px solid rgba(43, 83, 193, 0.3);
     border-radius: 24px;
     padding: 30px;
+    
+    /* Для анимации на мобильных можно уменьшить смещение */
+    transform: translateY(30px);
+  }
+  
+  .kit-card.visible {
+      transform: translateY(0);
   }
   
   .kit-card:nth-child(even) {

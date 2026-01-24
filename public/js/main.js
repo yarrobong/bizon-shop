@@ -597,7 +597,6 @@ async function loadKits(container) {
                         ${contentHtml}
                         <div class="kit-actions">
                             <a href="/product/${kit.slug}" class="btn-outline">Подробнее</a>
-                            <button class="btn-primary kit-add-to-cart" data-id="${kit.id}" data-slug="${kit.slug}">В корзину</button>
                         </div>
                     </div>
                 </div>
@@ -614,6 +613,25 @@ async function loadKits(container) {
             }
             
             container.appendChild(card);
+        });
+        
+        // Инициализируем IntersectionObserver для анимации появления
+        const observerOptions = {
+            threshold: 0.15, // Анимация срабатывает, когда 15% элемента видно
+            rootMargin: "0px 0px -50px 0px" // Смещаем область срабатывания чуть вверх
+        };
+
+        const observer = new IntersectionObserver((entries, obs) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    obs.unobserve(entry.target); // Прекращаем наблюдение после появления
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.kit-card').forEach(card => {
+            observer.observe(card);
         });
         
     } catch (error) {
