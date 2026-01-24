@@ -1,4 +1,3 @@
-// --- ФУНКЦИЯ ДЛЯ ОТЛОЖЕННОЙ ИНИЦИАЛИЗАЦИИ ЯНДЕКС.МЕТРИКИ ---
 function loadYandexMetrika() {
     // Проверяем, не было ли отказа
     const consentCookie = document.cookie
@@ -40,14 +39,13 @@ function loadYandexMetrika() {
     // Если ym уже существует как очередь, ничего не делаем - библиотека загружается
 }
 
-// --- ФУНКЦИЯ ДЛЯ ОСТАНОВКИ ЯНДЕКС.МЕТРИКИ И УДАЛЕНИЯ КУКИ ---
 function stopYandexMetrika() {
     // Останавливаем метрику, если она была инициализирована
     if (typeof window.ym === 'function') {
         try {
             window.ym(104163309, 'destroy');
         } catch(e) {
-            console.log('Метрика еще не инициализирована');
+            // Метрика еще не инициализирована
         }
     }
     
@@ -77,7 +75,6 @@ function stopYandexMetrika() {
     }
 }
 
-// --- ФУНКЦИЯ ДЛЯ УДАЛЕНИЯ ВСЕХ КУКИ CALLTOUCH (должна быть доступна глобально) ---
 function deleteCalltouchCookies() {
     // Полный список куки Calltouch (включая все варианты)
     const calltouchCookies = [
@@ -105,7 +102,6 @@ function deleteCalltouchCookies() {
     });
 }
 
-// --- ФУНКЦИЯ ДЛЯ ЗАГРУЗКИ CALLTOUCH ---
 function loadCalltouch() {
     // Проверяем, не было ли отказа
     const consentCookie = document.cookie
@@ -177,22 +173,18 @@ function loadCalltouch() {
                 var site_id = '78900';
                 var CT_URL = 'https://api.calltouch.ru/calls-service/RestAPI/requests/'+site_id+'/register/';
                 var ct_valid = !!phone && !!fio;
-                console.log(ct_data,ct_valid);
                 if (ct_valid && !window.ct_snd_flag){
                     window.ct_snd_flag = 1; setTimeout(function(){ window.ct_snd_flag = 0; }, 20000);
                     var request = window.ActiveXObject?new ActiveXObject("Microsoft.XMLHTTP"):new XMLHttpRequest();
                     request.open("POST", CT_URL, true); request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
                     request.send(post_data);
                 }
-            } catch (e) { 
-              console.error('[Calltouch] Ошибка отправки данных:', e);
-              // Не показываем ошибку пользователю, так как это не критично для работы сайта
+            } catch (e) {
             } }
         });
     }
 }
 
-// --- ФУНКЦИЯ ДЛЯ ОСТАНОВКИ CALLTOUCH И УДАЛЕНИЯ КУКИ ---
 function stopCalltouch() {
     // Устанавливаем флаг, что Calltouch остановлен
     window.ct_disabled = true;
@@ -259,16 +251,17 @@ function stopCalltouch() {
     }
 })();
 
-document.addEventListener('DOMContentLoaded', function() {
-    // --- КОД ДЛЯ COOKIE BANNER (один раз за сессию) ---
+function initCookieBanner() {
     const consentBanner = document.getElementById('cookieConsent');
     const acceptBtn = document.getElementById('acceptCookies');
     const declineBtn = document.getElementById('declineCookies');
+    
+    if (!consentBanner || !acceptBtn || !declineBtn) {
+        setTimeout(initCookieBanner, 100);
+        return;
+    }
 
-    // Ключ для sessionStorage
     const SESSION_STORAGE_KEY = 'cookie_banner_seen';
-
-    // Проверяем, было ли ранее дано согласие
     const consentCookie = document.cookie
         .split('; ')
         .find(row => row.startsWith('cookie_consent='));
@@ -278,169 +271,143 @@ document.addEventListener('DOMContentLoaded', function() {
         consentValue = consentCookie.split('=')[1];
     }
     
-    // Если был отказ ранее, удаляем все куки и не загружаем сервисы
     if (consentValue === 'declined') {
-        // Останавливаем сервисы, если они были загружены
         stopYandexMetrika();
         stopCalltouch();
-        // Удаляем все куки
         deleteCalltouchCookies();
-        // Удаляем куки Яндекс.Метрики
+        
         const metrikaCookies = [
             'ym_d', 'ym_uid', 'device_id', 'fuid01', 'i', 'my', 'yabs-frequency', 
             'yandex_gid', 'yandexuid', 'yp', 'ys', '_ym_hit', '_ym_ht', '_ym_sln', 
             '_ym_ssl', '_ym_timer', 'yabs-sid', '_ym_fa', '_ym_isad', '_ym_visorc',
             '_ym_d', '_ym_uid'
         ];
-        metrikaCookies.forEach(cookieName => {
-            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname};`;
-            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.yandex.ru;`;
-            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.mc.yandex.ru;`;
-        });
-        // Удаляем куки Calltouch
         const calltouchCookies = ['call_s', 'cted'];
-        calltouchCookies.forEach(cookieName => {
-            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname};`;
-        });
         
-        // Периодически удаляем куки, если они все равно появляются
-        const cleanupInterval = setInterval(function() {
+        const deleteCookies = () => {
+            metrikaCookies.forEach(cookieName => {
+                document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+                document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname};`;
+                document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.yandex.ru;`;
+                document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.mc.yandex.ru;`;
+            });
+            calltouchCookies.forEach(cookieName => {
+                document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+                document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname};`;
+            });
+            deleteCalltouchCookies();
+        };
+        
+        deleteCookies();
+        
+        const cleanupInterval = setInterval(() => {
             const currentConsent = document.cookie
                 .split('; ')
                 .find(row => row.startsWith('cookie_consent='));
             const currentValue = currentConsent ? currentConsent.split('=')[1] : null;
             
             if (currentValue === 'declined') {
-                // Удаляем куки Яндекс.Метрики
-                metrikaCookies.forEach(cookieName => {
-                    document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-                    document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname};`;
-                    document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.yandex.ru;`;
-                    document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.mc.yandex.ru;`;
-                });
-                // Удаляем куки Calltouch
-                deleteCalltouchCookies();
-                calltouchCookies.forEach(cookieName => {
-                    document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-                    document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname};`;
-                });
-                // Останавливаем сервисы на всякий случай
+                deleteCookies();
                 stopYandexMetrika();
                 stopCalltouch();
             } else {
-                // Если согласие изменилось, останавливаем очистку
                 clearInterval(cleanupInterval);
             }
-        }, 500); // Проверяем каждые 500мс
+        }, 500);
     } else {
-        // Если согласия нет или было дано - сервисы уже загружены выше
-        // Дополнительно загружаем, если они еще не загружены
         loadYandexMetrika();
         loadCalltouch();
     }
 
-    // Проверяем, был ли баннер уже показан в этой сессии
-    // Показываем баннер только если:
-    // 1. Нет cookie согласия (consentValue === null) - всегда показываем
-    // 2. ИЛИ cookie = 'declined' И не было показано в этой сессии
-    // 3. НЕ показываем, если cookie = 'accepted'
     let shouldShowBanner = false;
     
     if (!consentValue) {
-        // Нет cookie согласия - показываем баннер (игнорируем sessionStorage)
-        // Очищаем sessionStorage, если он есть, чтобы гарантировать показ баннера
         sessionStorage.removeItem(SESSION_STORAGE_KEY);
         shouldShowBanner = true;
     } else if (consentValue === 'declined') {
-        // Был отказ - показываем только если не было показано в этой сессии
         shouldShowBanner = !sessionStorage.getItem(SESSION_STORAGE_KEY);
-    } else if (consentValue === 'accepted') {
-        // Согласие дано - не показываем
-        shouldShowBanner = false;
     }
     
     if (shouldShowBanner) {
-        // Показываем баннер
-        setTimeout(() => {
-            if (consentBanner) { // Проверяем, существует ли элемент
+        const showBanner = () => {
+            if (consentBanner) {
                 consentBanner.classList.add('visible');
+                setTimeout(() => {
+                    consentBanner.style.opacity = '1';
+                    consentBanner.style.visibility = 'visible';
+                    consentBanner.style.transform = 'translateY(0)';
+                    consentBanner.style.display = 'block';
+                }, 50);
             }
-        }, 1000); // Показываем баннер через 1 секунду после загрузки
+        };
+        setTimeout(showBanner, 500);
     }
 
-    // Обработчик кнопки "Ок"
     if (acceptBtn) {
         acceptBtn.addEventListener('click', () => {
-            // Устанавливаем долгосрочный cookie согласия (например, на 1 год)
             const d = new Date();
             d.setTime(d.getTime() + (365 * 24 * 60 * 60 * 1000));
             const expires = "expires=" + d.toUTCString();
             document.cookie = `cookie_consent=accepted;${expires};path=/;SameSite=Lax`;
-
-            // Отмечаем в сессии, что баннер был показан
             sessionStorage.setItem(SESSION_STORAGE_KEY, 'true');
-
             if (consentBanner) {
                 consentBanner.classList.remove('visible');
             }
-            // Сервисы уже загружены при входе, просто подтверждаем согласие
         });
     }
 
-    // Обработчик кнопки "Отклонить"
     if (declineBtn) {
         declineBtn.addEventListener('click', () => {
-            // Устанавливаем cookie отказа на 30 дней (будем спрашивать снова через месяц)
             const d = new Date();
-            d.setTime(d.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 дней вместо года
+            d.setTime(d.getTime() + (30 * 24 * 60 * 60 * 1000));
             const expires = "expires=" + d.toUTCString();
             document.cookie = `cookie_consent=declined;${expires};path=/;SameSite=Lax`;
-
-            // Отмечаем в сессии, что баннер был показан
             sessionStorage.setItem(SESSION_STORAGE_KEY, 'true');
-
             if (consentBanner) {
                 consentBanner.classList.remove('visible');
             }
-            // Останавливаем оба сервиса и удаляем куки, если пользователь отказался
             stopYandexMetrika();
             stopCalltouch();
         });
     }
-    // --- КОНЕЦ КОДА ДЛЯ COOKIE BANNER ---
+}
+
+function initCookieBannerWhenReady() {
+    if (document.getElementById('cookieConsent')) {
+        initCookieBanner();
+    } else {
+        setTimeout(initCookieBannerWhenReady, 50);
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCookieBannerWhenReady);
+} else {
+    initCookieBannerWhenReady();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
 
 
-    // --- ВАШ СУЩЕСТВУЮЩИЙ КОД ---
+    window.currentCategory = 'все';
 
-
-    // Инициализируем начальное состояние
-    window.currentCategory = 'все'; // Устанавливаем начальную категорию
-
-    // Определяем текущую страницу и устанавливаем активный пункт меню
     const url = window.location.href;
-    let pageKey = null; // <-- Теперь по умолчанию null
+    let pageKey = null;
 
-    // Проверяем конкретные страницы
     if (url.includes('/catalog')) pageKey = 'catalog';
     else if (url.includes('/attractions')) pageKey = 'attractions';
     else if (url.includes('/contact')) pageKey = 'contact';
 
-    // Проверяем, находимся ли мы на главной странице
     if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
-        // Если URL указывает на главную, устанавливаем pageKey в 'index', независимо от других условий
         pageKey = 'index';
     }
 
-    // Удаляем активный класс со всех ссылок
     document.querySelectorAll('.nav-list a').forEach(link => {
         link.classList.remove('active');
     });
 
-    // Добавляем активный класс нужной ссылке, ТОЛЬКО ЕСЛИ pageKey - одна из известных страниц меню ИЛИ это главная
     const activeLink = document.querySelector(`.nav-list a[data-page="${pageKey}"]`);
-    if (activeLink && pageKey !== null) { // <-- Проверяем, что pageKey не null
+    if (activeLink && pageKey !== null) {
         activeLink.classList.add('active');
     }
 
@@ -664,7 +631,6 @@ async function loadKits(container) {
         });
         
     } catch (error) {
-        console.error('Ошибка загрузки комплектов:', error);
         container.innerHTML = '<div class="error-kits">Ошибка загрузки комплектов</div>';
     }
 }
