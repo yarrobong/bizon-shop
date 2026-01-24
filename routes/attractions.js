@@ -690,12 +690,27 @@ router.get('/:id', requireAuth, async (req, res) => {
       imagesArray.push({ url: row.image, alt: row.title || 'Изображение' });
     }
 
+    const videosResult = await pool.query(`
+      SELECT url, alt, sort_order, is_primary
+      FROM attraction_videos
+      WHERE attraction_id = $1
+      ORDER BY sort_order ASC;
+    `, [attractionId]);
+
+    const videosArray = videosResult.rows.map(vid => ({
+      url: vid.url,
+      alt: vid.alt || '',
+      sort_order: vid.sort_order,
+      is_primary: vid.is_primary
+    }));
+
     const attraction = {
       id: row.id,
       title: row.title,
       price: parseFloat(row.price),
       category: row.category,
       images: imagesArray,
+      videos: videosArray,
       description: row.description,
       specs: {
         places: row["specs.places"] || null,
