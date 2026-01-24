@@ -350,6 +350,22 @@ function initCookieBanner() {
         setTimeout(showBanner, 100);
         setTimeout(showBanner, 500);
     }
+    
+    // Экспортируем функцию для тестирования (можно вызвать из консоли)
+    window.showCookieBanner = () => {
+        const banner = document.getElementById('cookieConsent');
+        if (banner) {
+            banner.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; transform: translateY(0) !important;';
+            banner.classList.add('visible');
+        }
+    };
+    
+    // Функция для сброса cookie (для тестирования)
+    window.resetCookieConsent = () => {
+        document.cookie = 'cookie_consent=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        sessionStorage.removeItem('cookie_banner_seen');
+        location.reload();
+    };
 
     if (acceptBtn) {
         acceptBtn.addEventListener('click', () => {
