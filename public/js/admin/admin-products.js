@@ -21,7 +21,7 @@ window.loadProductsTab = loadProductsTab;
 async function loadProducts() {
     try {
         console.log('Загрузка товаров...');
-        const response = await fetchWithAuth('/api/products?admin=true');
+        const response = await fetchWithAuth('/api/products?admin=true&show_all=true');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
