@@ -4,7 +4,6 @@
 let productImages = [];
 let allProductsCache = [];
 let selectedVariants = [];
-let kitItems = []; // Товары комплекта
 
 // Инициализация вкладки товаров
 async function loadProductsTab() {
@@ -12,7 +11,6 @@ async function loadProductsTab() {
     await loadCategoriesForSelect(); // Загружаем категории для селекта в форме
     await loadAllProductsCache();
     setupVariantsFunctionality();
-    setupKitItemsFunctionality();
 }
 
 // Делаем функцию доступной глобально
@@ -93,9 +91,6 @@ function openProductModal(productId = null) {
     selectedVariants = [];
     renderSelectedVariants();
     updateSelectedVariantsInput();
-    kitItems = [];
-    renderKitItems();
-    updateKitItemsSectionVisibility(''); // Скрываем секцию по умолчанию
 
     if (productId) {
         // Редактирование
@@ -105,7 +100,6 @@ function openProductModal(productId = null) {
         title.textContent = 'Добавить товар';
         document.getElementById('product-id').value = '';
         document.getElementById('product-available').checked = true;
-        updateKitItemsSectionVisibility(''); // Скрываем секцию по умолчанию
         modal.style.display = 'block';
         document.body.classList.add('modal-open');
     }
@@ -777,187 +771,6 @@ async function deleteProduct(productId) {
     } catch (error) {
         console.error('Ошибка удаления товара:', error);
         adminPanel.showMessage('Ошибка удаления товара: ' + error.message, 'error');
-    }
-}
-
-// --- Работа с товарами комплекта ---
-
-function setupKitItemsFunctionality() {
-    const searchInput = document.getElementById('kit-item-search');
-    const searchResults = document.getElementById('kit-item-search-results');
-    if (!searchInput || !searchResults) return;
-
-    let searchTimeout;
-    searchInput.addEventListener('input', (e) => {
-        clearTimeout(searchTimeout);
-        const term = e.target.value.trim();
-        if (term.length < 2) {
-            searchResults.classList.add('hidden');
-            return;
-        }
-        searchTimeout = setTimeout(() => {
-            performKitItemSearch(term, searchResults);
-        }, 300);
-    });
-
-    document.addEventListener('click', (e) => {
-        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-            searchResults.classList.add('hidden');
-        }
-    });
-}
-
-function performKitItemSearch(term, container) {
-    const currentProductId = document.getElementById('product-id').value;
-    const lowerTerm = term.toLowerCase();
-    const filteredProducts = allProductsCache.filter(p =>
-        p.id != currentProductId &&
-        p.category !== 'Готовые комплекты' && // Не добавляем комплекты в комплекты
-        !kitItems.some(ki => ki.product.id === p.id) && // Не добавляем уже добавленные
-        (
-            (p.title && p.title.toLowerCase().includes(lowerTerm)) ||
-            (p.description && p.description.toLowerCase().includes(lowerTerm)) ||
-            (p.category && p.category.toLowerCase().includes(lowerTerm))
-        )
-    );
-
-    container.innerHTML = '';
-    if (filteredProducts.length === 0) {
-        container.innerHTML = '<div class="no-results">Товары не найдены</div>';
-        container.classList.remove('hidden');
-        return;
-    }
-
-    filteredProducts.forEach(product => {
-        const item = document.createElement('div');
-        item.className = 'variant-search-item';
-        item.dataset.productId = product.id;
-        const imageUrl = product.images && product.images.length > 0 ?
-            product.images[0].url : '/assets/icons/placeholder1.webp';
-        item.innerHTML = `
-            <img src="${imageUrl}" alt="${adminPanel.escapeHtml(product.title)}" onerror="this.src='/assets/icons/placeholder1.webp'">
-            <span class="variant-title">${adminPanel.escapeHtml(product.title)}</span>
-            <span class="variant-price">${adminPanel.formatPrice(product.price)}</span>
-        `;
-        item.addEventListener('click', () => {
-            addKitItem(product);
-            document.getElementById('kit-item-search').value = '';
-            container.classList.add('hidden');
-        });
-        container.appendChild(item);
-    });
-    container.classList.remove('hidden');
-}
-
-function addKitItem(product) {
-    if (kitItems.some(ki => ki.product.id === product.id)) return;
-    kitItems.push({
-        product: product,
-        quantity: 1,
-        display_order: kitItems.length
-    });
-    renderKitItems();
-    updateKitItemsInput();
-}
-
-function removeKitItem(productId) {
-    kitItems = kitItems.filter(ki => ki.product.id !== productId);
-    // Обновляем порядок отображения
-    kitItems.forEach((item, index) => {
-        item.display_order = index;
-    });
-    renderKitItems();
-    updateKitItemsInput();
-}
-
-function updateKitItemQuantity(productId, quantity) {
-    const item = kitItems.find(ki => ki.product.id === productId);
-    if (item) {
-        item.quantity = Math.max(1, parseInt(quantity) || 1);
-        updateKitItemsInput();
-    }
-}
-
-function renderKitItems() {
-    const container = document.getElementById('kit-items-list');
-    if (!container) return;
-    container.innerHTML = '';
-    
-    if (kitItems.length === 0) {
-        container.innerHTML = '<div class="empty-kit-items">Товары комплекта не добавлены</div>';
-        return;
-    }
-
-    kitItems.forEach((kitItem, index) => {
-        const item = document.createElement('div');
-        item.className = 'kit-item-row';
-        item.dataset.productId = kitItem.product.id;
-        const imageUrl = kitItem.product.images && kitItem.product.images.length > 0 ?
-            kitItem.product.images[0].url : '/assets/icons/placeholder1.webp';
-        item.innerHTML = `
-            <div class="kit-item-info">
-                <img src="${imageUrl}" alt="${adminPanel.escapeHtml(kitItem.product.title)}" onerror="this.src='/assets/icons/placeholder1.webp'">
-                <div class="kit-item-details">
-                    <span class="kit-item-title">${adminPanel.escapeHtml(kitItem.product.title)}</span>
-                    <span class="kit-item-price">${adminPanel.formatPrice(kitItem.product.price)}</span>
-                </div>
-            </div>
-            <div class="kit-item-controls">
-                <label>
-                    Количество:
-                    <input type="number" class="kit-item-quantity" value="${kitItem.quantity}" min="1" 
-                           data-product-id="${kitItem.product.id}">
-                </label>
-                <button type="button" class="remove-kit-item-btn" data-id="${kitItem.product.id}" title="Удалить">&times;</button>
-            </div>
-        `;
-        
-        const removeBtn = item.querySelector('.remove-kit-item-btn');
-        removeBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            removeKitItem(parseInt(e.target.dataset.id));
-        });
-
-        const quantityInput = item.querySelector('.kit-item-quantity');
-        quantityInput.addEventListener('change', (e) => {
-            updateKitItemQuantity(parseInt(e.target.dataset.productId), e.target.value);
-        });
-
-        container.appendChild(item);
-    });
-}
-
-function updateKitItemsInput() {
-    const input = document.getElementById('kit-items-data');
-    if (input) {
-        input.value = JSON.stringify(kitItems.map(ki => ({
-            product_id: ki.product.id,
-            quantity: ki.quantity,
-            display_order: ki.display_order
-        })));
-    }
-}
-
-async function loadKitItems(kitId) {
-    try {
-        kitItems = [];
-        const response = await fetchWithAuth(`/api/kits/${kitId}/items`);
-        if (response.ok) {
-            const items = await response.json();
-            kitItems = items.map(item => ({
-                product: item.product,
-                quantity: item.quantity || 1,
-                display_order: item.display_order || 0
-            }));
-        }
-        renderKitItems();
-        updateKitItemsInput();
-    } catch (error) {
-        console.error('Ошибка при загрузке товаров комплекта:', error);
-        kitItems = [];
-        renderKitItems();
-        updateKitItemsInput();
     }
 }
 

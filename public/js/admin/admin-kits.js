@@ -1,15 +1,15 @@
 // admin-kits.js
 
-// Глобальные переменные для комплектов
-let kitImages = [];
-let allProductsCache = [];
-let kitItems = [];
+// Глобальные переменные для комплектов (с уникальными именами)
+let kitsManagerImages = [];
+let kitsManagerAllProductsCache = [];
+let kitsManagerKitItems = [];
 
 // Инициализация вкладки комплектов
 async function loadKitsTab() {
-    await loadKits();
-    await loadAllProductsCache();
-    setupKitItemsFunctionality();
+    await kitsManagerLoadKits();
+    await kitsManagerLoadAllProductsCache();
+    kitsManagerSetupItemsFunctionality();
 }
 
 // Делаем функцию доступной глобально
@@ -17,7 +17,7 @@ window.loadKitsTab = loadKitsTab;
 
 // --- Функции для работы с комплектами ---
 
-async function loadKits() {
+async function kitsManagerLoadKits() {
     try {
         console.log('Загрузка комплектов...');
         const response = await fetchWithAuth('/api/products?admin=true&show_all=true');
@@ -30,14 +30,14 @@ async function loadKits() {
         // Фильтруем только комплекты
         const kits = products.filter(p => p.category === 'Готовые комплекты');
         
-        renderKits(kits);
+        kitsManagerRenderKits(kits);
     } catch (error) {
         console.error('Ошибка загрузки комплектов:', error);
         adminPanel.showMessage('Не удалось загрузить комплекты', 'error');
     }
 }
 
-function renderKits(kits) {
+function kitsManagerRenderKits(kits) {
     const container = document.getElementById('admin-kits-grid');
     if (!container) {
         console.error('Контейнер для комплектов не найден');
@@ -63,8 +63,8 @@ function renderKits(kits) {
             <p>Цена: ${adminPanel.formatPrice(kit.price)}</p>
             <p>Доступность: ${kit.available !== undefined ? (kit.available ? 'Да' : 'Нет') : 'Не указано'}</p>
             <div class="product-actions">
-                <button onclick="openKitModal(${kit.id})" class="btn-primary">Редактировать</button>
-                <button onclick="deleteKit(${kit.id})" class="btn-danger">Удалить</button>
+                <button onclick="kitsManagerOpenModal(${kit.id})" class="btn-primary">Редактировать</button>
+                <button onclick="kitsManagerDeleteKit(${kit.id})" class="btn-danger">Удалить</button>
             </div>
         `;
 
@@ -74,7 +74,7 @@ function renderKits(kits) {
 
 // --- Модальное окно комплекта ---
 
-function openKitModal(kitId = null) {
+function kitsManagerOpenModal(kitId = null) {
     const modal = document.getElementById('kit-modal');
     const title = document.getElementById('kit-modal-title');
     const form = document.getElementById('kit-form');
@@ -86,14 +86,14 @@ function openKitModal(kitId = null) {
 
     // Сброс формы и изображений
     form.reset();
-    clearKitImageFields();
-    kitItems = [];
-    renderKitItems();
-    updateKitItemsInput();
+    kitsManagerClearImageFields();
+    kitsManagerKitItems = [];
+    kitsManagerRenderKitItems();
+    kitsManagerUpdateItemsInput();
 
     if (kitId) {
         // Редактирование
-        loadKitForEdit(kitId);
+        kitsManagerLoadKitForEdit(kitId);
     } else {
         // Добавление нового
         title.textContent = 'Добавить комплект';
@@ -104,7 +104,7 @@ function openKitModal(kitId = null) {
     }
 }
 
-async function loadKitForEdit(kitId) {
+async function kitsManagerLoadKitForEdit(kitId) {
     try {
         // Используем прямой запрос через админский API
         const response = await fetchWithAuth(`/api/products/${kitId}`);
@@ -112,14 +112,14 @@ async function loadKitForEdit(kitId) {
             throw new Error('Комплект не найден');
         }
         const kit = await response.json();
-        await populateKitForm(kit, kitId);
+        await kitsManagerPopulateForm(kit, kitId);
     } catch (error) {
         console.error('Ошибка загрузки комплекта для редактирования:', error);
         adminPanel.showMessage('Ошибка загрузки комплекта для редактирования', 'error');
     }
 }
 
-async function populateKitForm(kit, kitId) {
+async function kitsManagerPopulateForm(kit, kitId) {
     const title = document.getElementById('kit-modal-title');
     title.textContent = 'Редактировать комплект';
     document.getElementById('kit-id').value = kitId;
@@ -134,10 +134,10 @@ async function populateKitForm(kit, kitId) {
 
     document.getElementById('kit-available').checked = kit.available !== false;
 
-    loadKitImagesToForm(kit.images || []);
+    kitsManagerLoadImagesToForm(kit.images || []);
 
     // Загружаем товары комплекта
-    await loadKitItems(kitId);
+    await kitsManagerLoadKitItems(kitId);
 
     const modal = document.getElementById('kit-modal');
     modal.style.display = 'block';
@@ -147,11 +147,11 @@ async function populateKitForm(kit, kitId) {
 
 document.getElementById('kit-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    await saveKit();
+    await kitsManagerSaveKit();
 });
 
 document.getElementById('add-kit-btn')?.addEventListener('click', () => {
-    openKitModal();
+    kitsManagerOpenModal();
 });
 
 // Закрытие модального окна комплекта
@@ -164,7 +164,7 @@ document.getElementById('cancel-kit-btn')?.addEventListener('click', () => {
 
 // --- Работа с изображениями комплекта ---
 
-function setupKitImageEventListeners() {
+function kitsManagerSetupImageEventListeners() {
     const addImageBtn = document.getElementById('add-kit-image-btn');
     if (addImageBtn) {
         addImageBtn.addEventListener('click', () => {
@@ -174,7 +174,7 @@ function setupKitImageEventListeners() {
             fileInput.multiple = true;
             fileInput.style.display = 'none';
             fileInput.addEventListener('change', (e) => {
-                handleKitFileSelect(e.target.files);
+                kitsManagerHandleFileSelect(e.target.files);
             });
             document.body.appendChild(fileInput);
             fileInput.click();
@@ -201,13 +201,13 @@ function setupKitImageEventListeners() {
             dropZone.classList.remove('drag-over');
             const files = e.dataTransfer.files;
             if (files.length > 0) {
-                handleKitFileSelect(files);
+                kitsManagerHandleFileSelect(files);
             }
         });
     }
 }
 
-async function handleKitFileSelect(files) {
+async function kitsManagerHandleFileSelect(files) {
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
         if (file.type.startsWith('image/')) {
@@ -226,7 +226,7 @@ async function handleKitFileSelect(files) {
                 }
 
                 const data = await response.json();
-                addKitImageField({ url: data.url, alt: file.name });
+                kitsManagerAddImageField({ url: data.url, alt: file.name });
             } catch (error) {
                 console.error('Ошибка при загрузке файла:', error);
                 adminPanel.showMessage(`Ошибка загрузки ${file.name}: ${error.message}`, 'error');
@@ -237,7 +237,7 @@ async function handleKitFileSelect(files) {
     }
 }
 
-function addKitImageField(imageData = null) {
+function kitsManagerAddImageField(imageData = null) {
     const container = document.getElementById('kit-images-container');
     const dropHint = document.getElementById('kit-drop-hint');
 
@@ -267,9 +267,9 @@ function addKitImageField(imageData = null) {
 
     container.appendChild(imageItem);
 
-    setupKitImageDragEvents(imageItem);
+    kitsManagerSetupImageDragEvents(imageItem);
 
-    kitImages.push({
+    kitsManagerImages.push({
         id: imageId,
         url: imageUrl,
         alt: imageAlt
@@ -290,12 +290,12 @@ function addKitImageField(imageData = null) {
         deleteBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            deleteKitImage(imageId);
+            kitsManagerDeleteImage(imageId);
         });
     }
 }
 
-function setupKitImageDragEvents(imageItem) {
+function kitsManagerSetupImageDragEvents(imageItem) {
     imageItem.addEventListener('dragstart', (e) => {
         imageItem.classList.add('dragging');
         e.dataTransfer.effectAllowed = 'move';
@@ -344,27 +344,27 @@ function setupKitImageDragEvents(imageItem) {
                     container.insertBefore(draggedElement, imageItem);
                 }
                 
-                updateKitImagesOrder();
+                kitsManagerUpdateImagesOrder();
             }
         }
     });
 }
 
-function updateKitImagesOrder() {
+function kitsManagerUpdateImagesOrder() {
     const imageItems = document.querySelectorAll('#kit-images-container .image-item');
     const newImages = [];
     imageItems.forEach(item => {
         const id = parseInt(item.dataset.id);
-        const image = kitImages.find(img => img.id === id);
+        const image = kitsManagerImages.find(img => img.id === id);
         if (image) newImages.push(image);
     });
-    kitImages = newImages;
+    kitsManagerImages = newImages;
 }
 
-function deleteKitImage(imageId) {
+function kitsManagerDeleteImage(imageId) {
     const imageItem = document.querySelector(`#kit-images-container .image-item[data-id="${imageId}"]`);
     if (imageItem) imageItem.remove();
-    kitImages = kitImages.filter(img => img.id !== imageId);
+    kitsManagerImages = kitsManagerImages.filter(img => img.id !== imageId);
     const container = document.getElementById('kit-images-container');
     const dropHint = document.getElementById('kit-drop-hint');
     if (container && dropHint && container.children.length === 0) {
@@ -372,18 +372,18 @@ function deleteKitImage(imageId) {
     }
 }
 
-function clearKitImageFields() {
+function kitsManagerClearImageFields() {
     const container = document.getElementById('kit-images-container');
     const dropHint = document.getElementById('kit-drop-hint');
     if (container) container.innerHTML = '';
     if (dropHint) dropHint.classList.add('show');
-    kitImages = [];
+    kitsManagerImages = [];
 }
 
-function loadKitImagesToForm(images) {
-    clearKitImageFields();
+function kitsManagerLoadImagesToForm(images) {
+    kitsManagerClearImageFields();
     if (images && Array.isArray(images) && images.length > 0) {
-        images.forEach(image => addKitImageField(image));
+        images.forEach(image => kitsManagerAddImageField(image));
         const dropHint = document.getElementById('kit-drop-hint');
         if (dropHint) dropHint.classList.remove('show');
     } else {
@@ -392,7 +392,7 @@ function loadKitImagesToForm(images) {
     }
 }
 
-function getKitImagesFromForm() {
+function kitsManagerGetImagesFromForm() {
     const imageItems = document.querySelectorAll('#kit-images-container .image-item');
     const images = [];
     imageItems.forEach((item, index) => {
@@ -406,26 +406,26 @@ function getKitImagesFromForm() {
 }
 
 // --- Загрузка кэша всех товаров для поиска ---
-async function loadAllProductsCache() {
+async function kitsManagerLoadAllProductsCache() {
     try {
         const response = await fetchWithAuth('/api/products?admin=true&show_all=true');
         if (!response.ok) {
             console.warn('Не удалось загрузить полный список товаров для поиска.');
-            allProductsCache = [];
+            kitsManagerAllProductsCache = [];
             return;
         }
         const data = await response.json();
-        allProductsCache = Array.isArray(data) ? data : (data.products || []);
-        console.log(`Кэш товаров обновлён. Загружено ${allProductsCache.length} товаров.`);
+        kitsManagerAllProductsCache = Array.isArray(data) ? data : (data.products || []);
+        console.log(`Кэш товаров комплектов обновлён. Загружено ${kitsManagerAllProductsCache.length} товаров.`);
     } catch (error) {
-        console.error('Ошибка при загрузке кэша товаров:', error);
-        allProductsCache = [];
+        console.error('Ошибка при загрузке кэша товаров комплектов:', error);
+        kitsManagerAllProductsCache = [];
     }
 }
 
 // --- Работа с товарами комплекта ---
 
-function setupKitItemsFunctionality() {
+function kitsManagerSetupItemsFunctionality() {
     const searchInput = document.getElementById('kit-item-search');
     const searchResults = document.getElementById('kit-item-search-results');
     if (!searchInput || !searchResults) return;
@@ -439,7 +439,7 @@ function setupKitItemsFunctionality() {
             return;
         }
         searchTimeout = setTimeout(() => {
-            performKitItemSearch(term, searchResults);
+            kitsManagerPerformItemSearch(term, searchResults);
         }, 300);
     });
 
@@ -450,13 +450,13 @@ function setupKitItemsFunctionality() {
     });
 }
 
-function performKitItemSearch(term, container) {
+function kitsManagerPerformItemSearch(term, container) {
     const currentKitId = document.getElementById('kit-id').value;
     const lowerTerm = term.toLowerCase();
-    const filteredProducts = allProductsCache.filter(p =>
+    const filteredProducts = kitsManagerAllProductsCache.filter(p =>
         p.id != currentKitId &&
         p.category !== 'Готовые комплекты' && // Не добавляем комплекты в комплекты
-        !kitItems.some(ki => ki.product.id === p.id) && // Не добавляем уже добавленные
+        !kitsManagerKitItems.some(ki => ki.product.id === p.id) && // Не добавляем уже добавленные
         (
             (p.title && p.title.toLowerCase().includes(lowerTerm)) ||
             (p.description && p.description.toLowerCase().includes(lowerTerm)) ||
@@ -483,7 +483,7 @@ function performKitItemSearch(term, container) {
             <span class="variant-price">${adminPanel.formatPrice(product.price)}</span>
         `;
         item.addEventListener('click', () => {
-            addKitItem(product);
+            kitsManagerAddKitItem(product);
             document.getElementById('kit-item-search').value = '';
             container.classList.add('hidden');
         });
@@ -492,45 +492,45 @@ function performKitItemSearch(term, container) {
     container.classList.remove('hidden');
 }
 
-function addKitItem(product) {
-    if (kitItems.some(ki => ki.product.id === product.id)) return;
-    kitItems.push({
+function kitsManagerAddKitItem(product) {
+    if (kitsManagerKitItems.some(ki => ki.product.id === product.id)) return;
+    kitsManagerKitItems.push({
         product: product,
         quantity: 1,
-        display_order: kitItems.length
+        display_order: kitsManagerKitItems.length
     });
-    renderKitItems();
-    updateKitItemsInput();
+    kitsManagerRenderKitItems();
+    kitsManagerUpdateItemsInput();
 }
 
-function removeKitItem(productId) {
-    kitItems = kitItems.filter(ki => ki.product.id !== productId);
-    kitItems.forEach((item, index) => {
+function kitsManagerRemoveKitItem(productId) {
+    kitsManagerKitItems = kitsManagerKitItems.filter(ki => ki.product.id !== productId);
+    kitsManagerKitItems.forEach((item, index) => {
         item.display_order = index;
     });
-    renderKitItems();
-    updateKitItemsInput();
+    kitsManagerRenderKitItems();
+    kitsManagerUpdateItemsInput();
 }
 
-function updateKitItemQuantity(productId, quantity) {
-    const item = kitItems.find(ki => ki.product.id === productId);
+function kitsManagerUpdateItemQuantity(productId, quantity) {
+    const item = kitsManagerKitItems.find(ki => ki.product.id === productId);
     if (item) {
         item.quantity = Math.max(1, parseInt(quantity) || 1);
-        updateKitItemsInput();
+        kitsManagerUpdateItemsInput();
     }
 }
 
-function renderKitItems() {
+function kitsManagerRenderKitItems() {
     const container = document.getElementById('kit-items-list');
     if (!container) return;
     container.innerHTML = '';
     
-    if (kitItems.length === 0) {
+    if (kitsManagerKitItems.length === 0) {
         container.innerHTML = '<div class="empty-kit-items">Товары комплекта не добавлены</div>';
         return;
     }
 
-    kitItems.forEach((kitItem, index) => {
+    kitsManagerKitItems.forEach((kitItem, index) => {
         const item = document.createElement('div');
         item.className = 'kit-item-row';
         item.dataset.productId = kitItem.product.id;
@@ -558,22 +558,22 @@ function renderKitItems() {
         removeBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            removeKitItem(parseInt(e.target.dataset.id));
+            kitsManagerRemoveKitItem(parseInt(e.target.dataset.id));
         });
 
         const quantityInput = item.querySelector('.kit-item-quantity');
         quantityInput.addEventListener('change', (e) => {
-            updateKitItemQuantity(parseInt(e.target.dataset.productId), e.target.value);
+            kitsManagerUpdateItemQuantity(parseInt(e.target.dataset.productId), e.target.value);
         });
 
         container.appendChild(item);
     });
 }
 
-function updateKitItemsInput() {
+function kitsManagerUpdateItemsInput() {
     const input = document.getElementById('kit-items-data');
     if (input) {
-        input.value = JSON.stringify(kitItems.map(ki => ({
+        input.value = JSON.stringify(kitsManagerKitItems.map(ki => ({
             product_id: ki.product.id,
             quantity: ki.quantity,
             display_order: ki.display_order
@@ -581,31 +581,31 @@ function updateKitItemsInput() {
     }
 }
 
-async function loadKitItems(kitId) {
+async function kitsManagerLoadKitItems(kitId) {
     try {
-        kitItems = [];
+        kitsManagerKitItems = [];
         const response = await fetchWithAuth(`/api/kits/${kitId}/items`);
         if (response.ok) {
             const items = await response.json();
-            kitItems = items.map(item => ({
+            kitsManagerKitItems = items.map(item => ({
                 product: item.product,
                 quantity: item.quantity || 1,
                 display_order: item.display_order || 0
             }));
         }
-        renderKitItems();
-        updateKitItemsInput();
+        kitsManagerRenderKitItems();
+        kitsManagerUpdateItemsInput();
     } catch (error) {
         console.error('Ошибка при загрузке товаров комплекта:', error);
-        kitItems = [];
-        renderKitItems();
-        updateKitItemsInput();
+        kitsManagerKitItems = [];
+        kitsManagerRenderKitItems();
+        kitsManagerUpdateItemsInput();
     }
 }
 
 // --- Сохранение/Удаление комплекта ---
 
-async function saveKit() {
+async function kitsManagerSaveKit() {
     try {
         const form = document.getElementById('kit-form');
         const formData = new FormData(form);
@@ -616,7 +616,7 @@ async function saveKit() {
         const price = rawPrice !== null && rawPrice !== '' ? parseFloat(rawPrice) : 0;
         const tag = (formData.get('kit-tag') || '').toString().trim();
         const available = formData.get('kit-available') === 'on';
-        const images = getKitImagesFromForm();
+        const images = kitsManagerGetImagesFromForm();
 
         const kitId = formData.get('kit-id');
         const isUpdate = kitId && kitId.trim() !== '';
@@ -674,7 +674,7 @@ async function saveKit() {
 
         // Сохраняем товары комплекта
         if (savedKitId) {
-            const kitItemsData = kitItems.map((item, index) => ({
+            const kitItemsData = kitsManagerKitItems.map((item, index) => ({
                 product_id: item.product.id,
                 quantity: item.quantity || 1,
                 display_order: index
@@ -697,8 +697,8 @@ async function saveKit() {
         }
 
         adminPanel.closeModal('kit-modal');
-        await loadKits();
-        await loadAllProductsCache();
+        await kitsManagerLoadKits();
+        await kitsManagerLoadAllProductsCache();
         adminPanel.showMessage(
             isUpdate ? 'Комплект обновлен успешно!' : 'Комплект создан успешно!',
             'success'
@@ -709,12 +709,12 @@ async function saveKit() {
     }
 }
 
-async function deleteKit(kitId) {
+async function kitsManagerDeleteKit(kitId) {
     if (!confirm('Вы уверены, что хотите удалить этот комплект?')) return;
     try {
         const response = await fetchWithAuth(`/api/products/${kitId}`, { method: 'DELETE' });
         if (response.ok) {
-            await loadKits();
+            await kitsManagerLoadKits();
             adminPanel.showMessage('Комплект удален успешно!', 'success');
         } else {
             const errorText = await response.text();
@@ -727,12 +727,14 @@ async function deleteKit(kitId) {
 }
 
 // Делаем функции доступными глобально
-window.openKitModal = openKitModal;
-window.deleteKit = deleteKit;
+window.kitsManagerOpenModal = kitsManagerOpenModal;
+window.kitsManagerDeleteKit = kitsManagerDeleteKit;
+window.openKitModal = kitsManagerOpenModal;
+window.deleteKit = kitsManagerDeleteKit;
 
 // Инициализация после загрузки DOM
 document.addEventListener('DOMContentLoaded', () => {
-    setupKitImageEventListeners();
+    kitsManagerSetupImageEventListeners();
     // Если вкладка комплектов активна при загрузке, загрузить данные
     if (document.getElementById('kits-tab')?.classList.contains('active')) {
         loadKitsTab();
