@@ -16,52 +16,87 @@
 </head>
 <body>
     <div class="admin-container">
-        <header class="admin-header">
-            <h1>Админ-панель</h1>
-            <button id="logout-btn" class="btn-danger">Выйти</button>
-        </header>
-
+        <!-- Боковая панель навигации -->
         <nav class="admin-nav">
-            <button class="nav-btn active" data-tab="products">Товары</button>
-            <button class="nav-btn" data-tab="kits">Комплекты</button>
-            <button class="nav-btn" data-tab="attractions">Аттракционы</button>
-            <button class="nav-btn" data-tab="categories">Категории</button>
-            <button class="nav-btn" data-tab="orders">Заказы</button>
-            <button class="nav-btn" data-tab="supplier-catalog">Каталог для заказа</button>
+            <div class="nav-header">
+                <h1>Bizon Admin</h1>
+            </div>
+            <button class="nav-btn active" data-tab="products">📦 Товары</button>
+            <button class="nav-btn" data-tab="kits">🎁 Комплекты</button>
+            <button class="nav-btn" data-tab="attractions">🎡 Аттракционы</button>
+            <button class="nav-btn" data-tab="categories">📂 Категории</button>
+            <button class="nav-btn" data-tab="orders">🛒 Заказы</button>
+            <button class="nav-btn" data-tab="supplier-catalog">📋 Каталог поставщика</button>
+            
+            <div class="nav-footer">
+                <button id="logout-btn" class="btn-danger" style="width: 100%;">Выйти</button>
+            </div>
         </nav>
 
         <main class="admin-main">
+            <!-- Верхняя шапка (будет обновляться JS при переключении табов) -->
+            <header class="admin-header">
+                <h2 id="page-title">Управление товарами</h2>
+            </header>
+
             <!-- Вкладка Товары -->
             <section id="products-tab" class="tab-content active">
                 <div class="tab-header">
-                    <h2>Управление товарами</h2>
+                    <h3>Список товаров</h3>
                     <button id="add-product-btn" class="btn-primary">Добавить товар</button>
                 </div>
-                <div id="admin-products-grid" class="admin-grid">
-                    <!-- Товары будут подгружаться сюда -->
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Фото</th>
+                                <th>ID</th>
+                                <th>Название</th>
+                                <th>Категория</th>
+                                <th>Цена</th>
+                                <th>Статус</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-products-list">
+                            <!-- Товары будут подгружаться сюда -->
+                        </tbody>
+                    </table>
                 </div>
             </section>
 
             <!-- Вкладка Комплекты -->
             <section id="kits-tab" class="tab-content">
                 <div class="tab-header">
-                    <h2>Управление комплектами</h2>
+                    <h3>Список комплектов</h3>
                     <button id="add-kit-btn" class="btn-primary">Добавить комплект</button>
                 </div>
-                <div id="admin-kits-grid" class="admin-grid">
-                    <!-- Комплекты будут подгружаться сюда -->
-                    <div class="empty">Загрузка комплектов...</div>
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Фото</th>
+                                <th>Название</th>
+                                <th>Цена</th>
+                                <th>Статус</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-kits-list">
+                            <!-- Комплекты будут подгружаться сюда -->
+                        </tbody>
+                    </table>
                 </div>
             </section>
 
-            <!-- Новая вкладка Аттракционы -->
+            <!-- Вкладка Аттракционы -->
             <section id="attractions-tab" class="tab-content">
                 <div class="tab-header">
-                    <h2>Управление аттракционами</h2>
+                    <h3>Список аттракционов</h3>
                     <button id="add-attraction-btn" class="btn-primary">Добавить аттракцион</button>
                 </div>
                 <div id="admin-attractions-grid" class="admin-grid">
-                    <!-- Аттракционы будут подгружаться сюда -->
+                    <!-- Аттракционы пока оставляем плиткой или переделаем позже -->
                     <div class="empty">Загрузка аттракционов...</div>
                 </div>
             </section>

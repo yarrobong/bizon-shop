@@ -137,37 +137,51 @@ class AdminPanel {
     }
 
     switchTab(tabName) {
-    document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-    });
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
 
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
 
-    const targetTab = document.getElementById(`${tabName}-tab`);
-    const targetBtn = document.querySelector(`[data-tab="${tabName}"]`);
+        const targetTab = document.getElementById(`${tabName}-tab`);
+        const targetBtn = document.querySelector(`[data-tab="${tabName}"]`);
 
-    if (targetTab) targetTab.classList.add('active');
-    if (targetBtn) targetBtn.classList.add('active');
+        if (targetTab) targetTab.classList.add('active');
+        if (targetBtn) targetBtn.classList.add('active');
 
-    this.currentTab = tabName;
+        // Обновляем заголовок страницы
+        const pageTitle = document.getElementById('page-title');
+        if (pageTitle) {
+            const titles = {
+                'products': 'Управление товарами',
+                'kits': 'Управление комплектами',
+                'attractions': 'Управление аттракционами',
+                'categories': 'Управление категориями',
+                'orders': 'Управление заказами',
+                'supplier-catalog': 'Каталог поставщика'
+            };
+            pageTitle.textContent = titles[tabName] || 'Админ-панель';
+        }
 
-    // Исправленная проверка имени функции
-    let functionName;
-    if (tabName === 'supplier-catalog') {
-        functionName = 'loadSupplierCatalogTab';
-    } else {
-        functionName = `load${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Tab`;
-    }
-    
-    if (typeof window[functionName] === 'function') {
+        this.currentTab = tabName;
+
+        // Исправленная проверка имени функции
+        let functionName;
+        if (tabName === 'supplier-catalog') {
+            functionName = 'loadSupplierCatalogTab';
+        } else {
+            functionName = `load${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Tab`;
+        }
         
-        window[functionName]();
-    } else {
-        console.warn(`Функция ${functionName} не найдена`);
+        if (typeof window[functionName] === 'function') {
+            
+            window[functionName]();
+        } else {
+            console.warn(`Функция ${functionName} не найдена`);
+        }
     }
-}
 
     logout() {
         localStorage.removeItem('isAdmin');
