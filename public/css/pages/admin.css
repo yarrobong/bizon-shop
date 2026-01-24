@@ -790,7 +790,12 @@ textarea {
     background: var(--bg-secondary);
 }
 
-/* === Mobile Adaptation === */
+    /* Utility classes */
+    .hidden {
+        display: none !important;
+    }
+
+    /* === Mobile Adaptation === */
 @media (max-width: 1024px) {
     .form-columns {
         grid-template-columns: 1fr;

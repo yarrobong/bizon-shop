@@ -455,6 +455,7 @@ function kitsManagerSetupItemsFunctionality() {
         const term = e.target.value.trim();
         if (term.length < 2) {
             searchResults.classList.add('hidden');
+            searchResults.innerHTML = ''; // Очищаем результаты
             return;
         }
         searchTimeout = setTimeout(() => {
