@@ -65,8 +65,8 @@ async function handleProductsRequest(req, res, isAdmin) {
       if (page < 1) {
         return res.status(400).json({ error: 'Номер страницы должен быть больше 0' });
       }
-      if (limit < 1 || limit > 100) {
-        return res.status(400).json({ error: 'Лимит должен быть от 1 до 100' });
+      if (limit < 1 || limit > 1000) {
+        return res.status(400).json({ error: 'Лимит должен быть от 1 до 1000' });
       }
     } else {
       // Для show_all сбрасываем лимиты
