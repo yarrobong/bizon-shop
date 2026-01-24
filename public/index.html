@@ -15,6 +15,11 @@
 <link rel="manifest" href="/assets/icons/favicon/site.webmanifest" />
 
   <meta name="theme-color" content="#ffffff"> <!-- Цвет темы для браузера Chrome на Android -->
+  
+  <!-- Глобальный обработчик ошибок для подавления ошибок от внешних скриптов -->
+  <!-- Должен загружаться ПЕРВЫМ, до всех других скриптов и ресурсов -->
+  <script src="js/error-handler.js"></script>
+  
   <!-- Preconnect -->
    
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,10 +34,6 @@
   <link rel="stylesheet" href="css/components/background.css">
 
   <link rel="stylesheet" href="css/pages/index.css">
-  
-  <!-- Глобальный обработчик ошибок для подавления ошибок от внешних скриптов -->
-  <!-- Должен загружаться первым, до всех других скриптов -->
-  <script src="js/error-handler.js"></script>
 
 </head>
 
