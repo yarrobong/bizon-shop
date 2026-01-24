@@ -33,11 +33,34 @@
       var origError = console.error;
       console.error = function() {
         var msg = Array.prototype.slice.call(arguments).join(' ');
-        if (!/Ya is not defined|Init stat_api|index\.\w+\.js.*error|fetchActivities.*JSON/i.test(msg)) {
+        var shouldSuppress = /Ya is not defined|Init stat_api|index\.\w+\.js.*error|fetchActivities.*JSON|SyntaxError.*Failed to execute.*json|Unexpected end of JSON/i.test(msg);
+        if (!shouldSuppress) {
           origError.apply(console, arguments);
         }
       };
     })();
+    // Немедленный перехват unhandledrejection для ошибок JSON
+    window.addEventListener('unhandledrejection', function(e) {
+      var reason = e.reason;
+      var msg = (reason && reason.message) || String(reason) || '';
+      var stack = (reason && reason.stack) || '';
+      var fullText = msg + ' ' + stack;
+      if (/Unexpected end of JSON|Failed to execute.*json|SyntaxError.*json|fetchActivities|mM\.fetchActivities|index\.\w+\.js.*json|index\.\w+\.js.*SyntaxError/i.test(fullText)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    }, false);
+    // Немедленный перехват глобальных ошибок
+    window.addEventListener('error', function(e) {
+      var msg = e.message || '';
+      var source = e.filename || '';
+      if (/index\.\w+\.js|fetchActivities|Unexpected end of JSON|Failed to execute.*json/i.test(msg + ' ' + source)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    }, true);
   </script>
   <script src="/js/error-handler.js"></script>
 

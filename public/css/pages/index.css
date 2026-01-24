@@ -60,7 +60,10 @@ section { scroll-snap-align: start; } */
   justify-content: center;
   gap: 60px;
   position: relative;
-  padding: 20px auto;
+  padding: 80px 40px;
+  min-height: 600px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .hero-content {
@@ -80,6 +83,8 @@ section { scroll-snap-align: start; } */
   background: #ffffff;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: font-size 0.3s ease;
 }
 
 .hero-subtitle {
@@ -88,6 +93,7 @@ section { scroll-snap-align: start; } */
   color: #cbd5e1;
   margin-bottom: 30px;
   font-weight: 400;
+  transition: font-size 0.3s ease;
 }
 
 .hero-buttons {
@@ -95,6 +101,7 @@ section { scroll-snap-align: start; } */
   gap: 16px;
   margin-bottom: 30px;
   flex-wrap: wrap;
+  transition: gap 0.3s ease;
 }
 
 .hero-trust {
@@ -104,27 +111,37 @@ section { scroll-snap-align: start; } */
   color: #94a3b8;
   flex-wrap: wrap;
   align-items: center;
+  transition: gap 0.3s ease, font-size 0.3s ease;
 }
 
 .hero-trust .trust-item {
   display: flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
+  transition: gap 0.3s ease;
 }
 
 .hero-trust .trust-item::before {
   content: "✓";
   color: #3b82f6;
   font-weight: bold;
+  font-size: 1rem;
+  transition: color 0.3s ease;
 }
 
 /* Изображение в герое */
 .hero-image {
   flex: 1;
   max-width: 500px;
+  min-width: 300px;
   border-radius: 16px;
   overflow: hidden;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: max-width 0.3s ease, min-width 0.3s ease;
 }
 
 .hero-image::before {
@@ -133,12 +150,24 @@ section { scroll-snap-align: start; } */
   inset: 0;
   border-radius: 16px;
   pointer-events: none;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(89, 222, 250, 0.05));
+  transition: opacity 0.3s ease;
 }
 
 .hero-image img {
   width: 100%;
+  height: auto;
   border-radius: 16px;
   transition: transform 0.4s ease, box-shadow 0.4s ease;
+  object-fit: cover;
+}
+
+.hero-image:hover img {
+  transform: scale(1.02);
+}
+
+.hero-image:hover::before {
+  opacity: 0.8;
 }
 
 @keyframes float {
@@ -923,38 +952,243 @@ section { scroll-snap-align: start; } */
   box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
 }
 
-/* ==================== АДАПТИВ ==================== */
-@media (max-width: 1200px) {
-  .hero { gap: 40px; }
-  .hero h1 { font-size: 3.2rem; }
-  .hero-image { max-width: 450px; }
+/* ==================== АДАПТИВ ГЕРОЯ ==================== */
+
+/* Очень большие экраны (1440px+) */
+@media (min-width: 1440px) {
+  .hero {
+    padding: 100px 60px;
+    gap: 80px;
+    min-height: 700px;
+  }
+  .hero h1 {
+    font-size: 4.2rem;
+  }
+  .hero-subtitle {
+    font-size: 1.3rem;
+  }
+  .hero-image {
+    max-width: 550px;
+  }
 }
 
-@media (max-width: 1070px) {
+/* Большие экраны (1200px - 1439px) */
+@media (max-width: 1439px) and (min-width: 1200px) {
+  .hero {
+    padding: 80px 40px;
+    gap: 60px;
+    min-height: 600px;
+  }
+  .hero h1 {
+    font-size: 3.6rem;
+  }
+  .hero-image {
+    max-width: 480px;
+  }
+}
+
+/* Средние экраны (1024px - 1199px) */
+@media (max-width: 1199px) and (min-width: 1024px) {
+  .hero {
+    padding: 70px 40px;
+    gap: 50px;
+    min-height: 550px;
+  }
+  .hero h1 {
+    font-size: 3.2rem;
+  }
+  .hero-subtitle {
+    font-size: 1.15rem;
+  }
+  .hero-image {
+    max-width: 420px;
+    min-width: 280px;
+  }
+}
+
+/* Планшеты в альбомной ориентации (900px - 1023px) */
+@media (max-width: 1023px) and (min-width: 900px) {
+  .hero {
+    padding: 60px 30px;
+    gap: 40px;
+    min-height: auto;
+  }
+  .hero h1 {
+    font-size: 3rem;
+  }
+  .hero-subtitle {
+    font-size: 1.1rem;
+    margin-bottom: 25px;
+  }
+  .hero-image {
+    max-width: 380px;
+    min-width: 260px;
+  }
+  .hero-buttons {
+    gap: 14px;
+  }
+}
+
+/* Планшеты в портретной ориентации (768px - 899px) */
+@media (max-width: 899px) and (min-width: 768px) {
   .hero {
     flex-direction: column;
     text-align: center;
-    min-height: auto;
+    padding: 60px 30px;
     gap: 40px;
+    min-height: auto;
   }
-  .hero-content { align-items: center; }
-  .hero-trust { justify-content: center; }
-  .hero-buttons { justify-content: center; }
-  .features h2, .cta h2, .clients h2, .trade-in h2 { font-size: 2.4rem; }
-  .hero-image { display: none; }
+  .hero-content {
+    align-items: center;
+    max-width: 100%;
+  }
+  .hero h1 {
+    font-size: 2.8rem;
+  }
+  .hero-subtitle {
+    font-size: 1.1rem;
+    max-width: 600px;
+  }
+  .hero-trust {
+    justify-content: center;
+  }
+  .hero-buttons {
+    justify-content: center;
+  }
+  .hero-image {
+    max-width: 500px;
+    min-width: auto;
+    width: 100%;
+  }
 }
 
-@media (max-width: 768px) {
-  .hero h1 { font-size: 2.8rem; }
+/* Мобильные устройства (576px - 767px) */
+@media (max-width: 767px) and (min-width: 576px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    padding: 50px 25px;
+    gap: 35px;
+    min-height: auto;
+  }
+  .hero-content {
+    align-items: center;
+    max-width: 100%;
+  }
+  .hero h1 {
+    font-size: 2.4rem;
+    margin-bottom: 18px;
+  }
+  .hero-subtitle {
+    font-size: 1.05rem;
+    margin-bottom: 25px;
+    line-height: 1.6;
+  }
   .hero-buttons {
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 25px;
   }
-  .btn-secondary { margin-left: 0; margin-top: 10px; }
+  .hero-buttons .btn-primary,
+  .hero-buttons .btn-secondary {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+  }
   .hero-trust {
     flex-direction: column;
     align-items: center;
+    gap: 12px;
+    font-size: 0.85rem;
   }
+  .hero-image {
+    max-width: 100%;
+    min-width: auto;
+    width: 100%;
+  }
+}
+
+/* Маленькие мобильные устройства (до 575px) */
+@media (max-width: 575px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    padding: 40px 20px;
+    gap: 30px;
+    min-height: auto;
+  }
+  .hero-content {
+    align-items: center;
+    max-width: 100%;
+  }
+  .hero h1 {
+    font-size: 2.2rem;
+    line-height: 1.15;
+    margin-bottom: 16px;
+  }
+  .hero-subtitle {
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 22px;
+  }
+  .hero-buttons {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+  .hero-buttons .btn-primary,
+  .hero-buttons .btn-secondary {
+    width: 100%;
+    padding: 12px 20px;
+    font-size: 0.9rem;
+  }
+  .hero-trust {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.8rem;
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+  }
+  .hero-trust .trust-item {
+    white-space: normal;
+    text-align: left;
+  }
+  .hero-image {
+    max-width: 100%;
+    min-width: auto;
+    width: 100%;
+  }
+}
+
+/* Очень маленькие экраны (до 400px) */
+@media (max-width: 400px) {
+  .hero {
+    padding: 35px 15px;
+    gap: 25px;
+  }
+  .hero h1 {
+    font-size: 1.9rem;
+  }
+  .hero-subtitle {
+    font-size: 0.95rem;
+  }
+  .hero-buttons .btn-primary,
+  .hero-buttons .btn-secondary {
+    padding: 10px 18px;
+    font-size: 0.85rem;
+  }
+  .hero-trust {
+    font-size: 0.75rem;
+    gap: 8px;
+  }
+}
+
+/* Общие медиа-запросы для других секций (не hero) */
+@media (max-width: 768px) {
   .features-grid {
     grid-template-columns: 1fr;
     padding: 20px;
@@ -966,17 +1200,10 @@ section { scroll-snap-align: start; } */
   .features h2, .clients h2 { font-size: 2.2rem; }
   
   .clients-track-inner { gap: 3rem; animation-duration: 8s; }
-  .clients-track-inner:hover { animation-play-state: paused; } /* Останавливаем на hover на мобилке */
+  .clients-track-inner:hover { animation-play-state: paused; }
 }
 
 @media (max-width: 576px) {
-  .hero {
-    padding: 0px 20px;
-    gap: 30px;
-  }
-  .hero h1 { font-size: 2.4rem; }
-  .hero-subtitle { font-size: 1.1rem; }
-  .hero-buttons { gap: 12px; }
   .btn-primary,
   .btn-secondary,
   .btn-outline {
@@ -998,17 +1225,11 @@ section { scroll-snap-align: start; } */
   .trade-in-image { order: 1; margin-bottom: 40px; display: none; }
   .btn-primary:hover,
   .btn-secondary:hover {
-    transform: none; /* Отключаем трансформации */
-    
+    transform: none;
   }
-  
 }
 
-
-
 @media (max-width: 480px) {
-  .hero h1 { font-size: 2.2rem; }
-  .hero-subtitle { font-size: 1rem; }
   .btn-primary,
   .btn-secondary,
   .btn-outline {
@@ -1018,8 +1239,7 @@ section { scroll-snap-align: start; } */
  
   .btn-primary:hover,
   .btn-secondary:hover {
-    transform: none; /* Отключаем трансформации */
-    
+    transform: none;
   }
   .features h2,
   .cta h2,
@@ -1042,7 +1262,8 @@ section { scroll-snap-align: start; } */
   .feature-card:hover,
   .btn-primary:hover,
   .btn-secondary:hover,
-  .client-logo:hover {
+  .client-logo:hover,
+  .hero-image:hover img {
     transform: none;
     box-shadow: none;
     background: inherit;

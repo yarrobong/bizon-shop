@@ -58,7 +58,10 @@
     /was preloaded using link preload but not used/i,
     /yastatic\.net.*preload/i,
     /partner-code-bundles.*preload/i,
-    /loader\.bundle\.js.*preload/i
+    /loader\.bundle\.js.*preload/i,
+    /The resource.*was preloaded/i,
+    /Please make sure it has an appropriate.*as.*value/i,
+    /Understand this warning/i
   ];
   
   // Переопределяем console.error - ДОЛЖНО БЫТЬ ПЕРВЫМ
@@ -99,9 +102,14 @@
     // Дополнительные проверки для конкретных сообщений
     message.includes('Init stat_api') ||
     message.includes('Ya is not defined') ||
+    message.includes('SyntaxError: Failed to execute') ||
+    message.includes('Unexpected end of JSON') ||
     (message.includes('index.') && message.includes('.js') && 
-     (message.includes('error') || message.includes('Error'))) ||
-    (message.includes('fetchActivities') && message.includes('JSON'));
+     (message.includes('error') || message.includes('Error') || message.includes('SyntaxError'))) ||
+    (message.includes('fetchActivities') && 
+     (message.includes('JSON') || message.includes('SyntaxError') || message.includes('Unexpected'))) ||
+    (message.includes('mM.fetchActivities') && 
+     (message.includes('JSON') || message.includes('SyntaxError')));
     
     // Пропускаем только ошибки, которые не соответствуют фильтрам
     if (!shouldSuppress) {
@@ -123,9 +131,28 @@
       return String(arg);
     }).join(' ');
     
+    // Проверяем все варианты
+    const shouldSuppress = 
+      errorFilters.some(filter => {
+        try {
+          return filter.test(message) || filter.test(fullMessage);
+        } catch {
+          return false;
+        }
+      }) ||
+      warningFilters.some(filter => {
+        try {
+          return filter.test(message) || filter.test(fullMessage);
+        } catch {
+          return false;
+        }
+      }) ||
+      message.includes('preload') && message.includes('not used') ||
+      message.includes('yastatic.net') && message.includes('preload') ||
+      message.includes('Understand this warning');
+    
     // Пропускаем только предупреждения, которые не соответствуют фильтрам
-    if (!errorFilters.some(filter => filter.test(message) || filter.test(fullMessage)) && 
-        !warningFilters.some(filter => filter.test(message) || filter.test(fullMessage))) {
+    if (!shouldSuppress) {
       originalWarn.apply(console, args);
     }
   };
@@ -133,8 +160,32 @@
   // Также переопределяем console.log для предупреждений о preload (некоторые браузеры используют log)
   console.log = function(...args) {
     const message = args.join(' ');
+    const fullMessage = args.map(arg => {
+      if (typeof arg === 'object') {
+        try {
+          return JSON.stringify(arg);
+        } catch {
+          return String(arg);
+        }
+      }
+      return String(arg);
+    }).join(' ');
+    
+    // Проверяем все варианты
+    const shouldSuppress = 
+      warningFilters.some(filter => {
+        try {
+          return filter.test(message) || filter.test(fullMessage);
+        } catch {
+          return false;
+        }
+      }) ||
+      message.includes('preload') && message.includes('not used') ||
+      message.includes('yastatic.net') && message.includes('preload') ||
+      message.includes('Understand this warning');
+    
     // Пропускаем только сообщения, которые не соответствуют фильтрам предупреждений
-    if (!warningFilters.some(filter => filter.test(message))) {
+    if (!shouldSuppress) {
       originalLog.apply(console, args);
     }
   };
@@ -165,7 +216,11 @@
       errorMessage.includes('Ya is not defined') ||
       errorMessage.includes('Init stat_api') ||
       (errorStack.includes('index.') && errorStack.includes('.js')) ||
-      (errorStack.includes('fetchActivities') && errorMessage.includes('JSON'));
+      (errorStack.includes('fetchActivities') && 
+       (errorMessage.includes('JSON') || errorMessage.includes('SyntaxError') || errorMessage.includes('Unexpected'))) ||
+      (errorStack.includes('mM.fetchActivities') && 
+       (errorMessage.includes('JSON') || errorMessage.includes('SyntaxError'))) ||
+      (errorMessage.includes('SyntaxError') && errorSource.includes('index.') && errorSource.includes('.js'));
     
     if (shouldSuppress) {
       event.preventDefault();
@@ -227,11 +282,12 @@
       errorString.includes('Unexpected end of JSON input') ||
       errorString.includes('Failed to execute \'json\'') ||
       (errorStack.includes('index.') && errorStack.includes('.js') && 
-       (errorMessage.includes('JSON') || errorString.includes('JSON'))) ||
+       (errorMessage.includes('JSON') || errorString.includes('JSON') || errorMessage.includes('SyntaxError') || errorString.includes('SyntaxError'))) ||
       (errorStack.includes('fetchActivities') && 
-       (errorMessage.includes('JSON') || errorString.includes('JSON'))) ||
+       (errorMessage.includes('JSON') || errorString.includes('JSON') || errorMessage.includes('SyntaxError') || errorString.includes('SyntaxError') || errorMessage.includes('Unexpected') || errorString.includes('Unexpected'))) ||
       (errorStack.includes('mM.fetchActivities') && 
-       (errorMessage.includes('JSON') || errorString.includes('JSON')));
+       (errorMessage.includes('JSON') || errorString.includes('JSON') || errorMessage.includes('SyntaxError') || errorString.includes('SyntaxError'))) ||
+      (errorStack.includes('index.') && errorStack.includes('.js') && errorStack.includes('fetchActivities'));
     
     if (shouldSuppress) {
       event.preventDefault();
