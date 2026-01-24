@@ -1162,7 +1162,7 @@ section { scroll-snap-align: start; } */
 /* Очень большие экраны (1440px+) */
 @media (min-width: 1440px) {
   .hero {
-    padding: 120px 60px;
+    padding: 10px 60px;
     gap: 100px;
     min-height: 800px;
   }
