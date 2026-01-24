@@ -1277,6 +1277,10 @@ section { scroll-snap-align: start; } */
 
 /* Мобильные устройства (576px - 767px) */
 @media (max-width: 767px) and (min-width: 576px) {
+  main {
+    padding-top: 1rem;
+  }
+  
   .hero {
     flex-direction: column;
     text-align: center;
@@ -1338,6 +1342,10 @@ section { scroll-snap-align: start; } */
 
 /* Маленькие мобильные устройства (до 575px) */
 @media (max-width: 575px) {
+  main {
+    padding-top: 1rem;
+  }
+  
   .hero {
     flex-direction: column;
     text-align: center;
@@ -1402,6 +1410,10 @@ section { scroll-snap-align: start; } */
 
 /* Очень маленькие экраны (до 400px) */
 @media (max-width: 400px) {
+  main {
+    padding-top: 1rem;
+  }
+  
   .hero {
     padding: 10px 15px;
     gap: 30px;
@@ -1431,6 +1443,10 @@ section { scroll-snap-align: start; } */
 
 /* Общие медиа-запросы для других секций (не hero) */
 @media (max-width: 768px) {
+  main {
+    padding-top: 1rem;
+  }
+  
   .features-grid {
     grid-template-columns: 1fr;
     padding: 20px;
@@ -1446,6 +1462,10 @@ section { scroll-snap-align: start; } */
 }
 
 @media (max-width: 576px) {
+  main {
+    padding-top: 1rem;
+  }
+  
   .btn-primary,
   .btn-secondary,
   .btn-outline {
@@ -1472,6 +1492,10 @@ section { scroll-snap-align: start; } */
 }
 
 @media (max-width: 480px) {
+  main {
+    padding-top: 1rem;
+  }
+  
   .btn-primary,
   .btn-secondary,
   .btn-outline {
