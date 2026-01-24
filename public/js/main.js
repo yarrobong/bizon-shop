@@ -517,19 +517,19 @@ document.addEventListener('DOMContentLoaded', function() {
 // Функция загрузки комплектов
 async function loadKits(container) {
     try {
-        // Загружаем товары (пока без фильтрации на сервере, фильтруем на клиенте)
-        // Запрашиваем больше товаров, чтобы наверняка получить комплекты
-        const response = await fetch('/api/products?limit=100'); 
+        // Загружаем товары. Добавляем timestamp для обхода кэша
+        const response = await fetch('/api/products?limit=1000&_t=' + Date.now()); 
         if (!response.ok) {
             throw new Error('Не удалось загрузить товары');
         }
         
         const data = await response.json();
-        const products = data.products || data; // Поддержка обоих форматов ответа
+        const products = data.products || data;
         
         // Фильтруем только готовые комплекты
         const kits = products.filter(p => p.category === 'Готовые комплекты');
         
+        // Очищаем контейнер перед рендерингом (удаляем индикатор загрузки)
         container.innerHTML = '';
         
         if (kits.length === 0) {
