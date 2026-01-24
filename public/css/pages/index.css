@@ -204,15 +204,15 @@ section { scroll-snap-align: start; } */
 
 .kit-card.popular {
   background: rgba(11, 11, 38, 0.6);
-  border: 1px solid rgba(59, 130, 246, 0.6);
-  box-shadow: 0 0 30px rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(255, 140, 0, 0.6); /* Оранжевый акцент */
+  box-shadow: 0 0 30px rgba(255, 140, 0, 0.15);
   transform: scale(1.05);
   z-index: 2;
 }
 
 .kit-card.popular:hover {
   transform: scale(1.05) translateY(-10px);
-  box-shadow: 0 0 50px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 50px rgba(255, 140, 0, 0.3);
 }
 
 .kit-badge {
@@ -220,7 +220,7 @@ section { scroll-snap-align: start; } */
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  background: #3b82f6;
+  background: #ff8c00; /* Оранжевый фон */
   color: white;
   padding: 8px 16px;
   border-bottom-left-radius: 12px;
@@ -232,23 +232,23 @@ section { scroll-snap-align: start; } */
 }
 
 .kit-header {
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding-bottom: 20px;
 }
 
 .kit-header h3 {
   font-family: 'Montserrat', sans-serif;
-  font-size: 2rem;
+  font-size: 1.8rem;
   color: white;
   margin-bottom: 10px;
   font-weight: 700;
 }
 
 .kit-price {
-  font-size: 1.5rem;
-  color: #59DEFA;
-  font-weight: 600;
+  font-size: 1.8rem;
+  color: #ff8c00; /* Оранжевый цвет цены */
+  font-weight: 700;
 }
 
 .kit-content {
@@ -266,29 +266,23 @@ section { scroll-snap-align: start; } */
 }
 
 .kit-list li {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
   position: relative;
-  padding-left: 20px;
-}
-
-.kit-list li::before {
-  content: "•";
-  color: #3b82f6;
-  font-size: 1.5rem;
-  position: absolute;
-  left: 0;
-  top: -5px;
+  border-bottom: 1px dashed rgba(255,255,255,0.1);
+  padding-bottom: 4px;
 }
 
 .kit-item-name {
   color: #e2e8f0;
-  font-weight: 600;
-  font-size: 1rem;
+  font-weight: 500;
+  font-size: 0.95rem;
 }
 
-.kit-item-desc {
+.kit-item-val {
   color: #94a3b8;
   font-size: 0.9rem;
 }
@@ -307,7 +301,7 @@ section { scroll-snap-align: start; } */
   }
   .kit-card.popular {
     transform: none;
-    grid-column: span 2;
+    grid-column: auto;
   }
   .kit-card.popular:hover {
     transform: translateY(-10px);
@@ -318,9 +312,6 @@ section { scroll-snap-align: start; } */
   .kits-grid {
     grid-template-columns: 1fr;
     max-width: 500px;
-  }
-  .kit-card.popular {
-    grid-column: auto;
   }
   .kits h2 {
     font-size: 2.2rem;
