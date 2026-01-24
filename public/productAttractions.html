@@ -20,6 +20,10 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/favicon/apple-touch-icon.png" />
   <link rel="manifest" href="/assets/icons/favicon/site.webmanifest" />
 
+  <!-- Глобальный обработчик ошибок для подавления ошибок от внешних скриптов -->
+  <!-- Должен загружаться ПЕРВЫМ, до всех других скриптов и ресурсов -->
+  <script src="/js/error-handler.js"></script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -36,10 +40,6 @@
 
   <!-- Специфичные стили для страницы товара (если потребуются) -->
   <link rel="stylesheet" href="/css/pages/product-page.css"> <!-- Создадим позже -->
-
-  <!-- Глобальный обработчик ошибок для подавления ошибок от внешних скриптов -->
-  <!-- Должен загружаться первым, до всех других скриптов -->
-  <script src="/js/error-handler.js"></script>
 
 </head>
 <body>

@@ -1,6 +1,9 @@
 // Глобальный обработчик ошибок для подавления ошибок от внешних скриптов
+// ВАЖНО: Этот скрипт должен загружаться ПЕРВЫМ, до всех других скриптов
 (function() {
-  // Создаем заглушку для объекта Ya (старое API Яндекс.Метрики)
+  'use strict';
+  
+  // Создаем заглушку для объекта Ya (старое API Яндекс.Метрики) СРАЗУ
   // Это предотвратит ошибки "Ya is not defined" от внешних виджетов
   if (typeof window.Ya === 'undefined') {
     window.Ya = {
@@ -18,9 +21,12 @@
     };
   }
   
-  // Сохраняем оригинальные обработчики
-  const originalError = console.error;
-  const originalWarn = console.warn;
+  // Сразу перехватываем console.error, чтобы не пропустить ранние ошибки
+  const originalError = console.error || function() {};
+  const originalWarn = console.warn || function() {};
+  const originalLog = console.log || function() {};
+  
+  // Обработчики уже сохранены выше
   
   // Фильтруем ошибки от внешних скриптов
   const errorFilters = [
@@ -55,31 +61,47 @@
     /loader\.bundle\.js.*preload/i
   ];
   
-  // Переопределяем console.error
+  // Переопределяем console.error - ДОЛЖНО БЫТЬ ПЕРВЫМ
   console.error = function(...args) {
     // Собираем все аргументы в строку для проверки
-    const message = args.map(arg => {
-      if (arg instanceof Error) {
-        return arg.message + ' ' + (arg.stack || '');
-      }
-      if (typeof arg === 'object') {
-        try {
-          return JSON.stringify(arg);
-        } catch {
-          return String(arg);
+    let message = '';
+    let fullText = '';
+    
+    try {
+      message = args.map(arg => {
+        if (arg instanceof Error) {
+          return arg.message + ' ' + (arg.stack || '');
         }
-      }
-      return String(arg);
-    }).join(' ');
+        if (typeof arg === 'object' && arg !== null) {
+          try {
+            return JSON.stringify(arg);
+          } catch {
+            return String(arg);
+          }
+        }
+        return String(arg);
+      }).join(' ');
+      
+      fullText = args.join(' ') + ' ' + message;
+    } catch {
+      message = String(args[0] || '');
+      fullText = message;
+    }
     
     // Проверяем все варианты сообщений
     const shouldSuppress = errorFilters.some(filter => {
       try {
-        return filter.test(message);
+        return filter.test(message) || filter.test(fullText);
       } catch {
         return false;
       }
-    });
+    }) || 
+    // Дополнительные проверки для конкретных сообщений
+    message.includes('Init stat_api') ||
+    message.includes('Ya is not defined') ||
+    (message.includes('index.') && message.includes('.js') && 
+     (message.includes('error') || message.includes('Error'))) ||
+    (message.includes('fetchActivities') && message.includes('JSON'));
     
     // Пропускаем только ошибки, которые не соответствуют фильтрам
     if (!shouldSuppress) {
@@ -109,7 +131,6 @@
   };
   
   // Также переопределяем console.log для предупреждений о preload (некоторые браузеры используют log)
-  const originalLog = console.log;
   console.log = function(...args) {
     const message = args.join(' ');
     // Пропускаем только сообщения, которые не соответствуют фильтрам предупреждений
