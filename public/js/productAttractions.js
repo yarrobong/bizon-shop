@@ -395,6 +395,10 @@ function createMediaElement(url, posterUrl = null, title = 'Видео') {
         iframe.setAttribute('webkitAllowFullScreen', '');
         iframe.setAttribute('mozallowfullscreen', '');
         iframe.setAttribute('allowFullScreen', '');
+        // Подавляем ошибки от внешних скриптов Rutube
+        iframe.onerror = function() {
+            // Игнорируем ошибки загрузки iframe
+        };
         return iframe;
     } else if (youtubeMatch) {
         const videoId = youtubeMatch[1];
