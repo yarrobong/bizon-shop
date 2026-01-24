@@ -545,6 +545,17 @@ async function loadKits(container) {
                 card.classList.add('popular');
             }
             
+            // Получаем URL изображения
+            let imageUrl = '/assets/icons/placeholder1.webp';
+            if (kit.images && kit.images.length > 0) {
+                const firstImage = kit.images[0];
+                if (typeof firstImage === 'string') {
+                    imageUrl = firstImage;
+                } else if (typeof firstImage === 'object' && firstImage.url) {
+                    imageUrl = firstImage.url;
+                }
+            }
+            
             // Форматируем цену
             const formattedPrice = new Intl.NumberFormat('ru-RU', {
                 style: 'currency',
@@ -574,6 +585,9 @@ async function loadKits(container) {
 
             card.innerHTML = `
                 ${card.classList.contains('popular') ? '<div class="kit-badge">ХИТ ПРОДАЖ</div>' : ''}
+                <div class="kit-image">
+                    <img src="${imageUrl}" alt="${kit.title}" onerror="this.src='/assets/icons/placeholder1.webp'">
+                </div>
                 <div class="kit-header">
                     <h3>${kit.title}</h3>
                     <div class="kit-price">${formattedPrice}</div>
